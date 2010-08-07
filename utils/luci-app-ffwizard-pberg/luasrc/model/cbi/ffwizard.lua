@@ -308,7 +308,14 @@ function main.write(self, section, value)
 			return
 		end
 		-- rename the wireless interface s/wifi/wireless/
-		local nif = string.gsub(device,"wifi", netname)
+		local nif
+		if string.find(device, "wifi") then
+			nif = string.gsub(device,"wifi", netname)
+		elseif string.find(device, "wl") then
+			nif = string.gsub(device,"wl", netname)
+		elseif string.find(device, "wlan") then
+			nif = string.gsub(device,"wlan", netname)
+		end
 
 		-- Cleanup
 		tools.wifi_delete_ifaces(device)
@@ -619,9 +626,11 @@ function main.write(self, section, value)
 			uci:set("system", s['.name'], "cronloglevel", "10")
 
 			-- Set hostname
-			if old_hostname == "OpenWrt" or old_hostname:match("^%d+-%d+-%d+-%d+$") then
-				uci:set("system", s['.name'], "hostname", new_hostname)
-				sys.hostname(new_hostname)
+			if new_hostname then
+				if old_hostname == "OpenWrt" or old_hostname:match("^%d+-%d+-%d+-%d+$") then
+					uci:set("system", s['.name'], "hostname", new_hostname)
+					sys.hostname(new_hostname)
+				end
 			end
 		end)
 
@@ -667,7 +676,14 @@ function olsr.write(self, section, value)
 			return
 		end
 		-- rename the wireless interface s/wifi/wireless/
-		local nif = string.gsub(device,"wifi", netname)
+		local nif
+		if string.find(device, "wifi") then
+			nif = string.gsub(device,"wifi", netname)
+		elseif string.find(device, "wl") then
+			nif = string.gsub(device,"wl", netname)
+		elseif string.find(device, "wlan") then
+			nif = string.gsub(device,"wlan", netname)
+		end
 
 		-- Write new interface
 		local olsrbase = uci:get_all("freifunk", "olsr_interface")
