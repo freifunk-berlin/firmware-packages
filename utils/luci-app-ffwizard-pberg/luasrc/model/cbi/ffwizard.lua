@@ -45,6 +45,7 @@ uci:foreach("wireless", "wifi-device",
 		local device = section[".name"]
 		local dev = f:field(Flag, "device_" .. device , " === Drahtloses Netzwerk \"" .. device .. "\" === ")
 			dev:depends("netconfig", "1")
+			dev.rmempty = false
 			function dev.value(self, section)
 				return uci:get("freifunk", "wizard", "device_" .. device)
 			end
@@ -56,6 +57,7 @@ uci:foreach("wireless", "wifi-device",
 			end
 		local chan = f:field(ListValue, "chan_" .. device, "Freifunk Kanal einrichten")
 			chan:depends("device_" .. device, "1")
+			chan.rmempty = true
 			function chan.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "chan_" .. device)
 			end
@@ -76,6 +78,7 @@ uci:foreach("wireless", "wifi-device",
 			end
 		local meship = f:field(Value, "meship_" .. device, "Mesh IP Adresse einrichten", "Netzweit eindeutige Identifikation z.B. 104.1.1.1")
 			meship:depends("device_" .. device, "1")
+			meship.rmempty = true
 			function meship.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "meship_" .. device)
 			end
@@ -94,6 +97,7 @@ uci:foreach("wireless", "wifi-device",
 			end
 		local client = f:field(Flag, "client_" .. device, "DHCP anbieten")
 			client:depends("device_" .. device, "1")
+			client.rmempty = false
 			function client.value(self, section)
 				return uci:get("freifunk", "wizard", "client_" .. device)
 			end
@@ -103,6 +107,7 @@ uci:foreach("wireless", "wifi-device",
 			end
 		local dhcpmesh = f:field(Value, "dhcpmesh_" .. device, "Mesh DHCP anbieten", "Netzweit eindeutiges DHCP Netz z.B. 104.1.2.1/28")
 			dhcpmesh:depends("client_" .. device, "1")
+			dhcpmesh.rmempty = false
 			function dhcpmesh.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "dhcpmesh_" .. device)
 			end
@@ -115,9 +120,10 @@ uci:foreach("wireless", "wifi-device",
 uci:foreach("network", "interface",
 	function(section)
 		local device = section[".name"]
-		if device ~= "loopback" and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") then
+		if device ~= "loopback" and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
 			dev = f:field(Flag, "device_" .. device , " === Drahtgebundenes Netzwerk \"" .. device .. "\" === ")
 				dev:depends("netconfig", "1")
+				dev.rmempty = false
 				function dev.value(self, section)
 					return uci:get("freifunk", "wizard", "device_" .. device)
 				end
@@ -127,6 +133,7 @@ uci:foreach("network", "interface",
 				end
 			meship = f:field(Value, "meship_" .. device, "Mesh IP Adresse einrichten", "Netzweit eindeutige Identifikation")
 				meship:depends("device_" .. device, "1")
+				meship.rmempty = true
 				function meship.cfgvalue(self, section)
 					return uci:get("freifunk", "wizard", "meship_" .. device)
 				end
@@ -145,6 +152,7 @@ uci:foreach("network", "interface",
 				end
 			client = f:field(Flag, "client_" .. device, "DHCP anbieten")
 				client:depends("device_" .. device, "1")
+				client.rmempty = false
 				function client.value(self, section)
 					return uci:get("freifunk", "wizard", "client_" .. device)
 				end
@@ -154,6 +162,7 @@ uci:foreach("network", "interface",
 				end
 			dhcpmesh = f:field(Value, "dhcpmesh_" .. device, "Mesh DHCP anbieten ", "Netzweit eindeutiges DHCP Netz")
 				dhcpmesh:depends("client_" .. device, "1")
+				client.rmempty = false
 				function dhcpmesh.cfgvalue(self, section)
 					return uci:get("freifunk", "wizard", "dhcpmesh_" .. device)
 				end
@@ -246,9 +255,7 @@ function f.handle(self, state, data)
 		luci.http.redirect(luci.dispatcher.build_url("admin", "uci", "changes"))
 		return false
 	elseif state == FORM_INVALID then
-		luci.http.redirect(luci.dispatcher.build_url("admin", "uci", "changes"))
-		return false
---		self.errmessage = "Ungültige Eingabe: Bitte die Formularfelder auf Fehler prüfen."
+		self.errmessage = "Ungültige Eingabe: Bitte die Formularfelder auf Fehler prüfen."
 	end
 	return true
 end
@@ -311,6 +318,9 @@ function main.write(self, section, value)
 	uci:foreach("wireless", "wifi-device",
 	function(sec)
 		local device = sec[".name"]
+		if not luci.http.formvalue("cbid.ffwizward.1.device_" .. device) then
+			return
+		end
 		node_ip = luci.http.formvalue("cbid.ffwizward.1.meship_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.meship_" .. device))
 		if not node_ip or not network or not network:contains(node_ip) then
 			meship.tag_missing[section] = true
@@ -325,6 +335,8 @@ function main.write(self, section, value)
 			nif = string.gsub(device,"wl", netname)
 		elseif string.find(device, "wlan") then
 			nif = string.gsub(device,"wlan", netname)
+		elseif string.find(device, "radio") then
+			nif = string.gsub(device,"radio", netname)
 		end
 
 		-- Cleanup
@@ -360,7 +372,6 @@ function main.write(self, section, value)
 		end
 		uci:tset("wireless", device, devconfig)
 		-- Create wifi iface
-		-- TODO uci bssid-channel config
 		local ifconfig = uci:get_all("freifunk", "wifi_iface")
 		util.update(ifconfig, uci:get_all(external, "wifi_iface") or {})
 		ifconfig.device = device
@@ -469,10 +480,10 @@ function main.write(self, section, value)
 				-- Make sure that luci_splash is enabled
 				sys.exec("/etc/init.d/luci_splash enable")
 			end
---[[		else
+		else
 			-- Delete old splash
 			uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
-			sys.exec("/etc/init.d/luci_splash stop")
+--[[			sys.exec("/etc/init.d/luci_splash stop")
 			sys.exec("/etc/init.d/luci_splash disable")]]
 		end
 		uci:save("wireless")
@@ -484,7 +495,10 @@ function main.write(self, section, value)
 	uci:foreach("network", "interface",
 		function(sec)
 		local device = sec[".name"]
-		if device ~= "loopback" and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") then
+		if not luci.http.formvalue("cbid.ffwizward.1.device_" .. device) then
+			return
+		end
+		if device ~= "loopback" and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
 			local node_ip
 			node_ip = luci.http.formvalue("cbid.ffwizward.1.meship_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.meship_" .. device))
 			if not node_ip or not network or not network:contains(node_ip) then
@@ -592,10 +606,10 @@ function main.write(self, section, value)
 					-- Make sure that luci_splash is enabled
 					sys.exec("/etc/init.d/luci_splash enable")
 				end
---[[			else
+			else
 				-- Delete old splash
 				uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
-				sys.exec("/etc/init.d/luci_splash stop")
+--[[				sys.exec("/etc/init.d/luci_splash stop")
 				sys.exec("/etc/init.d/luci_splash disable")]]
 			end
 			uci:save("wireless")
@@ -650,8 +664,7 @@ function main.write(self, section, value)
 			if new_hostname then
 				if old_hostname == "OpenWrt" or old_hostname:match("^%d+-%d+-%d+-%d+$") then
 					uci:set("system", s['.name'], "hostname", new_hostname)
-					-- sys.hostname(new_hostname)
-					-- sys.exec("/etc/init.d/uhttpd restart")
+					sys.hostname(new_hostname)
 				end
 			end
 		end)
@@ -659,7 +672,6 @@ function main.write(self, section, value)
 	uci:save("system")
 	uci:set("uhttpd","main","listen_http","0.0.0.0:80 0.0.0.0:8082")
 	uci:save("uhttpd")
---	sys.exec("/etc/init.d/uhttpd restart")
 end
 
 
@@ -687,13 +699,15 @@ function olsr.write(self, section, value)
 	uci:section("olsrd", "LoadPlugin", nil, {
 		library     = "olsrd_mdns.so.1.0.0",
 		ignore      = 1,
---		NonOlsrIf   = landevice .. " " .. netname
 	})
 
 	-- Create wireless olsr config
 	uci:foreach("wireless", "wifi-device",
 	function(sec)
 		local device = sec[".name"]
+		if not luci.http.formvalue("cbid.ffwizward.1.device_" .. device) then
+			return
+		end
 		local node_ip = luci.http.formvalue("cbid.ffwizward.1.meship_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.meship_" .. device))
 		if not node_ip or not network or not network:contains(node_ip) then
 			meship.tag_missing[section] = true
@@ -708,6 +722,8 @@ function olsr.write(self, section, value)
 			nif = string.gsub(device,"wl", netname)
 		elseif string.find(device, "wlan") then
 			nif = string.gsub(device,"wlan", netname)
+		elseif string.find(device, "radio") then
+			nif = string.gsub(device,"radio", netname)
 		end
 
 		-- Write new interface
@@ -741,8 +757,11 @@ function olsr.write(self, section, value)
 	uci:foreach("network", "interface",
 		function(sec)
 		local device = sec[".name"]
-		if device ~= "loopback" and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") then
+		if device ~= "loopback" and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
 			local node_ip
+			if not luci.http.formvalue("cbid.ffwizward.1.device_" .. device) then
+				return
+			end
 			node_ip = luci.http.formvalue("cbid.ffwizward.1.meship_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.meship_" .. device))
 			if not node_ip or not network or not network:contains(node_ip) then
 				meship.tag_missing[section] = true
@@ -856,7 +875,5 @@ function share.write(self, section, value)
 	uci:save("olsrd")
 	uci:save("system")
 end
-
-
 
 return f
