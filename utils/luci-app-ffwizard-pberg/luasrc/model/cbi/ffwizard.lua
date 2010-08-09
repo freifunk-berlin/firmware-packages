@@ -143,12 +143,6 @@ uci:foreach("network", "interface",
 				end
 				function meship.write(self, sec, value)
 					uci:set("freifunk", "wizard", "meship_" .. device, value)
-					local new_ip = ip.IPv4(value)
-					if new_ip then
-						local new_hostname = new_ip:string():gsub("%.", "-")
-						uci:set("freifunk", "wizard", "hostname", new_hostname)
-					end
-					uci:save("freifunk")
 				end
 			client = f:field(Flag, "client_" .. device, "DHCP anbieten")
 				client:depends("device_" .. device, "1")
@@ -388,9 +382,11 @@ function main.write(self, section, value)
 		netconfig.ipaddr = node_ip:string()
 		uci:section("network", "interface", nif, netconfig)
 		uci:save("network")
+		local new_hostname = node_ip:string():gsub("%.", "-")
+		uci:set("freifunk", "wizard", "hostname", new_hostname)
+		uci:save("freifunk")
 		tools.firewall_zone_add_interface("freifunk", nif)
 		uci:save("firewall")
-
 		-- Collect MESH DHCP IP NET
 		local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
 		if client then
@@ -517,7 +513,12 @@ function main.write(self, section, value)
 			netconfig.proto = "static"
 			netconfig.ipaddr = node_ip:string()
 			uci:section("network", "interface", device, netconfig)
+			uci:save("network")
+			local new_hostname = node_ip:string():gsub("%.", "-")
+			uci:set("freifunk", "wizard", "hostname", new_hostname)
+			uci:save("freifunk")
 			tools.firewall_zone_add_interface("freifunk", device)
+			uci:save("firewall")
 			-- Collect MESH DHCP IP NET
 			local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
 			if client then
