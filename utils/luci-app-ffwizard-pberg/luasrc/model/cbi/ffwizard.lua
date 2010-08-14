@@ -336,10 +336,22 @@ function main.write(self, section, value)
 
 		-- Cleanup
 		tools.wifi_delete_ifaces(device)
---		tools.network_remove_interface(device)
+		-- tools.network_remove_interface(device)
+		uci:delete("network", device .. "dhcp")
+		uci:delete("network", device)
 		tools.firewall_zone_remove_interface("freifunk", device)
---		tools.network_remove_interface(nif)
+		-- tools.network_remove_interface(nif)
+		uci:delete("network", nif .. "dhcp")
+		uci:delete("network", nif)
 		tools.firewall_zone_remove_interface("freifunk", nif)
+		-- Delete old dhcp
+		uci:delete("dhcp", "dhcp", device)
+		uci:delete("dhcp", "dhcp", device .. "dhcp")
+		uci:delete("dhcp", "dhcp", nif)
+		uci:delete("dhcp", "dhcp", nif .. "dhcp")
+		-- Delete old splash
+		uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
+		uci:delete_all("luci_splash", "iface", {network=nif.."dhcp", zone="freifunk"})
 		-- New Config
 		-- Tune wifi device
 		local ssid
@@ -429,8 +441,6 @@ function main.write(self, section, value)
 				end
 			end
 			if dhcp_ip and dhcp_mask then
-				-- clean up
-				uci:delete("network", nif .. "dhcp")
 				-- Create alias
 				local aliasbase = uci:get_all("freifunk", "alias")
 				util.update(aliasbase, uci:get_all(external, "alias") or {})
@@ -439,9 +449,6 @@ function main.write(self, section, value)
 				aliasbase.netmask = dhcp_mask
 				aliasbase.proto = "static"
 				uci:section("network", "alias", nif .. "dhcp", aliasbase)
-				-- Delete old dhcp
-				uci:delete("dhcp", "dhcp", nif)
-				uci:delete("dhcp", "dhcp", nif .. "dhcp")
 				-- Create dhcp
 				local dhcpbase = uci:get_all("freifunk", "dhcp")
 				util.update(dhcpbase, uci:get_all(external, "dhcp") or {})
@@ -485,8 +492,6 @@ function main.write(self, section, value)
 					dest_port="8082",
 					target="ACCEPT"
 				})
-				-- Delete old splash
-				uci:delete_all("luci_splash", "iface", {network=nif.."dhcp", zone="freifunk"})
 				-- Register splash
 				uci:section("luci_splash", "iface", nil, {network=nif.."dhcp", zone="freifunk"})
 				uci:save("luci_splash")
@@ -524,6 +529,12 @@ function main.write(self, section, value)
 			uci:delete_all("firewall","zone", {name=device})
 			uci:delete_all("firewall","forwarding", {src=device})
 			uci:delete_all("firewall","forwarding", {dest=device})
+			uci:delete("network", device .. "dhcp")
+			-- Delete old dhcp
+			uci:delete("dhcp", "dhcp", device)
+			uci:delete("dhcp", "dhcp", device .. "dhcp")
+			-- Delete old splash
+			uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
 			-- New Config
 			local netconfig = uci:get_all("freifunk", "interface")
 			util.update(netconfig, uci:get_all(external, "interface") or {})
@@ -561,8 +572,6 @@ function main.write(self, section, value)
 					end
 				end
 				if dhcp_ip and dhcp_mask then
-					-- clean up
-					uci:delete("network", device .. "dhcp")
 					-- Create alias
 					local aliasbase = uci:get_all("freifunk", "alias")
 					util.update(aliasbase, uci:get_all(external, "alias") or {})
@@ -571,9 +580,6 @@ function main.write(self, section, value)
 					aliasbase.netmask = dhcp_mask
 					aliasbase.proto = "static"
 					uci:section("network", "alias", device .. "dhcp", aliasbase)
-					-- Delete old dhcp
-					uci:delete("dhcp", "dhcp", device)
-					uci:delete("dhcp", "dhcp", device .. "dhcp")
 					-- Create dhcp
 					local dhcpbase = uci:get_all("freifunk", "dhcp")
 					util.update(dhcpbase, uci:get_all(external, "dhcp") or {})
@@ -616,19 +622,12 @@ function main.write(self, section, value)
 						dest_port="8082",
 						target="ACCEPT"
 					})
-					-- Delete old splash
-					uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
 					-- Register splash
 					uci:section("luci_splash", "iface", nil, {network=device.."dhcp", zone="freifunk"})
 					uci:save("luci_splash")
 					-- Make sure that luci_splash is enabled
 					sys.exec("/etc/init.d/luci_splash enable")
 				end
-			else
-				-- Delete old splash
-				uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
---[[				sys.exec("/etc/init.d/luci_splash stop")
-				sys.exec("/etc/init.d/luci_splash disable")]]
 			end
 			uci:save("wireless")
 			uci:save("network")
