@@ -61,6 +61,7 @@ uci:foreach("wireless", "wifi-device",
 			function chan.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "chan_" .. device)
 			end
+			chan:value('default')
 			for i = 1, 14, 1 do
 				chan:value(i)
 			end
@@ -341,49 +342,55 @@ function main.write(self, section, value)
 		tools.firewall_zone_remove_interface("freifunk", nif)
 		-- New Config
 		-- Tune wifi device
+		local ssid
 		local ssiduci = uci:get("freifunk", community, "ssid")
-		local ssidshort = string.gsub(ssiduci,"%.","-")
+		local ssidshort = string.sub(ssiduci,string.find(ssiduci,'%..*'))
 		local devconfig = uci:get_all("freifunk", "wifi_device")
 		util.update(devconfig, uci:get_all(external, "wifi_device") or {})
-		local channel = luci.http.formvalue("cbid.ffwizward.1.chan_" .. device) or 10
-		devconfig.channel = channel
-		local bssid = "02:CA:FF:EE:BA:BE"
-		local chan = tonumber(channel)
-		if chan >= 0 and chan < 10 then
-			mrate = 5500
-			bssid = channel .. "2:CA:FF:EE:BA:BE"
-			ssid = "ch" .. channel .. "." .. ssidshort
-		elseif chan == 10 then
-			mrate = 5500
-			bssid = "02:CA:FF:EE:BA:BE"
-			ssid = ssiduci
-		elseif chan >= 11 and chan <= 14 then
-			mrate = 5500
-			bssid = string.format("%X",channel) .. "2:CA:FF:EE:BA:BE"
-			ssid = "ch" .. channel .. "." .. ssidshort
-		elseif chan >= 36 and chan <= 64 then
-			mrate = ""
-			outdoor = 0
-			bssid = "00:" .. channel .."CA:FF:EE:EE"
-			ssid = "ch" .. channel .. "." .. ssidshort
-		elseif chan >= 100 and chan <= 140 then
-			mrate = ""
-			outdoor = 1
-			bssid = "01:" .. string.sub(channel, 2) .. ":CA:FF:EE:EE"
-			ssid = "ch" .. channel .. "." .. ssidshort
+		local channel = luci.http.formvalue("cbid.ffwizward.1.chan_" .. device)
+		if channel and not channel == "default" then
+			if devconfig.channel == channel then
+				ssid = uci:get("freifunk", community, "ssid")
+			else
+				devconfig.channel = channel
+				local bssid = "02:CA:FF:EE:BA:BE"
+				local mrate = 5500
+				local chan = tonumber(channel)
+				if chan >= 0 and chan < 10 then
+					bssid = channel .. "2:CA:FF:EE:BA:BE"
+					ssid = "ch" .. channel .. ssidshort
+				elseif chan == 10 then
+					bssid = "02:CA:FF:EE:BA:BE"
+					ssid = "ch" .. channel .. ssidshort
+				elseif chan >= 11 and chan <= 14 then
+					bssid = string.format("%X",channel) .. "2:CA:FF:EE:BA:BE"
+					ssid = "ch" .. channel .. ssidshort
+				elseif chan >= 36 and chan <= 64 then
+					mrate = ""
+					outdoor = 0
+					bssid = "00:" .. channel .."CA:FF:EE:EE"
+					ssid = "ch" .. channel .. ssidshort
+				elseif chan >= 100 and chan <= 140 then
+					mrate = ""
+					outdoor = 1
+					bssid = "01:" .. string.sub(channel, 2) .. ":CA:FF:EE:EE"
+					ssid = "ch" .. channel .. ssidshort
+				end
+				devconfig.outdoor = outdoor
+				devconfig.mrate = mrate
+			end
 		end
-		devconfig.outdoor = outdoor
-		devconfig.mrate = mrate
 		uci:tset("wireless", device, devconfig)
 		-- Create wifi iface
 		local ifconfig = uci:get_all("freifunk", "wifi_iface")
 		util.update(ifconfig, uci:get_all(external, "wifi_iface") or {})
 		ifconfig.device = device
 		ifconfig.network = nif
---		ifconfig.ssid = uci:get("freifunk", community, "ssid")
 		ifconfig.ssid = ssid
-		-- See Table https://kifuse02.pberg.freifunk.net/moin/channel-bssid-essid 
-		ifconfig.bssid = bssid
+		if bssid then
+			-- See Table https://kifuse02.pberg.freifunk.net/moin/channel-bssid-essid 
+			ifconfig.bssid = bssid
+		end
 		uci:section("wireless", "wifi-iface", nil, ifconfig)
 		uci:save("wireless")
 		local netconfig = uci:get_all("freifunk", "interface")
