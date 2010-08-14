@@ -360,12 +360,12 @@ function main.write(self, section, value)
 		local devconfig = uci:get_all("freifunk", "wifi_device")
 		util.update(devconfig, uci:get_all(external, "wifi_device") or {})
 		local channel = luci.http.formvalue("cbid.ffwizward.1.chan_" .. device)
-		if channel and not channel == "default" then
+		if channel and channel ~= "default" then
 			if devconfig.channel == channel then
 				ssid = uci:get("freifunk", community, "ssid")
 			else
 				devconfig.channel = channel
-				local bssid = "02:CA:FF:EE:BA:BE"
+				bssid = "02:CA:FF:EE:BA:BE"
 				local mrate = 5500
 				local chan = tonumber(channel)
 				if chan >= 0 and chan < 10 then
