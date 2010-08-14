@@ -354,16 +354,14 @@ function main.write(self, section, value)
 		uci:delete_all("luci_splash", "iface", {network=nif.."dhcp", zone="freifunk"})
 		-- New Config
 		-- Tune wifi device
-		local ssid
 		local ssiduci = uci:get("freifunk", community, "ssid")
 		local ssidshort = string.sub(ssiduci,string.find(ssiduci,'%..*'))
 		local devconfig = uci:get_all("freifunk", "wifi_device")
 		util.update(devconfig, uci:get_all(external, "wifi_device") or {})
+		local ssid = uci:get("freifunk", community, "ssid")
 		local channel = luci.http.formvalue("cbid.ffwizward.1.chan_" .. device)
 		if channel and channel ~= "default" then
-			if devconfig.channel == channel then
-				ssid = uci:get("freifunk", community, "ssid")
-			else
+			if devconfig.channel ~= channel then
 				devconfig.channel = channel
 				bssid = "02:CA:FF:EE:BA:BE"
 				local mrate = 5500
@@ -398,7 +396,12 @@ function main.write(self, section, value)
 		util.update(ifconfig, uci:get_all(external, "wifi_iface") or {})
 		ifconfig.device = device
 		ifconfig.network = nif
-		ifconfig.ssid = ssid
+		if ssid then
+			-- See Table https://kifuse02.pberg.freifunk.net/moin/channel-bssid-essid 
+			ifconfig.ssid = ssid
+		else
+			ifconfig.ssid = "olsr.freifunk.net"
+		end
 		if bssid then
 			-- See Table https://kifuse02.pberg.freifunk.net/moin/channel-bssid-essid 
 			ifconfig.bssid = bssid
