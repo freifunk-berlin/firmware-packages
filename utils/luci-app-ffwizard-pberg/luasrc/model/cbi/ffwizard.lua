@@ -247,19 +247,26 @@ end
 -------------------- Control --------------------
 function f.handle(self, state, data)
 	if state == FORM_VALID then
-		local changes = uci:changes()
+--[[		local changes = uci:changes()
 		for r, tbl in pairs(changes) do
-			table.insert(reload, r)
-			if path[#path] ~= "apply" then
-				uci:load(r)
-				uci:commit(r)
-				uci:unload(r)
-			end
-		end
+			uci:load(r)
+			uci:commit(r)
+			uci:unload(r)
+		end]]
+		uci:commit("freifunk")
+		uci:commit("wireless")
+		uci:commit("network")
+		uci:commit("dhcp")
+		uci:commit("luci_splash")
+		uci:commit("firewall")
+		uci:commit("system")
+		uci:commit("uhttpd")
+
 --		local function _reboot()
 --			return luci.sys.reboot()
 --		end
-		luci.template.render("admin_system/applyreboot")
+		local reboot = 1
+		luci.template.render("admin_system/applyreboot", {reboot=reboot})
 		luci.sys.reboot()
 --		luci.template.render("admin_uci/apply", {changes=convert_changes(changes), reload=_reboot})
 -- 		luci.template.render("admin_system/applyreboot")
