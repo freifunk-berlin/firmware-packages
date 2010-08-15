@@ -382,6 +382,7 @@ function main.write(self, section, value)
 		util.update(devconfig, uci:get_all(external, "wifi_device") or {})
 		local ssid = uci:get("freifunk", community, "ssid")
 		local channel = luci.http.formvalue("cbid.ffwizward.1.chan_" .. device)
+		local hwmode = "11bg"
 		if channel and channel ~= "default" then
 			if devconfig.channel ~= channel then
 				devconfig.channel = channel
@@ -398,16 +399,19 @@ function main.write(self, section, value)
 					bssid = string.format("%X",channel) .. "2:CA:FF:EE:BA:BE"
 					ssid = "ch" .. channel .. ssidshort
 				elseif chan >= 36 and chan <= 64 then
+					hwmode = "11a"
 					mrate = ""
 					outdoor = 0
 					bssid = "00:" .. channel .."CA:FF:EE:EE"
 					ssid = "ch" .. channel .. ssidshort
 				elseif chan >= 100 and chan <= 140 then
+					hwmode = "11a"
 					mrate = ""
 					outdoor = 1
 					bssid = "01:" .. string.sub(channel, 2) .. ":CA:FF:EE:EE"
 					ssid = "ch" .. channel .. ssidshort
 				end
+				devconfig.hwmode = hwmode
 				devconfig.outdoor = outdoor
 				devconfig.mrate = mrate
 			end
