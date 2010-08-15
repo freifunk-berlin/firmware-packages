@@ -261,6 +261,9 @@ function f.handle(self, state, data)
 		uci:commit("firewall")
 		uci:commit("system")
 		uci:commit("uhttpd")
+		uci:commit("olsrd")
+		uci:commit("qos")
+
 
 --		local function _reboot()
 --			return luci.sys.reboot()
