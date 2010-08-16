@@ -26,8 +26,9 @@ local ip = require "luci.ip"
 f = SimpleForm("ffwizward", "Freifunkassistent",
  "Dieser Assistent unterstüzt bei der Einrichtung des Routers für das Freifunknetz.")
 
-net = f:field(Value, "net", "Freifunk Community", "Mesh WLAN Netzbereich")
-net.rmempty = true
+net = f:field(ListValue, "net", "Freifunk Community", "Mesh WLAN Netzbereich")
+net.rmempty = false
+net.optional = false
 uci:foreach("freifunk", "community", function(s)
 	net:value(s[".name"], "%s (%s)" % {s.name, s.mesh_network or "?"})
 end)
@@ -212,7 +213,7 @@ self.zoom = "0"
 self.width = "100%" --popups will ignore the %-symbol, "100%" is interpreted as "100"
 self.height = "600"
 self.popup = false
-self.displaytext="OpenStretMap" --text on button, that loads and displays the OSMap
+self.displaytext="OpenStreetMap" --text on button, that loads and displays the OSMap
 self.hidetext="X" -- text on button, that hides OSMap
 end
 
