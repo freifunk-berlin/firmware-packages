@@ -729,11 +729,18 @@ function olsr.write(self, section, value)
 	-- Delete old interface
 	uci:delete_all("olsrd", "Interface")
 	uci:delete_all("olsrd", "Hna4")
-	-- Delete old mdns settings
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})
 	-- Write new nameservice settings
 	uci:section("olsrd", "LoadPlugin", nil, {
 		library     = "olsrd_mdns.so.1.0.0",
+		ignore      = 1,
+	})
+	-- Delete old p2pd settings
+	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_p2pd.so.0.1.0"})
+	-- Write new nameservice settings
+	uci:section("olsrd", "LoadPlugin", nil, {
+		library     = "olsrd_p2pd.so.0.1.0",
+		P2pdTtl     = 10,
+		UdpDestPort = "224.0.0.251 5353",
 		ignore      = 1,
 	})
 
@@ -781,7 +788,7 @@ function olsr.write(self, section, value)
 				})
 				uci:foreach("olsrd", "LoadPlugin",
 					function(s)		
-						if s.library == "olsrd_mdns.so.1.0.0" then
+						if s.library == "olsrd_p2pd.so.0.1.0" then
 							uci:set("olsrd", s['.name'], "ignore", "0")
 							uci:set("olsrd", s['.name'], "NonOlsrIf", nif)
 						end
