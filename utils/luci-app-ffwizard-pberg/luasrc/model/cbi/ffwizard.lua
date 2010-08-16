@@ -832,7 +832,7 @@ function olsr.write(self, section, value)
 						function(s)		
 							if s.library == "olsrd_mdns.so.1.0.0" then
 								uci:set("olsrd", s['.name'], "ignore", "0")
-								uci:set("olsrd", s['.name'], "NonOlsrIf", device)
+								uci:set_list("olsrd", s['.name'], "NonOlsrIf", device)
 							end
 						end)
 				end
@@ -877,7 +877,7 @@ function olsr.write(self, section, value)
 
 	-- Import hosts
 	uci:foreach("dhcp", "dnsmasq", function(s)
-		uci:set("dhcp", s[".name"], "addnhosts", "/var/etc/hosts.olsr")
+		uci:set_list("dhcp", s[".name"], "addnhosts", "/var/etc/hosts.olsr")
 	end)
 
 	-- Make sure that OLSR is enabled
