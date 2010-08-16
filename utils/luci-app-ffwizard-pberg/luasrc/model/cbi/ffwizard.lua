@@ -474,7 +474,7 @@ function main.write(self, section, value)
 				dhcpbase.interface = nif .. "dhcp"
 				dhcpbase.force = 1
 				uci:section("dhcp", "dhcp", nif .. "dhcp", dhcpbase)
-
+				uci:set_list("dhcp", nif .. "dhcp", "dhcp_option", "119,olsr")
 				-- Create firewall settings
 				uci:delete_all("firewall", "rule", {
 					src="freifunk",
@@ -605,6 +605,7 @@ function main.write(self, section, value)
 					dhcpbase.interface = device .. "dhcp"
 					dhcpbase.force = 1
 					uci:section("dhcp", "dhcp", device .. "dhcp", dhcpbase)
+					uci:set_list("dhcp", device .. "dhcp", "dhcp_option", "119,olsr")
 					-- Create firewall settings
 					uci:delete_all("firewall", "rule", {
 						src="freifunk",
@@ -875,9 +876,11 @@ function olsr.write(self, section, value)
 		end)
 	end
 
-	-- Import hosts
+	-- Import hosts and set domain
 	uci:foreach("dhcp", "dnsmasq", function(s)
 		uci:set_list("dhcp", s[".name"], "addnhosts", "/var/etc/hosts.olsr")
+		uci:set("dhcp", s[".name"], "local", "/olsr/")
+		uci:set("dhcp", s[".name"], "domain", "olsr")
 	end)
 
 	-- Make sure that OLSR is enabled
