@@ -243,23 +243,33 @@ function wansec.write(self, section, value)
 	uci:set("freifunk", "wizard", "wan_security", value)
 	uci:save("freifunk")
 end
+hb = f:field(Flag, "hb", "Heartbeat aktivieren","Dem Gerät erlauben anonyme Statistiken zu übertragen.")
+hb.rmempty = false
+function hb.cfgvalue(self, section)
+	return uci:get("freifunk", "wizard", "hb")
+end
 
 
 -------------------- Control --------------------
 function f.handle(self, state, data)
 	if state == FORM_VALID then
-		uci:commit("freifunk")
-		uci:commit("wireless")
-		uci:commit("network")
-		uci:commit("dhcp")
-		uci:commit("luci_splash")
-		uci:commit("firewall")
-		uci:commit("system")
-		uci:commit("uhttpd")
-		uci:commit("olsrd")
-		uci:commit("qos")
-
-		luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot") .. "?reboot=1")
+		local debug = uci:get("freifunk", "wizard", "debug")
+		if debug == 1 then
+			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot"))
+		else
+			uci:commit("freifunk")
+			uci:commit("wireless")
+			uci:commit("network")
+			uci:commit("dhcp")
+			uci:commit("luci_splash")
+			uci:commit("firewall")
+			uci:commit("system")
+			uci:commit("uhttpd")
+			uci:commit("olsrd")
+			uci:commit("qos")
+			uci:commit("manager")
+			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot") .. "?reboot=1")
+		end
 		return false
 	elseif state == FORM_INVALID then
 		self.errmessage = "Ungültige Eingabe: Bitte die Formularfelder auf Fehler prüfen."
@@ -320,6 +330,8 @@ function main.write(self, section, value)
 		end)
 	end
 	uci:save("firewall")
+	uci:delete("manager", "heartbeat", "interface")
+	uci:save("manager")
 
 	-- Create wireless ip and firewall config
 	uci:foreach("wireless", "wifi-device",
@@ -361,6 +373,7 @@ function main.write(self, section, value)
 		uci:delete("dhcp", "dhcp", device .. "dhcp")
 		uci:delete("dhcp", "dhcp", nif)
 		uci:delete("dhcp", "dhcp", nif .. "dhcp")
+
 		-- Delete old splash
 		uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
 		uci:delete_all("luci_splash", "iface", {network=nif.."dhcp", zone="freifunk"})
@@ -439,6 +452,8 @@ function main.write(self, section, value)
 		local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
 		if client then
 			local dhcpmeshnet = luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device))
+			uci:set_list("manager", "heartbeat", "interface", nif)
+			uci:save("manager")
 			if dhcpmeshnet then
 				dhcp_ip = dhcpmeshnet:minhost():string()
 				dhcp_mask = dhcpmeshnet:mask():string()
@@ -570,6 +585,8 @@ function main.write(self, section, value)
 			local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
 			if client then
 				local dhcpmeshnet = luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device))
+				uci:set_list("manager", "hertbeat", "interface", device)
+				uci:save("manager")
 				if dhcpmeshnet then
 					dhcp_ip = dhcpmeshnet:minhost():string()
 					dhcp_mask = dhcpmeshnet:mask():string()
@@ -691,6 +708,18 @@ function main.write(self, section, value)
 
 	local new_hostname = uci:get("freifunk", "wizard", "hostname")
 	local old_hostname = sys.hostname()
+
+	local dhcphb = hb:formvalue(section)
+	if dhcphb then
+		uci:set("manager", "heartbeat", "enabled", "1")
+		-- Make sure that OLSR is enabled
+		sys.exec("/etc/init.d/machash enable")
+	else
+		uci:set("manager", "heartbeat", "enabled", "0")
+		-- Make sure that OLSR is enabled
+		sys.exec("/etc/init.d/machash disable")
+	end
+	uci:save("manager")
 
 	uci:foreach("system", "system",
 		function(s)
