@@ -7,6 +7,4 @@ ln -s /www/cgi-bin /www/luci/splash
 ln -s /www/luci-static /www/luci/splash
 uci add_list uhttpd.main.listen_http="0.0.0.0:8082"
 uci set uhttpd.main.error_page="/luci/splash/index.html"
-uci set uhttpd.main.network_timeout="3"
-uci set uhttpd.main.script_timeout="6"
 uci commit uhttpd
