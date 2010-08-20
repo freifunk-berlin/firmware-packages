@@ -308,11 +308,6 @@ function main.write(self, section, value)
 	local network
 	network = ip.IPv4(uci:get("freifunk", community, "mesh_network") or "104.0.0.0/8")
 
-	-- Tune community settings
-	if community and uci:get("freifunk", community) then
-		uci:tset("freifunk", "community", uci:get_all("freifunk", community))
-	end
-
 	-- Cleanup
 	uci:delete_all("firewall","zone", {name="freifunk"})
 	uci:save("firewall")
