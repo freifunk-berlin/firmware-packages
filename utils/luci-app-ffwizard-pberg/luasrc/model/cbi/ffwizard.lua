@@ -385,7 +385,13 @@ function main.write(self, section, value)
 		-- New Config
 		-- Tune wifi device
 		local ssiduci = uci:get("freifunk", community, "ssid")
-		local ssidshort = string.sub(ssiduci,string.find(ssiduci,'%..*'))
+		local ssiddot = string.find(ssiduci,'%..*')
+		if ssiddot then
+			local ssidshort = string.sub(ssiduci,ssiddot)
+		else
+			local ssidshort = ssiduci
+		end
+
 		local devconfig = uci:get_all("freifunk", "wifi_device")
 		util.update(devconfig, uci:get_all(external, "wifi_device") or {})
 		local ssid = uci:get("freifunk", community, "ssid")
