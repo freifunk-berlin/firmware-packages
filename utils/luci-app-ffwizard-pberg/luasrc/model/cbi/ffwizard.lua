@@ -774,15 +774,8 @@ function olsr.write(self, section, value)
 	util.update(olsrbase, uci:get_all(external, "olsrd") or {})
 	uci:section("olsrd", "olsrd", nil, olsrbase)
 
-	-- Delete old interface
-	uci:delete_all("olsrd", "Interface")
-	uci:delete_all("olsrd", "Hna4")
-	-- Write new nameservice settings
-	uci:section("olsrd", "LoadPlugin", nil, {
-		library     = "olsrd_mdns.so.1.0.0",
-		ignore      = 1,
-	})
 	-- Delete old p2pd settings
+	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_p2pd.so.0.1.0"})
 	-- Write new nameservice settings
 	uci:section("olsrd", "LoadPlugin", nil, {
@@ -791,7 +784,15 @@ function olsr.write(self, section, value)
 		UdpDestPort = "224.0.0.251 5353",
 		ignore      = 1,
 	})
+	-- Delete gateway plugins
+	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
+	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
+	-- Delete http plugin
+	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
 
+	-- Delete old interface
+	uci:delete_all("olsrd", "Interface")
+	uci:delete_all("olsrd", "Hna4")
 	-- Create wireless olsr config
 	uci:foreach("wireless", "wifi-device",
 	function(sec)
@@ -891,7 +892,6 @@ function olsr.write(self, section, value)
 
 	-- Delete old watchdog settings
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_watchdog.so.0.1"})
-
 	-- Write new watchdog settings
 	uci:section("olsrd", "LoadPlugin", nil, {
 		library  = "olsrd_watchdog.so.0.1",
