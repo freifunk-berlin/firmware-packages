@@ -784,8 +784,12 @@ function olsr.write(self, section, value)
 		UdpDestPort = "224.0.0.251 5353",
 		ignore      = 1,
 	})
-	-- Delete gateway plugins
+	-- Delete/Disable gateway plugins
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
+	uci:section("olsrd", "LoadPlugin", nil, {
+		library     = "olsrd_dyn_gw_plain.so.0.4",
+		ignore      = 1,
+	})
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 	-- Delete http plugin
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
