@@ -257,7 +257,7 @@ function f.handle(self, state, data)
 		if debug == 1 then
 			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "system"))
 		else
---[[			uci:commit("freifunk")
+			uci:commit("freifunk")
 			uci:commit("wireless")
 			uci:commit("network")
 			uci:commit("dhcp")
@@ -268,8 +268,7 @@ function f.handle(self, state, data)
 			uci:commit("olsrd")
 			uci:commit("qos")
 			uci:commit("manager")
-			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot") .. "?reboot=1")]]
-			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot"))
+			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot") .. "?reboot=1")
 		end
 		return false
 	elseif state == FORM_INVALID then
