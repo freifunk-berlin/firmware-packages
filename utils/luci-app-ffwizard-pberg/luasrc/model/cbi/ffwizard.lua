@@ -255,9 +255,9 @@ function f.handle(self, state, data)
 	if state == FORM_VALID then
 		local debug = uci:get("freifunk", "wizard", "debug")
 		if debug == 1 then
-			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot"))
+			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "system"))
 		else
-			uci:commit("freifunk")
+--[[			uci:commit("freifunk")
 			uci:commit("wireless")
 			uci:commit("network")
 			uci:commit("dhcp")
@@ -268,7 +268,8 @@ function f.handle(self, state, data)
 			uci:commit("olsrd")
 			uci:commit("qos")
 			uci:commit("manager")
-			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot") .. "?reboot=1")
+			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot") .. "?reboot=1")]]
+			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot"))
 		end
 		return false
 	elseif state == FORM_INVALID then
@@ -386,10 +387,11 @@ function main.write(self, section, value)
 		-- Tune wifi device
 		local ssiduci = uci:get("freifunk", community, "ssid")
 		local ssiddot = string.find(ssiduci,'%..*')
+		local ssidshort
 		if ssiddot then
-			local ssidshort = string.sub(ssiduci,ssiddot)
+			ssidshort = string.sub(ssiduci,ssiddot)
 		else
-			local ssidshort = ssiduci
+			ssidshort = ssiduci
 		end
 
 		local devconfig = uci:get_all("freifunk", "wifi_device")
@@ -766,6 +768,12 @@ function olsr.write(self, section, value)
 	local latval = tonumber(lat:formvalue(section))
 	local lonval = tonumber(lon:formvalue(section))
 
+	-- Delete olsrd
+	uci:delete_all("olsrd", "olsrd")
+	local olsrbase
+	olsrbase = uci:get_all("freifunk", "olsrd") or {}
+	util.update(olsrbase, uci:get_all(external, "olsrd") or {})
+	uci:section("olsrd", "olsrd", nil, olsrbase)
 
 	-- Delete old interface
 	uci:delete_all("olsrd", "Interface")
@@ -811,11 +819,11 @@ function olsr.write(self, section, value)
 		end
 
 		-- Write new interface
-		local olsrbase = uci:get_all("freifunk", "olsr_interface")
-		util.update(olsrbase, uci:get_all(external, "olsr_interface") or {})
-		olsrbase.interface = nif
-		olsrbase.ignore    = "0"
-		uci:section("olsrd", "Interface", nil, olsrbase)
+		local olsrifbase = uci:get_all("freifunk", "olsr_interface")
+		util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
+		olsrifbase.interface = nif
+		olsrifbase.ignore    = "0"
+		uci:section("olsrd", "Interface", nil, olsrifbase)
 		-- Collect MESH DHCP IP NET
 		local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
 		if client then
@@ -853,11 +861,11 @@ function olsr.write(self, section, value)
 				return
 			end
 			-- Write new interface
-			local olsrbase = uci:get_all("freifunk", "olsr_interface")
-			util.update(olsrbase, uci:get_all(external, "olsr_interface") or {})
-			olsrbase.interface = device
-			olsrbase.ignore    = "0"
-			uci:section("olsrd", "Interface", nil, olsrbase)
+			local olsrifbase = uci:get_all("freifunk", "olsr_interface")
+			util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
+			olsrifbase.interface = device
+			olsrifbase.ignore    = "0"
+			uci:section("olsrd", "Interface", nil, olsrifbase)
 			-- Collect MESH DHCP IP NET
 			local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
 			if client then
