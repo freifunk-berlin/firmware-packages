@@ -943,6 +943,8 @@ end
 
 
 function share.write(self, section, value)
+	sys.init.disable("freifunk-p2pblock")
+	sys.init.disable("qos")
 	uci:delete_all("firewall", "forwarding", {src="freifunk", dest="wan"})
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 	uci:foreach("firewall", "zone",
@@ -967,6 +969,7 @@ function share.write(self, section, value)
 				end)
 		end
 	end
+	sys.exec('echo "0 6 * * * 	ifup wan" >> /etc/crontabs/root')
 
 	uci:save("firewall")
 	uci:save("olsrd")
