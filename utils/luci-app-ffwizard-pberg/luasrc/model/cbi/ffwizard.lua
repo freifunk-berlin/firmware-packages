@@ -254,7 +254,7 @@ end
 function f.handle(self, state, data)
 	if state == FORM_VALID then
 		local debug = uci:get("freifunk", "wizard", "debug")
-		if debug == 1 then
+		if debug == "1" then
 			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "system"))
 		else
 			uci:commit("freifunk")
@@ -315,6 +315,10 @@ function main.write(self, section, value)
 
 	-- Cleanup
 	uci:delete_all("firewall","zone", {name="freifunk"})
+	uci:delete_all("firewall","forwarding", {dest="freifunk"})
+	uci:delete_all("firewall","forwarding", {src="freifunk"})
+	uci:delete_all("firewall","rule", {dest="freifunk"})
+	uci:delete_all("firewall","rule", {src="freifunk"})
 	uci:save("firewall")
 	-- Create firewall zone and add default rules (first time)
 	--                    firewall_create_zone("name"    , "input" , "output", "forward ", Masqurade)
@@ -542,13 +546,11 @@ function main.write(self, section, value)
 				uci:section("luci_splash", "iface", nil, {network=nif.."dhcp", zone="freifunk"})
 				uci:save("luci_splash")
 				-- Make sure that luci_splash is enabled
-				sys.exec("/etc/init.d/luci_splash enable")
+				sys.init.enable("luci_splash")
 			end
 		else
 			-- Delete old splash
 			uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
---[[			sys.exec("/etc/init.d/luci_splash stop")
-			sys.exec("/etc/init.d/luci_splash disable")]]
 		end
 		uci:save("wireless")
 		uci:save("network")
@@ -675,7 +677,7 @@ function main.write(self, section, value)
 					uci:section("luci_splash", "iface", nil, {network=device.."dhcp", zone="freifunk"})
 					uci:save("luci_splash")
 					-- Make sure that luci_splash is enabled
-					sys.exec("/etc/init.d/luci_splash enable")
+					sys.init.enable("luci_splash")
 				end
 			end
 			uci:save("wireless")
@@ -725,11 +727,12 @@ function main.write(self, section, value)
 	if dhcphb then
 		uci:set("manager", "heartbeat", "enabled", "1")
 		-- Make sure that OLSR is enabled
-		sys.exec("/etc/init.d/machash enable")
+		sys.init.enable("machash")
+
 	else
 		uci:set("manager", "heartbeat", "enabled", "0")
 		-- Make sure that OLSR is enabled
-		sys.exec("/etc/init.d/machash disable")
+		sys.init.disable("machash")
 	end
 	uci:save("manager")
 
@@ -883,9 +886,9 @@ function olsr.write(self, section, value)
 					})
 					uci:foreach("olsrd", "LoadPlugin",
 						function(s)		
-							if s.library == "olsrd_mdns.so.1.0.0" then
+							if s.library == "olsrd_p2pd.so.0.1.0" then
 								uci:set("olsrd", s['.name'], "ignore", "0")
-								uci:set_list("olsrd", s['.name'], "NonOlsrIf", device)
+								uci:set("olsrd", s['.name'], "NonOlsrIf", nif)
 							end
 						end)
 				end
@@ -935,7 +938,7 @@ function olsr.write(self, section, value)
 	end)
 
 	-- Make sure that OLSR is enabled
-	sys.exec("/etc/init.d/olsrd enable")
+	sys.init.enable("olsrd")
 
 	uci:save("olsrd")
 	uci:save("dhcp")
@@ -945,6 +948,7 @@ end
 function share.write(self, section, value)
 	sys.init.disable("freifunk-p2pblock")
 	sys.init.disable("qos")
+	sys.exec("chmod -x /etc/init.d/freifunk-p2pblock")
 	uci:delete_all("firewall", "forwarding", {src="freifunk", dest="wan"})
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 	uci:foreach("firewall", "zone",
@@ -958,6 +962,10 @@ function share.write(self, section, value)
 	if value == "1" then
 		uci:section("firewall", "forwarding", nil, {src="freifunk", dest="wan"})
 		uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
+		sys.exec("chmod +x /etc/init.d/freifunk-p2pblock")
+		sys.init.enable("freifunk-p2pblock")
+		sys.init.enable("qos")
+		sys.exec('echo "0 6 * * * 	ifup wan" >> /etc/crontabs/root')
 
 		if wansec:formvalue(section) == "1" then
 			uci:foreach("firewall", "zone",
@@ -969,7 +977,6 @@ function share.write(self, section, value)
 				end)
 		end
 	end
-	sys.exec('echo "0 6 * * * 	ifup wan" >> /etc/crontabs/root')
 
 	uci:save("firewall")
 	uci:save("olsrd")
