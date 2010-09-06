@@ -44,7 +44,7 @@ main = f:field(Flag, "netconfig", "=== Netzwerk einrichten ===")
 uci:foreach("wireless", "wifi-device",
 	function(section)
 		local device = section[".name"]
-		local dev = f:field(Flag, "device_" .. device , " === Drahtloses Netzwerk \"" .. device .. "\" === ")
+		local dev = f:field(Flag, "device_" .. device , " === Drahtloses Netzwerk \"" .. device:upper() .. "\" === ")
 			dev:depends("netconfig", "1")
 			dev.rmempty = false
 			function dev.value(self, section)
@@ -123,7 +123,7 @@ uci:foreach("network", "interface",
 	function(section)
 		local device = section[".name"]
 		if device ~= "loopback" and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
-			dev = f:field(Flag, "device_" .. device , " === Drahtgebundenes Netzwerk \"" .. device .. "\" === ")
+			dev = f:field(Flag, "device_" .. device , " === Drahtgebundenes Netzwerk \"" .. device:upper() .. "\" === ")
 				dev:depends("netconfig", "1")
 				dev.rmempty = false
 				function dev.value(self, section)
@@ -226,12 +226,12 @@ osm.centerlon = uci:get("freifunk", "wizard", "longitude") or "10"
 osm.width = "100%"
 osm.height = "600"
 osm.popup = false
-osm.zoom = "11"
+osm.zoom = "12"
 osm.displaytext="OpenStreetMap anzeigen"
 osm.hidetext="OpenStreetMap verbergen"
 
 share = f:field(Flag, "sharenet", "Eigenen Internetzugang freigeben")
-share.rmempty = true
+share.rmempty = false
 
 wansec = f:field(Flag, "wansec", "WAN-Zugriff auf Gateway beschränken")
 wansec.rmempty = false
