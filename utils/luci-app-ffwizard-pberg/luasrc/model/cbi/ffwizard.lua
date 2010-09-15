@@ -402,11 +402,11 @@ function main.write(self, section, value)
 		local ssid = uci:get("freifunk", community, "ssid")
 		local channel = luci.http.formvalue("cbid.ffwizward.1.chan_" .. device)
 		local hwmode = "11bg"
+		local bssid = "02:CA:FF:EE:BA:BE"
+		local mrate = 5500
 		if channel and channel ~= "default" then
 			if devconfig.channel ~= channel then
 				devconfig.channel = channel
-				bssid = "02:CA:FF:EE:BA:BE"
-				local mrate = 5500
 				local chan = tonumber(channel)
 				if chan >= 0 and chan < 10 then
 					bssid = channel .. "2:CA:FF:EE:BA:BE"
@@ -432,7 +432,6 @@ function main.write(self, section, value)
 				end
 				devconfig.hwmode = hwmode
 				devconfig.outdoor = outdoor
-				devconfig.mrate = mrate
 			end
 		end
 		uci:tset("wireless", device, devconfig)
@@ -447,10 +446,9 @@ function main.write(self, section, value)
 		else
 			ifconfig.ssid = "olsr.freifunk.net"
 		end
-		if bssid then
-			-- See Table https://kifuse02.pberg.freifunk.net/moin/channel-bssid-essid 
-			ifconfig.bssid = bssid
-		end
+		-- See Table https://kifuse02.pberg.freifunk.net/moin/channel-bssid-essid	
+		ifconfig.bssid = bssid
+		ifconfig.mcast_rate = mrate
 		uci:section("wireless", "wifi-iface", nil, ifconfig)
 		uci:save("wireless")
 		local netconfig = uci:get_all("freifunk", "interface")
