@@ -72,6 +72,10 @@ define Package/l2gvpn/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/extra/examples/l2gvpn.initscript $(1)/etc/init.d/l2gvpn
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/extra/examples/l2gvpn.ucisample $(1)/etc/config/l2gvpn
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(CP) ./sbin/* $(1)/usr/sbin
+	$(INSTALL_DIR) $(1)/etc/l2gvpn
+	$(CP) ./etc/* $(1)/etc/l2gvpn
 endef
 
 $(eval $(call BuildPackage,l2gvpn))
