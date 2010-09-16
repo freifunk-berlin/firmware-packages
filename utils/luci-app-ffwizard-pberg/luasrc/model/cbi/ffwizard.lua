@@ -378,14 +378,14 @@ function main.write(self, section, value)
 		uci:delete("network", nif)
 		tools.firewall_zone_remove_interface("freifunk", nif)
 		-- Delete old dhcp
-		uci:delete("dhcp", "dhcp", device)
-		uci:delete("dhcp", "dhcp", device .. "dhcp")
-		uci:delete("dhcp", "dhcp", nif)
-		uci:delete("dhcp", "dhcp", nif .. "dhcp")
-
+		uci:delete("dhcp", device)
+		uci:delete("dhcp", device .. "dhcp")
+		uci:delete("dhcp", nif)
+		uci:delete("dhcp", nif .. "dhcp")
 		-- Delete old splash
 		uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
 		uci:delete_all("luci_splash", "iface", {network=nif.."dhcp", zone="freifunk"})
+			
 		-- New Config
 		-- Tune wifi device
 		local ssiduci = uci:get("freifunk", community, "ssid")
@@ -577,10 +577,11 @@ function main.write(self, section, value)
 			uci:delete_all("firewall","forwarding", {dest=device})
 			uci:delete("network", device .. "dhcp")
 			-- Delete old dhcp
-			uci:delete("dhcp", "dhcp", device)
-			uci:delete("dhcp", "dhcp", device .. "dhcp")
+			uci:delete("dhcp", device)
+			uci:delete("dhcp", device .. "dhcp")
 			-- Delete old splash
 			uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
+
 			-- New Config
 			local netconfig = uci:get_all("freifunk", "interface")
 			util.update(netconfig, uci:get_all(external, "interface") or {})
