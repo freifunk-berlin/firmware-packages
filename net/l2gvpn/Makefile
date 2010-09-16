@@ -10,7 +10,7 @@ include $(TOPDIR)/rules.mk
 #PKG_MD5SUM:=473c310b124992df9b21189f8c93592b
 
 PKG_BRANCH:=trunk
-PKG_SOURCE_URL:=http://cloud.pberg.freifunk.net/dl/
+PKG_SOURCE_URL:=http://kifuse02.pberg.freifunk.net/dl/
 PKG_REV:=176
 #PKG_REV:=$(shell LC_ALL=C svn info ${PKG_SOURCE_URL} | sed -ne's/^Last Changed Rev: //p')
 
