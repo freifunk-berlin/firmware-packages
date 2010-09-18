@@ -40,6 +40,20 @@ function net.write(self, section, value)
 	uci:save("freifunk")
 end
 
+hostname = f:field(Value, "hostname", "Knoten Name", "Hostname/Knotenname Wenn diese Feld leer gelassen wir wird Automatisch ein Knotenname generiert")
+hostname.rmempty = true
+hostname.optional = false
+-- local old_hostname = sys.hostname()
+-- hostname:cfgvalue(old_hostname)
+-- hostname:value(old_hostname)
+function hostname.cfgvalue(self, section)
+	return sys.hostname()
+end
+function hostname.write(self, section, value)
+	uci:set("freifunk", "wizard", "hostname", value)
+	uci:save("freifunk")
+end
+
 main = f:field(Flag, "netconfig", "=== Netzwerk einrichten ===")
 uci:foreach("wireless", "wifi-device",
 	function(section)
@@ -735,16 +749,22 @@ function main.write(self, section, value)
 	end
 	uci:save("manager")
 
+	local custom_hostname = hostname:formvalue(section)
 	uci:foreach("system", "system",
 		function(s)
 			-- Make crond silent
 			uci:set("system", s['.name'], "cronloglevel", "10")
 
 			-- Set hostname
-			if new_hostname then
-				if old_hostname == "OpenWrt" or old_hostname:match("^%d+-%d+-%d+-%d+$") then
-					uci:set("system", s['.name'], "hostname", new_hostname)
-					sys.hostname(new_hostname)
+			if custom_hostname then
+				uci:set("system", s['.name'], "hostname", custom_hostname)
+				sys.hostname(custom_hostname)
+			else
+				if new_hostname then
+					if old_hostname == "OpenWrt" or old_hostname:match("^%d+-%d+-%d+-%d+$") then
+						uci:set("system", s['.name'], "hostname", new_hostname)
+						sys.hostname(new_hostname)
+					end
 				end
 			end
 		end)
