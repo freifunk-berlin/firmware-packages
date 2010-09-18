@@ -43,9 +43,6 @@ end
 hostname = f:field(Value, "hostname", "Knoten Name", "Hostname/Knotenname Wenn diese Feld leer gelassen wir wird Automatisch ein Knotenname generiert")
 hostname.rmempty = true
 hostname.optional = false
--- local old_hostname = sys.hostname()
--- hostname:cfgvalue(old_hostname)
--- hostname:value(old_hostname)
 function hostname.cfgvalue(self, section)
 	return sys.hostname()
 end
