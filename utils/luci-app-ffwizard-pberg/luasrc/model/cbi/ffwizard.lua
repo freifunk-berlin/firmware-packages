@@ -22,9 +22,33 @@ local util = require "luci.util"
 local sys = require "luci.sys"
 local ip = require "luci.ip"
 
+luci.i18n.loadc("freifunk")
+
 -------------------- View --------------------
 f = SimpleForm("ffwizward", "Freifunkassistent",
  "Dieser Assistent unterstüzt bei der Einrichtung des Routers für das Freifunknetz.")
+-- main netconfig
+pw = f:field(Flag, "pw", "Router Passwort")
+pw1 = f:field(Value, "pw1", translate("password"))
+pw1.password = true
+pw1.rmempty = false
+
+pw2 = f:field(Value, "pw2", translate("confirmation"))
+pw2.password = true
+pw2.rmempty = false
+
+function pw2.validate(self, value, section)
+	return pw1:formvalue(section) == value and value
+end
+
+local newpsswd = sys.exec("diff /rom/etc/passwd /etc/passwd")
+if newpsswd ~= "" then
+	pw1:depends("pw", "1")
+	pw2:depends("pw", "1")
+	function pw.cfgvalue(self, section)
+		return 1
+	end
+end
 
 net = f:field(ListValue, "net", "Freifunk Community", "Mesh WLAN Netzbereich")
 net.rmempty = false
@@ -39,7 +63,7 @@ function net.write(self, section, value)
 	uci:set("freifunk", "wizard", "net", value)
 	uci:save("freifunk")
 end
-
+-- hostname
 hostname = f:field(Value, "hostname", "Knoten Name", "Hostname/Knotenname Wenn diese Feld leer gelassen wir wird Automatisch ein Knotenname generiert")
 hostname.rmempty = true
 hostname.optional = false
@@ -50,7 +74,29 @@ function hostname.write(self, section, value)
 	uci:set("freifunk", "wizard", "hostname", value)
 	uci:save("freifunk")
 end
-
+-- location
+location = f:field(Value, "location", translate("ff_location"))
+location.rmempty = false
+location.optional = false
+function location.cfgvalue(self, section)
+	return uci:get("freifunk", "contact", "location")
+end
+function location.write(self, section, value)
+	uci:set("freifunk", "contact", "location", value)
+	uci:save("freifunk")
+end
+-- mail
+mail = f:field(Value, "mail", translate("ff_mail"), translate("ff_mail1"))
+mail.rmempty = false
+mail.optional = false
+function mail.cfgvalue(self, section)
+	return uci:get("freifunk", "contact", "mail")
+end
+function mail.write(self, section, value)
+	uci:set("freifunk", "contact", "mail", value)
+	uci:save("freifunk")
+end
+-- main netconfig
 main = f:field(Flag, "netconfig", "=== Netzwerk einrichten ===")
 uci:foreach("wireless", "wifi-device",
 	function(section)
@@ -58,7 +104,7 @@ uci:foreach("wireless", "wifi-device",
 		local dev = f:field(Flag, "device_" .. device , " === Drahtloses Netzwerk \"" .. device:upper() .. "\" === ")
 			dev:depends("netconfig", "1")
 			dev.rmempty = false
-			function dev.value(self, section)
+			function dev.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "device_" .. device)
 			end
 			function dev.write(self, sec, value)
@@ -67,7 +113,7 @@ uci:foreach("wireless", "wifi-device",
 					uci:save("freifunk")
 				end
 			end
-		local chan = f:field(ListValue, "chan_" .. device, "Freifunk Kanal einrichten")
+		local chan = f:field(ListValue, "chan_" .. device, device:upper() .. "  Freifunk Kanal einrichten")
 			chan:depends("device_" .. device, "1")
 			chan.rmempty = true
 			function chan.cfgvalue(self, section)
@@ -89,7 +135,7 @@ uci:foreach("wireless", "wifi-device",
 					uci:save("freifunk")
 				end
 			end
-		local meship = f:field(Value, "meship_" .. device, "Mesh IP Adresse einrichten", "Netzweit eindeutige Identifikation z.B. 104.1.1.1")
+		local meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Netzweit eindeutige Identifikation z.B. 104.1.1.1")
 			meship:depends("device_" .. device, "1")
 			meship.rmempty = true
 			function meship.cfgvalue(self, section)
@@ -108,17 +154,17 @@ uci:foreach("wireless", "wifi-device",
 					uci:save("freifunk")
 				end
 			end
-		local client = f:field(Flag, "client_" .. device, "DHCP anbieten")
+		local client = f:field(Flag, "client_" .. device, device:upper() .. "  DHCP anbieten")
 			client:depends("device_" .. device, "1")
 			client.rmempty = false
-			function client.value(self, section)
+			function client.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "client_" .. device)
 			end
 			function client.write(self, sec, value)
 				uci:set("freifunk", "wizard", "client_" .. device, value)
 				uci:save("freifunk")
 			end
-		local dhcpmesh = f:field(Value, "dhcpmesh_" .. device, "Mesh DHCP anbieten", "Netzweit eindeutiges DHCP Netz z.B. 104.1.2.1/28")
+		local dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten", "Netzweit eindeutiges DHCP Netz z.B. 104.1.2.1/28")
 			dhcpmesh:depends("client_" .. device, "1")
 			dhcpmesh.rmempty = true
 			function dhcpmesh.cfgvalue(self, section)
@@ -137,14 +183,14 @@ uci:foreach("network", "interface",
 			dev = f:field(Flag, "device_" .. device , " === Drahtgebundenes Netzwerk \"" .. device:upper() .. "\" === ")
 				dev:depends("netconfig", "1")
 				dev.rmempty = false
-				function dev.value(self, section)
+				function dev.cfgvalue(self, section)
 					return uci:get("freifunk", "wizard", "device_" .. device)
 				end
 				function dev.write(self, sec, value)
 					uci:set("freifunk", "wizard", "device_" .. device, value)
 					uci:save("freifunk")
 				end
-			meship = f:field(Value, "meship_" .. device, "Mesh IP Adresse einrichten", "Netzweit eindeutige Identifikation")
+			meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Netzweit eindeutige Identifikation")
 				meship:depends("device_" .. device, "1")
 				meship.rmempty = true
 				function meship.cfgvalue(self, section)
@@ -157,17 +203,17 @@ uci:foreach("network", "interface",
 				function meship.write(self, sec, value)
 					uci:set("freifunk", "wizard", "meship_" .. device, value)
 				end
-			client = f:field(Flag, "client_" .. device, "DHCP anbieten")
+			client = f:field(Flag, "client_" .. device, device:upper() .. "  DHCP anbieten")
 				client:depends("device_" .. device, "1")
 				client.rmempty = false
-				function client.value(self, section)
+				function client.cfgvalue(self, section)
 					return uci:get("freifunk", "wizard", "client_" .. device)
 				end
 				function client.write(self, sec, value)
 					uci:set("freifunk", "wizard", "client_" .. device, value)
 					uci:save("freifunk")
 				end
-			dhcpmesh = f:field(Value, "dhcpmesh_" .. device, "Mesh DHCP anbieten ", "Netzweit eindeutiges DHCP Netz")
+			dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten ", "Netzweit eindeutiges DHCP Netz")
 				dhcpmesh:depends("client_" .. device, "1")
 				dhcpmesh.rmempty = true
 				function dhcpmesh.cfgvalue(self, section)
@@ -180,11 +226,14 @@ uci:foreach("network", "interface",
 		end
 	end)
 
-olsr = f:field(Flag, "olsr", " === OLSR einrichten === ")
-olsr.rmempty = true
+-- olsr = f:field(Flag, "olsr", " === OLSR einrichten === ")
+-- olsr.rmempty = true
+-- function olsr.cfgvalue(self, section)
+-- 	return uci:get("freifunk", "wizard", "olsr")
+-- end
 
 lat = f:field(Value, "lat", "Latitude")
-lat:depends("olsr", "1")
+lat:depends("netconfig", "1")
 function lat.cfgvalue(self, section)
 	return uci:get("freifunk", "wizard", "latitude")
 end
@@ -194,7 +243,7 @@ function lat.write(self, section, value)
 end
 
 lon = f:field(Value, "lon", "Longitude")
-lon:depends("olsr", "1")
+lon:depends("netconfig", "1")
 function lon.cfgvalue(self, section)
 	return uci:get("freifunk", "wizard", "longitude")
 end
@@ -214,22 +263,22 @@ local class = util.class
 OpenStreetMapLonLat = class(AbstractValue)
 
 function OpenStreetMapLonLat.__init__(self, ...)
-AbstractValue.__init__(self, ...)
-self.template = "cbi/osmll_value"
-self.latfield = nil
-self.lonfield = nil
-self.centerlat = "0"
-self.centerlon = "0"
-self.zoom = "0"
-self.width = "100%" --popups will ignore the %-symbol, "100%" is interpreted as "100"
-self.height = "600"
-self.popup = false
-self.displaytext="OpenStreetMap" --text on button, that loads and displays the OSMap
-self.hidetext="X" -- text on button, that hides OSMap
+	AbstractValue.__init__(self, ...)
+	self.template = "cbi/osmll_value"
+	self.latfield = nil
+	self.lonfield = nil
+	self.centerlat = "0"
+	self.centerlon = "0"
+	self.zoom = "0"
+	self.width = "100%" --popups will ignore the %-symbol, "100%" is interpreted as "100"
+	self.height = "600"
+	self.popup = false
+	self.displaytext="OpenStreetMap" --text on button, that loads and displays the OSMap
+	self.hidetext="X" -- text on button, that hides OSMap
 end
 
 osm = f:field(OpenStreetMapLonLat, "latlon", "Geokoordinaten mit OpenStreetMap ermitteln:")
-osm:depends("olsr", "1")
+osm:depends("netconfig", "1")
 osm.latfield = "lat"
 osm.lonfield = "lon"
 osm.centerlat = uci:get("freifunk", "wizard", "latitude") or "52"
@@ -243,10 +292,14 @@ osm.hidetext="OpenStreetMap verbergen"
 
 share = f:field(Flag, "sharenet", "Eigenen Internetzugang freigeben")
 share.rmempty = false
+share:depends("netconfig", "1")
+function share.cfgvalue(self, section)
+	return uci:get("freifunk", "wizard", "share")
+end
 
 wansec = f:field(Flag, "wansec", "WAN-Zugriff auf Gateway beschränken")
 wansec.rmempty = false
-wansec:depends("sharenet", "1")
+wansec:depends("share", "1")
 function wansec.cfgvalue(self, section)
 	return uci:get("freifunk", "wizard", "wan_security")
 end
@@ -256,8 +309,13 @@ function wansec.write(self, section, value)
 end
 hb = f:field(Flag, "hb", "Heartbeat aktivieren","Dem Gerät erlauben anonyme Statistiken zu übertragen.")
 hb.rmempty = false
+hb:depends("netconfig", "1")
 function hb.cfgvalue(self, section)
 	return uci:get("freifunk", "wizard", "hb")
+end
+function hb.write(self, section, value)
+	uci:set("freifunk", "wizard", "hb", value)
+	uci:save("freifunk")
 end
 
 
@@ -266,8 +324,27 @@ function f.handle(self, state, data)
 	if state == FORM_VALID then
 		local debug = uci:get("freifunk", "wizard", "debug")
 		if debug == "1" then
+			if data.pw1 then
+				local stat = luci.sys.user.setpasswd("root", data.pw1) == 0
+				if stat then
+					f.message = translate("a_s_changepw_changed")
+				else
+					f.errmessage = translate("unknownerror")
+				end
+			end
+			data.pw1 = nil
+			data.pw2 = nil
 			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "system"))
 		else
+			if data.pw1 then
+				local stat = luci.sys.user.setpasswd("root", data.pw1) == 0
+--				if stat then
+--					f.message = translate("a_s_changepw_changed")
+--			else
+--				f.errmessage = translate("unknownerror")
+				end
+			data.pw1 = nil
+			data.pw2 = nil
 			uci:commit("freifunk")
 			uci:commit("wireless")
 			uci:commit("network")
@@ -301,6 +378,8 @@ end
 -- Configure Freifunk checked
 function main.write(self, section, value)
 	if value == "0" then
+		uci:set("freifunk", "wizard", "netconfig", "0")
+		uci:save("freifunk")
 		return
 	end
 	-- Collect IP-Address
@@ -311,6 +390,9 @@ function main.write(self, section, value)
 		net.tag_missing[section] = true
 		return
 	end
+
+	uci:set("freifunk", "wizard", "netconfig", "1")
+	uci:save("freifunk")
 
 	local external
 	external = uci:get("freifunk", community, "external") or ""
@@ -766,18 +848,30 @@ function main.write(self, section, value)
 			end
 		end)
 
+-- Create time rdate_servers
+	local rdate = uci:get_all("freifunk", "time")
+	uci:delete_all("system", "time")
+	uci:section("system", "time", "rdate_servers", rdate)
+	rdate.server = rdate.rdate_servers
+	rdate.rdate_servers = ""
+	uci:delete_all("system", "rdate", nil)
+	uci:section("system", "rdate", nil, rdate)
+
 	uci:save("system")
 	uci:set("uhttpd","main","listen_http","0.0.0.0:80 0.0.0.0:8082")
 	uci:save("uhttpd")
-end
+-- end
 
 
-function olsr.write(self, section, value)
-	if value == "0" then
-		return
-	end
+-- function olsr.write(self, section, value)
+-- 	if value == "0" then
+-- 		uci:set("freifunk", "wizard", "olsr", "0")
+-- 		uci:save("freifunk")
+-- 		return
+-- 	end
 
-
+	uci:set("freifunk", "wizard", "olsr", "1")
+	uci:save("freifunk")
 	local netname = "wireless"
 	local community = net:formvalue(section)
 	local external  = community and uci:get("freifunk", community, "external") or ""
@@ -958,24 +1052,29 @@ function olsr.write(self, section, value)
 
 	uci:save("olsrd")
 	uci:save("dhcp")
-end
+-- end
 
 
-function share.write(self, section, value)
-	sys.init.disable("freifunk-p2pblock")
-	sys.init.disable("qos")
-	sys.exec("chmod -x /etc/init.d/freifunk-p2pblock")
-	uci:delete_all("firewall", "forwarding", {src="freifunk", dest="wan"})
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
-	uci:foreach("firewall", "zone",
-		function(s)		
-			if s.name == "wan" then
-				uci:delete("firewall", s['.name'], "local_restrict")
-				return false
-			end
-		end)
-
-	if value == "1" then
+-- function share.write(self, section, value)
+	local share_value = share:formvalue(section)
+	if share_value == "0" then
+		uci:set("freifunk", "wizard", "netconfig", "0")
+		uci:save("freifunk")
+		sys.init.disable("freifunk-p2pblock")
+		sys.init.disable("qos")
+		sys.exec("chmod -x /etc/init.d/freifunk-p2pblock")
+		uci:delete_all("firewall", "forwarding", {src="freifunk", dest="wan"})
+		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
+		uci:foreach("firewall", "zone",
+			function(s)		
+				if s.name == "wan" then
+					uci:delete("firewall", s['.name'], "local_restrict")
+					return false
+				end
+			end)
+	else
+	-- if value == "1" then
+		uci:set("freifunk", "wizard", "netconfig", "1")
 		uci:section("firewall", "forwarding", nil, {src="freifunk", dest="wan"})
 		uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
 		sys.exec("chmod +x /etc/init.d/freifunk-p2pblock")
@@ -994,6 +1093,7 @@ function share.write(self, section, value)
 		end
 	end
 
+	uci:save("freifunk")
 	uci:save("firewall")
 	uci:save("olsrd")
 	uci:save("system")
