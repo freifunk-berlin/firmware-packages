@@ -28,7 +28,6 @@ luci.i18n.loadc("freifunk")
 f = SimpleForm("ffwizward", "Freifunkassistent",
  "Dieser Assistent unterstüzt bei der Einrichtung des Routers für das Freifunknetz.")
 -- main netconfig
-pw = f:field(Flag, "pw", "Router Passwort")
 pw1 = f:field(Value, "pw1", translate("password"))
 pw1.password = true
 pw1.rmempty = false
@@ -43,6 +42,7 @@ end
 
 local newpsswd = sys.exec("diff /rom/etc/passwd /etc/passwd")
 if newpsswd ~= "" then
+	pw = f:field(Flag, "pw", "Router Passwort")
 	pw1:depends("pw", "1")
 	pw2:depends("pw", "1")
 	function pw.cfgvalue(self, section)
