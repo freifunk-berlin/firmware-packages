@@ -998,7 +998,7 @@ function main.write(self, section, value)
 						function(s)		
 							if s.library == "olsrd_p2pd.so.0.1.0" then
 								uci:set("olsrd", s['.name'], "ignore", "0")
-								uci:set("olsrd", s['.name'], "NonOlsrIf", nif)
+								uci:set("olsrd", s['.name'], "NonOlsrIf", device)
 							end
 						end)
 				end
