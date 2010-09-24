@@ -170,6 +170,10 @@ uci:foreach("wireless", "wifi-device",
 			function dhcpmesh.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "dhcpmesh_" .. device)
 			end
+			function dhcpmesh.validate(self, value)
+				local x = ip.IPv4(value)
+				return ( x and x:prefix() <= 30 ) and x:string() or ""
+			end
 			function dhcpmesh.write(self, sec, value)
 				uci:set("freifunk", "wizard", "dhcpmesh_" .. device, value)
 				uci:save("freifunk")
@@ -219,18 +223,16 @@ uci:foreach("network", "interface",
 				function dhcpmesh.cfgvalue(self, section)
 					return uci:get("freifunk", "wizard", "dhcpmesh_" .. device)
 				end
+				function dhcpmesh.validate(self, value)
+					local x = ip.IPv4(value)
+					return ( x and x:prefix() <= 30 ) and x:string() or ""
+				end
 				function dhcpmesh.write(self, sec, value)
 					uci:set("freifunk", "wizard", "dhcpmesh_" .. device, value)
 					uci:save("freifunk")
 				end
 		end
 	end)
-
--- olsr = f:field(Flag, "olsr", " === OLSR einrichten === ")
--- olsr.rmempty = true
--- function olsr.cfgvalue(self, section)
--- 	return uci:get("freifunk", "wizard", "olsr")
--- end
 
 lat = f:field(Value, "lat", "Latitude")
 lat:depends("netconfig", "1")
@@ -1052,28 +1054,12 @@ function main.write(self, section, value)
 
 	uci:save("olsrd")
 	uci:save("dhcp")
--- end
+--      end
 
 
--- function share.write(self, section, value)
+--      function share.write(self, section, value)
 	local share_value = share:formvalue(section)
-	if share_value == "0" then
-		uci:set("freifunk", "wizard", "netconfig", "0")
-		uci:save("freifunk")
-		sys.init.disable("freifunk-p2pblock")
-		sys.init.disable("qos")
-		sys.exec("chmod -x /etc/init.d/freifunk-p2pblock")
-		uci:delete_all("firewall", "forwarding", {src="freifunk", dest="wan"})
-		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
-		uci:foreach("firewall", "zone",
-			function(s)		
-				if s.name == "wan" then
-					uci:delete("firewall", s['.name'], "local_restrict")
-					return false
-				end
-			end)
-	else
-	-- if value == "1" then
+	if share_value == "1" then
 		uci:set("freifunk", "wizard", "netconfig", "1")
 		uci:section("firewall", "forwarding", nil, {src="freifunk", dest="wan"})
 		uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
@@ -1091,6 +1077,21 @@ function main.write(self, section, value)
 					end
 				end)
 		end
+	else
+		uci:set("freifunk", "wizard", "netconfig", "0")
+		uci:save("freifunk")
+		sys.init.disable("freifunk-p2pblock")
+		sys.init.disable("qos")
+		sys.exec("chmod -x /etc/init.d/freifunk-p2pblock")
+		uci:delete_all("firewall", "forwarding", {src="freifunk", dest="wan"})
+		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
+		uci:foreach("firewall", "zone",
+			function(s)		
+				if s.name == "wan" then
+					uci:delete("firewall", s['.name'], "local_restrict")
+					return false
+				end
+			end)
 	end
 
 	uci:save("freifunk")
