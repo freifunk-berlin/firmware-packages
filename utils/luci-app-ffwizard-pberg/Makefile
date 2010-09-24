@@ -26,17 +26,19 @@ endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
+	$(CP) ./luasrc/* $(PKG_BUILD_DIR)/
 endef
 
 define Build/Configure
 endef
 
 define Build/Compile
+	$(MAKE) -C $(PKG_BUILD_DIR)
 endef
 
 define Package/luci-app-ffwizard-pberg/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
-	$(CP) ./luasrc/* $(1)/usr/lib/lua/luci
+	$(CP) $(PKG_BUILD_DIR)/* $(1)/usr/lib/lua/luci
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
 	$(INSTALL_DIR) $(1)/www/luci-static
