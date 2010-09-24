@@ -172,7 +172,7 @@ uci:foreach("wireless", "wifi-device",
 			end
 			function dhcpmesh.validate(self, value)
 				local x = ip.IPv4(value)
-				return ( x and x:prefix() <= 30 ) and x:string() or ""
+				return ( x and x:minhost()) and x:string() or ""
 			end
 			function dhcpmesh.write(self, sec, value)
 				uci:set("freifunk", "wizard", "dhcpmesh_" .. device, value)
@@ -225,7 +225,7 @@ uci:foreach("network", "interface",
 				end
 				function dhcpmesh.validate(self, value)
 					local x = ip.IPv4(value)
-					return ( x and x:prefix() <= 30 ) and x:string() or ""
+					return ( x and x:prefix() <= 30 and x:minhost()) and x:string() or ""
 				end
 				function dhcpmesh.write(self, sec, value)
 					uci:set("freifunk", "wizard", "dhcpmesh_" .. device, value)
@@ -564,6 +564,11 @@ function main.write(self, section, value)
 			uci:set_list("manager", "heartbeat", "interface", nif)
 			uci:save("manager")
 			if dhcpmeshnet then
+				if not dhcpmeshnet:minhost() or not dhcpmeshnet:mask() then
+					dhcpmesh.tag_missing[section] = true
+					dhcpmeshnet = nil
+					return
+				end
 				dhcp_ip = dhcpmeshnet:minhost():string()
 				dhcp_mask = dhcpmeshnet:mask():string()
 			else
@@ -696,6 +701,11 @@ function main.write(self, section, value)
 				uci:set_list("manager", "hertbeat", "interface", device)
 				uci:save("manager")
 				if dhcpmeshnet then
+					if not dhcpmeshnet:minhost() or not dhcpmeshnet:mask() then
+						dhcpmesh.tag_missing[section] = true
+						dhcpmeshnet = nil
+						return
+					end
 					dhcp_ip = dhcpmeshnet:minhost():string()
 					dhcp_mask = dhcpmeshnet:mask():string()
 				else
