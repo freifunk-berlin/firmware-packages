@@ -932,13 +932,6 @@ function main.write(self, section, value)
 		UdpDestPort = "224.0.0.251 5353",
 		ignore      = 1,
 	})
-	-- Delete/Disable gateway plugins
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
-	uci:section("olsrd", "LoadPlugin", nil, {
-		library     = "olsrd_dyn_gw_plain.so.0.4",
-		ignore      = 1,
-	})
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 	-- Delete http plugin
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
 
@@ -1098,6 +1091,10 @@ function main.write(self, section, value)
 	if share_value == "1" then
 		uci:set("freifunk", "wizard", "netconfig", "1")
 		uci:section("firewall", "forwarding", nil, {src="freifunk", dest="wan"})
+		-- Delete/Disable gateway plugin
+		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
+		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
+		-- Enable gateway_plain plugin
 		uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
 		sys.exec("chmod +x /etc/init.d/freifunk-p2pblock")
 		sys.init.enable("freifunk-p2pblock")
@@ -1116,11 +1113,18 @@ function main.write(self, section, value)
 	else
 		uci:set("freifunk", "wizard", "netconfig", "0")
 		uci:save("freifunk")
+		-- Delete gateway plugins
+		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
+		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
+		-- Disable gateway_plain plugin
+		uci:section("olsrd", "LoadPlugin", nil, {
+			library     = "olsrd_dyn_gw_plain.so.0.4",
+			ignore      = 1,
+		})
 		sys.init.disable("freifunk-p2pblock")
 		sys.init.disable("qos")
 		sys.exec("chmod -x /etc/init.d/freifunk-p2pblock")
 		uci:delete_all("firewall", "forwarding", {src="freifunk", dest="wan"})
-		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 		uci:foreach("firewall", "zone",
 			function(s)		
 				if s.name == "wan" then
