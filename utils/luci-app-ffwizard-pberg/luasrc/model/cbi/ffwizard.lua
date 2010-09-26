@@ -234,10 +234,28 @@ uci:foreach("network", "interface",
 		end
 	end)
 
+
+local syslat = uci:get("freifunk", "wizard", "latitude") or 52
+local syslon = uci:get("freifunk", "wizard", "longitude") or 10
+uci:foreach("system", "system", function(s)
+	syslat = s.latitude
+	syslon = s.longitude
+end) 
+uci:foreach("olsrd", "LoadPlugin", function(s)
+	if s.library == "olsrd_nameservice.so.0.3" then
+		if s.lat then
+			syslat = s.lat
+		end
+		if s.lon then
+			syslon = s.lon
+		end
+	end
+end)
+
 lat = f:field(Value, "lat", "Latitude")
 lat:depends("netconfig", "1")
 function lat.cfgvalue(self, section)
-	return uci:get("freifunk", "wizard", "latitude")
+	return syslat
 end
 function lat.write(self, section, value)
 	uci:set("freifunk", "wizard", "latitude", value)
@@ -247,7 +265,7 @@ end
 lon = f:field(Value, "lon", "Longitude")
 lon:depends("netconfig", "1")
 function lon.cfgvalue(self, section)
-	return uci:get("freifunk", "wizard", "longitude")
+	return syslon
 end
 function lon.write(self, section, value)
 	uci:set("freifunk", "wizard", "longitude", value)
@@ -269,8 +287,8 @@ function OpenStreetMapLonLat.__init__(self, ...)
 	self.template = "cbi/osmll_value"
 	self.latfield = nil
 	self.lonfield = nil
-	self.centerlat = "0"
-	self.centerlon = "0"
+	self.centerlat = "52"
+	self.centerlon = "10"
 	self.zoom = "0"
 	self.width = "100%" --popups will ignore the %-symbol, "100%" is interpreted as "100"
 	self.height = "600"
@@ -283,12 +301,17 @@ osm = f:field(OpenStreetMapLonLat, "latlon", "Geokoordinaten mit OpenStreetMap e
 osm:depends("netconfig", "1")
 osm.latfield = "lat"
 osm.lonfield = "lon"
-osm.centerlat = uci:get("freifunk", "wizard", "latitude") or "52"
-osm.centerlon = uci:get("freifunk", "wizard", "longitude") or "10"
+osm.centerlat = syslat
+osm.centerlon = syslon
 osm.width = "100%"
 osm.height = "600"
 osm.popup = false
-osm.zoom = "12"
+syslatlengh = string.len(syslat)
+if syslatlengh > 7 then
+	osm.zoom = "15"
+else
+	osm.zoom = "6"
+end
 osm.displaytext="OpenStreetMap anzeigen"
 osm.hidetext="OpenStreetMap verbergen"
 
@@ -1043,12 +1066,15 @@ function main.write(self, section, value)
 	-- Save latlon to system too
 	if latval and lonval then
 		uci:foreach("system", "system", function(s)
-			uci:set("system", s[".name"], "latlon",
-				string.format("%.15f %.15f", latval, lonval))
+			uci:set("system", s[".name"], "latlon",string.format("%.15f %.15f", latval, lonval))
+			uci:set("system", s[".name"], "latitude",string.format("%.15f", latval))
+			uci:set("system", s[".name"], "longitude",string.format("%.15f", lonval))
 		end)
 	else
 		uci:foreach("system", "system", function(s)
 			uci:delete("system", s[".name"], "latlon")
+			uci:delete("system", s[".name"], "latitude")
+			uci:delete("system", s[".name"], "longitude")
 		end)
 	end
 
