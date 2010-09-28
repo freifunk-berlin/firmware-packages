@@ -99,13 +99,13 @@ function drawmap() {
 		projection: new OpenLayers.Projection("EPSG:900913"),
 		displayProjection: new OpenLayers.Projection("EPSG:4326"),
 		controls: [
-		new OpenLayers.Control.MouseDefaults(),
-		new OpenLayers.Control.PanZoomBar()],
-        	maxExtent:
-        	new OpenLayers.Bounds(-20037508.34,-20037508.34, 20037508.34, 20037508.34),
-        	numZoomLevels: 18,
+			new OpenLayers.Control.MouseDefaults(),
+			new OpenLayers.Control.PanZoomBar()],
+		maxExtent:
+			new OpenLayers.Bounds(-20037508.34,-20037508.34, 20037508.34, 20037508.34),
+		numZoomLevels: 18,
 		maxResolution: 156543,
-        	units: 'meters'
+		units: 'meters'
 	});
 
 	layer_mapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
@@ -120,8 +120,8 @@ function drawmap() {
 		navigator.geolocation.getCurrentPosition(function(position){
 			var y =lat2merc(position.coords.latitude);
 			var x =lon2merc(position.coords.longitude);
-	 		map.setCenter(new OpenLayers.LonLat(x, y), '17');
-	 	});
+			map.setCenter(new OpenLayers.LonLat(x, y), '17');
+		});
 	}
 
 	var click = new OpenLayers.Control.Click();
