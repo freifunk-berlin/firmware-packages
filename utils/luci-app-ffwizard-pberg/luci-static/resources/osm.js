@@ -119,18 +119,17 @@
 
 		    map.addLayers([layer_mapnik]);
 
+			var y =lat2merc(centerlat);
+			var x =lon2merc(centerlon);
+			map.setCenter(new OpenLayers.LonLat(x, y), zoom);
+			
 			// Check for geolocation support
 			if(navigator.geolocation){
 	 			navigator.geolocation.getCurrentPosition(function(position){
 	 				var y =lat2merc(position.coords.latitude); 
-		    		var x =lon2merc(position.coords.longitude);
+					var x =lon2merc(position.coords.longitude);
 	 				map.setCenter(new OpenLayers.LonLat(x, y), '17');
 	 			});
-	 		}
-	 		else {
-		    	var y =lat2merc(centerlat); 
-		    	var x =lon2merc(centerlon);
-		    	map.setCenter(new OpenLayers.LonLat(x, y), zoom);
 	 		}
 
 
