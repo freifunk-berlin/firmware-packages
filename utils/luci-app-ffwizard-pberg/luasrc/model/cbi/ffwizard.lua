@@ -238,9 +238,13 @@ uci:foreach("network", "interface",
 local syslat = uci:get("freifunk", "wizard", "latitude") or 52
 local syslon = uci:get("freifunk", "wizard", "longitude") or 10
 uci:foreach("system", "system", function(s)
-	syslat = s.latitude
-	syslon = s.longitude
-end) 
+		if s.latitude then
+			syslat = s.latitude
+		end
+		if s.longitude then
+			syslon = s.longitude
+		end
+end)
 uci:foreach("olsrd", "LoadPlugin", function(s)
 	if s.library == "olsrd_nameservice.so.0.3" then
 		if s.lat then
