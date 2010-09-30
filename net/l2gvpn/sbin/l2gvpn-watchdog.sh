@@ -9,7 +9,7 @@ setdefaultgw=wan
 
 pingparam="-c 5 -w 10 "
 dev=$(uci get l2gvpn.bbb.tundev)
-table=$(uci get olsrd.@olsrd[0].RtTable)
+table=$(uci get olsrd.@olsrd[0].RtTable | echo default)
 set $(ip route show | grep default)
 # defaultgw=$3
 defaultdev=$5
@@ -61,11 +61,13 @@ if [ $setdefaultgw == "gvpn" ] ; then
 fi
 
 if [ $setdefaultgw == "wan" ] ; then
-	if ip route show table $table | grep "default dev $defaultdev" >/dev/null 2>&1 ; then
-		logger -p 1 -t l2gvpnwatchdog "default route to $defaultdev for table $table"
-	else
-                logger -p 1 -t l2gvpnwatchdog "set default route to $defaultdev for table $table"
-                ip route add default dev $defaultdev table $table >/dev/null 2>&1
+	if [ "$table" != "notable" ] ; then
+		if ip route show table $table | grep "default .* dev $defaultdev" >/dev/null 2>&1 ; then
+			logger -p 1 -t l2gvpnwatchdog "default route to $defaultdev for table $table"
+		else
+                	logger -p 1 -t l2gvpnwatchdog "set default route to $defaultdev for table $table"
+                	ip route add default dev $defaultdev table $table >/dev/null 2>&1
+		fi
 	fi
 	set -x
 	gvpnrestart=0
@@ -86,9 +88,6 @@ if [ $setdefaultgw == "wan" ] ; then
 	txbytes=$(grep gvpn /proc/net/dev | awk '{ print $10}')
 	echo "rxbytesold=$rxbytes" > /tmp/gvpn.state
 	echo "txbytesold=$txbytes" >> /tmp/gvpn.state
-	set +x
-# set -x
-# 	if ! ping $pingparam -I $dev $ip >/dev/null -a ip route show table 111 | grep $dev >/dev/null ; then 
 	if [ $gvpnrestart -eq 1 ]  ; then 
 		ucimac=$(uci get l2gvpn.bbb.mac)
 		oldid=$(echo $ucimac | cut -d ':' -f 3 | sed -e s"/^0//")
@@ -109,5 +108,4 @@ if [ $setdefaultgw == "wan" ] ; then
 	        sleep 2
 		/etc/init.d/l2gvpn start
 	fi
-# set +x
 fi
