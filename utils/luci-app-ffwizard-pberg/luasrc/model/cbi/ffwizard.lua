@@ -101,7 +101,7 @@ main = f:field(Flag, "netconfig", "Netzwerk einrichten", "Setzen Sie den Haken, 
 uci:foreach("wireless", "wifi-device",
 	function(section)
 		local device = section[".name"]
-		local dev = f:field(Flag, "device_" .. device , "<i>Drahtloses Netzwerk \"" .. device:upper() .. "\"</i>", "Konfigurieren Sie Ihre " .. device:upper() .. " Schnittstelle.")
+		local dev = f:field(Flag, "device_" .. device , "<b>Drahtloses Netzwerk \"" .. device:upper() .. "\"</b>", "Konfigurieren Sie Ihre drahtlose " .. device:upper() .. " Schnittstelle (WLAN).")
 			dev:depends("netconfig", "1")
 			dev.rmempty = false
 			function dev.cfgvalue(self, section)
@@ -154,7 +154,7 @@ uci:foreach("wireless", "wifi-device",
 					uci:save("freifunk")
 				end
 			end
-		local client = f:field(Flag, "client_" .. device, device:upper() .. "  DHCP anbieten", "DHCP weist verbundenen Benutzern automatisch eine Adresse zu. Diese Option sollten Sie unbedingt aktivieren, wenn Sie Nutzer an der Schnittstelle erwarten.")
+		local client = f:field(Flag, "client_" .. device, device:upper() .. "  DHCP anbieten", "DHCP weist verbundenen Benutzern automatisch eine Adresse zu. Diese Option sollten Sie unbedingt aktivieren, wenn Sie Nutzer an der drahtlosen Schnittstelle erwarten.")
 			client:depends("device_" .. device, "1")
 			client.rmempty = false
 			function client.cfgvalue(self, section)
@@ -184,7 +184,7 @@ uci:foreach("network", "interface",
 	function(section)
 		local device = section[".name"]
 		if device ~= "loopback" and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
-			dev = f:field(Flag, "device_" .. device , " === Drahtgebundenes Netzwerk \"" .. device:upper() .. "\" === ")
+			dev = f:field(Flag, "device_" .. device , "<b>Drahtgebundenes Netzwerk \"" .. device:upper() .. "\"</b>", "Konfigurieren Sie Ihre drahtgebunde " .. device:upper() .. " Schnittstelle (LAN).")
 				dev:depends("netconfig", "1")
 				dev.rmempty = false
 				function dev.cfgvalue(self, section)
@@ -194,7 +194,7 @@ uci:foreach("network", "interface",
 					uci:set("freifunk", "wizard", "device_" .. device, value)
 					uci:save("freifunk")
 				end
-			meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Netzweit eindeutige Identifikation")
+			meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Ihre Mesh IP Adresse erhalten Sie von der Freifunk Gemeinschaft in Ihrer Nachbarschaft. Es ist eine netzweit eindeutige Identifikation, z.B. 104.1.1.1.")
 				meship:depends("device_" .. device, "1")
 				meship.rmempty = true
 				function meship.cfgvalue(self, section)
@@ -207,7 +207,7 @@ uci:foreach("network", "interface",
 				function meship.write(self, sec, value)
 					uci:set("freifunk", "wizard", "meship_" .. device, value)
 				end
-			client = f:field(Flag, "client_" .. device, device:upper() .. "  DHCP anbieten")
+			client = f:field(Flag, "client_" .. device, device:upper() .. "  DHCP anbieten","DHCP weist verbundenen Benutzern automatisch eine Adresse zu. Diese Option sollten Sie unbedingt aktivieren, wenn Sie Nutzer an der drahtlosen Schnittstelle erwarten.")
 				client:depends("device_" .. device, "1")
 				client.rmempty = false
 				function client.cfgvalue(self, section)
@@ -217,7 +217,7 @@ uci:foreach("network", "interface",
 					uci:set("freifunk", "wizard", "client_" .. device, value)
 					uci:save("freifunk")
 				end
-			dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten ", "Netzweit eindeutiges DHCP Netz")
+			dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten ", "Bestimmen Sie den Adressbereich aus dem Ihre Nutzer IP Adressen erhalten. Es wird empfohlen einen Adressbereich aus Ihrer lokalen Freifunk Gemeinschaft zu nutzen. Der Adressbereich ist ein netzweit eindeutiger Netzbereich. z.B. 104.1.2.1/28")
 				dhcpmesh:depends("client_" .. device, "1")
 				dhcpmesh.rmempty = true
 				function dhcpmesh.cfgvalue(self, section)
@@ -256,7 +256,7 @@ uci:foreach("olsrd", "LoadPlugin", function(s)
 	end
 end)
 
-lat = f:field(Value, "lat", "Latitude")
+lat = f:field(Value, "lat", "geographischer Breitengrad", "Setzen Sie den Breitengrad (Latitude) Ihres Geräts.")
 lat:depends("netconfig", "1")
 function lat.cfgvalue(self, section)
 	return syslat
@@ -266,7 +266,7 @@ function lat.write(self, section, value)
 	uci:save("freifunk")
 end
 
-lon = f:field(Value, "lon", "Longitude")
+lon = f:field(Value, "lon", "geograpischer Längengrad", "Setzen Sie den Längengrad (Longitude) Ihres Geräts.")
 lon:depends("netconfig", "1")
 function lon.cfgvalue(self, section)
 	return syslon
@@ -301,7 +301,7 @@ function OpenStreetMapLonLat.__init__(self, ...)
 	self.hidetext="X" -- text on button, that hides OSMap
 end
 
-osm = f:field(OpenStreetMapLonLat, "latlon", "Geokoordinaten mit OpenStreetMap ermitteln:")
+osm = f:field(OpenStreetMapLonLat, "latlon", "Geokoordinaten mit OpenStreetMap ermitteln:", "Klicken Sie auf Ihren Standort in der Karte. Diese Karte funktioniert nur, wenn das Gerät bereits eine Verbindung zum Internet hat.")
 osm:depends("netconfig", "1")
 osm.latfield = "lat"
 osm.lonfield = "lon"
@@ -319,14 +319,14 @@ end
 osm.displaytext="OpenStreetMap anzeigen"
 osm.hidetext="OpenStreetMap verbergen"
 
-share = f:field(Flag, "sharenet", "Eigenen Internetzugang freigeben")
+share = f:field(Flag, "sharenet", "Eigenen Internetzugang freigeben", "Geben Sie Ihren Internetzugang im Freifunknetz frei.")
 share.rmempty = false
 share:depends("netconfig", "1")
 function share.cfgvalue(self, section)
 	return uci:get("freifunk", "wizard", "share")
 end
 
-wansec = f:field(Flag, "wansec", "WAN-Zugriff auf Gateway beschränken")
+wansec = f:field(Flag, "wansec", "WAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
 wansec.rmempty = false
 wansec:depends("share", "1")
 function wansec.cfgvalue(self, section)
@@ -336,7 +336,7 @@ function wansec.write(self, section, value)
 	uci:set("freifunk", "wizard", "wan_security", value)
 	uci:save("freifunk")
 end
-hb = f:field(Flag, "hb", "Heartbeat aktivieren","Dem Gerät erlauben anonyme Statistiken zu übertragen.")
+hb = f:field(Flag, "hb", "Heartbeat aktivieren","Dem Gerät erlauben anonyme Statistiken zu übertragen. (empfohlen)")
 hb.rmempty = false
 hb:depends("netconfig", "1")
 function hb.cfgvalue(self, section)
