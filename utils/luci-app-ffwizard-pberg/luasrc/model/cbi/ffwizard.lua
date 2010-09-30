@@ -26,7 +26,7 @@ luci.i18n.loadc("freifunk")
 
 -------------------- View --------------------
 f = SimpleForm("ffwizward", "Freifunkassistent",
- "Dieser Assistent unterstüzt bei der Einrichtung des Routers für das Freifunknetz.")
+ "Dieser Assistent unterstützt Sie bei der Einrichtung des Routers für das Freifunknetz.")
 -- main netconfig
 pw1 = f:field(Value, "pw1", translate("password"))
 pw1.password = true
@@ -42,7 +42,7 @@ end
 
 local newpsswd = sys.exec("diff /rom/etc/passwd /etc/passwd")
 if newpsswd ~= "" then
-	pw = f:field(Flag, "pw", "Router Passwort")
+	pw = f:field(Flag, "pw", "Router Passwort", "Setzen Sie den Haken, um Ihr Passwort zu ändern.")
 	pw1:depends("pw", "1")
 	pw2:depends("pw", "1")
 	function pw.cfgvalue(self, section)
@@ -50,7 +50,7 @@ if newpsswd ~= "" then
 	end
 end
 
-net = f:field(ListValue, "net", "Freifunk Community", "Mesh WLAN Netzbereich")
+net = f:field(ListValue, "net", "Freifunk Community", "Nutzen Sie die Einstellungen der Freifunk Gemeinschaft in ihrer Nachbarschaft.")
 net.rmempty = false
 net.optional = false
 uci:foreach("freifunk", "community", function(s)
@@ -64,7 +64,7 @@ function net.write(self, section, value)
 	uci:save("freifunk")
 end
 -- hostname
-hostname = f:field(Value, "hostname", "Knoten Name", "Hostname/Knotenname Wenn diese Feld leer gelassen wir wird Automatisch ein Knotenname generiert")
+hostname = f:field(Value, "hostname", "Knoten Name", "Geben Sie Ihrem Freifunk Router einen Namen. Wenn Sie dieses Feld leer lassen, wird der Name automatisch aus der Mesh IP generiert.")
 hostname.rmempty = true
 hostname.optional = false
 function hostname.cfgvalue(self, section)
@@ -75,7 +75,7 @@ function hostname.write(self, section, value)
 	uci:save("freifunk")
 end
 -- location
-location = f:field(Value, "location", translate("ff_location"))
+location = f:field(Value, "location", "Standort", "Geben Sie den Standort ihres Gerätes an")
 location.rmempty = false
 location.optional = false
 function location.cfgvalue(self, section)
@@ -86,7 +86,7 @@ function location.write(self, section, value)
 	uci:save("freifunk")
 end
 -- mail
-mail = f:field(Value, "mail", translate("ff_mail"), translate("ff_mail1"))
+mail = f:field(Value, "mail", "E-Mail", "Bitte hinterlegen Sie eine Kontaktadresse.")
 mail.rmempty = false
 mail.optional = false
 function mail.cfgvalue(self, section)
@@ -97,11 +97,11 @@ function mail.write(self, section, value)
 	uci:save("freifunk")
 end
 -- main netconfig
-main = f:field(Flag, "netconfig", "=== Netzwerk einrichten ===")
+main = f:field(Flag, "netconfig", "Netzwerk einrichten", "Setzen Sie den Haken, wenn Sie Ihr Freifunk Netzwerk einrichten wollen.")
 uci:foreach("wireless", "wifi-device",
 	function(section)
 		local device = section[".name"]
-		local dev = f:field(Flag, "device_" .. device , " === Drahtloses Netzwerk \"" .. device:upper() .. "\" === ")
+		local dev = f:field(Flag, "device_" .. device , "<i>Drahtloses Netzwerk \"" .. device:upper() .. "\"</i>", "Konfigurieren Sie Ihre " .. device:upper() .. " Schnittstelle.")
 			dev:depends("netconfig", "1")
 			dev.rmempty = false
 			function dev.cfgvalue(self, section)
@@ -113,7 +113,7 @@ uci:foreach("wireless", "wifi-device",
 					uci:save("freifunk")
 				end
 			end
-		local chan = f:field(ListValue, "chan_" .. device, device:upper() .. "  Freifunk Kanal einrichten")
+		local chan = f:field(ListValue, "chan_" .. device, device:upper() .. "  Freifunk Kanal einrichten", "Ihr Gerät und benachbarte Freifunk Knoten müssen auf demselben Kanal senden. Je nach Gerätetyp können Sie zwischen verschiedenen 2,4Ghz und 5Ghz Kanälen auswählen.")
 			chan:depends("device_" .. device, "1")
 			chan.rmempty = true
 			function chan.cfgvalue(self, section)
@@ -135,7 +135,7 @@ uci:foreach("wireless", "wifi-device",
 					uci:save("freifunk")
 				end
 			end
-		local meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Netzweit eindeutige Identifikation z.B. 104.1.1.1")
+		local meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Ihre Mesh IP Adresse erhalten Sie von der Freifunk Gemeinschaft in Ihrer Nachbarschaft. Es ist eine netzweit eindeutige Identifikation, z.B. 104.1.1.1.")
 			meship:depends("device_" .. device, "1")
 			meship.rmempty = true
 			function meship.cfgvalue(self, section)
@@ -154,7 +154,7 @@ uci:foreach("wireless", "wifi-device",
 					uci:save("freifunk")
 				end
 			end
-		local client = f:field(Flag, "client_" .. device, device:upper() .. "  DHCP anbieten")
+		local client = f:field(Flag, "client_" .. device, device:upper() .. "  DHCP anbieten", "DHCP weist verbundenen Benutzern automatisch eine Adresse zu. Diese Option sollten Sie unbedingt aktivieren, wenn Sie Nutzer an der Schnittstelle erwarten.")
 			client:depends("device_" .. device, "1")
 			client.rmempty = false
 			function client.cfgvalue(self, section)
@@ -164,7 +164,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "client_" .. device, value)
 				uci:save("freifunk")
 			end
-		local dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten", "Netzweit eindeutiges DHCP Netz z.B. 104.1.2.1/28")
+		local dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten", "Bestimmen Sie den Adressbereich aus dem Ihre Nutzer IP Adressen erhalten. Es wird empfohlen einen Adressbereich aus Ihrer lokalen Freifunk Gemeinschaft zu nutzen. Der Adressbereich ist ein netzweit eindeutiger Netzbereich. z.B. 104.1.2.1/28")
 			dhcpmesh:depends("client_" .. device, "1")
 			dhcpmesh.rmempty = true
 			function dhcpmesh.cfgvalue(self, section)
