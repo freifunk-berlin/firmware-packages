@@ -22,7 +22,7 @@ set_default_config()
 			uci set freifunk.wifi_iface.bssid="02:CA:FF:EE:BA:BE"
 			uci set freifunk.wifi_iface.sw_merge=1
 			uci set freifunk.wifi_iface.mcast_rate=5500
-			uci set freifunk.wifi_iface.probereq=0
+			uci set freifunk.wifi_iface.probereq=1
 			uci commit freifunk
 		;;
 		mac80211)
@@ -71,8 +71,6 @@ while true ; do
 		config_foreach set_default_config wifi-device
 
 		uci set freifunk.interface.dns="88.198.178.18 141.54.1.1 212.204.49.83 8.8.8.8 8.8.4.4"
-		uci set freifunk.wizard.latitude="52.47598"
-		uci set freifunk.wizard.longitude="13.40168"
 		uci commit freifunk
 		exit 0
 	fi

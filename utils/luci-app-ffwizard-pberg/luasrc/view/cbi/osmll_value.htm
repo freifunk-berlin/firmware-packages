@@ -30,6 +30,45 @@ $Id$
 		<% else %>
 			<input class="cbi-input-button" type="button"<%= attr("name", cbid..".displayosm")..attr("id", cbid..".displayosm")..attr("value", self.displaytext)%> 
 					onclick="
+var net
+var entry
+var lon
+var lat
+var zoom
+net = document.getElementById('cbid.ffwizward.1.net').value;
+lon = document.getElementById('cbid.ffwizward.1.latlon.centerlon');
+lat = document.getElementById('cbid.ffwizward.1.latlon.centerlat');
+zoom = document.getElementById('cbid.ffwizward.1.latlon.zoom'); 
+if ( !lon.value || lon.value == '' || lon.value == 0 || lon.value == 10 ) {
+	for (var i=0; i<cbi_d.length; i++) {
+		if (cbi_d[i].id == 'cbi-ffwizward-1-net_lon') {
+			entry = cbi_d[i];
+			for (var j=0; j<entry.node.children[0].childElementCount; j++) {
+				if ( entry.node.children[0].children[j].value == net ) {
+					lon.value = entry.node.children[0].children[j].text;
+					zoom.value = '14';
+					break;
+            	}
+			}
+			break;
+		}
+	}
+}
+if ( !lat.value || lat.value == '' || lat.value == 0 || lat.value == 52 ) {
+	for (var i=0; i<cbi_d.length; i++) {
+		if (cbi_d[i].id == 'cbi-ffwizward-1-net_lat') {
+			entry = cbi_d[i];
+			for (var j=0; j<entry.node.children[0].childElementCount; j++) {
+				if ( entry.node.children[0].children[j].value == net ) {
+					lat.value = entry.node.children[0].children[j].text;
+					break;
+            	}
+			}
+			break;
+		}
+	}
+}
+
 						document.getElementById('<%=cbid..".hideosm"%>').style.display='inline';
 						document.getElementById('<%=cbid..".displayosm"%>').style.display='none';
 						for(var i = 0; Math.min(i, window.frames.length)!=window.frames.lengths; i++){

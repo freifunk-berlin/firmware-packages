@@ -63,6 +63,19 @@ function net.write(self, section, value)
 	uci:set("freifunk", "wizard", "net", value)
 	uci:save("freifunk")
 end
+net_lat = f:field(ListValue, "net_lat", "", "")
+net_lat:depends("net", "0")
+net_lon = f:field(ListValue, "net_lon", "", "")
+net_lon:depends("net", "0")
+uci:foreach("freifunk", "community", function(s)
+	if s.latitude then
+		net_lat:value(s[".name"], "%s" % {s.latitude or "?"})
+	end
+	if s.longitude then
+		net_lon:value(s[".name"], "%s" % {s.longitude or "?"})
+	end
+end)
+
 -- hostname
 hostname = f:field(Value, "hostname", "Knoten Name", "Geben Sie Ihrem Freifunk Router einen Namen. Wenn Sie dieses Feld leer lassen, wird der Name automatisch aus der Mesh IP generiert.")
 hostname.rmempty = true
@@ -291,8 +304,8 @@ function OpenStreetMapLonLat.__init__(self, ...)
 	self.template = "cbi/osmll_value"
 	self.latfield = nil
 	self.lonfield = nil
-	self.centerlat = "52"
-	self.centerlon = "10"
+	self.centerlat = ""
+	self.centerlon = ""
 	self.zoom = "0"
 	self.width = "100%" --popups will ignore the %-symbol, "100%" is interpreted as "100"
 	self.height = "600"
@@ -313,6 +326,8 @@ osm.popup = false
 syslatlengh = string.len(syslat)
 if syslatlengh > 7 then
 	osm.zoom = "15"
+elseif syslatlengh > 5 then
+	osm.zoom = "12"
 else
 	osm.zoom = "6"
 end
