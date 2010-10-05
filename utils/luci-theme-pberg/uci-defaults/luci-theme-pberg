@@ -1,6 +1,6 @@
 #!/bin/sh
 uci batch <<-EOF
-	set luci.themes.OpenWrt_Light=/luci-static/openwrt-light
+	set luci.themes.pberg=/luci-static/pberg
         commit luci
 EOF
 	
