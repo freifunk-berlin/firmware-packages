@@ -1,34 +1,37 @@
 #!/bin/sh
 # This file is for l2gvpn startup
 # usage: ./up_down up bbb gvpn
+. /etc/functions.sh 
 
 table=111
 
 up_bbb()
 {
+	devname="$1"
     #vpn-bbb1
     #ip link set dev $INTERFACE up
     #ip addr add dev $INTERFACE 77.87.48.81/26 broadcast 77.87.48.127
 
     #insert routing stuff
-    ip ro add default table $table via 77.87.48.247 dev tun0
-    ip ro add throw 104.0.0.0/8 table $table
-    ip ro add throw 77.87.48.0/21 table $table
-    ip rule add iif $1 to 104.0.0.0/8 lookup $table prio 100
-    ip rule add iif $1 to 77.87.48.0/21 lookup $table prio 100
-    ip rule add iif $1 to 194.26.180.0/24 lookup $table prio 100
-    ip rule add iif tun0 to 104.0.0.0/8 lookup $table prio 100
-    ip rule add iif tun0 to 77.87.48.0/21 lookup $table prio 100
-    ip rule add iif tun0 to 194.26.180.0/24 lookup $table prio 100
-    ip rule add iif lo to 104.0.0.0/8 lookup $table prio 100
-    ip rule add iif lo to 77.87.48.0/21 lookup $table prio 100
-    ip rule add iif lo to 194.26.180.0/24 lookup $table prio 100
-    ip rule add from 77.87.48.81 lookup $table prio 100
-    ip rule add from 77.87.48.246 lookup $table prio 100
+    #ip ro add default table $table via 77.87.48.247 dev tun0
+    #ip ro add throw 104.0.0.0/8 table $table
+    #ip ro add throw 77.87.48.0/21 table $table
+    #ip rule add iif $devname to 104.0.0.0/8 lookup $table prio 100
+    #ip rule add iif $devname to 77.87.48.0/21 lookup $table prio 100
+    #ip rule add iif $devname to 194.26.180.0/24 lookup $table prio 100
+    #ip rule add iif lo to 104.0.0.0/8 lookup $table prio 100
+    #ip rule add iif lo to 77.87.48.0/21 lookup $table prio 100
+    #ip rule add iif lo to 194.26.180.0/24 lookup $table prio 100
+    #ip rule add from 77.87.48.81 lookup $table prio 100
+    #ip rule add from 77.87.48.246 lookup $table prio 100
+	uci_set_state "network" "$devname" ipaddr "$ipaddr"
+	uci_set_state "network" "$devname" netmask "$subnet"
+	uci_set_state "network" "$devname" device "$devname"
 }
 
 down_bbb()
 {
+	devname="$1"
     # This file closes down the tap device.
 
     #ifconfig $INTERFACE down
@@ -36,18 +39,18 @@ down_bbb()
 
     #flush routing stuff
     #ip ru del from <deine IP> lookup 100
-    ip ro flush table $table
-    ip rule del iif $1 to 104.0.0.0/8 lookup $table prio 100
-    ip rule del iif $1 to 77.87.48.0/21 lookup $table prio 100
-    ip rule del iif $1 to 194.26.180.0/24 lookup $table prio 100
-    ip rule del iif tun0 to 104.0.0.0/8 lookup $table prio 100
-    ip rule del iif tun0 to 77.87.48.0/21 lookup $table prio 100
-    ip rule del iif tun0 to 194.26.180.0/24 lookup $table prio 100
-    ip rule del iif lo to 104.0.0.0/8 lookup $table prio 100
-    ip rule del iif lo to 77.87.48.0/21 lookup $table prio 100
-    ip rule del iif lo to 194.26.180.0/24 lookup $table prio 100
-    ip rule del from 77.87.48.81 lookup $table prio 100
-    ip rule del from 77.87.48.246 lookup $table prio 100
+    #ip ro flush table $table
+    #ip rule del iif $devname to 104.0.0.0/8 lookup $table prio 100
+    #ip rule del iif $devname to 77.87.48.0/21 lookup $table prio 100
+    #ip rule del iif $devname to 194.26.180.0/24 lookup $table prio 100
+    #ip rule del iif lo to 104.0.0.0/8 lookup $table prio 100
+    #ip rule del iif lo to 77.87.48.0/21 lookup $table prio 100
+    #ip rule del iif lo to 194.26.180.0/24 lookup $table prio 100
+    #ip rule del from 77.87.48.81 lookup $table prio 100
+    #ip rule del from 77.87.48.246 lookup $table prio 100
+	uci_set_state "network" "$devname" ipaddr ""
+	uci_set_state "network" "$devname" netmask ""
+	uci_set_state "network" "$devname" device ""
 }
 
 
@@ -57,6 +60,8 @@ eval devname=$3
 
 #(
 logger "updown: $updown netname: $netname devname: $devname"
+ipaddr="$(uci_get l2gvpn.$netname.ipaddr)"
+subnet="$(uci_get l2gvpn.$netname.subnet)"
 "$updown"_"$netname" $devname 
 # 1>/dev/null 2>/dev/null &
 #)
