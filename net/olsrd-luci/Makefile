@@ -39,6 +39,7 @@ endef
 
 define Package/olsrd-luci/conffiles
 /etc/config/olsrd
+/etc/config/olsrdv6
 endef
 
 define Package/olsrd-luci-mod-arprefresh
@@ -135,10 +136,12 @@ MAKE_FLAGS+= \
 define Package/olsrd-luci/install
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) ./files/olsrd.config $(1)/etc/config/olsrd
+	$(INSTALL_DATA) ./files/olsrdv6.config $(1)/etc/config/olsrdv6
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/olsrd $(1)/usr/sbin/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/olsrd.init $(1)/etc/init.d/olsrd
+	$(INSTALL_BIN) ./files/olsrdv6.init $(1)/etc/init.d/olsrdv6
 endef
 
 define Package/olsrd-luci-mod-arprefresh/install
