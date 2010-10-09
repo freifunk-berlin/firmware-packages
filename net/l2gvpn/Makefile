@@ -76,6 +76,7 @@ define Package/l2gvpn/install
 	$(INSTALL_BIN) ./sbin/l2gvpn-watchdog.sh $(1)/usr/sbin/l2gvpn-watchdog.sh
 	$(INSTALL_DIR) $(1)/etc/l2gvpn
 	$(INSTALL_BIN) ./etc/up_down $(1)/etc/l2gvpn/up_down
+	$(INSTALL_BIN) ./etc/l2gvpn.init $(1)/etc/init.d/l2gvpn
 endef
 
 $(eval $(call BuildPackage,l2gvpn))
