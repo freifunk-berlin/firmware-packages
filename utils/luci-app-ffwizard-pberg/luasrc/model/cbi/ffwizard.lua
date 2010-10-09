@@ -680,7 +680,7 @@ function main.write(self, section, value)
 					hwmode = "11a"
 					mrate = ""
 					outdoor = 0
-					bssid = "00:" .. channel .."CA:FF:EE:EE"
+					bssid = "00:" .. channel ..":CA:FF:EE:EE"
 					ssid = "ch" .. channel .. ssidshort
 				elseif chan >= 100 and chan <= 140 then
 					hwmode = "11a"
@@ -707,16 +707,13 @@ function main.write(self, section, value)
 		end
 		-- See Table https://kifuse02.pberg.freifunk.net/moin/channel-bssid-essid	
 		ifconfig.bssid = bssid
-		ifconfig.mcast_rate = mrate
-		uci:section("wireless", "wifi-iface", nil, ifconfig)
-		uci:save("wireless")
+		ifconfig.encryption="none"
 		-- Read Preset 
 		local netconfig = uci:get_all("freifunk", "interface")
 		util.update(netconfig, uci:get_all(external, "interface") or {})
 		netconfig.proto = "static"
 		netconfig.ipaddr = node_ip:string()
 		uci:section("network", "interface", nif, netconfig)
-		uci:save("network")
 		local new_hostname = node_ip:string():gsub("%.", "-")
 		uci:set("freifunk", "wizard", "hostname", new_hostname)
 		uci:save("freifunk")
@@ -763,8 +760,11 @@ function main.write(self, section, value)
 				vap = luci.http.formvalue("cbid.ffwizward.1.vap_" .. device)
 				if vap then
 					uci:section("network", "interface", nif .. "dhcp", aliasbase)
-					uci:section("wireless", "wifi-iface", nil, {device=device,mode=ap,encryption=none,network=nif.."dhcp",ssid="AP"..ssidshort})
+					uci:section("wireless", "wifi-iface", nil, {device=device,mode="ap",encryption="none",network=nif.."dhcp",ssid="AP"..ssidshort})
 					tools.firewall_zone_add_interface("freifunk", nif .. "dhcp")
+					uci:save("wireless")
+					ifconfig.mcast_rate = nil
+					ifconfig.encryption="none"
 				else
 					aliasbase.interface = nif
 					uci:section("network", "alias", nif .. "dhcp", aliasbase)
@@ -822,6 +822,8 @@ function main.write(self, section, value)
 			-- Delete old splash
 			uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
 		end
+		uci:section("wireless", "wifi-iface", nil, ifconfig)
+		uci:save("network")
 		uci:save("wireless")
 		uci:save("network")
 		uci:save("firewall")
@@ -1281,7 +1283,7 @@ function main.write(self, section, value)
 		if gvpnif and gvpnif.tundev and vpnip then
 			uci:section("network", "interface", gvpnif.tundev, {ifname=gvpnif.tundev , proto="none"})
 			gvpnif.ip=vpnip
-			gvpnif.macc="00:00:48:"..string.format("%X",string.gsub( vpnip, ".*%." , "" ))..":00:00"
+			gvpnif.mac="00:00:48:"..string.format("%X",string.gsub( vpnip, ".*%." , "" ))..":00:00"
 			tools.firewall_zone_add_interface("freifunk", gvpnif.tundev)
 			uci:section("l2gvpn", "node" , gvpnif.community , gvpnif)
 			uci:save("network")
