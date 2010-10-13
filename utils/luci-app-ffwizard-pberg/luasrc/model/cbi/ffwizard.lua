@@ -28,8 +28,29 @@ local has_pptp  = fs.access("/usr/sbin/pptp")
 local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
 local has_l2gvpn  = fs.access("/usr/sbin/node")
 
-
 luci.i18n.loadc("freifunk")
+
+function get_mac(ix)
+	local mac = fs.readfile("/sys/class/net/" .. ix .. "/address")
+	if not mac then
+		mac = luci.util.exec("ifconfig " .. ix)
+		mac = mac and mac:match(" ([A-F0-9:]+)%s*\n")
+	end
+	if mac and #mac > 0 then
+		return mac:upper()
+	end
+	return "?"
+end
+function get_ula(imac)
+	if string.len(imac) == 17 then
+		local mac1 = string.sub(imac,4,8)
+		local mac2 = string.sub(imac,10,14)
+		local mac3 = string.sub(imac,16,17)
+		return 'fdca:ffee:babe::02'..mac1..'ff:fe'..mac2..mac3..'/64'
+	end
+	return "?"
+end	
+
 
 -------------------- View --------------------
 f = SimpleForm("ffwizward", "Freifunkassistent",
@@ -122,7 +143,7 @@ uci:foreach("wireless", "wifi-device",
 	function(section)
 		local device = section[".name"]
 		local type = section[".name"]
-		local dev = f:field(Flag, "device_" .. device , "<b>Drahtloses Netzwerk \"" .. device:upper() .. "\"</b>", "Konfigurieren Sie Ihre drahtlose " .. device:upper() .. " Schnittstelle (WLAN).")
+		local dev = f:field(Flag, "device_" .. device , "<b>Drahtloses Netzwerk \"" .. device:upper() .. "\"</b>", "Konfigurieren Sie Ihre drahtlose " .. device:upper() .. ":".. get_mac(device) .. "Schnittstelle (WLAN).")
 			dev:depends("netconfig", "1")
 			dev.rmempty = false
 			function dev.cfgvalue(self, section)
@@ -522,6 +543,7 @@ function f.handle(self, state, data)
 			uci:commit("olsrd")
 			uci:commit("qos")
 			uci:commit("manager")
+			uci:commit("l2gvpn")
 			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot") .. "?reboot=1")
 		end
 		return false
@@ -1273,6 +1295,9 @@ function main.write(self, section, value)
 	-- Write gvpn dummy interface
 	local vpn = gvpn:formvalue(section)
 	if vpn then
+		uci:delete_all("l2gvpn", "debug")
+		uci:delete_all("l2gvpn", "node")
+		uci:delete_all("l2gvpn", "supernode")
 		-- Write olsr tunnel interface options
 		local olsr_gvpnifbase = uci:get_all("freifunk", "olsr_gvpninterface")
 		util.update(olsr_gvpnifbase, uci:get_all(external, "olsr_gvpninterface") or {})
@@ -1289,6 +1314,7 @@ function main.write(self, section, value)
 			uci:save("network")
 			uci:save("l2gvpn")
 			uci:save("firewall")
+			uci:save("olsrd")
 			sys.init.enable("l2gvpn")
 		end
 	else
