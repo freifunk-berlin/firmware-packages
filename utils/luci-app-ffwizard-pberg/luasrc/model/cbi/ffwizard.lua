@@ -1158,7 +1158,7 @@ function main.write(self, section, value)
 		end
 		local node_ip = luci.http.formvalue("cbid.ffwizward.1.meship_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.meship_" .. device))
 		if not node_ip or not network or not network:contains(node_ip) then
-			meship.tag_missing[sec] = true
+			meship.tag_missing[section] = true
 			node_ip = nil
 			return
 		end
