@@ -23,8 +23,8 @@ start() {
 	config_foreach start_node node
 	### Add crontab entry
 	test -f /etc/crontabs/root || touch /etc/crontabs/root
-	grep -q luci-splash /etc/crontabs/root || {
-		echo '*/5 * * * * 	/usr/sbin/l2gvpn-watchdog.sh' >> /etc/crontabs/root
+	grep -q l2gvpn-watchdog /etc/crontabs/root || {
+		echo '*/16 * * * * 	/usr/sbin/l2gvpn-watchdog.sh' >> /etc/crontabs/root
 	}
 
 	
