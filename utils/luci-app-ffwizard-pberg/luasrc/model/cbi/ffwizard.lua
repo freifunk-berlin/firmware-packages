@@ -1527,7 +1527,7 @@ function main.write(self, section, value)
 	uci:save("freifunk")
 	uci:save("firewall")
 	uci:save("olsrd")
-	uci:save("olsrdv2")
+	uci:save("olsrdv6")
 	uci:save("system")
 end
 
