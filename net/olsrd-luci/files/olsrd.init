@@ -590,6 +590,16 @@ start() {
 	else
 		olsrd -f "$OLSRD_CONFIG_FILE" -nofork < /dev/null > /dev/null &
 	fi
+	if [ -f /etc/config/olsrdv6 ] ; then
+		config_load olsrdv6
+		reset_cb
+		mkdir -p -- /var/etc/
+		olsrd_write_config > /var/etc/olsrdv6.conf
+		if [ "$INTERFACES_COUNT" -gt 0 -a "$OLSRD_COUNT" -gt 0 ]; then
+			OLSRD_CONFIG_FILE=/var/etc/olsrdv6.conf
+			olsrd -ipv6 -f "$OLSRD_CONFIG_FILE" -nofork < /dev/null > /dev/null &
+		fi
+	fi
 }
 
 stop() {
