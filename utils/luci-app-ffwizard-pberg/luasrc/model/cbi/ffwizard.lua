@@ -1387,6 +1387,7 @@ function main.write(self, section, value)
 			olsrifbase.interface = device
 			olsrifbase.ignore    = "0"
 			olsrifbase.Ip4Broadcast = ''
+			olsrifbase.Mode = 'ether'
 			uci:section("olsrdv6", "Interface", nil, olsrifbase)
 			-- Collect MESH DHCP IP NET
 --			local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
@@ -1493,7 +1494,7 @@ function main.write(self, section, value)
 	-- Write gvpn dummy interface
 	local vpn = gvpn:formvalue(section)
 	if vpn then
-		uci:delete_all("l2gvpn", "debug")
+		uci:delete_all("l2gvpn", "l2gvpn")
 		uci:delete_all("l2gvpn", "node")
 		uci:delete_all("l2gvpn", "supernode")
 		-- Write olsr tunnel interface options
@@ -1504,8 +1505,16 @@ function main.write(self, section, value)
 		local gvpnif = uci:get_all("freifunk", "gvpn_node")
 		util.update(gvpnif, uci:get_all(external, "gvpn_node") or {})
 		if gvpnif and gvpnif.tundev and vpnip then
-			uci:section("network", "interface", gvpnif.tundev, {ifname=gvpnif.tundev , proto="none"})
-			gvpnif.ip=vpnip
+			uci:section("network", "interface", gvpnif.tundev, {
+				ifname  =gvpnif.tundev ,
+				proto   ="static" ,
+				ipaddr  =vpnip ,
+				netmask =gvpnif.subnet or "255.255.255.192" ,
+			})
+			gvpnif.ip=""
+			gvpnif.subnet=""
+			gvpnif.up=""
+			gvpnif.down=""
 			gvpnif.mac="00:00:48:"..string.format("%X",string.gsub( vpnip, ".*%." , "" ))..":00:00"
 			tools.firewall_zone_add_interface("freifunk", gvpnif.tundev)
 			uci:section("l2gvpn", "node" , gvpnif.community , gvpnif)
