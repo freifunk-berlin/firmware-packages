@@ -1437,9 +1437,6 @@ function main.write(self, section, value)
 		uci:set_list("dhcp", s[".name"], "addnhosts", "/var/etc/hosts.olsrv6")
 	end)
 
-	-- Make sure that OLSRV6 is enabled
-	sys.init.enable("olsrdv6")
-
 	uci:save("olsrdv6")
 	uci:save("dhcp")
 
