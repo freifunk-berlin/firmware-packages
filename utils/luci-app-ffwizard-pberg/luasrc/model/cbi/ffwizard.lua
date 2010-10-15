@@ -17,6 +17,7 @@ $Id$
 
 
 local uci = require "luci.model.uci".cursor()
+local uci_state = require "luci.model.uci".cursor_state()
 local tools = require "luci.tools.ffwizard"
 local util = require "luci.util"
 local sys = require "luci.sys"
@@ -259,7 +260,7 @@ uci:foreach("wireless", "wifi-device",
 uci:foreach("network", "interface",
 	function(section)
 		local device = section[".name"]
-		local ifname = section.ifname or section[".name"]
+		local ifname = uci_state:get("network",device,"ifname")
 		if device ~= "loopback" and not string.find(device, "gvpn")  and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
 			dev = f:field(Flag, "device_" .. device , "<b>Drahtgebundenes Netzwerk \"" .. device:upper() .. "\"</b>", "Konfigurieren Sie Ihre drahtgebunde " .. device:upper() .. " Schnittstelle (LAN).")
 				dev:depends("netconfig", "1")
