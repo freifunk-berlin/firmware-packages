@@ -516,15 +516,11 @@ if has_l2gvpn then
 	gvpnip = f:field(Value, "gvpnipaddr", translate("ipaddress"))
 	gvpnip:depends("gvpn", "1")
 	function gvpnip.cfgvalue(self, section)
-		return uci:get("l2gvpn", "bbb", "ip")
-	end
-	function gvpnip.write(self, section, value)
-		uci:set("l2gvpn", "bbb", "ip", value)
-		uci:save("network")
+		return uci:get("l2gvpn", "bbb", "ip") or uci:get("network", "gvpn", "ipaddr")
 	end
 	function gvpnip.validate(self, value)
 		local x = ip.IPv4(value)
-		return ( x and x:prefix() == 32 ) and x:string() or ""	
+		return ( x and x:prefix() == 32 ) and x:string() or ""
 	end
 end
 
@@ -781,7 +777,10 @@ function main.write(self, section, value)
 		local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
 		if client then
 			local dhcpmeshnet = luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device))
-			uci:set_list("manager", "heartbeat", "interface", nif)
+			local ifacelist = uci:get_list("manager", "heartbeat", "interface") or {}
+			local ifaces = nif .. "dhcp"
+			for i=1,#ifacelist do ifaces = ifacelist[i] .. ' ' .. ifaces end
+			uci:set_list("manager", "heartbeat", "interface", ifaces)
 			uci:save("manager")
 			if dhcpmeshnet then
 				if not dhcpmeshnet:minhost() or not dhcpmeshnet:mask() then
@@ -932,7 +931,10 @@ function main.write(self, section, value)
 			local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
 			if client then
 				local dhcpmeshnet = luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device))
-				uci:set_list("manager", "hertbeat", "interface", device)
+				local ifacelist = uci:get_list("manager", "heartbeat", "interface") or {}
+				local ifaces = device .. "dhcp"
+				for i=1,#ifacelist do ifaces = ifacelist[i] .. ' ' .. ifaces end
+				uci:set_list("manager", "heartbeat", "interface", ifaces)
 				uci:save("manager")
 				if dhcpmeshnet then
 					if not dhcpmeshnet:minhost() or not dhcpmeshnet:mask() then
@@ -1426,17 +1428,18 @@ function main.write(self, section, value)
 	uci:delete_all("olsrdv6", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
 	-- Write new nameservice settings
 	uci:section("olsrdv6", "LoadPlugin", nil, {
-		library     = "olsrd_nameservice.so.0.3",
-		suffix      = ".olsrv6",
-		hosts_file  = "/var/etc/hosts.olsrv6",
-		latlon_file = "/var/run/latlonv6.js",
-		lat         = latval and string.format("%.15f", latval) or "",
-		lon         = lonval and string.format("%.15f", lonval) or ""
+		library       = "olsrd_nameservice.so.0.3",
+		suffix        = ".olsrv6",
+		hosts_file    = "/var/etc/hosts.olsrv6",
+		latlon_file   = "/var/run/latlonv6.js",
+		services_file = "/var/etc/services.olsrv6",
+		lat           = latval and string.format("%.15f", latval) or "",
+		lon           = lonval and string.format("%.15f", lonval) or ""
 	})
 
 	-- Import hosts and set domain
 	uci:foreach("dhcp", "dnsmasq", function(s)
-		uci:set_list("dhcp", s[".name"], "addnhosts", "/var/etc/hosts.olsrv6")
+		uci:set_list("dhcp", s[".name"], "addnhosts", "/var/etc/hosts.olsr /var/etc/hosts.olsrv6")
 	end)
 
 	uci:save("olsrdv6")
@@ -1527,6 +1530,7 @@ function main.write(self, section, value)
 		end
 	else
 		-- Disable l2gvpn
+		sys.exec("/etc/init.d/l2gvpn stop")
 		sys.init.disable("l2gvpn")
 	end
 
