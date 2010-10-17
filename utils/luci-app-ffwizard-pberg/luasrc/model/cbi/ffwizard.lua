@@ -28,6 +28,7 @@ local fs  = require "nixio.fs"
 local has_pptp  = fs.access("/usr/sbin/pptp")
 local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
 local has_l2gvpn  = fs.access("/usr/sbin/node")
+local has_radvd  = fs.access("/etc/config/radvd")
 
 luci.i18n.loadc("freifunk")
 
@@ -573,7 +574,12 @@ function f.handle(self, state, data)
 			uci:commit("olsrdv6")
 			uci:commit("qos")
 			uci:commit("manager")
-			uci:commit("l2gvpn")
+			if has_l2gvpn then
+				uci:commit("l2gvpn")
+			end
+			if has_radvd then
+				uci:commit("radvd")
+			end
 			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot") .. "?reboot=1")
 		end
 		return false
@@ -653,7 +659,7 @@ function main.write(self, section, value)
 	uci:delete("manager", "heartbeat", "interface")
 	uci:save("manager")
 
-	-- Create wireless ip and firewall config
+	-- Create wireless ip4/ip6 and firewall config
 	uci:foreach("wireless", "wifi-device",
 	function(sec)
 		local device = sec[".name"]
@@ -697,7 +703,14 @@ function main.write(self, section, value)
 		-- Delete old splash
 		uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
 		uci:delete_all("luci_splash", "iface", {network=nif.."dhcp", zone="freifunk"})
-			
+		-- Delete old radvd
+		if has_radvd then
+			uci:delete_all("radvd", "interface", {interface=nif.."dhcp"})
+			uci:delete_all("radvd", "interface", {interface=nif})
+			uci:delete_all("radvd", "prefix", {interface=nif.."dhcp"})
+			uci:delete_all("radvd", "prefix", {interface=nif})
+		end
+
 		-- New Config
 		-- Tune wifi device
 		local ssiduci = uci:get("freifunk", community, "ssid")
@@ -768,6 +781,23 @@ function main.write(self, section, value)
 		netconfig.ipaddr = node_ip:string()
 		netconfig.ip6addr = node_ip6:string()
 		uci:section("network", "interface", nif, netconfig)
+		if has_radvd then
+			uci:section("radvd", "interface", nil, {
+				interface          =nif,
+				AdvSendAdvert      =1,
+				AdvManagedFlag     =0,
+				AdvOtherConfigFlag =0,
+				ignore             =0
+			})
+			uci:section("radvd", "prefix", nil, {
+				interface          =nif,
+				AdvOnLink          =1,
+				AdvAutonomous      =1,
+				AdvRouterAddr      =0,
+				ignore             =0,
+			})
+			uci:save("radvd")
+		end
 		local new_hostname = node_ip:string():gsub("%.", "-")
 		uci:set("freifunk", "wizard", "hostname", new_hostname)
 		uci:save("freifunk")
@@ -817,7 +847,30 @@ function main.write(self, section, value)
 				vap = luci.http.formvalue("cbid.ffwizward.1.vap_" .. device)
 				if vap then
 					uci:section("network", "interface", nif .. "dhcp", aliasbase)
-					uci:section("wireless", "wifi-iface", nil, {device=device,mode="ap",encryption="none",network=nif.."dhcp",ssid="AP"..ssidshort})
+					uci:section("wireless", "wifi-iface", nil, {
+						device     =device,
+						mode       ="ap",
+						encryption ="none",
+						network    =nif.."dhcp",
+						ssid       ="AP"..ssidshort
+					})
+					if has_radvd then
+						uci:section("radvd", "interface", nil, {
+							interface          =nif .. "dhcp",
+							AdvSendAdvert      =1,
+							AdvManagedFlag     =0,
+							AdvOtherConfigFlag =0,
+							ignore             =0
+						})
+						uci:section("radvd", "prefix", nil, {
+							interface          =nif .. "dhcp",
+							AdvOnLink          =1,
+							AdvAutonomous      =1,
+							AdvRouterAddr      =0,
+							ignore             =0
+						})
+						uci:save("radvd")
+					end
 					tools.firewall_zone_add_interface("freifunk", nif .. "dhcp")
 					uci:save("wireless")
 					ifconfig.mcast_rate = nil
@@ -879,6 +932,7 @@ function main.write(self, section, value)
 			-- Delete old splash
 			uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
 		end
+		--Write Ad-Hoc wifi section after AP wifi section
 		uci:section("wireless", "wifi-iface", nil, ifconfig)
 		uci:save("network")
 		uci:save("wireless")
@@ -913,6 +967,12 @@ function main.write(self, section, value)
 			uci:delete("dhcp", device .. "dhcp")
 			-- Delete old splash
 			uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
+			if has_radvd then
+				uci:delete_all("radvd", "interface", {interface=device.."dhcp"})
+				uci:delete_all("radvd", "interface", {interface=device})
+				uci:delete_all("radvd", "prefix", {interface=device.."dhcp"})
+				uci:delete_all("radvd", "prefix", {interface=device})
+			end
 
 			-- New Config
 			local netconfig = uci:get_all("freifunk", "interface")
@@ -922,6 +982,23 @@ function main.write(self, section, value)
 			netconfig.ip6addr = node_ip6:string()
 			uci:section("network", "interface", device, netconfig)
 			uci:save("network")
+			if has_radvd then
+				uci:section("radvd", "interface", nil, {
+					interface          =device,
+					AdvSendAdvert      =1,
+					AdvManagedFlag     =0,
+					AdvOtherConfigFlag =0,
+					ignore             =0
+				})
+				uci:section("radvd", "prefix", nil, {
+					interface          =device,
+					AdvOnLink          =1,
+					AdvAutonomous      =1,
+					AdvRouterAddr      =0,
+					ignore             =0,
+				})
+				uci:save("radvd")
+			end
 			local new_hostname = node_ip:string():gsub("%.", "-")
 			uci:set("freifunk", "wizard", "hostname", new_hostname)
 			uci:save("freifunk")
