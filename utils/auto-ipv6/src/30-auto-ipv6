@@ -1,11 +1,101 @@
 #!/bin/sh
 
-if [ "$INTERFACE" = "wan" ] && [ "$ACTION" = "ifup" ] ;then
-  PPP_LOCAL=$(uci -p /var/state get network.$INTERFACE.ipaddr)
-  modprobe ipv6
-  PPP_LOCAL_IP6TO4=$(printf "2002:%02x%02x:%02x%02x::1" $(echo $PPP_LOCAL | tr . ' '))
-  ip tunnel add tun6to4 mode sit remote any local $PPP_LOCAL ttl 64
-  ip link set dev tun6to4 up
-  ip addr add $PPP_LOCAL_IP6TO4/16 dev tun6to4
-  ip route add 2000::/3 via ::192.88.99.1 dev tun6to4 metric 1
+#Kernel Tunnel Modul?
+lsmod | grep '^sit ' 2&>1 1>/dev/null || exit 0
+
+# IFUP?
+[ "$ACTION" = "ifup" ] || exit 0
+
+#Internet Gateway?
+uci -p /var/state get network.$INTERFACE.gateway 2&>1 1>/dev/null || exit 0
+
+. /etc/functions.sh
+
+IP4_LOCAL=$(uci -p /var/state get network.$INTERFACE.ipaddr)
+case $IP4_LOCAL in
+	1.*) exit 0 ;;
+	10.*) exit 0 ;;
+	192.168.*) exit 0 ;;
+	172.17.*) exit 0 ;;
+esac
+
+IP6_LOCAL_IP6TO4=$(printf "2002:%02x%02x:%02x%02x::1" $(echo $IP4_LOCAL | tr . ' '))
+IP6_SUFIX=$(printf "2002:%02x%02x:%02x%02x" $(echo $IP4_LOCAL|sed 's/\./ /g'))
+IP6_LOCAL_IP6TO4="$IP6_SUFIX""::1"
+
+ip -6 route flush dev tun6to4 2&>1 1>/dev/null
+ip link set dev tun6to4 down 2&>1 1>/dev/null
+ip tunnel del tun6to4 2&>1 1>/dev/null
+ip tunnel add tun6to4 mode sit remote any local $IP4_LOCAL ttl 64
+#ip tunnel add tun6to4 mode sit remote any local $(ip -4 r get 1|sed -n 's/.* src //p') ttl 64
+ip link set dev tun6to4 up
+ip addr add "$IP6_LOCAL_IP6TO4""/16" dev tun6to4
+ip route add "::192.88.99.1" dev tun6to4
+ip route add "2000::/3" via "::192.88.99.1" dev tun6to4 metric 1
+ip route add "::/0" via "::192.88.99.1" dev tun6to4 metric 1
+IP6_OLDSUFIX=$(uci -q -p/var/state get network.lan.ip6oldsufix)
+uci -p/var/state set "network.lan.ip6oldaddr=$IP6_SUFIX"
+
+LANDEV=$(uci -p/var/state get network.lan.ifname)
+IP6_OLDLANUNIQ=$(uci -q -p/var/state get network.lan.ip6olduniq)
+IP6_OLDLANADDR="$IP6_OLDSUFIX"":""$IP6_OLDLANUNIQ""::1/64"
+IP6_LANUNIQ="$(head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4)"
+IP6_LANADDR="$IP6_SUFIX"":""$IP6_LANUNIQ""::1/64"
+ip -6 addr del "$IP6_OLDLANADDR" dev "$LANDEV" 2>/dev/null
+ip -6 addr add "$IP6_LANADDR" dev "$LANDEV" 2>/dev/null
+uci -p/var/state set "network.lan.ip6olduniq=$IP6_UNIQ"
+
+[ -x /etc/init.d/radvd ] && /etc/init.d/radvd restart
+
+olsrd_remove_hna6() {
+	local cfg="$1"
+	local hna6="$2"
+	config_get netaddr "$cfg" netaddr
+	config_set "$cfg" $(date)
+	[ "$netaddr" == "$hna6" ] && uci del "olsrdv6.@Hna6[""$hna6_count""]"
+	hna6_count=$((hna6_count+1))
+	return 0
+}
+olsrd_count_hna6() {
+	local cfg="$1"
+	hna6_count=$((hna6_count+1))
+	return 0
+}
+olsrd_find_hna6() {
+	local cfg="$1"
+	local hna6="$2"
+	config_get netaddr "$cfg" netaddr
+	config_set "$cfg" $(date)
+	[ "$netaddr" == "$hna6" ] && hna6_find="1"
+	return 0
+}
+
+if [ -f /etc/config/olsrdv6 ] ; then
+	config_load olsrdv6
+	hna6_count="0"
+	config_foreach olsrd_remove_hna6 Hna6 "$IP6_OLDLANSUFIX"":""$IP6_OLDLANUNIQ""::"
+	hna6_count="0"
+	config_foreach olsrd_count_hna6 Hna6
+	set -x
+	uci add olsrdv6 Hna6 >/dev/null
+	uci set "olsrdv6.@Hna6[""$hna6_count""].netmask=64"
+	uci set "olsrdv6.@Hna6[""$hna6_count""].netaddr=""$IP6_SUFIX"":""$IP6_LANUNIQ""::"
+	set +x
+	hna6_count=$((hna6_count+1))
+	hna6_find="0"
+	config_foreach olsrd_find_hna6 Hna6 "::"
+	if [ "$hna6_find" == "0" ] ; then
+		uci add olsrdv6 Hna6 >/dev/null
+		uci set "olsrdv6.@Hna6[""$hna6_count""].netmask=0"
+		uci set "olsrdv6.@Hna6[""$hna6_count""].netaddr=::"
+		hna6_count=$((hna6_count+1))
+	fi
+	hna6_find="0"
+	config_foreach olsrd_find_hna6 Hna6 "2000::"
+	if [ "$hna6_find" == "0" ] ; then
+		uci add olsrdv6 Hna6 >/dev/null
+		uci set "olsrdv6.@Hna6[""$hna6_count""].netmask=0"
+		uci set "olsrdv6.@Hna6[""$hna6_count""].netaddr=2000::"
+	fi
 fi
+
