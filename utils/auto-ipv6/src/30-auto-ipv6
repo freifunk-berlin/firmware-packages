@@ -23,21 +23,29 @@ olsrd_remove_hna6() {
 	local cfg="$1"
 	local hna6="$2"
 	config_get netaddr "$cfg" netaddr
-	config_set "$cfg" $(date)
-	[ "$netaddr" == "$hna6" ] && uci del "olsrdv6.@Hna6[""$hna6_count""]"
+	if [ "$netaddr" == "$hna6" ] ; then
+		uci del "olsrdv6.@Hna6[""$hna6_count""]"
+		return 0
+	fi
 	hna6_count=$((hna6_count+1))
 	return 0
 }
 olsrd_count_hna6() {
-	local cfg="$1"
-	hna6_count=$((hna6_count+1))
-	return 0
+	if [ -z "$hna6_count" ] ; then 
+		hna6_count=0
+		return 0
+	else
+		hna6_count=$((hna6_count+1))
+		return 0
+	fi
 }
 olsrd_find_hna6() {
 	local cfg="$1"
 	local hna6="$2"
 	config_get netaddr "$cfg" netaddr
-	[ "$netaddr" == "$hna6" ] && hna6_find="1"
+	if [ "$netaddr" == "$hna6" ] ; then
+		hna6_find="$hna6_count"
+	fi
 	hna6_count=$((hna6_count+1))
 	return 0
 }
@@ -66,17 +74,15 @@ olsrd_find_plugin(){
 	return 0
 }
 
-IP6_LOCAL_IP6TO4=$(printf "2002:%02x%02x:%02x%02x::1" $(echo $IP4_LOCAL | tr . ' '))
 IP6_SUFIX=$(printf "2002:%02x%02x:%02x%02x" $(echo $IP4_LOCAL|sed 's/\./ /g'))
-IP6_LOCAL_IP6TO4="$IP6_SUFIX""::1"
-
+logger -t auto-ipv6 "Applying IPv6 Sufix $IP6_SUFIX"
 ip -6 route flush dev tun6to4 2&>1 1>/dev/null
 ip link set dev tun6to4 down 2&>1 1>/dev/null
 ip tunnel del tun6to4 2&>1 1>/dev/null
 ip tunnel add tun6to4 mode sit remote any local $IP4_LOCAL ttl 64
 #ip tunnel add tun6to4 mode sit remote any local $(ip -4 r get 1|sed -n 's/.* src //p') ttl 64
 ip link set dev tun6to4 up
-ip addr add "$IP6_LOCAL_IP6TO4""/16" dev tun6to4
+ip addr add "$IP6_SUFIX""::1/16" dev tun6to4
 ip route add "::192.88.99.1" dev tun6to4
 ip route add "2000::/3" via "::192.88.99.1" dev tun6to4 metric 1
 ip route add "::/0" via "::192.88.99.1" dev tun6to4 metric 1
@@ -89,22 +95,35 @@ for i in $(echo $interfaces) ; do
 	DEV=$(uci -p/var/state get network.$i.ifname)
 	#Sufix
 	IP6_OLDSUFIX=$(uci -q -p/var/state get network.$i.ip6oldsufix)
-	uci -p /var/state set "network.$i.ip6oldsufix=$IP6_SUFIX"
+	uci set "network.$i.ip6oldsufix=$IP6_SUFIX"
 	#Uniq 4Bybte from urandom
 	IP6_OLDUNIQ=$(uci -q -p/var/state get network.$i.ip6olduniq)
 	IP6_UNIQ="$(head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4)"
-	uci -p /var/state set "network.$i.ip6olduniq=$IP6_UNIQ"
+	uci set "network.$i.ip6olduniq=$IP6_UNIQ"
+
+	logger -t auto-ipv6 "Removing IPv6 Sufix ""$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64"" from ""$DEV"
 	ip -6 addr del "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64" dev "$DEV" 2>/dev/null
+
+	logger -t auto-ipv6 "Applying IPv6 Sufix ""$IP6_SUFIX"":""$IP6_UNIQ""::1/64"" to ""$DEV"
 	ip -6 addr add "$IP6_SUFIX"":""$IP6_UNIQ""::1/64"       dev "$DEV" 2>/dev/null
+
 	if [ -f /etc/config/olsrdv6 ] ; then
 		config_load olsrdv6
+
+		logger -t auto-ipv6 "Removing IPv6 Hna6 ""$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"" from olsrd"
 		hna6_count="0"
-		config_foreach olsrd_remove_hna6 Hna6 "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"
-		hna6_count="0"
+		hna6_find="0"
+		config_foreach olsrd_find_hna6 Hna6 "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"
+		uci del "olsrdv6.@Hna6[""$hna6_find""]"
+		uci commit
+
+		logger -t auto-ipv6 "Applying IPv6 Hna6 ""$IP6_SUFIX"":""$IP6_UNIQ""::"" to olsrd"
+		hna6_count=""
 		config_foreach olsrd_count_hna6 Hna6
 		uci add olsrdv6 Hna6 >/dev/null
-		uci set "olsrdv6.@Hna6[""$hna6_count""].prefix=64"
-		uci set "olsrdv6.@Hna6[""$hna6_count""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
+		uci set "olsrdv6.@Hna6[""$((hna6_count+1))""].prefix=64"
+		uci set "olsrdv6.@Hna6[""$((hna6_count+1))""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
+		uci commit
 	fi
 done
 
@@ -140,6 +159,6 @@ if [ -f /etc/config/olsrdv6 ] ; then
 fi
 
 uci commit
-#[ -x /etc/init.d/radvd ] && /etc/init.d/radvd restart
-#[ -x /etc/init.d/olsrd ] && /etc/init.d/olsrd restart
+[ -z "$(pidof radvd)" ] || /etc/init.d/radvd restart
+[ -z "$(pidof olsrd)" ] || /etc/init.d/olsrd restart
 
