@@ -1343,7 +1343,8 @@ function main.write(self, section, value)
 		hosts_file  = "/var/etc/hosts.olsr",
 		latlon_file = "/var/run/latlon.js",
 		lat         = latval and string.format("%.15f", latval) or "",
-		lon         = lonval and string.format("%.15f", lonval) or ""
+		lon         = lonval and string.format("%.15f", lonval) or "",
+		services_file = "/var/etc/services.olsr"
 	})
 
 	-- Import hosts and set domain
