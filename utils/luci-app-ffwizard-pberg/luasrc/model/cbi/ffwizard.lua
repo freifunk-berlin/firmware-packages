@@ -1103,6 +1103,10 @@ function main.write(self, section, value)
 			uci:save("dhcp")
 		end
 	end)
+	if has_radvd then
+		sys.init.enable("radvd")
+	end
+
 
 	-- Enforce firewall include
 	local has_include = false
