@@ -3,7 +3,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=auto-ipv6
-PKG_VERSION:=0.0.1
+PKG_VERSION:=0.0.2
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
@@ -20,7 +20,7 @@ define Package/auto-ipv6
 endef
 
 define Package/auto-ipv6/description
-  Freifunk Wizard for pberg
+  Auto IPv6 Tunnel to 192.88.99.1 with olsrd and radvd integration
 endef
 
 define Build/Prepare
