@@ -28,6 +28,7 @@ net_find_iface() {
 }
 
 IP6_SUFIX="$(wget -q -O - http://[::1]:2006/hna | grep '::/0' | cut -d "$(printf "\t")" -f 2 | cut -d ':' -f 1-3)"
+[ -z $IP6_SUFIX ] && exit 0
 
 config_load network
 interfaces=""
@@ -38,7 +39,7 @@ for i in $(echo $interfaces) ; do
 	#Sufix
 	IP6_OLDSUFIX=$(uci -q -p/var/state get network.$i.ip6oldsufix)
 	logger -t auto-ipv6 "interface: $i device: $DEV Check IPv6 New Sufix $IP6_SUFIX and Old Sufix $IP6_OLDSUFIX"
-	[ "$IP6_SUFIX" != "$IP6_OLDSUFIX" ] || ifconfig "$DEV" | grep -q -e "$IP6_SUFIX"".*1\/64" && exit 0
+	[ "$IP6_SUFIX" == "$IP6_OLDSUFIX" ] && ifconfig "$DEV" | grep -q -e "$IP6_SUFIX"".*1\/64" && exit 0
 	uci set "network.$i.ip6oldsufix=$IP6_SUFIX"
 	#Uniq 4Bybte from urandom
 	IP6_OLDUNIQ=$(uci -q -p/var/state get network.$i.ip6olduniq)
