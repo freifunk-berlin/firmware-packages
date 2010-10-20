@@ -1187,6 +1187,7 @@ function main.write(self, section, value)
 
 	-- Create http splash port 8082
 	uci:set_list("uhttpd","main","listen_http",{"80","8082"})
+	uci:set_list("uhttpd","main","listen_https",{"443"})
 	uci:save("uhttpd")
 
 	-- Read geos
