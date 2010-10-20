@@ -35,7 +35,11 @@ endef
 
 define Package/auto-ipv6/install
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
-	$(CP) ./src/* $(1)/etc/hotplug.d/iface
+	$(INSTALL_BIN) ./src/30-auto-ipv6 $(1)/etc/hotplug.d/iface/30-auto-ipv6
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) ./src/auto-ipv6 $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_DATA) ./src/auto-ipv6.defaults $(1)/etc/uci-defaults/auto-ipv6
 endef
 
 $(eval $(call BuildPackage,auto-ipv6))

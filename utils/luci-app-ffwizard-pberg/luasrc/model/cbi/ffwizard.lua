@@ -1532,6 +1532,9 @@ function main.write(self, section, value)
 	if share_value == "1" then
 		uci:set("freifunk", "wizard", "netconfig", "1")
 		uci:section("firewall", "forwarding", nil, {src="freifunk", dest="wan"})
+		uci:set("autoipv6", "olsrd_node", "enable", "0")
+		uci:set("autoipv6", "tunnel", "enable", "1")
+		uci:save("autoipv6")
 		-- Delete/Disable gateway plugin
 		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
@@ -1556,6 +1559,9 @@ function main.write(self, section, value)
 	else
 		uci:set("freifunk", "wizard", "netconfig", "0")
 		uci:save("freifunk")
+		uci:set("autoipv6", "olsrd_node", "enable", "1")
+		uci:set("autoipv6", "tunnel", "enable", "0")
+		uci:save("autoipv6")
 		-- Delete gateway plugins
 		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
