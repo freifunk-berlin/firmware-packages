@@ -544,6 +544,9 @@ olsrd_write_config() {
 }
 
 start() {
+	if [ -f /etc/config/olsrdv6 ] ; then
+		startv6
+	fi
 	SYSTEM_HOSTNAME=
 	SYSTEM_LAT=
 	SYSTEM_LON=
@@ -561,20 +564,6 @@ start() {
 	include /lib/network
 	scan_interfaces
 	
-	if [ -f /etc/config/olsrdv6 ] ; then
-		config_load olsrdv6
-		reset_cb
-		mkdir -p -- /var/etc/
-		olsrd_write_config > /var/etc/olsrdv6.conf
-		if [ "$INTERFACES_COUNT" -gt 0 -a "$OLSRD_COUNT" -gt 0 ]; then
-			OLSRD_CONFIG_FILE=/var/etc/olsrdv6.conf
-			bindv6only="$(sysctl -n net.ipv6.bindv6only)"
-			sysctl -w net.ipv6.bindv6only=1
-			olsrd -f "$OLSRD_CONFIG_FILE" -nofork < /dev/null > /dev/null &
-			sleep 3
-			sysctl -w net.ipv6.bindv6only="$bindv6only"
-		fi
-	fi
 
 	config_load olsrd
 	reset_cb
@@ -607,6 +596,52 @@ start() {
 		olsrd -f "$OLSRD_CONFIG_FILE" -nofork < /dev/null > /dev/null &
 	fi
 }
+
+startv6() {
+	[ -f /etc/config/olsrdv6 ] || exit 1
+	SYSTEM_HOSTNAME=
+	SYSTEM_LAT=
+	SYSTEM_LON=
+	config_load system
+	config_foreach system_config system
+
+	option_cb() {
+		olsrd_update_schema "option" "$@"
+	}
+
+	list_cb() {
+		olsrd_update_schema "list" "$@"
+	}
+
+	include /lib/network
+	scan_interfaces
+	
+
+	config_load olsrdv6
+	reset_cb
+
+	OLSRD_CONFIG_FILE=
+	config_foreach olsrd_find_config_file olsrd
+
+	if [ -z "$OLSRD_CONFIG_FILE" ]; then
+		mkdir -p -- /var/etc/
+		olsrd_write_config > /var/etc/olsrdv6.conf
+		if [ "$INTERFACES_COUNT" -gt 0 -a "$OLSRD_COUNT" -gt 0 ]; then
+			OLSRD_CONFIG_FILE=/var/etc/olsrdv6.conf
+		fi
+	fi
+
+	[ -z "$OLSRD_CONFIG_FILE" ] && return 1
+	if [ "$INTERFACES_COUNT" -gt 0 -a "$OLSRD_COUNT" -gt 0 ]; then
+		OLSRD_CONFIG_FILE=/var/etc/olsrdv6.conf
+		bindv6only="$(sysctl -n net.ipv6.bindv6only)"
+		sysctl -w net.ipv6.bindv6only=1
+		olsrd -f "$OLSRD_CONFIG_FILE" -nofork < /dev/null > /dev/null &
+		sleep 3
+		sysctl -w net.ipv6.bindv6only="$bindv6only"
+	fi
+}
+
 
 stop() {
 	killall olsrd
