@@ -808,7 +808,7 @@ function main.write(self, section, value)
 		if client then
 			local dhcpmeshnet = luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device))
 			local ifacelist = uci:get_list("manager", "heartbeat", "interface") or {}
-			local table.insert(ifacelist,nif .. "dhcp")
+			table.insert(ifacelist,nif .. "dhcp")
 			uci:set_list("manager", "heartbeat", "interface", ifacelist)
 			uci:save("manager")
 			if dhcpmeshnet then
@@ -1008,7 +1008,7 @@ function main.write(self, section, value)
 			if client then
 				local dhcpmeshnet = luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device))
 				local ifacelist = uci:get_list("manager", "heartbeat", "interface") or {}
-				local table.insert(ifacelist,device .. "dhcp")
+				table.insert(ifacelist,device .. "dhcp")
 				uci:set_list("manager", "heartbeat", "interface", ifacelist)
 				uci:save("manager")
 				if dhcpmeshnet then
