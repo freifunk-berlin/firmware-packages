@@ -1282,7 +1282,14 @@ function main.write(self, section, value)
 					function(s)		
 						if s.library == "olsrd_p2pd.so.0.1.0" then
 							uci:set("olsrd", s['.name'], "ignore", "0")
-							uci:set("olsrd", s['.name'], "NonOlsrIf", nif)
+							local nonolsr = uci:get("olsrd", s['.name'], "NonOlsrIf") or ""
+							vap = luci.http.formvalue("cbid.ffwizward.1.vap_" .. device)
+							if vap then
+								nonolsr = nif.."dhcp "..nonolsr
+							else
+								nonolsr = nif.." "..nonolsr
+							end
+							uci:set("olsrd", s['.name'], "NonOlsrIf", nonolsr)
 						end
 					end)
 			end
@@ -1324,7 +1331,8 @@ function main.write(self, section, value)
 						function(s)		
 							if s.library == "olsrd_p2pd.so.0.1.0" then
 								uci:set("olsrd", s['.name'], "ignore", "0")
-								uci:set("olsrd", s['.name'], "NonOlsrIf", device)
+								local nonolsr = uci:get("olsrd", s['.name'], "NonOlsrIf") or ""
+								uci:set("olsrd", s['.name'], "NonOlsrIf", device .." ".. nonolsr)
 							end
 						end)
 				end
