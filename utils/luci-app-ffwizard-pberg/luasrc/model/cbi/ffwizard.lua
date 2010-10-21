@@ -29,6 +29,7 @@ local has_pptp  = fs.access("/usr/sbin/pptp")
 local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
 local has_l2gvpn  = fs.access("/usr/sbin/node")
 local has_radvd  = fs.access("/etc/config/radvd")
+local has_rom  = fs.access("/rom/etc")
 
 luci.i18n.loadc("freifunk")
 
@@ -63,6 +64,14 @@ end
 f = SimpleForm("ffwizward", "Freifunkassistent",
  "Dieser Assistent unterstützt Sie bei der Einrichtung des Routers für das Freifunknetz.")
 -- main netconfig
+local newpsswd = has_rom and sys.exec("diff /rom/etc/passwd /etc/passwd")
+if newpsswd ~= "" then
+	pw = f:field(Flag, "pw", "Router Passwort", "Setzen Sie den Haken, um Ihr Passwort zu ändern.")
+	function pw.cfgvalue(self, section)
+		return 1
+	end
+end
+
 pw1 = f:field(Value, "pw1", translate("password"))
 pw1.password = true
 pw1.rmempty = false
@@ -75,14 +84,9 @@ function pw2.validate(self, value, section)
 	return pw1:formvalue(section) == value and value
 end
 
-local newpsswd = sys.exec("diff /rom/etc/passwd /etc/passwd")
 if newpsswd ~= "" then
-	pw = f:field(Flag, "pw", "Router Passwort", "Setzen Sie den Haken, um Ihr Passwort zu ändern.")
 	pw1:depends("pw", "1")
 	pw2:depends("pw", "1")
-	function pw.cfgvalue(self, section)
-		return 1
-	end
 end
 
 net = f:field(ListValue, "net", "Freifunk Community", "Nutzen Sie die Einstellungen der Freifunk Gemeinschaft in ihrer Nachbarschaft.")
@@ -122,15 +126,15 @@ function hostname.write(self, section, value)
 	uci:set("freifunk", "wizard", "hostname", value)
 	uci:save("freifunk")
 end
---function hostname.validate(self, value)
---        if (#value > 16) then
---        	return ""
---        elseif (string.find(value, "[^%w%_%-]")) then
---                return ""
---        else
---        	return value
---        end
---end
+function hostname.validate(self, value)
+	if (#value > 16) then
+		return
+	elseif (string.find(value, "[^%w%_%-]")) then
+		return
+	else
+		return value
+	end
+end
 
 -- location
 location = f:field(Value, "location", "Standort", "Geben Sie den Standort ihres Gerätes an")
