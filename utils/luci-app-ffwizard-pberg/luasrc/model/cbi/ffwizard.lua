@@ -1576,6 +1576,8 @@ function main.write(self, section, value)
 		-- Delete gateway plugins
 		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
+		uci:delete_all("olsrdv6", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
+		uci:delete_all("olsrdv6", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 		-- Disable gateway_plain plugin
 		uci:section("olsrd", "LoadPlugin", nil, {
 			library     = "olsrd_dyn_gw_plain.so.0.4",
