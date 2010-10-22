@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=auto-ipv6
 PKG_VERSION:=0.0.2
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -40,6 +40,8 @@ define Package/auto-ipv6/install
 	$(INSTALL_BIN) ./src/auto-ipv6 $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_DATA) ./src/auto-ipv6.defaults $(1)/etc/uci-defaults/auto-ipv6
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_DATA) ./src/autoipv6.config $(1)/etc/config/autoipv6
 endef
 
 $(eval $(call BuildPackage,auto-ipv6))
