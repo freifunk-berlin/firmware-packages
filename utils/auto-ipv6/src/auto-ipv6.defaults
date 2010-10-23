@@ -1,5 +1,5 @@
 #!/bin/sh
 
 #add cron entry
-grep -q 'auto-ipv6' /etc/crontabs/root || echo '4/* * * * * /usr/bin/auto-ipv6' >> /etc/crontabs/root
+grep -q 'auto-ipv6' /etc/crontabs/root || echo '*/4 * * * * /usr/bin/auto-ipv6' >> /etc/crontabs/root
 
