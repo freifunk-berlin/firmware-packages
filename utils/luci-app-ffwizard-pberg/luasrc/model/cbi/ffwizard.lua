@@ -30,6 +30,7 @@ local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
 local has_l2gvpn  = fs.access("/usr/sbin/node")
 local has_radvd  = fs.access("/etc/config/radvd")
 local has_rom  = fs.access("/rom/etc")
+local has_autoipv6  = fs.access("/usr/bin/auto-ipv6")
 
 luci.i18n.loadc("freifunk")
 
@@ -576,6 +577,9 @@ function f.handle(self, state, data)
 			uci:commit("uhttpd")
 			uci:commit("olsrd")
 			uci:commit("olsrdv6")
+			if has_autoipv6 then
+				uci:commit("autoipv6")
+			end
 			uci:commit("qos")
 			uci:commit("manager")
 			if has_l2gvpn then
@@ -602,7 +606,6 @@ local function _strip_internals(tbl)
 	end
 	return tbl
 end
-
 -- Configure Freifunk checked
 function main.write(self, section, value)
 	if value == "0" then
@@ -662,7 +665,59 @@ function main.write(self, section, value)
 	uci:save("firewall")
 	uci:delete("manager", "heartbeat", "interface")
 	uci:save("manager")
+	-- Delete olsrdv4
+	uci:delete_all("olsrd", "olsrd")
+	local olsrbase
+	olsrbase = uci:get_all("freifunk", "olsrd") or {}
+	util.update(olsrbase, uci:get_all(external, "olsrd") or {})
+	uci:section("olsrd", "olsrd", nil, olsrbase)
+	-- Delete olsrdv4 old p2pd settings
+	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})
+	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_p2pd.so.0.1.0"})
+	-- Write olsrdv4 new p2pd settings
+	uci:section("olsrd", "LoadPlugin", nil, {
+		library     = "olsrd_p2pd.so.0.1.0",
+		P2pdTtl     = 10,
+		UdpDestPort = "224.0.0.251 5353",
+		ignore      = 1,
+	})
+	-- Delete http plugin
+	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
 
+	-- Delete olsrdv4 old interface
+	uci:delete_all("olsrd", "Interface")
+	uci:delete_all("olsrd", "Hna4")
+	-- Delete olsrdv6
+	uci:delete_all("olsrdv6", "olsrdv6")
+	uci:delete_all("olsrdv6", "olsrd")
+	local olsrbase6
+	olsrbase6 = uci:get_all("freifunk", "olsrd") or {}
+	util.update(olsrbase6, uci:get_all(external, "olsrd") or {})
+	olsrbase6.IpVersion='6'
+	uci:section("olsrdv6", "olsrd", nil, olsrbase6)
+
+	-- Delete old olsrdv6 p2pd settings
+	uci:delete_all("olsrdv6", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})
+	uci:delete_all("olsrdv6", "LoadPlugin", {library="olsrd_p2pd.so.0.1.0"})
+	-- Write new nameservice settings
+--	uci:section("olsrdv6", "LoadPlugin", nil, {
+--		library     = "olsrd_p2pd.so.0.1.0",
+--		P2pdTtl     = 10,
+--		UdpDestPort = "224.0.0.251 5353",
+--		ignore      = 1,
+--	})
+	-- Delete http plugin
+	uci:delete_all("olsrdv6", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
+	-- Delete txtinfo plugin
+	uci:delete_all("olsrdv6", "LoadPlugin", {library="olsrd_txtinfo.so.0.1"})
+	-- Write new nameservice settings
+	uci:section("olsrdv6", "LoadPlugin", nil, {
+		library     = "olsrd_txtinfo.so.0.1",
+		accept      = "::",
+	})
+	-- Delete olsrdv6 old interface
+	uci:delete_all("olsrdv6", "Interface")
+	uci:delete_all("olsrdv6", "Hna6")
 	-- Create wireless ip4/ip6 and firewall config
 	uci:foreach("wireless", "wifi-device",
 	function(sec)
@@ -688,7 +743,6 @@ function main.write(self, section, value)
 		elseif string.find(device, "radio") then
 			nif = string.gsub(device,"radio", netname)
 		end
-
 		-- Cleanup
 		tools.wifi_delete_ifaces(device)
 		-- tools.network_remove_interface(device)
@@ -714,7 +768,6 @@ function main.write(self, section, value)
 			uci:delete_all("radvd", "prefix", {interface=nif.."dhcp"})
 			uci:delete_all("radvd", "prefix", {interface=nif})
 		end
-
 		-- New Config
 		-- Tune wifi device
 		local ssiduci = uci:get("freifunk", community, "ssid")
@@ -725,7 +778,6 @@ function main.write(self, section, value)
 		else
 			ssidshort = ssiduci
 		end
-
 		local devconfig = uci:get_all("freifunk", "wifi_device")
 		util.update(devconfig, uci:get_all(external, "wifi_device") or {})
 		local ssid = uci:get("freifunk", community, "ssid")
@@ -807,6 +859,15 @@ function main.write(self, section, value)
 		uci:save("freifunk")
 		tools.firewall_zone_add_interface("freifunk", nif)
 		uci:save("firewall")
+		-- Write new olsrv4 interface
+		local olsrifbase = uci:get_all("freifunk", "olsr_interface")
+		util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
+		olsrifbase.interface = nif
+		olsrifbase.ignore    = "0"
+		uci:section("olsrd", "Interface", nil, olsrifbase)
+		-- Write new olsrv6 interface
+		olsrifbase.Ip4Broadcast = ''
+		uci:section("olsrdv6", "Interface", nil, olsrifbase)
 		-- Collect MESH DHCP IP NET
 		local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
 		if client then
@@ -823,6 +884,25 @@ function main.write(self, section, value)
 				end
 				dhcp_ip = dhcpmeshnet:minhost():string()
 				dhcp_mask = dhcpmeshnet:mask():string()
+				dhcp_network = dhcpmeshnet:network():string()
+				uci:section("olsrd", "Hna4", nil, {
+					netmask  = dhcp_mask,
+					netaddr  = dhcp_network
+				})
+				uci:foreach("olsrd", "LoadPlugin",
+					function(s)		
+						if s.library == "olsrd_p2pd.so.0.1.0" then
+							uci:set("olsrd", s['.name'], "ignore", "0")
+							local nonolsr = uci:get("olsrd", s['.name'], "NonOlsrIf") or ""
+							vap = luci.http.formvalue("cbid.ffwizward.1.vap_" .. device)
+							if vap then
+								nonolsr = nif.."dhcp "..nonolsr
+							else
+								nonolsr = nif.." "..nonolsr
+							end
+							uci:set("olsrd", s['.name'], "NonOlsrIf", nonolsr)
+						end
+					end)
 			else
 				local subnet_prefix = tonumber(uci:get("freifunk", community, "splash_prefix")) or 27
 				local pool_network = uci:get("freifunk", community, "splash_network") or "10.104.0.0/16"
@@ -976,7 +1056,6 @@ function main.write(self, section, value)
 				uci:delete_all("radvd", "prefix", {interface=device.."dhcp"})
 				uci:delete_all("radvd", "prefix", {interface=device})
 			end
-
 			-- New Config
 			local netconfig = uci:get_all("freifunk", "interface")
 			util.update(netconfig, uci:get_all(external, "interface") or {})
@@ -1007,6 +1086,16 @@ function main.write(self, section, value)
 			uci:save("freifunk")
 			tools.firewall_zone_add_interface("freifunk", device)
 			uci:save("firewall")
+			-- Write new olsrv4 interface
+			local olsrifbase = uci:get_all("freifunk", "olsr_interface")
+			util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
+			olsrifbase.interface = device
+			olsrifbase.ignore    = "0"
+			uci:section("olsrd", "Interface", nil, olsrifbase)
+			-- Write new olsrv6 interface
+			olsrifbase.Ip4Broadcast = ''
+			olsrifbase.Mode = 'ether'
+			uci:section("olsrdv6", "Interface", nil, olsrifbase)
 			-- Collect MESH DHCP IP NET
 			local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
 			if client then
@@ -1023,6 +1112,19 @@ function main.write(self, section, value)
 					end
 					dhcp_ip = dhcpmeshnet:minhost():string()
 					dhcp_mask = dhcpmeshnet:mask():string()
+					dhcp_network = dhcpmeshnet:network():string()
+					uci:section("olsrd", "Hna4", nil, {
+						netmask  = dhcp_mask,
+						netaddr  = dhcp_network
+					})
+					uci:foreach("olsrd", "LoadPlugin",
+						function(s)		
+							if s.library == "olsrd_p2pd.so.0.1.0" then
+								uci:set("olsrd", s['.name'], "ignore", "0")
+								local nonolsr = uci:get("olsrd", s['.name'], "NonOlsrIf") or ""
+								uci:set("olsrd", s['.name'], "NonOlsrIf", device .." ".. nonolsr)
+							end
+						end)
 				else
 					local subnet_prefix = tonumber(uci:get("freifunk", community, "splash_prefix")) or 27
 					local pool_network = uci:get("freifunk", community, "splash_network") or "10.104.0.0/16"
@@ -1105,11 +1207,10 @@ function main.write(self, section, value)
 			uci:save("dhcp")
 		end
 	end)
+	--enable radvd
 	if has_radvd then
 		sys.init.enable("radvd")
 	end
-
-
 	-- Enforce firewall include
 	local has_include = false
 	uci:foreach("firewall", "include",
@@ -1212,134 +1313,6 @@ function main.write(self, section, value)
 			uci:delete("system", s[".name"], "longitude")
 		end)
 	end
-
-	-- Delete olsrd IPv4
-	uci:delete_all("olsrd", "olsrd")
-	local olsrbase
-	olsrbase = uci:get_all("freifunk", "olsrd") or {}
-	util.update(olsrbase, uci:get_all(external, "olsrd") or {})
-	uci:section("olsrd", "olsrd", nil, olsrbase)
-
-	-- Delete old p2pd settings
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_p2pd.so.0.1.0"})
-	-- Write new nameservice settings
-	uci:section("olsrd", "LoadPlugin", nil, {
-		library     = "olsrd_p2pd.so.0.1.0",
-		P2pdTtl     = 10,
-		UdpDestPort = "224.0.0.251 5353",
-		ignore      = 1,
-	})
-	-- Delete http plugin
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
-
-	-- Delete old interface
-	uci:delete_all("olsrd", "Interface")
-	uci:delete_all("olsrd", "Hna4")
-	-- Create wireless olsrv4 config
-	uci:foreach("wireless", "wifi-device",
-	function(sec)
-		local device = sec[".name"]
-		if not luci.http.formvalue("cbid.ffwizward.1.device_" .. device) then
-			return
-		end
-		local node_ip = luci.http.formvalue("cbid.ffwizward.1.meship_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.meship_" .. device))
-		if not node_ip or not network or not network:contains(node_ip) then
-			meship.tag_missing[section] = true
-			node_ip = nil
-			return
-		end
-		-- rename the wireless interface s/wifi/wireless/
-		local nif
-		if string.find(device, "wifi") then
-			nif = string.gsub(device,"wifi", netname)
-		elseif string.find(device, "wl") then
-			nif = string.gsub(device,"wl", netname)
-		elseif string.find(device, "wlan") then
-			nif = string.gsub(device,"wlan", netname)
-		elseif string.find(device, "radio") then
-			nif = string.gsub(device,"radio", netname)
-		end
-
-		-- Write new interface
-		local olsrifbase = uci:get_all("freifunk", "olsr_interface")
-		util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
-		olsrifbase.interface = nif
-		olsrifbase.ignore    = "0"
-		uci:section("olsrd", "Interface", nil, olsrifbase)
-		-- Collect MESH DHCP IP NET
-		local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
-		if client then
-			local dhcpmesh = luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device))
-			if dhcpmesh then
-				local mask = dhcpmesh:mask():string()
-				local network = dhcpmesh:network():string()
-				uci:section("olsrd", "Hna4", nil, {
-					netmask  = mask,
-					netaddr  = network
-				})
-				uci:foreach("olsrd", "LoadPlugin",
-					function(s)		
-						if s.library == "olsrd_p2pd.so.0.1.0" then
-							uci:set("olsrd", s['.name'], "ignore", "0")
-							local nonolsr = uci:get("olsrd", s['.name'], "NonOlsrIf") or ""
-							vap = luci.http.formvalue("cbid.ffwizward.1.vap_" .. device)
-							if vap then
-								nonolsr = nif.."dhcp "..nonolsr
-							else
-								nonolsr = nif.." "..nonolsr
-							end
-							uci:set("olsrd", s['.name'], "NonOlsrIf", nonolsr)
-						end
-					end)
-			end
-		end
-	end)
-	-- Create wired olsrdv4 config
-	uci:foreach("network", "interface",
-		function(sec)
-		local device = sec[".name"]
-		if device ~= "loopback" and not string.find(device, "gvpn") and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
-			local node_ip
-			if not luci.http.formvalue("cbid.ffwizward.1.device_" .. device) then
-				return
-			end
-			node_ip = luci.http.formvalue("cbid.ffwizward.1.meship_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.meship_" .. device))
-			if not node_ip or not network or not network:contains(node_ip) then
-				meship.tag_missing[section] = true
-				node_ip = nil
-				return
-			end
-			-- Write new interface
-			local olsrifbase = uci:get_all("freifunk", "olsr_interface")
-			util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
-			olsrifbase.interface = device
-			olsrifbase.ignore    = "0"
-			uci:section("olsrd", "Interface", nil, olsrifbase)
-			-- Collect MESH DHCP IP NET
-			local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
-			if client then
-				local dhcpmesh = luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device))
-				if dhcpmesh then
-					local mask = dhcpmesh:mask():string()
-					local network = dhcpmesh:network():string()
-					uci:section("olsrd", "Hna4", nil, {
-						netmask  = mask,
-						netaddr  = network
-					})
-					uci:foreach("olsrd", "LoadPlugin",
-						function(s)		
-							if s.library == "olsrd_p2pd.so.0.1.0" then
-								uci:set("olsrd", s['.name'], "ignore", "0")
-								local nonolsr = uci:get("olsrd", s['.name'], "NonOlsrIf") or ""
-								uci:set("olsrd", s['.name'], "NonOlsrIf", device .." ".. nonolsr)
-							end
-						end)
-				end
-			end
-		end
-	end)
-	
 	-- Delete old watchdog settings
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_watchdog.so.0.1"})
 	-- Write new watchdog settings
@@ -1374,140 +1347,6 @@ function main.write(self, section, value)
 
 	uci:save("olsrd")
 	uci:save("dhcp")
-
-	-- Delete olsrd IPv6
-	uci:delete_all("olsrdv6", "olsrdv6")
-	uci:delete_all("olsrdv6", "olsrd")
-	local olsrbase6
-	olsrbase6 = uci:get_all("freifunk", "olsrd") or {}
-	util.update(olsrbase6, uci:get_all(external, "olsrd") or {})
-	olsrbase6.IpVersion='6'
-	uci:section("olsrdv6", "olsrd", nil, olsrbase6)
-
-	-- Delete old p2pd settings
-	uci:delete_all("olsrdv6", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})
-	uci:delete_all("olsrdv6", "LoadPlugin", {library="olsrd_p2pd.so.0.1.0"})
-	-- Write new nameservice settings
---	uci:section("olsrdv6", "LoadPlugin", nil, {
---		library     = "olsrd_p2pd.so.0.1.0",
---		P2pdTtl     = 10,
---		UdpDestPort = "224.0.0.251 5353",
---		ignore      = 1,
---	})
-	-- Delete http plugin
-	uci:delete_all("olsrdv6", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
-	-- Delete txtinfo plugin
-	uci:delete_all("olsrdv6", "LoadPlugin", {library="olsrd_txtinfo.so.0.1"})
-	-- Write new nameservice settings
-	uci:section("olsrdv6", "LoadPlugin", nil, {
-		library     = "olsrd_txtinfo.so.0.1",
-		accept      = "::",
-	})
-
-	-- Delete old interface
-	uci:delete_all("olsrdv6", "Interface")
-	uci:delete_all("olsrdv6", "Hna6")
-	-- Create wireless olsr config
-	uci:foreach("wireless", "wifi-device",
-	function(sec)
-		local device = sec[".name"]
-		if not luci.http.formvalue("cbid.ffwizward.1.device_" .. device) then
-			return
-		end
-		local node_ip6 = luci.http.formvalue("cbid.ffwizward.1.meship6_" .. device)
-		-- and ip.IPv6(luci.http.formvalue("cbid.ffwizward.1.meship6_" .. device))
-		if not node_ip6 then
-			meship6.tag_missing[section] = true
-			node_ip6 = nil
-			return
-		end
-		-- rename the wireless interface s/wifi/wireless/
-		local nif
-		if string.find(device, "wifi") then
-			nif = string.gsub(device,"wifi", netname)
-		elseif string.find(device, "wl") then
-			nif = string.gsub(device,"wl", netname)
-		elseif string.find(device, "wlan") then
-			nif = string.gsub(device,"wlan", netname)
-		elseif string.find(device, "radio") then
-			nif = string.gsub(device,"radio", netname)
-		end
-
-		-- Write new interface
-		local olsrifbase = uci:get_all("freifunk", "olsr_interface")
-		util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
-		olsrifbase.interface = nif
-		olsrifbase.Ip4Broadcast = ''
-		olsrifbase.ignore    = "0"
-		uci:section("olsrdv6", "Interface", nil, olsrifbase)
-		-- Collect MESH DHCP IP NET
---		local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
---		if client then
---			local dhcpmesh = luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device) and ip.IPv6(luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device))
---			if dhcpmesh then
---				local mask = dhcpmesh:mask():string()
---				local network = dhcpmesh:network():string()
---				uci:section("olsrdv6", "Hna6", nil, {
---					netmask  = mask,
---					netaddr  = network
---				})
---				uci:foreach("olsrdv6", "LoadPlugin",
---					function(s)
---						if s.library == "olsrd_p2pd.so.0.1.0" then
---							uci:set("olsrd", s['.name'], "ignore", "0")
---							uci:set("olsrd", s['.name'], "NonOlsrIf", nif)
---						end
---					end)
---			end
---		end
-	end)
-	-- Create wired olsrdv6 config
-	uci:foreach("network", "interface",
-		function(sec)
-		local device = sec[".name"]
-		if device ~= "loopback" and not string.find(device, "gvpn") and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
-			local node_ip6
-			if not luci.http.formvalue("cbid.ffwizward.1.device_" .. device) then
-				return
-			end
-			node_ip6 = luci.http.formvalue("cbid.ffwizward.1.meship6_" .. device)
-			-- and ip.IPv6(luci.http.formvalue("cbid.ffwizward.1.meship6_" .. device))
-			if not node_ip6 then
-				meship6.tag_missing[section] = true
-				node_ip6 = nil
-				return
-			end
-			-- Write new interface
-			local olsrifbase = uci:get_all("freifunk", "olsr_interface")
-			util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
-			olsrifbase.interface = device
-			olsrifbase.ignore    = "0"
-			olsrifbase.Ip4Broadcast = ''
-			olsrifbase.Mode = 'ether'
-			uci:section("olsrdv6", "Interface", nil, olsrifbase)
-			-- Collect MESH DHCP IP NET
---			local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
---			if client then
---				local dhcpmesh = luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device) and ip.IPv6(luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device))
---				if dhcpmesh then
---					local mask = dhcpmesh:mask():string()
---					local network = dhcpmesh:network():string()
---					uci:section("olsrdv6", "Hna6", nil, {
---						netmask  = mask,
---						netaddr  = network
---					})
---					uci:foreach("olsrdv6", "LoadPlugin",
---						function(s)		
---							if s.library == "olsrd_p2pd.so.0.1.0" then
---								uci:set("olsrdv6", s['.name'], "ignore", "0")
---								uci:set("olsrdv6", s['.name'], "NonOlsrIf", device)
---							end
---						end)
---				end
---			end
-		end
-	end)
-	
 	-- Delete old watchdog settings
 	uci:delete_all("olsrdv6", "LoadPlugin", {library="olsrd_watchdog.so.0.1"})
 	-- Write new watchdog settings
@@ -1595,7 +1434,6 @@ function main.write(self, section, value)
 				end
 			end)
 	end
-
 	-- Write gvpn dummy interface
 	local vpn = gvpn:formvalue(section)
 	if vpn then
