@@ -423,15 +423,13 @@ function share.write(self, section, value)
 end
 
 wanproto = f:field(ListValue, "wanproto", "Protokoll des Internetzugangs", "Geben Sie das Protokol an ueber das eine Internet verbindung hergestellt werden kann.")
-wanproto.rmempty = false
-wanproto.optional = false
 wanproto:depends("sharenet", "1")
 wanproto:value("static", translate("manual", "manual"))
 wanproto:value("dhcp", translate("automatic", "automatic"))
 if has_pppoe then wanproto:value("pppoe", "PPPoE") end
 if has_pptp  then wanproto:value("pptp",  "PPTP")  end
 function wanproto.cfgvalue(self, section)
-	return uci:get("network", "wan", "proto")
+	return uci:get("network", "wan", "proto") or "dhcp"
 end
 function wanproto.write(self, section, value)
 	uci:set("network", "wan", "proto", value)
@@ -1437,44 +1435,47 @@ function main.write(self, section, value)
 			end)
 	end
 	-- Write gvpn dummy interface
-	local vpn = gvpn:formvalue(section)
-	if vpn then
-		uci:delete_all("l2gvpn", "l2gvpn")
-		uci:delete_all("l2gvpn", "node")
-		uci:delete_all("l2gvpn", "supernode")
-		-- Write olsr tunnel interface options
-		local olsr_gvpnifbase = uci:get_all("freifunk", "olsr_gvpninterface")
-		util.update(olsr_gvpnifbase, uci:get_all(external, "olsr_gvpninterface") or {})
-		uci:section("olsrd", "Interface", nil, olsr_gvpnifbase)
-		local vpnip = gvpnip:formvalue(section)
-		local gvpnif = uci:get_all("freifunk", "gvpn_node")
-		util.update(gvpnif, uci:get_all(external, "gvpn_node") or {})
-		if gvpnif and gvpnif.tundev and vpnip then
-			uci:section("network", "interface", gvpnif.tundev, {
-				ifname  =gvpnif.tundev ,
-				proto   ="static" ,
-				ipaddr  =vpnip ,
-				netmask =gvpnif.subnet or "255.255.255.192" ,
-			})
-			gvpnif.ip=""
-			gvpnif.subnet=""
-			gvpnif.up=""
-			gvpnif.down=""
-			gvpnif.mac="00:00:48:"..string.format("%X",string.gsub( vpnip, ".*%." , "" ))..":00:00"
-			tools.firewall_zone_add_interface("freifunk", gvpnif.tundev)
-			uci:section("l2gvpn", "node" , gvpnif.community , gvpnif)
-			uci:save("network")
-			uci:save("l2gvpn")
-			uci:save("firewall")
-			uci:save("olsrd")
-			sys.init.enable("l2gvpn")
+	if has_l2gvpn then
+		if gvpn then
+			local vpn = gvpn:formvalue(section) or ''
+			if vpn then
+				uci:delete_all("l2gvpn", "l2gvpn")
+				uci:delete_all("l2gvpn", "node")
+				uci:delete_all("l2gvpn", "supernode")
+				-- Write olsr tunnel interface options
+				local olsr_gvpnifbase = uci:get_all("freifunk", "olsr_gvpninterface")
+				util.update(olsr_gvpnifbase, uci:get_all(external, "olsr_gvpninterface") or {})
+				uci:section("olsrd", "Interface", nil, olsr_gvpnifbase)
+				local vpnip = gvpnip:formvalue(section)
+				local gvpnif = uci:get_all("freifunk", "gvpn_node")
+				util.update(gvpnif, uci:get_all(external, "gvpn_node") or {})
+				if gvpnif and gvpnif.tundev and vpnip then
+					uci:section("network", "interface", gvpnif.tundev, {
+						ifname  =gvpnif.tundev ,
+						proto   ="static" ,
+						ipaddr  =vpnip ,
+						netmask =gvpnif.subnet or "255.255.255.192" ,
+					})
+					gvpnif.ip=""
+					gvpnif.subnet=""
+					gvpnif.up=""
+					gvpnif.down=""
+					gvpnif.mac="00:00:48:"..string.format("%X",string.gsub( vpnip, ".*%." , "" ))..":00:00"
+					tools.firewall_zone_add_interface("freifunk", gvpnif.tundev)
+					uci:section("l2gvpn", "node" , gvpnif.community , gvpnif)
+					uci:save("network")
+					uci:save("l2gvpn")
+					uci:save("firewall")
+					uci:save("olsrd")
+					sys.init.enable("l2gvpn")
+				end
+			else
+				-- Disable l2gvpn
+				sys.exec("/etc/init.d/l2gvpn stop")
+				sys.init.disable("l2gvpn")
+			end
 		end
-	else
-		-- Disable l2gvpn
-		sys.exec("/etc/init.d/l2gvpn stop")
-		sys.init.disable("l2gvpn")
 	end
-
 
 	uci:save("freifunk")
 	uci:save("firewall")
