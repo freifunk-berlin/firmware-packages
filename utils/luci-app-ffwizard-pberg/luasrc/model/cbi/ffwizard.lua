@@ -1263,7 +1263,9 @@ function main.write(self, section, value)
 		function(s)
 			-- Make crond silent
 			uci:set("system", s['.name'], "cronloglevel", "10")
-
+			-- Make set timzone and zonename
+			uci:set("system", s['.name'], "zonename", "Europe/Berlin")
+			uci:set("system", s['.name'], "timezone", 'CET-1CEST,M3.5.0,M10.5.0/3')
 			-- Set hostname
 			if custom_hostname then
 				uci:set("system", s['.name'], "hostname", custom_hostname)
@@ -1437,7 +1439,7 @@ function main.write(self, section, value)
 	-- Write gvpn dummy interface
 	if has_l2gvpn then
 		if gvpn then
-			local vpn = gvpn:formvalue(section) or ''
+			local vpn = gvpn:formvalue(section)
 			if vpn then
 				uci:delete_all("l2gvpn", "l2gvpn")
 				uci:delete_all("l2gvpn", "node")
