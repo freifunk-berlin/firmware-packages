@@ -49,7 +49,15 @@ for i in $(echo $interfaces) ; do
 	logger -t auto-ipv6 "Removing IPv6 Sufix ""$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64"" from ""$DEV"
 	#ip -6 addr del "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64" dev "$DEV" 2>/dev/null
 	ifconfig "$DEV" del "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64"
-	
+	sysctl -w "net.ipv6.conf.$DEV.autoconf=0"
+	sysctl -w "net.ipv6.conf.$DEV.accept_redirects=0"
+	sysctl -w "net.ipv6.conf.$DEV.accept_ra=0"
+	sysctl -w "net.ipv6.conf.$DEV.accept_ra_defrtr=0"
+	sysctl -w "net.ipv6.conf.$DEV.accept_ra_pinfo=0"
+	sysctl -w "net.ipv6.conf.$DEV.accept_source_route=0"
+	for j in $(ifconfig $DEV | grep Scope:Global | cut -d ' ' -f 13 | grep -v fdca) ; do
+		ifconfig "$DEV" del "$j"
+	done
 	logger -t auto-ipv6 "Applying IPv6 Sufix ""$IP6_SUFIX"":""$IP6_UNIQ""::1/64"" to ""$DEV"
 	#ip -6 addr add "$IP6_SUFIX"":""$IP6_UNIQ""::1/64"       dev "$DEV" 2>/dev/null
 	ifconfig "$DEV" add "$IP6_SUFIX"":""$IP6_UNIQ""::1/64"
@@ -79,6 +87,14 @@ done
 
 
 uci commit
-[ -z "$(pidof radvd)" ] || /etc/init.d/radvd restart
-[ -z "$(pidof olsrd)" ] || /etc/init.d/olsrd restart
+if ! [ -z "$(pidof radvd)" ] ; then
+	/etc/init.d/radvd stop
+	killall -9 radvd
+	/etc/init.d/radvd start
+fi
+if ! [ -z "$(pidof olsrd)" ] ; then
+	/etc/init.d/olsrd stop
+	killall -9 olsrd
+	/etc/init.d/olsrd start
+fi
 
