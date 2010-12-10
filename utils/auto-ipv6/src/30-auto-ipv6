@@ -1,11 +1,16 @@
 #!/bin/sh
 
 #Enable/Disable auto-ipv6
-[ "$(uci get autoipv6.tunnel.enable)" == 1 ] || exit 0
+if ! [ "$(uci get autoipv6.tunnel.enable)" == 1 ] ; then
+        logger -t auto-ipv6 "If you have a Internet uplink then uci set  autoipv6.tunnel.enable=1"
+        exit 0
+fi
 
 #Kernel Tunnel Modul?
-lsmod | grep '^sit ' 2&>1 1>/dev/null || exit 0
-
+if [ "a""$(lsmod | grep '^sit ')" == "a" ] ; then
+        logger -t auto-ipv6 "Please install kmod-sit and kmod-iptunnel4"
+        exit 0
+fi
 # IFUP?
 [ "$ACTION" = "ifup" ] || exit 0
 
@@ -119,7 +124,6 @@ if [ -f /etc/config/olsrdv6 ] ; then
 	hna6_find=""
 	config_foreach olsrd_find_hna6 Hna6 "::"
 	if [ "$hna6_find" == "" ] ; then
-		logger 
 		uci add olsrdv6 Hna6 >/dev/null
 		uci set "olsrdv6.@Hna6[""$hna6_count""].prefix=0"
 		uci set "olsrdv6.@Hna6[""$hna6_count""].netaddr=::"
