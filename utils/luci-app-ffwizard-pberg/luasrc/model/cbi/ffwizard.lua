@@ -31,6 +31,7 @@ local has_l2gvpn  = fs.access("/usr/sbin/node")
 local has_radvd  = fs.access("/etc/config/radvd")
 local has_rom  = fs.access("/rom/etc")
 local has_autoipv6  = fs.access("/usr/bin/auto-ipv6")
+local has_qos  = fs.access("/etc/init.d/qos")
 
 luci.i18n.loadc("freifunk")
 
@@ -506,6 +507,29 @@ function wansec.write(self, section, value)
 	uci:set("freifunk", "wizard", "wan_security", value)
 	uci:save("freifunk")
 end
+if has_qos then
+	wanqosdown = f:field(Value, "wanqosdown", "Download Bandbreite begrenzen", "kb/s")
+	wanqosdown.rmempty = false
+	wanqosdown:depends("sharenet", "1")
+	function wanqosdown.cfgvalue(self, section)
+		return uci:get("qos", "wan", "download")
+	end
+	function wanqosdown.write(self, section, value)
+		uci:set("qos", "wan", "download", value)
+		uci:save("qos")
+	end
+	wanqosup = f:field(Value, "wanqosup", "Upload Bandbreite begrenzen", "kb/s")
+	wanqosup.rmempty = false
+	wanqosup:depends("sharenet", "1")
+	function wanqosup.cfgvalue(self, section)
+		return uci:get("qos", "wan", "upload")
+	end
+	function wanqosup.write(self, section, value)
+		uci:set("qos", "wan", "upload", value)
+		uci:save("qos")
+	end
+end
+
 if has_l2gvpn then
 	gvpn = f:field(Flag, "gvpn", "Freifunk Internet Tunnel", "Verbinden Sie ihren Router ueber das Internet mit anderen Freifunknetzen.")
 	gvpn.rmempty = false
@@ -575,11 +599,13 @@ function f.handle(self, state, data)
 			uci:commit("uhttpd")
 			uci:commit("olsrd")
 			uci:commit("olsrdv6")
+			uci:commit("manager")
 			if has_autoipv6 then
 				uci:commit("autoipv6")
 			end
-			uci:commit("qos")
-			uci:commit("manager")
+			if has_qos then
+				uci:commit("qos")
+			end
 			if has_l2gvpn then
 				uci:commit("l2gvpn")
 			end
