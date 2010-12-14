@@ -509,7 +509,6 @@ function wansec.write(self, section, value)
 end
 if has_qos then
 	wanqosdown = f:field(Value, "wanqosdown", "Download Bandbreite begrenzen", "kb/s")
-	wanqosdown.rmempty = false
 	wanqosdown:depends("sharenet", "1")
 	function wanqosdown.cfgvalue(self, section)
 		return uci:get("qos", "wan", "download")
@@ -519,7 +518,6 @@ if has_qos then
 		uci:save("qos")
 	end
 	wanqosup = f:field(Value, "wanqosup", "Upload Bandbreite begrenzen", "kb/s")
-	wanqosup.rmempty = false
 	wanqosup:depends("sharenet", "1")
 	function wanqosup.cfgvalue(self, section)
 		return uci:get("qos", "wan", "upload")
