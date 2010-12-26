@@ -576,7 +576,7 @@ function f.handle(self, state, data)
 			end
 			data.pw1 = nil
 			data.pw2 = nil
-			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "system"))
+			luci.http.redirect(luci.dispatcher.build_url(unpack(luci.dispatcher.context.requested.path), "system", "system"))
 		else
 			if data.pw1 then
 				local stat = luci.sys.user.setpasswd("root", data.pw1) == 0
@@ -610,7 +610,7 @@ function f.handle(self, state, data)
 			if has_radvd then
 				uci:commit("radvd")
 			end
-			luci.http.redirect(luci.dispatcher.build_url(unpack(luci.dispatcher.context.requested.path) .. "/system/reboot?reboot=1"))
+			luci.http.redirect(luci.dispatcher.build_url(unpack(luci.dispatcher.context.requested.path), "system", "reboot") .. "?reboot=1")
 		end
 		return false
 	elseif state == FORM_INVALID then
