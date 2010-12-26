@@ -610,7 +610,7 @@ function f.handle(self, state, data)
 			if has_radvd then
 				uci:commit("radvd")
 			end
-			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot") .. "?reboot=1")
+			luci.http.redirect(luci.dispatcher.build_url(unpack(luci.dispatcher.context.requested.path) .. "/system/reboot?reboot=1"))
 		end
 		return false
 	elseif state == FORM_INVALID then
