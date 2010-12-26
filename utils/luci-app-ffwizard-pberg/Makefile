@@ -43,7 +43,6 @@ define Package/luci-app-ffwizard-pberg/install
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
 	$(INSTALL_DIR) $(1)/www/luci-static
 	$(CP) ./luci-static/* $(1)/www/luci-static
-	$(CP) ./htdocs/* $(1)/www
 endef
 
 $(eval $(call BuildPackage,luci-app-ffwizard-pberg))
