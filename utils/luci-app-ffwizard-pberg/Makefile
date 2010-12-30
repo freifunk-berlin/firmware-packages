@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ffwizard-pberg
 PKG_VERSION:=0.0.2
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -13,11 +13,10 @@ include $(INCLUDE_DIR)/package.mk
 define Package/luci-app-ffwizard-pberg
   SECTION:=luci
   CATEGORY:=LuCI
-  SUBMENU:=Components
+  SUBMENU:=Applications
   TITLE:=Freifunk Prenzlauerberg configuration wizard
   URL:=http://pberg.freifunk.net
-  DEPENDS+= \
-   +luci-web +luci-app-splash
+  DEPENDS+= +luci-lib-web +luci-mod-freifunk
 endef
 
 define Package/luci-app-ffwizard-pberg/description

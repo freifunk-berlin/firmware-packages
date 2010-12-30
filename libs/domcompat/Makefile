@@ -15,7 +15,7 @@ include $(INCLUDE_DIR)/package.mk
 
 define Package/domcompat
   SECTION:=lib
-  CATEGORY:=Library
+  CATEGORY:=Libraries
   TITLE:=domcompat
   URL:=http://inolares.net/domcompat
   DEPENDS:=
