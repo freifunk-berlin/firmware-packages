@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ssl-cert
 PKG_VERSION:=0.0.1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -13,11 +13,10 @@ include $(INCLUDE_DIR)/package.mk
 define Package/ssl-cert
   SECTION:=luci
   CATEGORY:=LuCI
-  SUBMENU:=Components
+  SUBMENU:=Applications
   TITLE:=SSL Cert for uhttpd/https
   URL:=http://pberg.freifunk.net
-  DEPENDS+= \
-   +uhttpd
+  DEPENDS+= +uhttpd
 endef
 
 define Package/ssl-cert/description
