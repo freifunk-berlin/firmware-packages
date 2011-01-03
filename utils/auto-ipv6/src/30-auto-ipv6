@@ -96,8 +96,8 @@ for i in $(echo $interfaces) ; do
 	ip -6 addr add "$IP6_SUFIX"":""$IP6_UNIQ""::1/64"       dev "$DEV" 2>/dev/null
 	uci -P /var/state set network.$i.ip6addr="$IP6_SUFIX"":""$IP6_UNIQ""::1/64"
 
-	if [ -f /etc/config/olsrdv6 ] ; then
-		config_load olsrdv6
+	if [ "6and4" == "$(uci get olsrd.@olsrd[0].IpVersion)" ] ; then
+		config_load olsrd
 
 		logger -t auto-ipv6 "Removing IPv6 Hna6 ""$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"" from olsrd"
 		hna6_count="0"
@@ -105,49 +105,50 @@ for i in $(echo $interfaces) ; do
 		config_foreach olsrd_find_hna6 Hna6 "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"
 		if [ "$hna6_find" == "" ] ; then
 			logger -t auto-ipv6 "Applying IPv6 Hna6 ""$IP6_SUFIX"":""$IP6_UNIQ""::"" to olsrd"
-			uci add olsrdv6 Hna6 >/dev/null
-			uci set "olsrdv6.@Hna6[""$hna6_count""].prefix=64"
-			uci set "olsrdv6.@Hna6[""$hna6_count""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
+			uci add olsrd Hna6 >/dev/null
+			uci set "olsrd.@Hna6[""$hna6_count""].prefix=64"
+			uci set "olsrd.@Hna6[""$hna6_count""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
 			uci commit
 		else
 			logger -t auto-ipv6 "Overwrite IPv6 Hna6 ""$IP6_SUFIX"":""$IP6_UNIQ""::"" to olsrd"
-			uci set "olsrdv6.@Hna6[""$hna6_find""].prefix=64"
-			uci set "olsrdv6.@Hna6[""$hna6_find""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
+			uci set "olsrd.@Hna6[""$hna6_find""].prefix=64"
+			uci set "olsrd.@Hna6[""$hna6_find""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
 			uci commit
 		fi
 	fi
 done
 
-if [ -f /etc/config/olsrdv6 ] ; then
-	config_load olsrdv6
+if [ "6and4" == "$(uci get olsrd.@olsrd[0].IpVersion)" ] ; then
+	config_load olsrd
 	hna6_count="0"
 	hna6_find=""
 	config_foreach olsrd_find_hna6 Hna6 "::"
 	if [ "$hna6_find" == "" ] ; then
-		uci add olsrdv6 Hna6 >/dev/null
-		uci set "olsrdv6.@Hna6[""$hna6_count""].prefix=0"
-		uci set "olsrdv6.@Hna6[""$hna6_count""].netaddr=::"
+		uci add olsrd Hna6 >/dev/null
+		uci set "olsrd.@Hna6[""$hna6_count""].prefix=0"
+		uci set "olsrd.@Hna6[""$hna6_count""].netaddr=::"
 	fi
 	hna6_count="0"
 	hna6_find=""
 	config_foreach olsrd_find_hna6 Hna6 "2000::"
 	if [ "$hna6_find" == "" ] ; then
-		uci add olsrdv6 Hna6 >/dev/null
-		uci set "olsrdv6.@Hna6[""$hna6_count""].prefix=3"
-		uci set "olsrdv6.@Hna6[""$hna6_count""].netaddr=2000::"
+		uci add olsrd Hna6 >/dev/null
+		uci set "olsrd.@Hna6[""$hna6_count""].prefix=3"
+		uci set "olsrd.@Hna6[""$hna6_count""].netaddr=2000::"
 	fi
 	plugin_count="0"
 	plugin_find="0"
 	hostname=$(uname -n)
 	config_foreach olsrd_find_plugin LoadPlugin "olsrd_nameservice"
 	if [ "$plugin_find" == "1" ] ; then
-		service=$(uci get "olsrdv6.@LoadPlugin[""$plugin_count""].service")
-		uci set "olsrdv6.@LoadPlugin[""$plugin_count""].service="
-		uci add_list "olsrdv6.@LoadPlugin[""$plugin_count""].service=http://""$hostname"".olsr:80|ip6|""$IP6_SUFIX"
+		service=$(uci get "olsrd.@LoadPlugin[""$plugin_count""].service")
+		uci set "olsrd.@LoadPlugin[""$plugin_count""].service="
+		uci add_list "olsrd.@LoadPlugin[""$plugin_count""].service=http://""$hostname"".olsr:80|ip6|""$IP6_SUFIX"
 	fi
 fi
 
 uci commit
+
 grep -q ping6 /etc/crontabs/root || {
 	echo '1 * * * * 	ping6 -w 59 ipv6.google.com 1>/dev/null &' >> /etc/crontabs/root
 	}
