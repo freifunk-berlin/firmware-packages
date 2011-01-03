@@ -63,8 +63,8 @@ for i in $(echo $interfaces) ; do
 	ifconfig "$DEV" add "$IP6_SUFIX"":""$IP6_UNIQ""::1/64"
 	uci -P /var/state set network.$i.ip6addr="$IP6_SUFIX"":""$IP6_UNIQ""::1/64"
 
-	if [ -f /etc/config/olsrdv6 ] ; then
-		config_load olsrdv6
+	if [ "6and4" == "$(uci get olsrd.@olsrd[0].IpVersion)" ] ; then
+		config_load olsrd
 
 		logger -t auto-ipv6 "Removing IPv6 Hna6 ""$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"" from olsrd"
 		hna6_count="0"
@@ -72,14 +72,14 @@ for i in $(echo $interfaces) ; do
 		config_foreach olsrd_find_hna6 Hna6 "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"
 		if [ "$hna6_find" == "" ] ; then
 			logger -t auto-ipv6 "Applying IPv6 Hna6 ""$IP6_SUFIX"":""$IP6_UNIQ""::"" to olsrd"
-			uci add olsrdv6 Hna6 >/dev/null
-			uci set "olsrdv6.@Hna6[""$hna6_count""].prefix=64"
-			uci set "olsrdv6.@Hna6[""$hna6_count""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
+			uci add olsrd Hna6 >/dev/null
+			uci set "olsrd.@Hna6[""$hna6_count""].prefix=64"
+			uci set "olsrd.@Hna6[""$hna6_count""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
 			uci commit
 		else
 			logger -t auto-ipv6 "Overwrite IPv6 Hna6 ""$IP6_SUFIX"":""$IP6_UNIQ""::"" to olsrd"
-			uci set "olsrdv6.@Hna6[""$hna6_find""].prefix=64"
-			uci set "olsrdv6.@Hna6[""$hna6_find""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
+			uci set "olsrd.@Hna6[""$hna6_find""].prefix=64"
+			uci set "olsrd.@Hna6[""$hna6_find""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
 			uci commit
 		fi
 	fi
