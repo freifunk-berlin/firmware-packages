@@ -1113,7 +1113,7 @@ function main.write(self, section, value)
 			olsrifbase.interface = device
 			olsrifbase.ignore    = "0"
 			uci:section("olsrd", "Interface", nil, olsrifbase)
-			olsrifbase.Mode = 'ether'
+			olsrifbase.mode = 'ether'
 			-- Collect MESH DHCP IP NET
 			local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
 			if client then
