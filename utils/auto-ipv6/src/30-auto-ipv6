@@ -62,6 +62,10 @@ olsrd_find_plugin(){
 	return 0
 }
 
+# warum ist die umask von hotplug.d so restricktiev?
+umask 022
+#
+
 IP6_SUFIX=$(printf "2002:%02x%02x:%02x%02x" $(echo $IP4_LOCAL|sed 's/\./ /g'))
 logger -t auto-ipv6 "Applying IPv6 Sufix $IP6_SUFIX"
 ip -6 route flush dev tun6to4 2&>1 1>/dev/null
