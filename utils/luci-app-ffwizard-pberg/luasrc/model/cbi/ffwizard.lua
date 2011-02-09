@@ -38,13 +38,16 @@ luci.i18n.loadc("freifunk")
 
 function get_mac(ix)
 	if string.find(ix, "radio") then
-		ix = string.gsub(ix,"radio", 'wlan')
+		mac = uci:get('wireless',ix,'macaddr')
+	else
+		local mac = fs.readfile("/sys/class/net/" .. ix .. "/address")
 	end
-	local mac = fs.readfile("/sys/class/net/" .. ix .. "/address")
 	if not mac then
 		mac = luci.util.exec("ifconfig " .. ix)
 		mac = mac and mac:match(" ([A-F0-9:]+)%s*\n")
-	else
+	end
+		
+	if mac then
 		mac = mac:sub(1,17)
 	end
 	if mac and #mac > 0 then
@@ -848,7 +851,9 @@ function main.write(self, section, value)
 		netconfig.proto = "static"
 		netconfig.ipaddr = node_ip:string()
 		if has_ipv6 then
-			netconfig.ip6addr = node_ip6:string()
+			if node_ip6 == '?' then
+				netconfig.ip6addr = node_ip6:string()
+			end
 		end
 		uci:section("network", "interface", nif, netconfig)
 		if has_radvd then
@@ -1081,7 +1086,9 @@ function main.write(self, section, value)
 			netconfig.proto = "static"
 			netconfig.ipaddr = node_ip:string()
 			if has_ipv6 then
-				netconfig.ip6addr = node_ip6:string()
+				if node_ip6 then
+					netconfig.ip6addr = node_ip6:string()
+				end
 			end
 			uci:section("network", "interface", device, netconfig)
 			uci:save("network")
