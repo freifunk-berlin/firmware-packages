@@ -1473,21 +1473,27 @@ function main.write(self, section, value)
 				local olsr_gvpnifbase = uci:get_all("freifunk", "olsr_gvpninterface")
 				util.update(olsr_gvpnifbase, uci:get_all(external, "olsr_gvpninterface") or {})
 				uci:section("olsrd", "Interface", nil, olsr_gvpnifbase)
-				local vpnip = gvpnip:formvalue(section)
+				local vpnip = gvpnip:formvalue(section) and ip.IPv4(gvpnip:formvalue(section))
+				if not vpnip then
+					vpnip.tag_missing[section] = true
+					vpnip = nil
+					return
+				end
+				local vpn_ip = vpnip:string()
 				local gvpnif = uci:get_all("freifunk", "gvpn_node")
 				util.update(gvpnif, uci:get_all(external, "gvpn_node") or {})
 				if gvpnif and gvpnif.tundev and vpnip then
 					uci:section("network", "interface", gvpnif.tundev, {
 						ifname  =gvpnif.tundev ,
 						proto   ="static" ,
-						ipaddr  =vpnip ,
+						ipaddr  =vpnip:string() ,
 						netmask =gvpnif.subnet or "255.255.255.192" ,
 					})
 					gvpnif.ip=""
 					gvpnif.subnet=""
 					gvpnif.up=""
 					gvpnif.down=""
-					gvpnif.mac="00:00:48:"..string.format("%X",string.gsub( vpnip, ".*%." , "" ))..":00:00"
+					gvpnif.mac="00:00:48:"..string.format("%X",string.gsub(vpnip:string(), ".*%." , "" ))..":00:00"
 					tools.firewall_zone_add_interface("freifunk", gvpnif.tundev)
 					uci:section("l2gvpn", "node" , gvpnif.community , gvpnif)
 					uci:save("network")
