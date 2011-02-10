@@ -40,7 +40,7 @@ function get_mac(ix)
 	if string.find(ix, "radio") then
 		mac = uci:get('wireless',ix,'macaddr')
 	else
-		local mac = fs.readfile("/sys/class/net/" .. ix .. "/address")
+		mac = fs.readfile("/sys/class/net/" .. ix .. "/address")
 	end
 	if not mac then
 		mac = luci.util.exec("ifconfig " .. ix)
