@@ -143,12 +143,12 @@ if [ "6and4" == "$(uci get olsrd.@olsrd[0].IpVersion)" ] ; then
 	plugin_count="0"
 	plugin_find="0"
 	hostname=$(uname -n)
-	config_foreach olsrd_find_plugin LoadPlugin "olsrd_nameservice"
-	if [ "$plugin_find" == "1" ] ; then
-		service=$(uci get "olsrd.@LoadPlugin[""$plugin_count""].service")
-		uci set "olsrd.@LoadPlugin[""$plugin_count""].service="
-		uci add_list "olsrd.@LoadPlugin[""$plugin_count""].service=http://""$hostname"".olsr:80|ip6|""$IP6_SUFIX"
-	fi
+#	config_foreach olsrd_find_plugin LoadPlugin "olsrd_nameservice"
+#	if [ "$plugin_find" == "1" ] ; then
+#		service=$(uci get "olsrd.@LoadPlugin[""$plugin_count""].service")
+#		uci set "olsrd.@LoadPlugin[""$plugin_count""].service="
+#		uci add_list "olsrd.@LoadPlugin[""$plugin_count""].service=http://""$hostname"".olsr:80|ip6|""$IP6_SUFIX"
+#	fi
 fi
 
 uci commit
