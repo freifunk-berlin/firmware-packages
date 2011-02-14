@@ -851,7 +851,7 @@ function main.write(self, section, value)
 		netconfig.proto = "static"
 		netconfig.ipaddr = node_ip:string()
 		if has_ipv6 then
-			if node_ip6 == '?' then
+			if node_ip6 then
 				netconfig.ip6addr = node_ip6:string()
 			end
 		end
