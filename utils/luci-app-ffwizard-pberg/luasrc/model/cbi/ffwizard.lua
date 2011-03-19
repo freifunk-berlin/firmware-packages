@@ -1495,6 +1495,12 @@ function main.write(self, section, value)
 					gvpnif.down=""
 					gvpnif.mac="00:00:48:"..string.format("%X",string.gsub(vpnip:string(), ".*%." , "" ))..":00:00"
 					tools.firewall_zone_add_interface("freifunk", gvpnif.tundev)
+					uci:section("firewall", "rule", nil, {
+						src       ="wan",
+						proto     ="udp",
+						dest_port =gvpnif.localport or "8719",
+						target    ="ACCEPT"
+					})
 					uci:section("l2gvpn", "node" , gvpnif.community , gvpnif)
 					uci:save("network")
 					uci:save("l2gvpn")
