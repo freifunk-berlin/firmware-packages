@@ -142,6 +142,21 @@ function hostname.validate(self, value)
 		return value
 	end
 end
+-- nodeid
+local nid
+uci:foreach("system", "system", function(s)
+		if s.nodeid then
+			nid = s.nodeid
+		end
+end)
+if nid then
+	nodeid = f:field(Value, "nodeid", "Knoten ID", "Geben Sie Ihrem Freifunk Knoten (Router) eine ID. In diesem Feld steht die Node ID fuer den Heartbeat Daemon")
+	nodeid.rmempty = true
+	nodeid.optional = false
+	function nodeid.cfgvalue(self, section)
+		return nid
+	end
+end
 
 -- location
 location = f:field(Value, "location", "Standort", "Geben Sie den Standort ihres Gerätes an")
@@ -1119,8 +1134,8 @@ function main.write(self, section, value)
 			util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
 			olsrifbase.interface = device
 			olsrifbase.ignore    = "0"
+			olsrifbase.Mode = 'ether'
 			uci:section("olsrd", "Interface", nil, olsrifbase)
-			olsrifbase.mode = 'ether'
 			-- Collect MESH DHCP IP NET
 			local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
 			if client then
@@ -1290,6 +1305,13 @@ function main.write(self, section, value)
 			sys.init.disable("machash")
 		end
 		uci:save("manager")
+		local nid = nodeid:formvalue(section)
+		if nid then
+			uci:foreach("system", "system", function(s)
+				uci:set("system", s[".name"], "nodeid",nid)
+			end)
+		end
+		uci:save("system")
 	end
 
 	uci:foreach("system", "system",
