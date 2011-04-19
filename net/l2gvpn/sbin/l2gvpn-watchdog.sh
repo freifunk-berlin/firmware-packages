@@ -39,7 +39,7 @@ if [ $setdefaultgw == "gvpn" ] ; then
 	        sleep 2
 	        killall -9 node 2>/dev/null
 	        sleep 2
-	        uci -p /var/state set network.gvpn.connect_time=''
+	        sed -i '/network.gvpn.connect_time/d' /var/state/network
 		/etc/init.d/l2gvpn start
 		sleep 5
 		rm /var/state/firewall
@@ -109,7 +109,7 @@ if [ $setdefaultgw == "wan" ] ; then
 	        sleep 2
 	        killall -9 node 2>/dev/null
 	        sleep 2
-	        uci -p /var/state set network.gvpn.connect_time=''
+	        sed -i '/network.gvpn.connect_time/d' /var/state/network
 		/etc/init.d/l2gvpn start
 		sleep 5
 		rm /var/state/firewall
