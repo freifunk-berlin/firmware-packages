@@ -39,10 +39,11 @@ if [ $setdefaultgw == "gvpn" ] ; then
 	        sleep 2
 	        killall -9 node 2>/dev/null
 	        sleep 2
+	        uci -p /var/state set network.gvpn.connect_time=''
 		/etc/init.d/l2gvpn start
-	        sleep 5
-	        rm /var/state/firewall
-	        /etc/init.d/firewall restart
+		sleep 5
+		rm /var/state/firewall
+		/etc/init.d/firewall restart
         	if ! ping $pingparam -I $dev $ip >/dev/null ; then
 			logger -p 1 -t l2gvpnwatchdog "set default route to $defaultdev for table $table"
                 	ip route add default dev $defaultdev table $table >/dev/null 2>&1
@@ -108,9 +109,10 @@ if [ $setdefaultgw == "wan" ] ; then
 	        sleep 2
 	        killall -9 node 2>/dev/null
 	        sleep 2
+	        uci -p /var/state set network.gvpn.connect_time=''
 		/etc/init.d/l2gvpn start
-			        sleep 5
-	        rm /var/state/firewall
-	        /etc/init.d/firewall restart
+		sleep 5
+		rm /var/state/firewall
+		/etc/init.d/firewall restart
 	fi
 fi
