@@ -273,7 +273,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:save("freifunk")
 			end
 		local hwtype = section.type
-		if hwtype == "atheros" then
+		if hwtype == "atheros" or hwtype == "mac80211" then
 			local vap = f:field(Flag, "vap_" .. device , "Virtueller Drahtloser Zugangspunkt", "Konfigurieren Sie Ihren Virtuellen AP")
 			vap:depends("client_" .. device, "1")
 			vap.rmempty = false
