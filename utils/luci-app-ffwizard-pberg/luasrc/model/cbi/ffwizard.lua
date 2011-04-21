@@ -33,6 +33,7 @@ local has_autoipv6  = fs.access("/usr/bin/auto-ipv6")
 local has_qos  = fs.access("/etc/init.d/qos")
 local has_ipv6 = fs.access("/proc/sys/net/ipv6")
 local has_hb = fs.access("/sbin/heartbeat")
+local has_wpad = fs.access("/usr/sbin/wpad")
 
 luci.i18n.loadc("freifunk")
 
@@ -273,7 +274,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:save("freifunk")
 			end
 		local hwtype = section.type
-		if hwtype == "atheros" or hwtype == "mac80211" then
+		if hwtype == "atheros" or ( hwtype == "mac80211" and has_wpad ) then
 			local vap = f:field(Flag, "vap_" .. device , "Virtueller Drahtloser Zugangspunkt", "Konfigurieren Sie Ihren Virtuellen AP")
 			vap:depends("client_" .. device, "1")
 			vap.rmempty = false
@@ -812,7 +813,7 @@ function main.write(self, section, value)
 		util.update(devconfig, uci:get_all(external, "wifi_device") or {})
 		local ssid = uci:get("freifunk", community, "ssid")
 		local channel = luci.http.formvalue("cbid.ffwizward.1.chan_" .. device)
-		local hwmode = "11bg"
+		local hwmode = "11g"
 		local bssid = "02:CA:FF:EE:BA:BE"
 		local mrate = 5500
 		if channel and channel ~= "default" then
@@ -972,7 +973,7 @@ function main.write(self, section, value)
 						mode       ="ap",
 						encryption ="none",
 						network    =nif.."dhcp",
-						ssid       ="AP"..ssidshort
+						ssid       ="AP"..channel..ssidshort
 					})
 					if has_radvd then
 						uci:section("radvd", "interface", nil, {
