@@ -69,7 +69,10 @@ end
 
 -------------------- View --------------------
 f = SimpleForm("ffwizward", "Freifunkassistent",
- "Dieser Assistent unterstützt Sie bei der Einrichtung des Routers für das Freifunknetz.")
+ "Dieser Assistent unterstützt Sie bei der Einrichtung des Routers für das Freifunknetz. Eine ausführliche Dokumentation ist auf http://wiki.freifunk.net/Freifunk_Berlin_Pberg:Firmware#FF_Wizard nach zu lesen")
+
+--ddd = f:field(DummyValue,"link","")
+
 -- main netconfig
 local newpsswd = has_rom and sys.exec("diff /rom/etc/passwd /etc/passwd")
 if newpsswd ~= "" then
@@ -259,7 +262,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "client_" .. device, value)
 				uci:save("freifunk")
 			end
-		local dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten", "Bestimmen Sie den Adressbereich aus dem Ihre Nutzer IP Adressen erhalten. Es wird empfohlen einen Adressbereich aus Ihrer lokalen Freifunk Gemeinschaft zu nutzen. Der Adressbereich ist ein netzweit eindeutiger Netzbereich. z.B. 104.1.2.1/28")
+		local dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten", "Bestimmen Sie den Adressbereich aus dem Ihre Nutzer IP Adressen erhalten. Es wird empfohlen einen Adressbereich aus Ihrer lokalen Freifunk Gemeinschaft zu nutzen. Der Adressbereich ist ein netzweit eindeutiger Netzbereich. z.B. 104.1.2.1/28 Wenn das Feld leer bleibt wird ein Netzwerk automatisch nach den vorgaben aus dem Feld Freifunk Comunity erstellt")
 			dhcpmesh:depends("client_" .. device, "1")
 			dhcpmesh.rmempty = true
 			function dhcpmesh.cfgvalue(self, section)
