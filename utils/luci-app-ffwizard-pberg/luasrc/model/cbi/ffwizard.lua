@@ -224,6 +224,36 @@ uci:foreach("wireless", "wifi-device",
 					uci:save("freifunk")
 				end
 			end
+		local advanced = f:field(Flag, "advanced_" .. device, device:upper() .. " Erweiterte WLAN Einstellungen", "advanced")
+			advanced:depends("device_" .. device, "1")
+			advanced.rmempty = false
+			function advanced.cfgvalue(self, section)
+				return uci:get("freifunk", "wizard", "advanced_" .. device)
+			end
+			function advanced.write(self, sec, value)
+				uci:set("freifunk", "wizard", "advanced_" .. device, value)
+				uci:save("freifunk")
+			end
+		local txpower = f:field(Value, "txpower_" .. device, device:upper() .. "  Sendeleistung", "dBm")
+			txpower:depends("advanced_" .. device, "1")
+			txpower.rmempty = true
+			function txpower.cfgvalue(self, section)
+				return uci:get("freifunk", "wizard", "txpower_" .. device)
+			end
+			function txpower.write(self, sec, value)
+				uci:set("freifunk", "wizard", "txpower_" .. device, value)
+				uci:save("freifunk")
+			end
+		local distance = f:field(Value, "distance_" .. device, device:upper() .. "  Distanzoptimierung", "Distanz zum am weitesten entfernten Funkpartner in Metern.")
+			distance:depends("advanced_" .. device, "1")
+			distance.rmempty = true
+			function distance.cfgvalue(self, section)
+				return uci:get("freifunk", "wizard", "distance_" .. device)
+			end
+			function distance.write(self, sec, value)
+				uci:set("freifunk", "wizard", "distance_" .. device, value)
+				uci:save("freifunk")
+			end
 		local meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Ihre Mesh IP Adresse erhalten Sie von der Freifunk Gemeinschaft in Ihrer Nachbarschaft. Es ist eine netzweit eindeutige Identifikation, z.B. 104.1.1.1.")
 			meship:depends("device_" .. device, "1")
 			meship.rmempty = true
@@ -847,6 +877,17 @@ function main.write(self, section, value)
 				end
 				devconfig.hwmode = hwmode
 				devconfig.outdoor = outdoor
+			end
+		end
+		local advanced = luci.http.formvalue("cbid.ffwizward.1.advanced_" .. device)
+		if advanced then
+			local txpower = luci.http.formvalue("cbid.ffwizward.1.txpower_" .. device)
+			if txpower then
+				devconfig.txpower = txpower
+			end
+			local distance = luci.http.formvalue("cbid.ffwizward.1.distance_" .. device)
+			if distance then
+				devconfig.distance = distance
 			end
 		end
 		uci:tset("wireless", device, devconfig)
