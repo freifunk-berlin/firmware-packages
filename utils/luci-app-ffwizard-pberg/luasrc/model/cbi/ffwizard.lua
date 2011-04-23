@@ -33,7 +33,7 @@ local has_autoipv6  = fs.access("/usr/bin/auto-ipv6")
 local has_qos  = fs.access("/etc/init.d/qos")
 local has_ipv6 = fs.access("/proc/sys/net/ipv6")
 local has_hb = fs.access("/sbin/heartbeat")
-local has_wpad = fs.access("/usr/sbin/wpad")
+local has_wpad = fs.access("/usr/sbin/hostapd")
 
 luci.i18n.loadc("freifunk")
 
