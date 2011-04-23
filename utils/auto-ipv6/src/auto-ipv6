@@ -6,15 +6,9 @@
 
 . /etc/functions.sh
 
-olsrd_find_hna6() {
-	local cfg="$1"
-	local hna6="$2"
-	config_get netaddr "$cfg" netaddr
-	if [ "$netaddr" == "$hna6" ] ; then
-		hna6_find="$hna6_count"
-	fi
-	hna6_count=$((hna6_count+1))
-	return 0
+olsrd_clear_hna6() {
+        uci delete olsrd.@Hna6[-1]
+        return 0
 }
 
 net_find_iface() {
@@ -32,6 +26,7 @@ IP6_SUFIX="$(wget -q -O - http://[::1]:2006/hna | grep '::/0' | cut -d "$(printf
 
 config_load network
 interfaces=""
+firstinterface="1"
 config_foreach net_find_iface interface
 for i in $(echo $interfaces) ; do
 	#Interface
@@ -65,23 +60,16 @@ for i in $(echo $interfaces) ; do
 
 	if [ "6and4" == "$(uci get olsrd.@olsrd[0].IpVersion)" ] ; then
 		config_load olsrd
-
-		logger -t auto-ipv6 "Removing IPv6 Hna6 ""$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"" from olsrd"
-		hna6_count="0"
-		hna6_find=""
-		config_foreach olsrd_find_hna6 Hna6 "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"
-		if [ "$hna6_find" == "" ] ; then
-			logger -t auto-ipv6 "Applying IPv6 Hna6 ""$IP6_SUFIX"":""$IP6_UNIQ""::"" to olsrd"
-			uci add olsrd Hna6 >/dev/null
-			uci set "olsrd.@Hna6[""$hna6_count""].prefix=64"
-			uci set "olsrd.@Hna6[""$hna6_count""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
-			uci commit
-		else
-			logger -t auto-ipv6 "Overwrite IPv6 Hna6 ""$IP6_SUFIX"":""$IP6_UNIQ""::"" to olsrd"
-			uci set "olsrd.@Hna6[""$hna6_find""].prefix=64"
-			uci set "olsrd.@Hna6[""$hna6_find""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
-			uci commit
+		if [ $firstinterface == "1" ] ; then
+			logger -t auto-ipv6 "Removing All IPv6 Hna6 from olsrd"
+			config_foreach olsrd_clear_hna6 Hna6
 		fi
+		firstinterface=""
+		logger -t auto-ipv6 "write IPv6 Hna6 ""$IP6_SUFIX"":""$IP6_UNIQ""::"" to olsrd"
+		uci add olsrd Hna6
+		uci set "olsrd.@Hna6[-1].prefix=64"
+		uci set "olsrd.@Hna6[-1].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
+		uci commit
 	fi
 done
 
