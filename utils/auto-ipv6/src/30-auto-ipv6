@@ -154,7 +154,11 @@ fi
 uci commit
 
 grep -q ping6 /etc/crontabs/root || {
-	echo '1 * * * * 	ping6 -w 59 ipv6.google.com 1>/dev/null &' >> /etc/crontabs/root
+	echo '* * * * *       ping6 -w 59 ipv6.google.com 1>/dev/null &' >> /etc/crontabs/root
+	echo '* * * * *       ping6 -w 59 inorouter.pberg.freifunk.net 1>/dev/null &' >> /etc/crontabs/root
+	echo '* * * * *       ping6 -w 59 six.heise.de 1>/dev/null &' >> /etc/crontabs/root
+	echo '* * * * *       ping6 -w 59 druschba.pberg.freifunk.net 1>/dev/null &' >> /etc/crontabs/root
+	echo '* * * * *       ping6 -w 59 pitoresque.pberg.freifunk.net 1>/dev/null &' >> /etc/crontabs/root
 	}
 [ -z "$(pidof crond)" ] || /etc/init.d/cron restart
 [ -z "$(pidof radvd)" ] || /etc/init.d/radvd restart
