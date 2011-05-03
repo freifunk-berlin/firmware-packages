@@ -9,10 +9,10 @@ setdefaultgw=wan
 
 pingparam="-c 5 -w 10 "
 dev=$(uci get l2gvpn.bbb.tundev)
-table=$(uci get olsrd.@olsrd[0].RtTable | echo default)
-set $(ip route show | grep default)
-# defaultgw=$3
-defaultdev=$5
+table=$(uci -q get olsrd.@olsrd[0].RtTable || echo default)
+set $(route -n | grep ^0.0.0.0)
+# defaultgw=$2
+defaultdev=$8
 
 
 if ! ( [ $dev ] && [ $table ] && [ $defaultdev ] ) ; then
@@ -64,7 +64,7 @@ if [ $setdefaultgw == "gvpn" ] ; then
 fi
 
 if [ $setdefaultgw == "wan" ] ; then
-	if [ "$table" != "notable" ] ; then
+	if [ "$table" != "default" ] ; then
 		if ip route show table $table | grep "default .* dev $defaultdev" >/dev/null 2>&1 ; then
 			logger -p 1 -t l2gvpnwatchdog "default route to $defaultdev for table $table"
 		else
@@ -72,7 +72,6 @@ if [ $setdefaultgw == "wan" ] ; then
                 	ip route add default dev $defaultdev table $table >/dev/null 2>&1
 		fi
 	fi
-	set -x
 	gvpnrestart=0
 	rxbytes=$(grep gvpn /proc/net/dev | awk '{ print $2}')
 	txbytes=$(grep gvpn /proc/net/dev | awk '{ print $10}')
