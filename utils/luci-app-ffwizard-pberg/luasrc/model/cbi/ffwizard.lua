@@ -190,6 +190,7 @@ main = f:field(Flag, "netconfig", "Netzwerk einrichten", "Setzen Sie den Haken, 
 uci:foreach("wireless", "wifi-device",
 	function(section)
 		local device = section[".name"]
+		local hwtype = section.type
 		local dev = f:field(Flag, "device_" .. device , "<b>Drahtloses Netzwerk \"" .. device:upper() .. "\"</b> ", "Konfigurieren Sie Ihre drahtlose " .. device:upper() .. "Schnittstelle (WLAN).")
 			dev:depends("netconfig", "1")
 			dev.rmempty = false
@@ -234,6 +235,51 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "advanced_" .. device, value)
 				uci:save("freifunk")
 			end
+		local hwmode = f:field(ListValue, "hwmode_" .. device, device:upper() .. "  "..translate("Mode"))
+			hwmode:depends("advanced_" .. device, "1")
+			hwmode.rmempty = true
+			hwmode.widget = "radio"
+			hwmode.orientation = "horizontal"
+			hwmode:value("11b", "802.11b")
+			hwmode:value("11g", "802.11g")
+			hwmode:value("11a", "802.11a")
+			hwmode:value("11bg", "802.11b + g")
+			if hwtype == "atheros" then
+				hwmode:value("11gst", "802.11g + Turbo")
+				hwmode:value("11ast", "802.11a + Turbo")
+			end
+			if hwtype == "broadcom" then
+				hwmode:value("11gst", "802.11g + Turbo")
+			end
+			if hwtype == "mac80211" then
+				hwmode:value("11ng", "802.11n + g")
+				hwmode:value("11na", "802.11n + a")
+			end
+			function hwmode.cfgvalue(self, section)
+				return uci:get("freifunk", "wizard", "hwmode_" .. device)
+			end
+			function hwmode.write(self, sec, value)
+				uci:set("freifunk", "wizard", "hwmode_" .. device, value)
+				uci:save("freifunk")
+			end
+		if hwtype == "mac80211" then
+			local htmode = f:field(ListValue, "htmode_" .. device, device:upper() .. "  "..translate("HT mode"))
+				htmode:depends("hwmode_" .. device, "11na")
+				htmode:depends("hwmode_" .. device, "11ng")
+				htmode.rmempty = true
+				htmode.widget = "radio"
+				htmode.orientation = "horizontal"
+				htmode:value("HT20", "20MHz")
+				htmode:value("HT40-", translate("40MHz 2nd channel below"))
+				htmode:value("HT40+", translate("40MHz 2nd channel above"))
+				function htmode.cfgvalue(self, section)
+					return uci:get("freifunk", "wizard", "htmode_" .. device)
+				end
+				function htmode.write(self, sec, value)
+					uci:set("freifunk", "wizard", "htmode_" .. device, value)
+					uci:save("freifunk")
+				end
+		end
 		local txpower = f:field(Value, "txpower_" .. device, device:upper() .. "  Sendeleistung", "dBm")
 			txpower:depends("advanced_" .. device, "1")
 			txpower.rmempty = true
@@ -244,7 +290,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "txpower_" .. device, value)
 				uci:save("freifunk")
 			end
-		local distance = f:field(Value, "distance_" .. device, device:upper() .. "  Distanzoptimierung", "Distanz zum am weitesten entfernten Funkpartner in Metern.")
+		local distance = f:field(Value, "distance_" .. device, device:upper().."  "..translate("Distance Optimization"), translate("Distance to farthest network member in meters."))
 			distance:depends("advanced_" .. device, "1")
 			distance.rmempty = true
 			function distance.cfgvalue(self, section)
@@ -252,6 +298,62 @@ uci:foreach("wireless", "wifi-device",
 			end
 			function distance.write(self, sec, value)
 				uci:set("freifunk", "wizard", "distance_" .. device, value)
+				uci:save("freifunk")
+			end
+		local txantenna = f:field(ListValue, "txantenna_" .. device, device:upper() .."  ".. translate("Transmitter Antenna"))
+			txantenna:depends("advanced_" .. device, "1")
+			txantenna.rmempty = true
+			txantenna.widget = "radio"
+			txantenna.orientation = "horizontal"
+			if hwtype == "atheros" then
+				txantenna:value("0", translate("auto"))
+				txantenna:value("1", translate("Antenna 1"))
+				txantenna:value("2", translate("Antenna 2"))
+			end
+			if hwtype == "broadcom" then
+				txantenna:value("3", translate("auto"))
+				txantenna:value("0", translate("Antenna 1"))
+				txantenna:value("1", translate("Antenna 2"))
+			end
+			if hwtype == "mac80211" then
+				txantenna:value("all", translate("all"))
+				txantenna:value("1", translate("Antenna 1"))
+				txantenna:value("2", translate("Antenna 2"))
+				txantenna:value("4", translate("Antenna 3"))
+			end
+			function txantenna.cfgvalue(self, section)
+				return uci:get("freifunk", "wizard", "txantenna_" .. device)
+			end
+			function txantenna.write(self, sec, value)
+				uci:set("freifunk", "wizard", "txantenna_" .. device, value)
+				uci:save("freifunk")
+			end
+		local rxantenna = f:field(ListValue, "rxantenna_" .. device, device:upper().."  "..translate("Receiver Antenna"))
+			rxantenna:depends("advanced_" .. device, "1")
+			rxantenna.rmempty = true
+			rxantenna.widget = "radio"
+			rxantenna.orientation = "horizontal"
+			if hwtype == "atheros" then
+				rxantenna:value("0", translate("auto"))
+				rxantenna:value("1", translate("Antenna 1"))
+				rxantenna:value("2", translate("Antenna 2"))
+			end
+			if hwtype == "broadcom" then
+				rxantenna:value("3", translate("auto"))
+				rxantenna:value("0", translate("Antenna 1"))
+				rxantenna:value("1", translate("Antenna 2"))
+			end
+			if hwtype == "mac80211" then
+				rxantenna:value("all", translate("all"))
+				rxantenna:value("1", translate("Antenna 1"))
+				rxantenna:value("2", translate("Antenna 2"))
+				rxantenna:value("4", translate("Antenna 3"))
+			end
+			function rxantenna.cfgvalue(self, section)
+				return uci:get("freifunk", "wizard", "rxantenna_" .. device)
+			end
+			function rxantenna.write(self, sec, value)
+				uci:set("freifunk", "wizard", "rxantenna_" .. device, value)
 				uci:save("freifunk")
 			end
 		local meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Ihre Mesh IP Adresse erhalten Sie von der Freifunk Gemeinschaft in Ihrer Nachbarschaft. Es ist eine netzweit eindeutige Identifikation, z.B. 104.1.1.1.")
@@ -306,7 +408,6 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "dhcpmesh_" .. device, value)
 				uci:save("freifunk")
 			end
-		local hwtype = section.type
 		if hwtype == "atheros" or ( hwtype == "mac80211" and has_hostapd ) then
 			local vap = f:field(Flag, "vap_" .. device , "Virtueller Drahtloser Zugangspunkt", "Konfigurieren Sie Ihren Virtuellen AP")
 			vap:depends("client_" .. device, "1")
@@ -638,7 +739,7 @@ function f.handle(self, state, data)
 			end
 			data.pw1 = nil
 			data.pw2 = nil
-			luci.http.redirect(luci.dispatcher.build_url(unpack(luci.dispatcher.context.requested.path), "system", "system"))
+			luci.http.redirect(luci.dispatcher.build_url(unpack(luci.dispatcher.context.requested.path), "system"))
 		else
 			if data.pw1 then
 				local stat = luci.sys.user.setpasswd("root", data.pw1) == 0
@@ -831,6 +932,10 @@ function main.write(self, section, value)
 			uci:delete_all("radvd", "interface", {interface=nif})
 			uci:delete_all("radvd", "prefix", {interface=nif.."dhcp"})
 			uci:delete_all("radvd", "prefix", {interface=nif})
+			uci:delete_all("radvd", "rdnss", {interface=nif.."dhcp"})
+			uci:delete_all("radvd", "rdnss", {interface=nif})
+			uci:delete_all("radvd", "dnssl", {interface=nif.."dhcp"})
+			uci:delete_all("radvd", "dnssl", {interface=nif})
 		end
 		-- New Config
 		-- Tune wifi device
@@ -888,6 +993,14 @@ function main.write(self, section, value)
 		end
 		local advanced = luci.http.formvalue("cbid.ffwizward.1.advanced_" .. device)
 		if advanced then
+			local hwmode = luci.http.formvalue("cbid.ffwizward.1.hwmode_" .. device)
+			if hwmode then
+				devconfig.hwmode = hwmode
+			end
+			local htmode = luci.http.formvalue("cbid.ffwizward.1.htmode_" .. device)
+			if htmode then
+				devconfig.htmode = htmode
+			end
 			local txpower = luci.http.formvalue("cbid.ffwizward.1.txpower_" .. device)
 			if txpower then
 				devconfig.txpower = txpower
@@ -895,6 +1008,14 @@ function main.write(self, section, value)
 			local distance = luci.http.formvalue("cbid.ffwizward.1.distance_" .. device)
 			if distance then
 				devconfig.distance = distance
+			end
+			local txantenna = luci.http.formvalue("cbid.ffwizward.1.txantenna_" .. device)
+			if txantenna then
+				devconfig.txantenna = txantenna
+			end
+			local rxantenna = luci.http.formvalue("cbid.ffwizward.1.rxantenna_" .. device)
+			if rxantenna then
+				devconfig.rxantenna = rxantenna
 			end
 		end
 		uci:tset("wireless", device, devconfig)
@@ -929,13 +1050,29 @@ function main.write(self, section, value)
 				AdvSendAdvert      =1,
 				AdvManagedFlag     =0,
 				AdvOtherConfigFlag =0,
-				ignore             =0
+				MinRtrAdvInterval  =3,
+				MaxRtrAdvInterval  =6,
+				AdvLinkMTU         =1280,
+				ignore             =0,
 			})
 			uci:section("radvd", "prefix", nil, {
 				interface          =nif,
 				AdvOnLink          =1,
 				AdvAutonomous      =1,
 				AdvRouterAddr      =0,
+				AdvPreferredLifetime =6,
+				AdvValidLifetime   =12,
+				ignore             =0,
+			})
+			uci:section("radvd", "rdnss", nil, {
+				interface          =device,
+				AdvDNSSLLifetime   =60,
+				ignore             =0,
+			})
+			uci:section("radvd", "dnssl", nil, {
+				interface          =device,
+				AdvDNSSLLifetime   =60,
+				suffix             ="olsr",
 				ignore             =0,
 			})
 			uci:save("radvd")
@@ -1032,14 +1169,30 @@ function main.write(self, section, value)
 							AdvSendAdvert      =1,
 							AdvManagedFlag     =0,
 							AdvOtherConfigFlag =0,
-							ignore             =0
+							MinRtrAdvInterval  =3,
+							MaxRtrAdvInterval  =6,
+							AdvLinkMTU         =1280,
+							ignore             =0,
 						})
 						uci:section("radvd", "prefix", nil, {
 							interface          =nif .. "dhcp",
 							AdvOnLink          =1,
 							AdvAutonomous      =1,
 							AdvRouterAddr      =0,
-							ignore             =0
+							AdvPreferredLifetime =6,
+							AdvValidLifetime   =12,
+							ignore             =0,
+						})
+						uci:section("radvd", "rdnss", nil, {
+							interface          =device,
+							AdvDNSSLLifetime   =60,
+							ignore             =0,
+						})
+						uci:section("radvd", "dnssl", nil, {
+							interface          =device,
+							AdvDNSSLLifetime   =60,
+							suffix             ="olsr",
+							ignore             =0,
 						})
 						uci:save("radvd")
 					end
@@ -1142,10 +1295,10 @@ function main.write(self, section, value)
 			-- Delete old splash
 			uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
 			if has_radvd then
-				uci:delete_all("radvd", "interface", {interface=device.."dhcp"})
 				uci:delete_all("radvd", "interface", {interface=device})
-				uci:delete_all("radvd", "prefix", {interface=device.."dhcp"})
 				uci:delete_all("radvd", "prefix", {interface=device})
+				uci:delete_all("radvd", "rdnss", {interface=device})
+				uci:delete_all("radvd", "dnssl", {interface=device})
 			end
 			-- New Config
 			local netconfig = uci:get_all("freifunk", "interface")
@@ -1165,13 +1318,29 @@ function main.write(self, section, value)
 					AdvSendAdvert      =1,
 					AdvManagedFlag     =0,
 					AdvOtherConfigFlag =0,
-					ignore             =0
+					MinRtrAdvInterval  =3,
+					MaxRtrAdvInterval  =6,
+					AdvLinkMTU         =1280,
+					ignore             =0,
 				})
 				uci:section("radvd", "prefix", nil, {
 					interface          =device,
 					AdvOnLink          =1,
 					AdvAutonomous      =1,
 					AdvRouterAddr      =0,
+					AdvPreferredLifetime =6,
+					AdvValidLifetime   =12,
+					ignore             =0,
+				})
+				uci:section("radvd", "rdnss", nil, {
+					interface          =device,
+					AdvDNSSLLifetime   =60,
+					ignore             =0,
+				})
+				uci:section("radvd", "dnssl", nil, {
+					interface          =device,
+					AdvDNSSLLifetime   =60,
+					suffix             ="olsr",
 					ignore             =0,
 				})
 				uci:save("radvd")
@@ -1544,7 +1713,7 @@ function main.write(self, section, value)
 				uci:delete_all("l2gvpn", "node")
 				uci:delete_all("l2gvpn", "supernode")
 				-- Write olsr tunnel interface options
-				local olsr_gvpnifbase = uci:get_all("freifunk", "olsr_gvpninterface")
+				local olsr_gvpnifbase = uci:get_all("freifunk", "olsr_gvpninterface") or {}
 				util.update(olsr_gvpnifbase, uci:get_all(external, "olsr_gvpninterface") or {})
 				uci:section("olsrd", "Interface", nil, olsr_gvpnifbase)
 				local vpnip = gvpnip:formvalue(section) and ip.IPv4(gvpnip:formvalue(section))
@@ -1554,7 +1723,7 @@ function main.write(self, section, value)
 					return
 				end
 				local vpn_ip = vpnip:string()
-				local gvpnif = uci:get_all("freifunk", "gvpn_node")
+				local gvpnif = uci:get_all("freifunk", "gvpn_node") or {}
 				util.update(gvpnif, uci:get_all(external, "gvpn_node") or {})
 				if gvpnif and gvpnif.tundev and vpnip then
 					uci:section("network", "interface", gvpnif.tundev, {
