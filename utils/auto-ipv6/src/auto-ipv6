@@ -28,19 +28,21 @@ config_load network
 interfaces=""
 firstinterface="1"
 config_foreach net_find_iface interface
+restart_radvd=0
+restart_olsrd=0
 for i in $(echo $interfaces) ; do
-	#Interface
+	[ "$(uci get network.$i.proto)" == "static" ] || continue
 	DEV=$(uci -p/var/state get network.$i.ifname)
 	#IP6_UCI=$(uci -q -p/var/state get network.$i.ip6addr)
 	IP6_UCI=$(uci get network.$i.ip6addr)
-	[ "$IP6_UCI" == "$IP6_SUFIX"":""$IP6_UNIQ""::1/64" ] && exit 0
+	[ "$IP6_UCI" == "$IP6_SUFIX"":""$IP6_UNIQ""::1/64" ] && continue
 	if [ $(echo $IP6_UCI | grep -i fdca) ] ; then
 		uci set network.$i.ip6addr_fdca="$IP6_UCI"
 	fi
 	#Sufix
 	IP6_OLDSUFIX=$(uci -q -p/var/state get network.$i.ip6oldsufix)
 	logger -t auto-ipv6 "interface: $i device: $DEV Check IPv6 New Sufix $IP6_SUFIX and Old Sufix $IP6_OLDSUFIX"
-	[ "$IP6_SUFIX" == "$IP6_OLDSUFIX" ] && ifconfig "$DEV" | grep -q -e "$IP6_SUFIX"".*1\/64" && exit 0
+	[ "$IP6_SUFIX" == "$IP6_OLDSUFIX" ] && ifconfig "$DEV" | grep -q -e "$IP6_SUFIX"".*1\/64" && continue
 	uci set "network.$i.ip6oldsufix=$IP6_SUFIX"
 	#Uniq 4Bybte from urandom
 	IP6_OLDUNIQ=$(uci -q -p/var/state get network.$i.ip6olduniq)
@@ -56,7 +58,7 @@ for i in $(echo $interfaces) ; do
 	sysctl -w "net.ipv6.conf.$DEV.accept_ra_defrtr=0"
 	sysctl -w "net.ipv6.conf.$DEV.accept_ra_pinfo=0"
 	sysctl -w "net.ipv6.conf.$DEV.accept_source_route=0"
-	for j in $(ifconfig $DEV | grep Scope:Global | cut -d ' ' -f 13 | grep -v fdca) ; do
+	for j in $(ifconfig $DEV | grep Scope:Global | cut -d ' ' -f 13 ) ; do
 		ifconfig "$DEV" del "$j"
 	done
 	logger -t auto-ipv6 "Applying IPv6 Sufix ""$IP6_SUFIX"":""$IP6_UNIQ""::1/64"" to ""$DEV"
@@ -79,18 +81,23 @@ for i in $(echo $interfaces) ; do
 		uci set "olsrd.@Hna6[-1].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
 		uci commit
 	fi
+	restart_radvd=1
+	restart_olsrd=1
 done
 
 
-uci commit
-if ! [ -z "$(pidof radvd)" ] ; then
-	/etc/init.d/radvd stop
-	killall -9 radvd
-	/etc/init.d/radvd start
+if [ $restart_radvd -eq 1 ] ; then
+	if ! [ -z "$(pidof radvd)" ] ; then
+		/etc/init.d/radvd stop
+		killall -9 radvd
+		/etc/init.d/radvd start
+	fi
 fi
-if ! [ -z "$(pidof olsrd)" ] ; then
-	/etc/init.d/olsrd stop
-	killall -9 olsrd
-	/etc/init.d/olsrd start
+if [ $restart_olsrd -eq 1 ] ; then
+	if ! [ -z "$(pidof olsrd)" ] ; then
+		/etc/init.d/olsrd stop
+		killall -9 olsrd
+		/etc/init.d/olsrd start
+	fi
 fi
 
