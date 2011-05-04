@@ -270,8 +270,8 @@ uci:foreach("wireless", "wifi-device",
 				htmode.widget = "radio"
 				htmode.orientation = "horizontal"
 				htmode:value("HT20", "20MHz")
-				htmode:value("HT40-", translate("40MHz 2nd channel below"))
-				htmode:value("HT40+", translate("40MHz 2nd channel above"))
+				htmode:value("HT40-", translate("40MHz 2nd channel above"))
+				htmode:value("HT40+", translate("40MHz 2nd channel below"))
 				function htmode.cfgvalue(self, section)
 					return uci:get("freifunk", "wizard", "htmode_" .. device)
 				end
