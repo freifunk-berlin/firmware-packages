@@ -72,7 +72,7 @@ while true ; do
 	if [ $wifie -eq 1 ] ; then
 		config_foreach set_default_config wifi-device
 
-		uci set freifunk.interface.dns="2001:7fd::1 2002:d596:2a92:1:71:53:: 2002:5968:c28e::53 88.198.178.18 141.54.1.1 212.204.49.83 8.8.8.8 8.8.4.4"
+		uci set freifunk.interface.dns="2002:d596:2a92:1:71:53:: 2002:5968:c28e::53 88.198.178.18 141.54.1.1 212.204.49.83 8.8.8.8 8.8.4.4"
 		uci commit freifunk
 		exit 0
 	fi
