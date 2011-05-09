@@ -60,21 +60,37 @@ set_default_config()
 	esac
 }
 
-
+cp_config() {
+	local cfg="$1"
+	if [ "$(uci -q -c /rom/etc/config get "$cfg")" = "defaults" ] ; then
+		if [ "$(uci -q get "$cfg")" != "defaults" ] ; then
+			local iface
+			iface=$(uci -c /rom/etc/config show "$cfg")
+			for i in $iface ; do
+				uci set "$i"
+			done
+			uci commit
+		fi
+	fi
+}
+cp_config "freifunk.radvd_interface"
+cp_config "freifunk.radvd_prefix"
+cp_config "freifunk.radvd_rdnss"
+cp_config "freifunk.radvd_dnssl"
+uci set freifunk.interface.dns="2002:d596:2a92:1:71:53:: 2002:5968:c28e::53 88.198.178.18 141.54.1.1 212.204.49.83 8.8.8.8 8.8.4.4"
+uci commit freifunk
+uci set uhttpd.main.rfc1918_filter=0
+uci commit uhttpd
 
 (
 while true ; do
 	sleep 30
 	wifie=0
-
 	config_load wireless && wifie=1
-
 	if [ $wifie -eq 1 ] ; then
 		config_foreach set_default_config wifi-device
-
-		uci set freifunk.interface.dns="2002:d596:2a92:1:71:53:: 2002:5968:c28e::53 88.198.178.18 141.54.1.1 212.204.49.83 8.8.8.8 8.8.4.4"
-		uci commit freifunk
 		exit 0
 	fi
 done
 ) >/dev/null &
+
