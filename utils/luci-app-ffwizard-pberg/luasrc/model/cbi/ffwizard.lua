@@ -581,125 +581,125 @@ end
 osm.displaytext="OpenStreetMap anzeigen"
 osm.hidetext="OpenStreetMap verbergen"
 
-
-wanproto = f:field(ListValue, "wanproto", "<b>Internet WAN</b>", "Geben Sie das Protokol an ueber das eine Internet verbindung hergestellt werden kann.")
-wanproto:depends("device_wan", "")
-wanproto:value("static", translate("manual", "manual"))
-wanproto:value("dhcp", translate("automatic", "automatic"))
-if has_pppoe then wanproto:value("pppoe", "PPPoE") end
-if has_pptp  then wanproto:value("pptp",  "PPTP")  end
-function wanproto.cfgvalue(self, section)
-	return uci:get("network", "wan", "proto") or "dhcp"
-end
-function wanproto.write(self, section, value)
-	uci:set("network", "wan", "proto", value)
-	uci:save("network")
-end
-share = f:field(Flag, "sharenet", "Eigenen Internetzugang freigeben", "Geben Sie Ihren Internetzugang im Freifunknetz frei.")
-share.rmempty = false
-share:depends("device_wan", "")
-function share.cfgvalue(self, section)
-	return uci:get("freifunk", "wizard", "share")
-end
-function share.write(self, section, value)
-	uci:set("freifunk", "wizard", "share", value)
-	uci:save("freifunk")
-end
-
-wanip = f:field(Value, "wanipaddr", translate("ipaddress"))
-wanip:depends("wanproto", "static")
-function wanip.cfgvalue(self, section)
-	return uci:get("network", "wan", "ipaddr")
-end
-function wanip.write(self, section, value)
-	uci:set("network", "wan", "ipaddr", value)
-	uci:save("network")
-end
-wannm = f:field(Value, "wannetmask", translate("netmask"))
-wannm:depends("wanproto", "static")
-function wannm.cfgvalue(self, section)
-	return uci:get("network", "wan", "netmask")
-end
-function wannm.write(self, section, value)
-	uci:set("network", "wan", "netmask", value)
-	uci:save("network")
-end
-wangw = f:field(Value, "wangateway", translate("gateway"))
-wangw:depends("wanproto", "static")
-wangw.rmempty = true
-function wangw.cfgvalue(self, section)
-	return uci:get("network", "wan", "gateway")
-end
-function wangw.write(self, section, value)
-	uci:set("network", "wan", "gateway", value)
-	uci:save("network")
-end
-wandns = f:field(Value, "wandns", translate("dnsserver"))
-wandns:depends("wanproto", "static")
-wandns.rmempty = true
-function wandns.cfgvalue(self, section)
-	return uci:get("network", "wan", "dns")
-end
-function wandns.write(self, section, value)
-	uci:set("network", "wan", "dns", value)
-	uci:save("network")
-end
-wanusr = f:field(Value, "wanusername", translate("username"))
-wanusr:depends("wanproto", "pppoe")
-wanusr:depends("wanproto", "pptp")
-function wanusr.cfgvalue(self, section)
-	return uci:get("network", "wan", "username")
-end
-function wanusr.write(self, section, value)
-	uci:set("network", "wan", "username", value)
-	uci:save("network")
-end
-wanpwd = f:field(Value, "wanpassword", translate("password"))
-wanpwd.password = true
-wanpwd:depends("wanproto", "pppoe")
-wanpwd:depends("wanproto", "pptp")
-function wanpwd.cfgvalue(self, section)
-	return uci:get("network", "wan", "password")
-end
-function wanpwd.write(self, section, value)
-	uci:set("network", "wan", "password", value)
-	uci:save("network")
-end
-
-wansec = f:field(Flag, "wansec", "WAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
-wansec.rmempty = false
-wansec:depends("wanproto", "static")
-wansec:depends("wanproto", "dhcp")
-function wansec.cfgvalue(self, section)
-	return uci:get("freifunk", "wizard", "wan_security")
-end
-function wansec.write(self, section, value)
-	uci:set("freifunk", "wizard", "wan_security", value)
-	uci:save("freifunk")
-end
-
-
-if has_qos then
-	wanqosdown = f:field(Value, "wanqosdown", "Download Bandbreite begrenzen", "kb/s")
-	wanqosdown:depends("sharenet", "1")
-	function wanqosdown.cfgvalue(self, section)
-		return uci:get("qos", "wan", "download")
+if uci:get("network", "wan", "proto") then
+	wanproto = f:field(ListValue, "wanproto", "<b>Internet WAN</b>", "Geben Sie das Protokol an ueber das eine Internet verbindung hergestellt werden kann.")
+	wanproto:depends("device_wan", "")
+	wanproto:value("static", translate("manual", "manual"))
+	wanproto:value("dhcp", translate("automatic", "automatic"))
+	if has_pppoe then wanproto:value("pppoe", "PPPoE") end
+	if has_pptp  then wanproto:value("pptp",  "PPTP")  end
+	function wanproto.cfgvalue(self, section)
+		return uci:get("network", "wan", "proto") or "dhcp"
 	end
-	function wanqosdown.write(self, section, value)
-		uci:set("qos", "wan", "download", value)
-		uci:save("qos")
+	function wanproto.write(self, section, value)
+		uci:set("network", "wan", "proto", value)
+		uci:save("network")
 	end
-	wanqosup = f:field(Value, "wanqosup", "Upload Bandbreite begrenzen", "kb/s")
-	wanqosup:depends("sharenet", "1")
-	function wanqosup.cfgvalue(self, section)
-		return uci:get("qos", "wan", "upload")
+	share = f:field(Flag, "sharenet", "Eigenen Internetzugang freigeben", "Geben Sie Ihren Internetzugang im Freifunknetz frei.")
+	share.rmempty = false
+	share:depends("device_wan", "")
+	function share.cfgvalue(self, section)
+		return uci:get("freifunk", "wizard", "share")
 	end
-	function wanqosup.write(self, section, value)
-		uci:set("qos", "wan", "upload", value)
-		uci:save("qos")
+	function share.write(self, section, value)
+		uci:set("freifunk", "wizard", "share", value)
+		uci:save("freifunk")
+	end
+	
+	wanip = f:field(Value, "wanipaddr", translate("ipaddress"))
+	wanip:depends("wanproto", "static")
+	function wanip.cfgvalue(self, section)
+		return uci:get("network", "wan", "ipaddr")
+	end
+	function wanip.write(self, section, value)
+		uci:set("network", "wan", "ipaddr", value)
+		uci:save("network")
+	end
+	wannm = f:field(Value, "wannetmask", translate("netmask"))
+	wannm:depends("wanproto", "static")
+	function wannm.cfgvalue(self, section)
+		return uci:get("network", "wan", "netmask")
+	end
+	function wannm.write(self, section, value)
+		uci:set("network", "wan", "netmask", value)
+		uci:save("network")
+	end
+	wangw = f:field(Value, "wangateway", translate("gateway"))
+	wangw:depends("wanproto", "static")
+	wangw.rmempty = true
+	function wangw.cfgvalue(self, section)
+		return uci:get("network", "wan", "gateway")
+	end
+	function wangw.write(self, section, value)
+		uci:set("network", "wan", "gateway", value)
+		uci:save("network")
+	end
+	wandns = f:field(Value, "wandns", translate("dnsserver"))
+	wandns:depends("wanproto", "static")
+	wandns.rmempty = true
+	function wandns.cfgvalue(self, section)
+		return uci:get("network", "wan", "dns")
+	end
+	function wandns.write(self, section, value)
+		uci:set("network", "wan", "dns", value)
+		uci:save("network")
+	end
+	wanusr = f:field(Value, "wanusername", translate("username"))
+	wanusr:depends("wanproto", "pppoe")
+	wanusr:depends("wanproto", "pptp")
+	function wanusr.cfgvalue(self, section)
+		return uci:get("network", "wan", "username")
+	end
+	function wanusr.write(self, section, value)
+		uci:set("network", "wan", "username", value)
+		uci:save("network")
+	end
+	wanpwd = f:field(Value, "wanpassword", translate("password"))
+	wanpwd.password = true
+	wanpwd:depends("wanproto", "pppoe")
+	wanpwd:depends("wanproto", "pptp")
+	function wanpwd.cfgvalue(self, section)
+		return uci:get("network", "wan", "password")
+	end
+	function wanpwd.write(self, section, value)
+		uci:set("network", "wan", "password", value)
+		uci:save("network")
+	end
+	
+	wansec = f:field(Flag, "wansec", "WAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
+	wansec.rmempty = false
+	wansec:depends("wanproto", "static")
+	wansec:depends("wanproto", "dhcp")
+	function wansec.cfgvalue(self, section)
+		return uci:get("freifunk", "wizard", "wan_security")
+	end
+	function wansec.write(self, section, value)
+		uci:set("freifunk", "wizard", "wan_security", value)
+		uci:save("freifunk")
+	end
+	
+	
+	if has_qos then
+		wanqosdown = f:field(Value, "wanqosdown", "Download Bandbreite begrenzen", "kb/s")
+		wanqosdown:depends("sharenet", "1")
+		function wanqosdown.cfgvalue(self, section)
+			return uci:get("qos", "wan", "download")
+		end
+		function wanqosdown.write(self, section, value)
+			uci:set("qos", "wan", "download", value)
+			uci:save("qos")
+		end
+		wanqosup = f:field(Value, "wanqosup", "Upload Bandbreite begrenzen", "kb/s")
+		wanqosup:depends("sharenet", "1")
+		function wanqosup.cfgvalue(self, section)
+			return uci:get("qos", "wan", "upload")
+		end
+		function wanqosup.write(self, section, value)
+			uci:set("qos", "wan", "upload", value)
+			uci:save("qos")
+		end
 	end
 end
-
 if has_l2gvpn then
 	gvpn = f:field(Flag, "gvpn", "Freifunk Internet Tunnel", "Verbinden Sie ihren Router ueber das Internet mit anderen Freifunknetzen.")
 	gvpn.rmempty = false
@@ -735,82 +735,81 @@ if has_hb then
 	end
 end
 
-
-lanproto = f:field(ListValue, "lanproto", "<b>Lokales Netzwerk LAN</b>", "Geben Sie das Protokol der LAN Schnittstelle an.")
---lanproto:depends("sharenet", "1")
-lanproto:depends("device_lan", "")
-lanproto:value("static", translate("manual", "manual"))
-lanproto:value("dhcp", translate("automatic", "automatic"))
-function lanproto.cfgvalue(self, section)
-	return uci:get("network", "lan", "proto") or "dhcp"
+if uci:get("network", "lan", "proto") then
+	lanproto = f:field(ListValue, "lanproto", "<b>Lokales Netzwerk LAN</b>", "Geben Sie das Protokol der LAN Schnittstelle an.")
+	--lanproto:depends("sharenet", "1")
+	lanproto:depends("device_lan", "")
+	lanproto:value("static", translate("manual", "manual"))
+	lanproto:value("dhcp", translate("automatic", "automatic"))
+	function lanproto.cfgvalue(self, section)
+		return uci:get("network", "lan", "proto") or "dhcp"
+	end
+	function lanproto.write(self, section, value)
+		uci:set("network", "lan", "proto", value)
+		uci:save("network")
+	end
+	sharelan = f:field(Flag, "sharelan", "Eigenen Internetzugang freigeben", "Geben Sie Ihren Internetzugang ueber LAN frei.")
+	sharelan.rmempty = false
+	sharelan:depends("lanproto", "static")
+	sharelan:depends("lanproto", "dhcp")
+	function sharelan.cfgvalue(self, section)
+		return uci:get("freifunk", "wizard", "sharelan")
+	end
+	function sharelan.write(self, section, value)
+		uci:set("freifunk", "wizard", "sharelan", value)
+		uci:save("freifunk")
+	end
+	
+	lanip = f:field(Value, "lanipaddr", translate("ipaddress"))
+	lanip:depends("lanproto", "static")
+	function lanip.cfgvalue(self, section)
+		return uci:get("network", "lan", "ipaddr")
+	end
+	function lanip.write(self, section, value)
+		uci:set("network", "lan", "ipaddr", value)
+		uci:save("network")
+	end
+	lannm = f:field(Value, "lannetmask", translate("netmask"))
+	lannm:depends("lanproto", "static")
+	function lannm.cfgvalue(self, section)
+		return uci:get("network", "lan", "netmask")
+	end
+	function lannm.write(self, section, value)
+		uci:set("network", "lan", "netmask", value)
+		uci:save("network")
+	end
+	langw = f:field(Value, "langateway", translate("gateway"))
+	langw:depends("lanproto", "static")
+	langw.rmempty = true
+	function langw.cfgvalue(self, section)
+		return uci:get("network", "lan", "gateway")
+	end
+	function langw.write(self, section, value)
+		uci:set("network", "lan", "gateway", value)
+		uci:save("network")
+	end
+	landns = f:field(Value, "landns", translate("dnsserver"))
+	landns:depends("lanproto", "static")
+	landns.rmempty = true
+	function landns.cfgvalue(self, section)
+		return uci:get("network", "lan", "dns")
+	end
+	function landns.write(self, section, value)
+		uci:set("network", "lan", "dns", value)
+		uci:save("network")
+	end
+	
+	lansec = f:field(Flag, "lansec", "LAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
+	lansec.rmempty = false
+	lansec:depends("sharelan", "1")
+	function lansec.cfgvalue(self, section)
+		return uci:get("freifunk", "wizard", "lan_security")
+	end
+	function lansec.write(self, section, value)
+		uci:set("freifunk", "wizard", "lan_security", value)
+		uci:save("freifunk")
+	end
 end
-function lanproto.write(self, section, value)
-	uci:set("network", "lan", "proto", value)
-	uci:save("network")
-end
-sharelan = f:field(Flag, "sharelan", "Eigenen Internetzugang freigeben", "Geben Sie Ihren Internetzugang ueber Ihr LAN frei.")
-sharelan.rmempty = false
-sharelan:depends("wanproto", "static")
-sharelan:depends("wanproto", "dhcp")
-function sharelan.cfgvalue(self, section)
-	return uci:get("freifunk", "wizard", "sharelan")
-end
-function sharelan.write(self, section, value)
-	uci:set("freifunk", "wizard", "sharelan", value)
-	uci:save("freifunk")
-end
-
-lanip = f:field(Value, "lanipaddr", translate("ipaddress"))
-lanip:depends("lanproto", "static")
-function lanip.cfgvalue(self, section)
-	return uci:get("network", "lan", "ipaddr")
-end
-function lanip.write(self, section, value)
-	uci:set("network", "lan", "ipaddr", value)
-	uci:save("network")
-end
-lannm = f:field(Value, "lannetmask", translate("netmask"))
-lannm:depends("lanproto", "static")
-function lannm.cfgvalue(self, section)
-	return uci:get("network", "lan", "netmask")
-end
-function lannm.write(self, section, value)
-	uci:set("network", "lan", "netmask", value)
-	uci:save("network")
-end
-langw = f:field(Value, "langateway", translate("gateway"))
-langw:depends("lanproto", "static")
-langw.rmempty = true
-function langw.cfgvalue(self, section)
-	return uci:get("network", "lan", "gateway")
-end
-function langw.write(self, section, value)
-	uci:set("network", "lan", "gateway", value)
-	uci:save("network")
-end
-landns = f:field(Value, "landns", translate("dnsserver"))
-landns:depends("lanproto", "static")
-landns.rmempty = true
-function landns.cfgvalue(self, section)
-	return uci:get("network", "lan", "dns")
-end
-function landns.write(self, section, value)
-	uci:set("network", "lan", "dns", value)
-	uci:save("network")
-end
-
-lansec = f:field(Flag, "lansec", "LAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
-lansec.rmempty = false
-lansec:depends("sharelan", "1")
-function lansec.cfgvalue(self, section)
-	return uci:get("freifunk", "wizard", "lan_security")
-end
-function lansec.write(self, section, value)
-	uci:set("freifunk", "wizard", "lan_security", value)
-	uci:save("freifunk")
-end
-
-
 
 -------------------- Control --------------------
 function f.handle(self, state, data)
@@ -1341,8 +1340,8 @@ function main.write(self, section, value)
 				return
 			end
 			-- Cleanup
+			tools.firewall_zone_remove_interface(device, device)
 			if device ~= "freifunk" then
-				tools.firewall_zone_remove_interface(device, device)
 				uci:delete_all("firewall","zone", {name=device})
 				uci:delete_all("firewall","forwarding", {src=device})
 				uci:delete_all("firewall","forwarding", {dest=device})
