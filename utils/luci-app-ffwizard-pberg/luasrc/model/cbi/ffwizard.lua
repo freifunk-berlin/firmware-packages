@@ -34,6 +34,8 @@ local has_qos  = fs.access("/etc/init.d/qos")
 local has_ipv6 = fs.access("/proc/sys/net/ipv6")
 local has_hb = fs.access("/sbin/heartbeat")
 local has_hostapd = fs.access("/usr/sbin/hostapd")
+local has_wan = uci:get("network", "wan", "proto")
+local has_lan = uci:get("network", "lan", "proto")
 
 luci.i18n.loadc("freifunk")
 
@@ -581,7 +583,7 @@ end
 osm.displaytext="OpenStreetMap anzeigen"
 osm.hidetext="OpenStreetMap verbergen"
 
-if uci:get("network", "wan", "proto") then
+if has_wan then
 	wanproto = f:field(ListValue, "wanproto", "<b>Internet WAN</b>", "Geben Sie das Protokol an ueber das eine Internet verbindung hergestellt werden kann.")
 	wanproto:depends("device_wan", "")
 	wanproto:value("static", translate("manual", "manual"))
@@ -735,7 +737,7 @@ if has_hb then
 	end
 end
 
-if uci:get("network", "lan", "proto") then
+if has_lan then
 	lanproto = f:field(ListValue, "lanproto", "<b>Lokales Netzwerk LAN</b>", "Geben Sie das Protokol der LAN Schnittstelle an.")
 	--lanproto:depends("sharenet", "1")
 	lanproto:depends("device_lan", "")
@@ -1685,8 +1687,12 @@ function main.write(self, section, value)
 	uci:save("dhcp")
 
 	-- Internet sharing
-	local share_value = share:formvalue(section)
-	local sharelan_value = sharelan:formvalue(section)
+	if has_wan then
+		local share_value = share:formvalue(section)
+	end
+	if has_lan then
+		local sharelan_value = sharelan:formvalue(section)
+	end
 	if share_value == "1" or sharelan_value == "1" then
 		uci:set("freifunk", "wizard", "netconfig", "1")
 		uci:section("firewall", "forwarding", nil, {src="freifunk", dest="wan"})
