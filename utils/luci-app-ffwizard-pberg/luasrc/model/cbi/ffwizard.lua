@@ -1341,10 +1341,12 @@ function main.write(self, section, value)
 				return
 			end
 			-- Cleanup
-			tools.firewall_zone_remove_interface(device, device)
-			uci:delete_all("firewall","zone", {name=device})
-			uci:delete_all("firewall","forwarding", {src=device})
-			uci:delete_all("firewall","forwarding", {dest=device})
+			if device ~= "freifunk" then
+				tools.firewall_zone_remove_interface(device, device)
+				uci:delete_all("firewall","zone", {name=device})
+				uci:delete_all("firewall","forwarding", {src=device})
+				uci:delete_all("firewall","forwarding", {dest=device})
+			end
 			uci:delete("network", device .. "dhcp")
 			-- Delete old dhcp
 			uci:delete("dhcp", device)
