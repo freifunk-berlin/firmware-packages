@@ -1081,6 +1081,12 @@ function main.write(self, section, value)
 				devconfig.outdoor = outdoor
 			end
 		end
+		if has_n then
+			local channel = tonumber(devconfig.channel)
+			if channel < 5 and devconfig.htmode == 'HT40-' then
+				devconfig.htmode = 'HT40'
+			end
+		end
 		local advanced = luci.http.formvalue("cbid.ffwizward.1.advanced_" .. device)
 		if advanced then
 			local hwmode = luci.http.formvalue("cbid.ffwizward.1.hwmode_" .. device)
@@ -1687,15 +1693,18 @@ function main.write(self, section, value)
 	uci:save("dhcp")
 
 	-- Internet sharing
+	local share_value = 0
+	local sharelan_value = 0
 	if has_wan then
-		local share_value = share:formvalue(section)
+		share_value = share:formvalue(section) or 0
+		uci:set("freifunk", "wizard", "share_value", share_value)
 	end
 	if has_lan then
-		local sharelan_value = sharelan:formvalue(section)
+		sharelan_value = sharelan:formvalue(section) or 0
+		uci:set("freifunk", "wizard", "sharelan_value", sharelan_value)
 	end
 	if share_value == "1" or sharelan_value == "1" then
-		uci:set("freifunk", "wizard", "netconfig", "1")
-		uci:section("firewall", "forwarding", nil, {src="freifunk", dest="wan"})
+		uci:set("freifunk", "wizard", "shareconfig", "1")
 
 		if has_autoipv6 and share_value == "1" then
 			-- Set autoipv6 tunnel mode
@@ -1718,27 +1727,35 @@ function main.write(self, section, value)
 		sys.init.enable("freifunk-p2pblock")
 		sys.init.enable("qos")
 
-		if share_value == "1" and wansec:formvalue(section) == "1" then
+		if share_value == "1" then
+			uci:section("firewall", "forwarding", nil, {src="freifunk", dest="wan"})
 			sys.exec('grep wan /etc/crontabs/root >/dev/null || echo "0 6 * * * 	ifup wan" >> /etc/crontabs/root')
-			uci:foreach("firewall", "zone",
-				function(s)		
-					if s.name == "wan" then
-						uci:set("firewall", s['.name'], "local_restrict", "1")
-						return false
-					end
-				end)
+			if wansec:formvalue(section) == "1" then
+				uci:foreach("firewall", "zone",
+					function(s)		
+						if s.name == "wan" then
+							uci:set("firewall", s['.name'], "local_restrict", "1")
+							uci:set("firewall", s['.name'], "masq", "1")
+							return false
+							end
+					end)
+			end
 		end
-		if sharelan_value == "1" and lansec:formvalue(section) == "1" then
-			uci:foreach("firewall", "zone",
-				function(s)		
-					if s.name == "lan" then
-						uci:set("firewall", s['.name'], "local_restrict", "1")
-						return false
-					end
-				end)
+		if sharelan_value == "1" then
+			uci:section("firewall", "forwarding", nil, {src="freifunk", dest="lan"})
+			if lansec:formvalue(section) == "1" then
+				uci:foreach("firewall", "zone",
+					function(s)		
+						if s.name == "lan" then
+							uci:set("firewall", s['.name'], "local_restrict", "1")
+							uci:set("firewall", s['.name'], "masq", "1")
+							return false
+						end
+					end)
+			end
 		end
 	else
-		uci:set("freifunk", "wizard", "netconfig", "0")
+		uci:set("freifunk", "wizard", "shareconfig", "0")
 		uci:save("freifunk")
 		if has_autoipv6 then
 			-- Set autoipv6 olsrd mode
