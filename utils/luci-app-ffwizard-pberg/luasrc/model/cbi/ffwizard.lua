@@ -1052,7 +1052,7 @@ function main.write(self, section, value)
 			if devconfig.channel ~= channel then
 				devconfig.channel = channel
 				local chan = tonumber(channel)
-				if chan >= 0 and chan < 10 then
+				if chan > 0 and chan < 10 then
 					hwmode = hwmode.."g"
 					bssid = channel .. "2:CA:FF:EE:BA:BE"
 					ssid = "ch" .. channel .. ssidshort
@@ -1083,8 +1083,20 @@ function main.write(self, section, value)
 		end
 		if has_n then
 			local channel = tonumber(devconfig.channel)
-			if channel < 5 and devconfig.htmode == 'HT40-' then
-				devconfig.htmode = 'HT40'
+			if channel > 0 and channel < 5 and devconfig.htmode == 'HT40-' then
+				devconfig.htmode = 'HT40+'
+			elseif channel > 9 and channel < 14 and devconfig.htmode == 'HT40+' then
+				devconfig.htmode = 'HT40-'
+			elseif channel == 36 and devconfig.htmode == 'HT40-' then
+				devconfig.htmode = 'HT40+'
+			elseif channel == 64 and devconfig.htmode == 'HT40+' then
+				devconfig.htmode = 'HT40-'
+			elseif channel == 100 and devconfig.htmode == 'HT40-' then
+				devconfig.htmode = 'HT40+'
+			elseif channel == 136 and devconfig.htmode == 'HT40+' then
+				devconfig.htmode = 'HT40-'
+			elseif channel == 140 then
+				devconfig.htmode = 'HT20'
 			end
 		end
 		local advanced = luci.http.formvalue("cbid.ffwizward.1.advanced_" .. device)
