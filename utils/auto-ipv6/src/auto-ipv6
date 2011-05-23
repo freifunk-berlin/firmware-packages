@@ -1,14 +1,40 @@
 #!/bin/sh
 
-
 #Enable/Disable auto-ipv6
 [ "$(uci get autoipv6.olsr_node.enable)" == 1 ] || exit 0
 
 . /etc/functions.sh
 
 olsrd_clear_hna6() {
-        uci delete olsrd.@Hna6[-1]
-        return 0
+	uci delete 'olsrd.@Hna6[-1]'
+	return 0
+}
+
+olsrd_find_hna6() {
+	local cfg="$1"
+	local netaddr="$2"
+	config_get Netaddr $cfg netaddr
+	if [ "$Netaddr" == "$netaddr" ] ; then
+		neta="$count $neta"
+	fi
+	count=$((count+1))
+	return 0
+}
+
+olsrd_search_hna6() {
+	local cfg="$1"
+	local found="0"
+	config_get Netaddr $cfg netaddr
+	for i in $hna6s ; do
+		if [ "$Netaddr" == "$i" ] ; then
+			found="1"
+		fi
+	done
+	if [ "$found" == "0" ] ; then
+		neta="$count $neta"
+	fi
+	count=$((count+1))
+	return 0
 }
 
 net_find_iface() {
@@ -23,67 +49,84 @@ net_find_iface() {
 
 IP6_SUFIX="$(wget -q -O - http://[::1]:2006/hna | grep '::/0' | cut -d "$(printf "\t")" -f 2 | cut -d ':' -f 1-3)"
 [ -z $IP6_SUFIX ] && exit 0
+for i in $IP6_SUFIX ; do
+	case $i in
+		fdca*) ;;
+		*) IP6_SUFIX=$i ;;
+	esac
+done
 
 config_load network
 interfaces=""
-firstinterface="1"
 config_foreach net_find_iface interface
 restart_radvd=0
 restart_olsrd=0
+hna6s=""
 for i in $(echo $interfaces) ; do
 	[ "$(uci get network.$i.proto)" == "static" ] || continue
 	DEV=$(uci -p/var/state get network.$i.ifname)
-	#IP6_UCI=$(uci -q -p/var/state get network.$i.ip6addr)
 	IP6_UCI=$(uci get network.$i.ip6addr)
-	[ "$IP6_UCI" == "$IP6_SUFIX"":""$IP6_UNIQ""::1/64" ] && continue
 	if [ $(echo $IP6_UCI | grep -i fdca) ] ; then
 		uci set network.$i.ip6addr_fdca="$IP6_UCI"
 	fi
-	#Sufix
 	IP6_OLDSUFIX=$(uci -q -p/var/state get network.$i.ip6oldsufix)
-	logger -t auto-ipv6 "interface: $i device: $DEV Check IPv6 New Sufix $IP6_SUFIX and Old Sufix $IP6_OLDSUFIX"
-	[ "$IP6_SUFIX" == "$IP6_OLDSUFIX" ] && ifconfig "$DEV" | grep -q -e "$IP6_SUFIX"".*1\/64" && continue
+	IP6_OLDUNIQ=$(uci -q -p/var/state get network.$i.ip6olduniq)
+	[ -z $IP6_OLDSUFIX ] || {
+		[ "$IP6_SUFIX" == "$IP6_OLDSUFIX" ] && ifconfig "$DEV" | grep -q -e "$IP6_SUFIX"".*1\/64" && {
+			hna6s="$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"" $hna6s"
+			continue
+		}
+	}
 	uci set "network.$i.ip6oldsufix=$IP6_SUFIX"
 	#Uniq 4Bybte from urandom
-	IP6_OLDUNIQ=$(uci -q -p/var/state get network.$i.ip6olduniq)
 	IP6_UNIQ="$(head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4)"
 	uci set "network.$i.ip6olduniq=$IP6_UNIQ"
 	uci commit network
-	logger -t auto-ipv6 "Removing IPv6 Sufix ""$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64"" from ""$DEV"
-	#ip -6 addr del "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64" dev "$DEV" 2>/dev/null
-	ifconfig "$DEV" del "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64"
+	[ -z $IP6_OLDSUFIX ] || {
+		ifconfig "$DEV" del "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64"
+	}
+	for j in $(ifconfig $DEV | grep Scope:Global | cut -d ' ' -f 13 ) ; do
+		ifconfig "$DEV" del "$j"
+	done
 	sysctl -w "net.ipv6.conf.$DEV.autoconf=0"
 	sysctl -w "net.ipv6.conf.$DEV.accept_redirects=0"
 	sysctl -w "net.ipv6.conf.$DEV.accept_ra=0"
 	sysctl -w "net.ipv6.conf.$DEV.accept_ra_defrtr=0"
 	sysctl -w "net.ipv6.conf.$DEV.accept_ra_pinfo=0"
 	sysctl -w "net.ipv6.conf.$DEV.accept_source_route=0"
-	for j in $(ifconfig $DEV | grep Scope:Global | cut -d ' ' -f 13 ) ; do
-		ifconfig "$DEV" del "$j"
-	done
-	logger -t auto-ipv6 "Applying IPv6 Sufix ""$IP6_SUFIX"":""$IP6_UNIQ""::1/64"" to ""$DEV"
-	#ip -6 addr add "$IP6_SUFIX"":""$IP6_UNIQ""::1/64"       dev "$DEV" 2>/dev/null
 	ifconfig "$DEV" add "$IP6_SUFIX"":""$IP6_UNIQ""::1/64"
 	uci -P /var/state set network.$i.ip6addr="$IP6_SUFIX"":""$IP6_UNIQ""::1/64"
 	uci set network.$i.ip6addr="$IP6_SUFIX"":""$IP6_UNIQ""::1/64"
 	uci commit network
+	hna6s="$IP6_SUFIX"":""$IP6_UNIQ""::"" $hna6s"
 
-	if [ "6and4" == "$(uci get olsrd.@olsrd[0].IpVersion)" ] ; then
-		config_load olsrd
-		if [ $firstinterface == "1" ] ; then
-			logger -t auto-ipv6 "Removing All IPv6 Hna6 from olsrd"
-			config_foreach olsrd_clear_hna6 Hna6
-		fi
-		firstinterface=""
-		logger -t auto-ipv6 "write IPv6 Hna6 ""$IP6_SUFIX"":""$IP6_UNIQ""::"" to olsrd"
-		uci add olsrd Hna6
-		uci set "olsrd.@Hna6[-1].prefix=64"
-		uci set "olsrd.@Hna6[-1].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
-		uci commit
-	fi
 	restart_radvd=1
-	restart_olsrd=1
 done
+
+if [ "6and4" == "$(uci get olsrd.@olsrd[0].IpVersion)" ] ; then
+	config_load olsrd
+	for i in $hna6s ; do
+		local neta=""
+		local count=0
+		config_foreach olsrd_find_hna6 Hna6 $i
+		if [ "$neta" == "" ] ; then
+			uci add olsrd Hna6
+			uci set "olsrd.@Hna6[-1].prefix=64"
+			uci set "olsrd.@Hna6[-1].netaddr=""$i"
+			uci commit olsrd
+			restart_olsrd=1
+		fi
+	done
+
+	local neta=""
+	local count=0
+	config_foreach olsrd_search_hna6 Hna6
+	for i in $neta ; do
+		uci delete "olsrd.@Hna6["$i"]"
+		uci commit olsrd
+		restart_olsrd=1
+	done
+fi
 
 
 if [ $restart_radvd -eq 1 ] ; then
