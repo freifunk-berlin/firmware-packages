@@ -67,6 +67,16 @@ function get_ula(imac)
 	end
 	return "?"
 end
+function get_ula_rand(imac)
+	if string.len(imac) == 17 then
+		local mac0 = sys.exec("head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4")
+		local mac1 = string.sub(imac,4,8)
+		local mac2 = string.sub(imac,10,14)
+		local mac3 = string.sub(imac,16,17)
+		return 'fdca:ffee:'..mac0..'::02'..mac1..'ff:fe'..mac2..mac3..'/64'
+	end
+	return "?"
+end
 
 
 -------------------- View --------------------
@@ -429,6 +439,15 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "vap_" .. device, value)
 				uci:save("freifunk")
 			end
+			if has_ipv6 then
+				dhcpip6 = f:field(Value, "dhcpip6_" .. device, device:upper() .. "  Mesh DHCP IPv6 Adresse einrichten", "Ihre Mesh IP Adresse wird automatisch berechnet")
+				dhcpip6:depends("vap_" .. device, "1")
+				dhcpip6.rmempty = true
+				function dhcpip6.cfgvalue(self, section)
+					return get_ula_rand(get_mac(device))
+				end
+			end
+
 		end
 	end)
 
@@ -971,6 +990,7 @@ function main.write(self, section, value)
 	-- Delete olsrdv4 old interface
 	uci:delete_all("olsrd", "Interface")
 	uci:delete_all("olsrd", "Hna4")
+	uci:delete_all("olsrd", "Hna6")
 	-- Create wireless ip4/ip6 and firewall config
 	uci:foreach("wireless", "wifi-device",
 	function(sec)
@@ -981,6 +1001,7 @@ function main.write(self, section, value)
 		node_ip = luci.http.formvalue("cbid.ffwizward.1.meship_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.meship_" .. device))
 		if has_ipv6 then
 			node_ip6 = luci.http.formvalue("cbid.ffwizward.1.meship6_" .. device) and ip.IPv6(luci.http.formvalue("cbid.ffwizward.1.meship6_" .. device))
+			dhcp_ip6 = luci.http.formvalue("cbid.ffwizward.1.dhcpip6_" .. device) and ip.IPv6(luci.http.formvalue("cbid.ffwizward.1.dhcpip6_" .. device))
 		end
 		if not node_ip or not network or not network:contains(node_ip) then
 			meship.tag_missing[section] = true
@@ -1249,6 +1270,17 @@ function main.write(self, section, value)
 				aliasbase.proto = "static"
 				vap = luci.http.formvalue("cbid.ffwizward.1.vap_" .. device)
 				if vap then
+					if has_ipv6 then
+						if dhcp_ip6 then
+							aliasbase.ip6addr = dhcp_ip6:string()
+							dhcpnetaddr = dhcp_ip6:network(64):string()
+							uci:section("olsrd", "Hna6", nil, {
+								prefix = 64,
+								netaddr = dhcpnetaddr
+							})
+							uci:save("olsrd")
+						end
+					end
 					uci:section("network", "interface", nif .. "dhcp", aliasbase)
 					uci:section("wireless", "wifi-iface", nil, {
 						device     =device,
