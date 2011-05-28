@@ -134,20 +134,21 @@ for i in $(echo $interfaces) ; do
 	IP6_UCI=$(uci get network.$i.ip6addr)
 	if [ $(echo $IP6_UCI | grep -i fdca) ] ; then
 		uci set network.$i.ip6addr_fdca="$IP6_UCI"
+		IP6_UCI=''
 	fi
-	IP6_OLDSUFIX=$(uci -q -p/var/state get network.$i.ip6oldsufix)
-	IP6_OLDUNIQ=$(uci -q -p/var/state get network.$i.ip6olduniq)
+	IP6_OLDSUFIX="$(echo $IP6_UCI | cut -d ':' -f -3)"
+	IP6_OLDUNIQ="$(echo $IP6_UCI | cut -d ':' -f 4)"
 	[ -z $IP6_OLDSUFIX ] || {
 		[ "$IP6_SUFIX" == "$IP6_OLDSUFIX" ] && ifconfig "$DEV" | grep -q -e "$IP6_SUFIX"".*1\/64" && {
 			hna6s="$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"" $hna6s"
 			continue
 		}
 	}
-	uci set "network.$i.ip6oldsufix=$IP6_SUFIX"
+	#uci set "network.$i.ip6oldsufix=$IP6_SUFIX"
 	#Uniq 4Bybte from urandom
 	IP6_UNIQ="$(head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4)"
-	uci set "network.$i.ip6olduniq=$IP6_UNIQ"
-	uci commit network
+	#uci set "network.$i.ip6olduniq=$IP6_UNIQ"
+	#uci commit network
 	[ -z $IP6_OLDSUFIX ] || {
 		ifconfig "$DEV" del "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64"
 	}
