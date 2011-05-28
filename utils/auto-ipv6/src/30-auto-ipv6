@@ -1,5 +1,7 @@
 #!/bin/sh
 
+. /etc/functions.sh
+
 #Enable/Disable auto-ipv6
 if ! [ "$(uci get autoipv6.tunnel.enable)" == 1 ] ; then
         logger -t auto-ipv6 "If you have a Internet uplink then uci set  autoipv6.tunnel.enable=1"
@@ -14,36 +16,58 @@ fi
 # IFUP?
 [ "$ACTION" = "ifup" ] || exit 0
 
+
 #Internet Gateway?
-uci -p /var/state get network.$INTERFACE.gateway 2&>1 1>/dev/null || exit 0
+local IP4_IFACE
+IP4_IFACE="$(uci -p /var/state get network.$INTERFACE.gateway)"
+if [ "$IP4_IFACE" == "" ] ; then
+	logger -t auto-ipv6 "No Local IPv4 IFACE found"
+	exit 0
+fi
 
-. /etc/functions.sh
+IP4_LOCAL="$(uci -p /var/state get network.$INTERFACE.ipaddr)"
+if [ "$IP4_LOCAL" == "" ] ; then
+	logger -t auto-ipv6 "No Local IPv4 found"
+	exit 0
+fi
 
-IP4_LOCAL=$(uci -p /var/state get network.$INTERFACE.ipaddr)
-case $IP4_LOCAL in
-	1.*) exit 0 ;;
-	10.*) exit 0 ;;
-	192.168.*) exit 0 ;;
-	172.17.*) exit 0 ;;
-esac
+
 
 olsrd_find_hna6() {
 	local cfg="$1"
-	local hna6="$2"
-	config_get netaddr "$cfg" netaddr
-	if [ "$netaddr" == "$hna6" ] ; then
-		hna6_find="$hna6_count"
+	local netaddr="$2"
+	config_get Netaddr $cfg netaddr
+	if [ "$Netaddr" == "$netaddr" ] ; then
+		neta="$count $neta"
 	fi
-	hna6_count=$((hna6_count+1))
+	count=$((count+1))
+	return 0
+}
+
+olsrd_search_hna6() {
+	local cfg="$1"
+	local found="0"
+	config_get Netaddr $cfg netaddr
+	for i in $hna6s ; do
+		if [ "$Netaddr" == "$i" ] ; then
+			found="1"
+		fi
+	done
+	if [ "$found" == "0" ] ; then
+		neta="$count $neta"
+	fi
+	count=$((count+1))
 	return 0
 }
 
 net_find_iface() {
         local cfg="$1"
+        if [ "$cfg" == "$IP4_IFACE" ] ; then
+        	return 0
+        fi
         case $cfg in
         	loopback) return 0 ;;
         	gvpn) return 0 ;;
-        	wan) return 0 ;;
         esac
         interfaces="$interfaces ""$cfg"
         return 0
@@ -61,6 +85,24 @@ olsrd_find_plugin(){
 	plugin_count=$((plugin_count+1))
 	return 0
 }
+
+find_public_ip(){
+	local ret
+	ret="$(wget -q -O - http://checkip.dyndns.org/index.html | awk {'print $6'} | sed 's/<.*$//')"
+	echo "$ret"
+}
+
+case $IP4_LOCAL in
+	1.*) IP4_LOCAL="$(find_public_ip)" ;;
+	10.*) IP4_LOCAL="$(find_public_ip)" ;;
+	192.168.*) IP4_LOCAL="$(find_public_ip)" ;;
+	172.17.*) IP4_LOCAL="$(find_public_ip)" ;;
+esac
+
+if [ "$IP4_LOCAL" == "" ] ; then
+	logger -t auto-ipv6 "No Local Public IPv4 found"
+	exit 0
+fi
 
 # warum ist die umask von hotplug.d so restricktiev?
 umask 022
@@ -82,85 +124,103 @@ ip route add "::/0" via "::192.88.99.1" dev tun6to4 metric 1
 config_load network
 interfaces=""
 config_foreach net_find_iface interface
+restart_radvd=0
+restart_olsrd=0
+restart_crond=0
+hna6s="::"
 for i in $(echo $interfaces) ; do
-	#Interface
+	[ "$(uci get network.$i.proto)" == "static" ] || continue
 	DEV=$(uci -p/var/state get network.$i.ifname)
-	#Sufix
+	IP6_UCI=$(uci get network.$i.ip6addr)
+	if [ $(echo $IP6_UCI | grep -i fdca) ] ; then
+		uci set network.$i.ip6addr_fdca="$IP6_UCI"
+	fi
 	IP6_OLDSUFIX=$(uci -q -p/var/state get network.$i.ip6oldsufix)
+	IP6_OLDUNIQ=$(uci -q -p/var/state get network.$i.ip6olduniq)
+	[ -z $IP6_OLDSUFIX ] || {
+		[ "$IP6_SUFIX" == "$IP6_OLDSUFIX" ] && ifconfig "$DEV" | grep -q -e "$IP6_SUFIX"".*1\/64" && {
+			hna6s="$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"" $hna6s"
+			continue
+		}
+	}
 	uci set "network.$i.ip6oldsufix=$IP6_SUFIX"
 	#Uniq 4Bybte from urandom
-	IP6_OLDUNIQ=$(uci -q -p/var/state get network.$i.ip6olduniq)
 	IP6_UNIQ="$(head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4)"
 	uci set "network.$i.ip6olduniq=$IP6_UNIQ"
-
-	logger -t auto-ipv6 "Removing IPv6 Sufix ""$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64"" from ""$DEV"
-	ip -6 addr del "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64" dev "$DEV" 2>/dev/null
-
-	logger -t auto-ipv6 "Applying IPv6 Sufix ""$IP6_SUFIX"":""$IP6_UNIQ""::1/64"" to ""$DEV"
-	ip -6 addr add "$IP6_SUFIX"":""$IP6_UNIQ""::1/64"       dev "$DEV" 2>/dev/null
+	uci commit network
+	[ -z $IP6_OLDSUFIX ] || {
+		ifconfig "$DEV" del "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64"
+	}
+	for j in $(ifconfig $DEV | grep Scope:Global | cut -d ' ' -f 13 ) ; do
+		ifconfig "$DEV" del "$j"
+	done
+	sysctl -w "net.ipv6.conf.$DEV.autoconf=0"
+	sysctl -w "net.ipv6.conf.$DEV.accept_redirects=0"
+	sysctl -w "net.ipv6.conf.$DEV.accept_ra=0"
+	sysctl -w "net.ipv6.conf.$DEV.accept_ra_defrtr=0"
+	sysctl -w "net.ipv6.conf.$DEV.accept_ra_pinfo=0"
+	sysctl -w "net.ipv6.conf.$DEV.accept_source_route=0"
+	ifconfig "$DEV" add "$IP6_SUFIX"":""$IP6_UNIQ""::1/64"
 	uci -P /var/state set network.$i.ip6addr="$IP6_SUFIX"":""$IP6_UNIQ""::1/64"
+	uci set network.$i.ip6addr="$IP6_SUFIX"":""$IP6_UNIQ""::1/64"
+	uci commit network
+	hna6s="$IP6_SUFIX"":""$IP6_UNIQ""::"" $hna6s"
 
-	if [ "6and4" == "$(uci get olsrd.@olsrd[0].IpVersion)" ] ; then
-		config_load olsrd
-
-		logger -t auto-ipv6 "Removing IPv6 Hna6 ""$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"" from olsrd"
-		hna6_count="0"
-		hna6_find=""
-		config_foreach olsrd_find_hna6 Hna6 "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::"
-		if [ "$hna6_find" == "" ] ; then
-			logger -t auto-ipv6 "Applying IPv6 Hna6 ""$IP6_SUFIX"":""$IP6_UNIQ""::"" to olsrd"
-			uci add olsrd Hna6 >/dev/null
-			uci set "olsrd.@Hna6[""$hna6_count""].prefix=64"
-			uci set "olsrd.@Hna6[""$hna6_count""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
-			uci commit
-		else
-			logger -t auto-ipv6 "Overwrite IPv6 Hna6 ""$IP6_SUFIX"":""$IP6_UNIQ""::"" to olsrd"
-			uci set "olsrd.@Hna6[""$hna6_find""].prefix=64"
-			uci set "olsrd.@Hna6[""$hna6_find""].netaddr=""$IP6_SUFIX"":""$IP6_UNIQ""::"
-			uci commit
-		fi
-	fi
+	restart_radvd=1
 done
 
 if [ "6and4" == "$(uci get olsrd.@olsrd[0].IpVersion)" ] ; then
 	config_load olsrd
-	hna6_count="0"
-	hna6_find=""
-	config_foreach olsrd_find_hna6 Hna6 "::"
-	if [ "$hna6_find" == "" ] ; then
-		uci add olsrd Hna6 >/dev/null
-		uci set "olsrd.@Hna6[""$hna6_count""].prefix=0"
-		uci set "olsrd.@Hna6[""$hna6_count""].netaddr=::"
-	fi
-	hna6_count="0"
-	hna6_find=""
-	config_foreach olsrd_find_hna6 Hna6 "2000::"
-	if [ "$hna6_find" == "" ] ; then
-		uci add olsrd Hna6 >/dev/null
-		uci set "olsrd.@Hna6[""$hna6_count""].prefix=3"
-		uci set "olsrd.@Hna6[""$hna6_count""].netaddr=2000::"
-	fi
-	plugin_count="0"
-	plugin_find="0"
-	hostname=$(uname -n)
-#	config_foreach olsrd_find_plugin LoadPlugin "olsrd_nameservice"
-#	if [ "$plugin_find" == "1" ] ; then
-#		service=$(uci get "olsrd.@LoadPlugin[""$plugin_count""].service")
-#		uci set "olsrd.@LoadPlugin[""$plugin_count""].service="
-#		uci add_list "olsrd.@LoadPlugin[""$plugin_count""].service=http://""$hostname"".olsr:80|ip6|""$IP6_SUFIX"
-#	fi
+	for i in $hna6s ; do
+		local neta=""
+		local count=0
+		config_foreach olsrd_find_hna6 Hna6 $i
+		if [ "$neta" == "" ] ; then
+			uci add olsrd Hna6
+			uci set "olsrd.@Hna6[-1].prefix=64"
+			uci set "olsrd.@Hna6[-1].netaddr=""$i"
+			uci commit olsrd
+			restart_olsrd=1
+		fi
+	done
+
+	local neta=""
+	local count=0
+	config_foreach olsrd_search_hna6 Hna6
+	for i in $neta ; do
+		uci delete "olsrd.@Hna6["$i"]"
+		uci commit olsrd
+		restart_olsrd=1
+	done
 fi
 
-uci commit
 
 grep -q ping6 /etc/crontabs/root || {
 	echo '* * * * *       ping6 -w 59 ipv6.google.com 1>/dev/null &' >> /etc/crontabs/root
-	echo '* * * * *       ping6 -w 59 inorouter.pberg.freifunk.net 1>/dev/null &' >> /etc/crontabs/root
 	echo '* * * * *       ping6 -w 59 six.heise.de 1>/dev/null &' >> /etc/crontabs/root
 	echo '* * * * *       ping6 -w 59 druschba.pberg.freifunk.net 1>/dev/null &' >> /etc/crontabs/root
-	echo '* * * * *       ping6 -w 59 pitoresque.pberg.freifunk.net 1>/dev/null &' >> /etc/crontabs/root
+	restart_crond=1
 	}
-[ -z "$(pidof crond)" ] || /etc/init.d/cron restart
-[ -z "$(pidof radvd)" ] || /etc/init.d/radvd restart
-[ -z "$(pidof olsrd)" ] || /etc/init.d/olsrd restart
+
+if [ $restart_crond -eq 1 ] ; then
+	if ! [ -z "$(pidof crond)" ] ; then
+		/etc/init.d/crond stop
+		killall -9 crond
+		/etc/init.d/crond start
+	fi
+fi
+if [ $restart_radvd -eq 1 ] ; then
+	if ! [ -z "$(pidof radvd)" ] ; then
+		/etc/init.d/radvd stop
+		killall -9 radvd
+		/etc/init.d/radvd start
+	fi
+fi
+if [ $restart_olsrd -eq 1 ] ; then
+	if ! [ -z "$(pidof olsrd)" ] ; then
+		/etc/init.d/olsrd stop
+		killall -9 olsrd
+		/etc/init.d/olsrd start
+	fi
+fi
 
