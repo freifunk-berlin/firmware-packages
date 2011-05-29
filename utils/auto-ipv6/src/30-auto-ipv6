@@ -13,6 +13,11 @@ if [ "a""$(lsmod | grep '^sit ')" == "a" ] ; then
         logger -t auto-ipv6 "Please install kmod-sit and kmod-iptunnel4"
         exit 0
 fi
+#IPutils?
+if [ "a""$(lsmod | grep '^sit ')" == "a" ] ; then
+        logger -t auto-ipv6 "Please install ip"
+        exit 0
+fi
 # IFUP?
 [ "$ACTION" = "ifup" ] || exit 0
 
@@ -131,6 +136,10 @@ hna6s="::"
 for i in $(echo $interfaces) ; do
 	[ "$(uci get network.$i.proto)" == "static" ] || continue
 	DEV=$(uci -p/var/state get network.$i.ifname)
+	grep -q $DEV /proc/net/dev || {
+		logger -t auto-ipv6 "Device Not Found IP6_SUFIX $IP6_SUFIX interfaces $i DEV $DEV check your uci config"
+		continue
+	}
 	IP6_UCI=$(uci get network.$i.ip6addr)
 	if [ $(echo $IP6_UCI | grep -i fdca) ] ; then
 		uci set network.$i.ip6addr_fdca="$IP6_UCI"
