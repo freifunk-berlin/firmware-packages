@@ -14,7 +14,7 @@ if [ "a""$(lsmod | grep '^sit ')" == "a" ] ; then
         exit 0
 fi
 #IPutils?
-if [ "a""$(lsmod | grep '^sit ')" == "a" ] ; then
+if ! [ -f /usr/sbin/ip ] ; then
         logger -t auto-ipv6 "Please install ip"
         exit 0
 fi
@@ -135,7 +135,11 @@ restart_crond=0
 hna6s="::"
 for i in $(echo $interfaces) ; do
 	[ "$(uci get network.$i.proto)" == "static" ] || continue
-	DEV=$(uci -p/var/state get network.$i.ifname)
+	DEV="$(uci -q -p/var/state get network.$i.ifname)"
+	[ -z "$DEV" ]  && {
+		logger -t auto-ipv6 "uci Device Not Found IP6_SUFIX $IP6_SUFIX interfaces $i DEV $DEV check your uci config"
+		continue
+	}
 	grep -q $DEV /proc/net/dev || {
 		logger -t auto-ipv6 "Device Not Found IP6_SUFIX $IP6_SUFIX interfaces $i DEV $DEV check your uci config"
 		continue

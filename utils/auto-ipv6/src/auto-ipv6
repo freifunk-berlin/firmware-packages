@@ -66,9 +66,13 @@ local hna6s=""
 
 for i in $(echo $interfaces) ; do
 	[ "$(uci get network.$i.proto)" == "static" ] || continue
-	DEV=$(uci -p/var/state get network.$i.ifname)
-	grep -q $DEV /proc/net/dev || {
-		logger -t auto-ipv6 "Device Not Found IP6_SUFIX $IP6_SUFIX interfaces $i DEV $DEV check your uci config"
+	DEV="$(uci -q -p/var/state get network.$i.ifname)"
+	[ -z "$DEV" ]  && {
+		logger -t auto-ipv6 "uci Device Not Found IP6_SUFIX $IP6_SUFIX interfaces $i DEV $DEV check your uci config"
+		continue
+	}
+	grep -q "$DEV" /proc/net/dev || {
+		logger -t auto-ipv6 "proc Device Not Found IP6_SUFIX $IP6_SUFIX interfaces $i DEV $DEV check your uci config"
 		continue
 	}
 	IP6_UCI=$(uci get network.$i.ip6addr)
