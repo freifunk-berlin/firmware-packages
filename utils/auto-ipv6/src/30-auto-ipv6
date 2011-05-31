@@ -93,10 +93,11 @@ olsrd_find_plugin(){
 
 find_public_ip(){
 	local ret
-	ret="$(wget -q -O - http://checkip.dyndns.org/index.html | awk {'print $6'} | sed 's/<.*$//')"
+	#ret="$(wget -q -O - http://checkip.dyndns.org/index.html | awk {'print $6'} | sed 's/<.*$//')"
+	ret="$(wget -q -O - http://204.13.248.70/index.html | awk {'print $6'} | sed 's/<.*$//')"
 	echo "$ret"
 }
-
+local IP4_LOCAL_IF="$IP4_LOCAL"
 case $IP4_LOCAL in
 	1.*) IP4_LOCAL="$(find_public_ip)" ;;
 	10.*) IP4_LOCAL="$(find_public_ip)" ;;
@@ -118,7 +119,7 @@ logger -t auto-ipv6 "Applying IPv6 Sufix $IP6_SUFIX"
 ip -6 route flush dev tun6to4 2&>1 1>/dev/null
 ip link set dev tun6to4 down 2&>1 1>/dev/null
 ip tunnel del tun6to4 2&>1 1>/dev/null
-ip tunnel add tun6to4 mode sit remote any local $IP4_LOCAL ttl 64
+ip tunnel add tun6to4 mode sit remote any local $IP4_LOCAL_IF ttl 64
 #ip tunnel add tun6to4 mode sit remote any local $(ip -4 r get 1|sed -n 's/.* src //p') ttl 64
 ip link set dev tun6to4 up
 ip addr add "$IP6_SUFIX""::1/16" dev tun6to4
