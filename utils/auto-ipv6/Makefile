@@ -3,8 +3,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=auto-ipv6
-PKG_VERSION:=0.0.3
-PKG_RELEASE:=3
+PKG_VERSION:=0.0.5
+PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -36,6 +36,8 @@ endef
 define Package/auto-ipv6/install
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
 	$(INSTALL_BIN) ./src/30-auto-ipv6 $(1)/etc/hotplug.d/iface/30-auto-ipv6
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./src/autoipv6.init $(1)/etc/init.d/autoipv6
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./src/auto-ipv6 $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/etc/uci-defaults

@@ -1,0 +1,18 @@
+#!/bin/sh /etc/rc.common
+
+START=49
+
+net_start_iface() {
+        local cfg="$1"
+        export ACTION="ifup"
+        export INTERFACE="$cfg"
+        /etc/hotplug.d/iface/30-auto-ipv6
+        return 0
+}
+
+
+start() {
+	config_load network
+	config_foreach net_start_iface interface
+}
+
