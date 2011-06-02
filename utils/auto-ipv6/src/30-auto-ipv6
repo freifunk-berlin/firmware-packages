@@ -2,6 +2,9 @@
 
 . /etc/functions.sh
 
+# IFUP?
+[ "$ACTION" = "ifup" ] || exit 0
+
 #Enable/Disable auto-ipv6
 if ! [ "$(uci get autoipv6.tunnel.enable)" == 1 ] ; then
         logger -t auto-ipv6 "If you have a Internet uplink then uci set  autoipv6.tunnel.enable=1"
@@ -14,23 +17,21 @@ if [ "a""$(lsmod | grep '^sit ')" == "a" ] ; then
         exit 0
 fi
 #IPutils?
-if ! [ -f /usr/sbin/ip ] ; then
-        logger -t auto-ipv6 "Please install ip"
+if ! ip 2>&1 | grep -q tunnel ; then
+        logger -t auto-ipv6 "Please install ip with tunnel support"
         exit 0
 fi
-# IFUP?
-[ "$ACTION" = "ifup" ] || exit 0
 
 
 #Internet Gateway?
-local IP4_IFACE
-IP4_IFACE="$(uci -p /var/state get network.$INTERFACE.gateway)"
-if [ "$IP4_IFACE" == "" ] ; then
-	logger -t auto-ipv6 "No Local IPv4 IFACE found"
+local IP4_GW
+IP4_GW="$(uci -p /var/state get network.$INTERFACE.gateway)"
+if [ "$IP4_GW" == "" ] ; then
+	logger -t auto-ipv6 "No Gateway found on $INTERFACE"
 	exit 0
 fi
 
-IP4_LOCAL="$(uci -p /var/state get network.$INTERFACE.ipaddr)"
+local IP4_LOCAL="$(uci -p /var/state get network.$INTERFACE.ipaddr)"
 if [ "$IP4_LOCAL" == "" ] ; then
 	logger -t auto-ipv6 "No Local IPv4 found"
 	exit 0
@@ -67,7 +68,7 @@ olsrd_search_hna6() {
 
 net_find_iface() {
         local cfg="$1"
-        if [ "$cfg" == "$IP4_IFACE" ] ; then
+        if [ "$cfg" == "$INTERFACE" ] ; then
         	return 0
         fi
         case $cfg in
@@ -93,6 +94,7 @@ olsrd_find_plugin(){
 
 find_public_ip(){
 	local ret
+	#FIXME
 	#ret="$(wget -q -O - http://checkip.dyndns.org/index.html | awk {'print $6'} | sed 's/<.*$//')"
 	ret="$(wget -q -O - http://204.13.248.70/index.html | awk {'print $6'} | sed 's/<.*$//')"
 	echo "$ret"
@@ -110,26 +112,27 @@ if [ "$IP4_LOCAL" == "" ] ; then
 	exit 0
 fi
 
-# warum ist die umask von hotplug.d so restricktiev?
+# change umask of /var/state files for httpd 
 umask 022
-#
 
 IP6_SUFIX=$(printf "2002:%02x%02x:%02x%02x" $(echo $IP4_LOCAL|sed 's/\./ /g'))
 logger -t auto-ipv6 "Applying IPv6 Sufix $IP6_SUFIX"
-ip -6 route flush dev tun6to4 2&>1 1>/dev/null
-ip link set dev tun6to4 down 2&>1 1>/dev/null
+ifconfig tun6to4 down 2&>1 1>/dev/null
 ip tunnel del tun6to4 2&>1 1>/dev/null
 ip tunnel add tun6to4 mode sit remote any local $IP4_LOCAL_IF ttl 64
-#ip tunnel add tun6to4 mode sit remote any local $(ip -4 r get 1|sed -n 's/.* src //p') ttl 64
-ip link set dev tun6to4 up
-ip addr add "$IP6_SUFIX""::1/16" dev tun6to4
-ip route add "::192.88.99.1" dev tun6to4
-ip route add "2000::/3" via "::192.88.99.1" dev tun6to4 metric 1
-ip route add "::/0" via "::192.88.99.1" dev tun6to4 metric 1
+ifconfig tun6to4 up
+ifconfig tun6to4 "$IP6_SUFIX""::1/16"
+route -A inet6 add "::192.88.99.1" dev tun6to4
+route -A inet6 add "2000::/3" gw "::192.88.99.1" dev tun6to4 metric 1
+route -A inet6 add "::/0" gw "::192.88.99.1" dev tun6to4 metric 1
 
+(
+lock -w /var/run/auto-ipv6.lock && lock /var/run/auto-ipv6.lock
+sleep 30
 config_load network
 interfaces=""
 config_foreach net_find_iface interface
+logger -t auto-ipv6 "found $interfaces"
 restart_radvd=0
 restart_olsrd=0
 restart_crond=0
@@ -158,17 +161,17 @@ for i in $(echo $interfaces) ; do
 			continue
 		}
 	}
-	#uci set "network.$i.ip6oldsufix=$IP6_SUFIX"
 	#Uniq 4Bybte from urandom
 	IP6_UNIQ="$(head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4)"
-	#uci set "network.$i.ip6olduniq=$IP6_UNIQ"
-	#uci commit network
+
 	[ -z $IP6_OLDSUFIX ] || {
 		ifconfig "$DEV" del "$IP6_OLDSUFIX"":""$IP6_OLDUNIQ""::1/64"
 	}
+
 	for j in $(ifconfig $DEV | grep Scope:Global | cut -d ' ' -f 13 ) ; do
 		ifconfig "$DEV" del "$j"
 	done
+
 	sysctl -w "net.ipv6.conf.$DEV.autoconf=0"
 	sysctl -w "net.ipv6.conf.$DEV.accept_redirects=0"
 	sysctl -w "net.ipv6.conf.$DEV.accept_ra=0"
@@ -189,10 +192,14 @@ if [ "6and4" == "$(uci get olsrd.@olsrd[0].IpVersion)" ] ; then
 	for i in $hna6s ; do
 		local neta=""
 		local count=0
+		local prefix=64
+		if [ "$i" == "::" ] ; then
+			prefix=0
+		fi
 		config_foreach olsrd_find_hna6 Hna6 $i
 		if [ "$neta" == "" ] ; then
 			uci add olsrd Hna6
-			uci set "olsrd.@Hna6[-1].prefix=64"
+			uci set "olsrd.@Hna6[-1].prefix=""$prefix"
 			uci set "olsrd.@Hna6[-1].netaddr=""$i"
 			uci commit olsrd
 			restart_olsrd=1
@@ -238,4 +245,6 @@ if [ $restart_olsrd -eq 1 ] ; then
 		/etc/init.d/olsrd start
 	fi
 fi
+lock -u /var/run/auto-ipv6.lock
+) &
 
