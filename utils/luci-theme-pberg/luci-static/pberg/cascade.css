@@ -14,7 +14,7 @@ body {
 	background-repeat: repeat-x;
 	font-family: Verdana, Arial, sans-serif;
 	font-size: 14pt;
-	line-height: 100%;
+	line-height: 150%;
 	padding-bottom: 1.5em;
 }
 
@@ -261,7 +261,7 @@ textarea#syslog {
 	padding: 0.5em;
 	background: #f5f5f5;
 	color: #000000;
-	font-size: 80%;
+	font-size: 100%;
 	border-width: 0 1px 1px 1px;
 	border-style: solid;
 	border-color: #444444;
