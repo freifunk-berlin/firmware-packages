@@ -1821,6 +1821,7 @@ function main.write(self, section, value)
 				uci:delete_all("radvd", "dnssl", {interface='wan'})
 				uci:save("radvd")
 		end
+		local wproto = wanproto:formvalue(section)
 	end
 	if has_lan then
 		if has_radvd then
@@ -1830,10 +1831,8 @@ function main.write(self, section, value)
 				uci:delete_all("radvd", "dnssl", {interface='lan'})
 				uci:save("radvd")
 		end
+		local lproto = lanproto:formvalue(section)
 	end
-
-	local wproto = wanproto:formvalue(section)
-	local lproto = lanproto:formvalue(section)
 
 	if share_value == "1" or sharelan_value == "1" then
 		uci:set("freifunk", "wizard", "shareconfig", "1")
