@@ -36,8 +36,14 @@ define Build/Compile
 endef
 
 define Package/luci-app-ffwizard-pberg/install
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
-	$(CP) $(PKG_BUILD_DIR)/luasrc/* $(1)/usr/lib/lua/luci
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/tools
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
+	$(CP) $(PKG_BUILD_DIR)/luasrc/controller/* $(1)/usr/lib/lua/luci/controller
+	$(CP) $(PKG_BUILD_DIR)/luasrc/model/* $(1)/usr/lib/lua/luci/model
+	$(CP) $(PKG_BUILD_DIR)/luasrc/tools/* $(1)/usr/lib/lua/luci/tools
+	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
 	$(INSTALL_DIR) $(1)/www/luci-static
