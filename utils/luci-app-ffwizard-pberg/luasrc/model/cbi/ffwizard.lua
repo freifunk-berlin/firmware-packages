@@ -22,7 +22,8 @@ local tools = require "luci.tools.ffwizard"
 local util = require "luci.util"
 local sys = require "luci.sys"
 local ip = require "luci.ip"
-local fs  = require "nixio.fs"
+--local fs  = require "nixio.fs"
+local fs = require "luci.fs"
 
 local has_pptp  = fs.access("/usr/sbin/pptp")
 local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
@@ -36,6 +37,7 @@ local has_hb = fs.access("/sbin/heartbeat")
 local has_hostapd = fs.access("/usr/sbin/hostapd")
 local has_wan = uci:get("network", "wan", "proto")
 local has_lan = uci:get("network", "lan", "proto")
+local profiles = "/etc/config/profile_"
 
 luci.i18n.loadc("freifunk")
 
@@ -111,9 +113,18 @@ end
 net = f:field(ListValue, "net", "Freifunk Community", "Nutzen Sie die Einstellungen der Freifunk Gemeinschaft in ihrer Nachbarschaft.")
 net.rmempty = false
 net.optional = false
-uci:foreach("freifunk", "community", function(s)
-	net:value(s[".name"], "%s (%s)" % {s.name, s.mesh_network or "?"})
-end)
+--uci:foreach("freifunk", "community", function(s)
+--	net:value(s[".name"], "%s (%s)" % {s.name, s.mesh_network or "?"})
+--end)
+local list = { }
+local list = fs.glob(profiles .. "*")
+
+for k,v in ipairs(list) do
+	local name = uci:get_first(v, "community", "name") or "?"
+	local n = string.gsub(v, profiles, "")
+	net:value(n, name)
+end
+
 function net.cfgvalue(self, section)
 	return uci:get("freifunk", "wizard", "net")
 end
@@ -126,14 +137,21 @@ net_lat:depends("net", "0")
 net_lon = f:field(ListValue, "net_lon", "", "")
 net_lon:depends("net", "0")
 
-uci:foreach("freifunk", "community", function(s)
-	if s.latitude then
-		net_lat:value(s[".name"], "%s" % {s.latitude or "?"})
-	end
-	if s.longitude then
-		net_lon:value(s[".name"], "%s" % {s.longitude or "?"})
-	end
-end)
+--uci:foreach("freifunk", "community", function(s)
+--	if s.latitude then
+--		net_lat:value(s[".name"], "%s" % {s.latitude or "?"})
+--	end
+--	if s.longitude then
+--		net_lon:value(s[".name"], "%s" % {s.longitude or "?"})
+--	end
+--end)
+for k,v in ipairs(list) do
+	local latitude = uci:get_first(v, "community", "latitude") or "?"
+	local longitude = uci:get_first(v, "community", "longitude") or "?"
+	local n = string.gsub(v, profiles, "")
+	net_lat:value(n, "%s" % {latitude or "?"})
+	net_lon:value(n, "%s" % {longitude or "?"})
+end
 
 -- hostname
 hostname = f:field(Value, "hostname", "Knoten Name", "Geben Sie Ihrem Freifunk Router einen Namen. Wenn Sie dieses Feld leer lassen, wird der Name automatisch aus der Mesh IP generiert.")
@@ -940,7 +958,8 @@ end
 -- Configure Freifunk checked
 function main.write(self, section, value)
 	local community = net:formvalue(section)
-	suffix = uci:get("freifunk", community, "suffix") or "olsr"
+	--suffix = uci:get("freifunk", community, "suffix") or "olsr"
+	suffix = uci:get_first("profile_"..community, "community", "suffix") or "olsr"
 
 	-- Invalidate fields
 	if not community then
@@ -949,16 +968,18 @@ function main.write(self, section, value)
 	end
 
 	local external
-	external = uci:get("freifunk", community, "external") or ""
+	--external = uci:get("freifunk", community, "external") or ""
+	external = "profile_"..community
 
 	local netname = "wireless"
 	local network
-	network = ip.IPv4(uci:get("freifunk", community, "mesh_network") or "104.0.0.0/8")
+	--network = ip.IPv4(uci:get("freifunk", community, "mesh_network") or "104.0.0.0/8")
+	network = ip.IPv4(uci:get_first("profile_"..community, "community", "mesh_network") or "104.0.0.0/8")
 
 	-- Tune community settings
-	if community and uci:get("freifunk", community) then
-		uci:tset("freifunk", "community", uci:get_all("freifunk", community))
-	end
+	--if community and uci:get("freifunk", community) then
+	--	uci:tset("freifunk", "community", uci:get_all("freifunk", community))
+	--end
 
 	-- Cleanup
 	uci:delete_all("firewall","zone", {name="freifunk"})
@@ -1120,7 +1141,8 @@ function main.write(self, section, value)
 		end
 		-- New Config
 		-- Tune wifi device
-		local ssid = uci:get("freifunk", community, "ssid")
+		-- local ssid = uci:get("freifunk", community, "ssid")
+		local ssid = uci:get_first("profile_"..community, "community", "ssid")
 		local ssiddot = string.find(ssid,'%..*')
 		local ssidshort
 		if ssiddot then
@@ -1323,8 +1345,10 @@ function main.write(self, section, value)
 						end
 					end)
 			else
-				local subnet_prefix = tonumber(uci:get("freifunk", community, "splash_prefix")) or 27
-				local pool_network = uci:get("freifunk", community, "splash_network") or "10.104.0.0/16"
+				--local subnet_prefix = tonumber(uci:get("freifunk", community, "splash_prefix")) or 27
+				local subnet_prefix = tonumber(uci:get_first("profile_"..community, "community", "splash_prefix")) or 27
+				--local pool_network = uci:get("freifunk", community, "splash_network") or "10.104.0.0/16"
+				local pool_network = uci:get_first("profile_"..community, "community", "splash_network") or "10.104.0.0/16"
 				local pool = luci.ip.IPv4(pool_network)
 				local ip = tostring(node_ip)
 				if pool and ip then
@@ -1562,8 +1586,10 @@ function main.write(self, section, value)
 							end
 						end)
 				else
-					local subnet_prefix = tonumber(uci:get("freifunk", community, "splash_prefix")) or 27
-					local pool_network = uci:get("freifunk", community, "splash_network") or "10.104.0.0/16"
+					--local subnet_prefix = tonumber(uci:get("freifunk", community, "splash_prefix")) or 27
+					local subnet_prefix = tonumber(uci:get_first("profile_"..community, "splash_prefix")) or 27
+					--local pool_network = uci:get("freifunk", community, "splash_network") or "10.104.0.0/16"
+					local pool_network = uci:get_first("profile_"..community, "splash_network") or "10.104.0.0/16"
 					local pool = luci.ip.IPv4(pool_network)
 					local ip = tostring(node_ip)
 					if pool and ip then
