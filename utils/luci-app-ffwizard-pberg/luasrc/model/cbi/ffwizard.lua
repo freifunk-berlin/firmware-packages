@@ -1427,6 +1427,7 @@ function main.write(self, section, value)
 				util.update(dhcpbase, uci:get_all(external, "dhcp") or {})
 				dhcpbase.interface = nif .. "dhcp"
 				dhcpbase.force = 1
+				dhcpbase.ignore = 0
 				uci:section("dhcp", "dhcp", nif .. "dhcp", dhcpbase)
 				uci:set_list("dhcp", nif .. "dhcp", "dhcp_option", "119,olsr")
 				-- Create firewall settings
@@ -1628,6 +1629,7 @@ function main.write(self, section, value)
 					util.update(dhcpbase, uci:get_all(external, "dhcp") or {})
 					dhcpbase.interface = device .. "dhcp"
 					dhcpbase.force = 1
+					dhcpbase.ignore = 0
 					uci:section("dhcp", "dhcp", device .. "dhcp", dhcpbase)
 					uci:set_list("dhcp", device .. "dhcp", "dhcp_option", "119,olsr")
 					-- Create firewall settings
