@@ -113,9 +113,7 @@ end
 net = f:field(ListValue, "net", "Freifunk Community", "Nutzen Sie die Einstellungen der Freifunk Gemeinschaft in ihrer Nachbarschaft.")
 net.rmempty = false
 net.optional = false
---uci:foreach("freifunk", "community", function(s)
---	net:value(s[".name"], "%s (%s)" % {s.name, s.mesh_network or "?"})
---end)
+
 local list = { }
 local list = fs_luci.glob(profiles .. "*")
 
@@ -137,14 +135,6 @@ net_lat:depends("net", "0")
 net_lon = f:field(ListValue, "net_lon", "", "")
 net_lon:depends("net", "0")
 
---uci:foreach("freifunk", "community", function(s)
---	if s.latitude then
---		net_lat:value(s[".name"], "%s" % {s.latitude or "?"})
---	end
---	if s.longitude then
---		net_lon:value(s[".name"], "%s" % {s.longitude or "?"})
---	end
---end)
 for k,v in ipairs(list) do
 	local latitude = uci:get_first(v, "community", "latitude") or "?"
 	local longitude = uci:get_first(v, "community", "longitude") or "?"
@@ -766,39 +756,6 @@ if has_wan then
 		end
 	end
 end
-if has_l2gvpn then
-	gvpn = f:field(Flag, "gvpn", "Freifunk Internet Tunnel", "Verbinden Sie ihren Router ueber das Internet mit anderen Freifunknetzen.")
-	gvpn.rmempty = false
-	gvpn:depends("sharenet", "1")
-	function gvpn.cfgvalue(self, section)
-		return uci:get("freifunk", "wizard", "gvpn")
-	end
-	function gvpn.write(self, section, value)
-		uci:set("freifunk", "wizard", "gvpn", value)
-		uci:save("freifunk")
-	end
-	gvpnip = f:field(Value, "gvpnipaddr", translate("ipaddress"))
-	gvpnip:depends("gvpn", "1")
-	function gvpnip.cfgvalue(self, section)
-		return uci:get("l2gvpn", "bbb", "ip") or uci:get("network", "gvpn", "ipaddr")
-	end
-	function gvpnip.validate(self, value)
-		local x = ip.IPv4(value)
-		return ( x and x:prefix() == 32 ) and x:string() or ""
-	end
-end
-
-if has_hb then
-	hb = f:field(Flag, "hb", "Heartbeat aktivieren","Dem Gerät erlauben anonyme Statistiken zu übertragen. (empfohlen)")
-	hb.rmempty = false
-	function hb.cfgvalue(self, section)
-		return uci:get("freifunk", "wizard", "hb")
-	end
-	function hb.write(self, section, value)
-		uci:set("freifunk", "wizard", "hb", value)
-		uci:save("freifunk")
-	end
-end
 
 if has_lan then
 	lanproto = f:field(ListValue, "lanproto", "<b>Lokales Netzwerk LAN</b>", "Geben Sie das Protokol der LAN Schnittstelle an.")
@@ -885,7 +842,70 @@ if has_lan then
 	function lansec.cfgvalue(self, section)
 		return uci:get("freifunk", "wizard", "lan_security")
 	end
+	if has_qos then
+		lanqosdown = f:field(Value, "lanqosdown", "Download Bandbreite begrenzen", "kb/s")
+		lanqosdown:depends("sharelan", "1")
+		function lanqosdown.cfgvalue(self, section)
+			return uci:get("qos", "lan", "download")
+		end
+		function lanqosdown.write(self, section, value)
+			uci:set("qos", "lan", "download", value)
+			uci:save("qos")
+		end
+		function lanqosdown.remove(self, section)
+			uci:delete("qos", "lan", "download")
+			uci:save("qos")
+		end
+		lanqosup = f:field(Value, "lanqosup", "Upload Bandbreite begrenzen", "kb/s")
+		lanqosup:depends("sharelan", "1")
+		function lanqosup.cfgvalue(self, section)
+			return uci:get("qos", "lan", "upload")
+		end
+		function lanqosup.write(self, section, value)
+			uci:set("qos", "lan", "upload", value)
+			uci:save("qos")
+		end
+		function lanqosup.remove(self, section)
+			uci:delete("qos", "lan", "upload")
+			uci:save("qos")
+		end
+	end
 end
+
+if has_l2gvpn then
+	gvpn = f:field(Flag, "gvpn", "Freifunk Internet Tunnel", "Verbinden Sie ihren Router ueber das Internet mit anderen Freifunknetzen.")
+	gvpn.rmempty = false
+	function gvpn.cfgvalue(self, section)
+		return uci:get("freifunk", "wizard", "gvpn")
+	end
+	function gvpn.write(self, section, value)
+		uci:set("freifunk", "wizard", "gvpn", value)
+		uci:save("freifunk")
+	end
+	gvpnip = f:field(Value, "gvpnipaddr", translate("ipaddress"))
+	gvpnip:depends("gvpn", "1")
+	function gvpnip.cfgvalue(self, section)
+		return uci:get("l2gvpn", "bbb", "ip") or uci:get("network", "gvpn", "ipaddr")
+	end
+	function gvpnip.validate(self, value)
+		local x = ip.IPv4(value)
+		return ( x and x:prefix() == 32 ) and x:string() or ""
+	end
+end
+
+
+if has_hb then
+	hb = f:field(Flag, "hb", "Heartbeat aktivieren","Dem Gerät erlauben anonyme Statistiken zu übertragen. (empfohlen)")
+	hb.rmempty = false
+	function hb.cfgvalue(self, section)
+		return uci:get("freifunk", "wizard", "hb")
+	end
+	function hb.write(self, section, value)
+		uci:set("freifunk", "wizard", "hb", value)
+		uci:save("freifunk")
+	end
+end
+
 
 -------------------- Control --------------------
 function f.handle(self, state, data)
@@ -958,7 +978,6 @@ end
 -- Configure Freifunk checked
 function main.write(self, section, value)
 	local community = net:formvalue(section)
-	--suffix = uci:get("freifunk", community, "suffix") or "olsr"
 	suffix = uci:get_first("profile_"..community, "community", "suffix") or "olsr"
 
 	-- Invalidate fields
@@ -968,18 +987,18 @@ function main.write(self, section, value)
 	end
 
 	local external
-	--external = uci:get("freifunk", community, "external") or ""
 	external = "profile_"..community
 
 	local netname = "wireless"
 	local network
-	--network = ip.IPv4(uci:get("freifunk", community, "mesh_network") or "104.0.0.0/8")
 	network = ip.IPv4(uci:get_first("profile_"..community, "community", "mesh_network") or "104.0.0.0/8")
 
 	-- Tune community settings
-	--if community and uci:get("freifunk", community) then
-	--	uci:tset("freifunk", "community", uci:get_all("freifunk", community))
-	--end
+	if community and uci:get("freifunk", community) then
+		uci:tset("freifunk", "community", uci:get_all("profile_"..community, "profile"))
+	end
+	uci:set("freifunk", "community", "name", community)
+	uci:save("freifunk")
 
 	-- Cleanup
 	uci:delete_all("firewall","zone", {name="freifunk"})
@@ -1141,7 +1160,6 @@ function main.write(self, section, value)
 		end
 		-- New Config
 		-- Tune wifi device
-		-- local ssid = uci:get("freifunk", community, "ssid")
 		local ssid = uci:get_first("profile_"..community, "community", "ssid")
 		local ssiddot = string.find(ssid,'%..*')
 		local ssidshort
@@ -1330,24 +1348,18 @@ function main.write(self, section, value)
 					function(s)		
 						if s.library == "olsrd_p2pd.so.0.1.0" then
 							uci:set("olsrd", s['.name'], "ignore", "0")
-							-- local nonolsr = uci:get("olsrd", s['.name'], "NonOlsrIf") or ""
 							local nonolsr = uci:get_list("olsrd", s['.name'], "NonOlsrIf") or {}
 							vap = luci.http.formvalue("cbid.ffwizward.1.vap_" .. device)
 							if vap then
-								--nonolsr = nif.."dhcp "..nonolsr
 								table.insert(nonolsr,nif.."dhcp")
 							else
-								--nonolsr = nif.." "..nonolsr
 								table.insert(nonolsr,nif)
 							end
-							-- uci:set("olsrd", s['.name'], "NonOlsrIf", nonolsr)
 							uci:set_list("olsrd", s['.name'], "NonOlsrIf", nonolsr)
 						end
 					end)
 			else
-				--local subnet_prefix = tonumber(uci:get("freifunk", community, "splash_prefix")) or 27
 				local subnet_prefix = tonumber(uci:get_first("profile_"..community, "community", "splash_prefix")) or 27
-				--local pool_network = uci:get("freifunk", community, "splash_network") or "10.104.0.0/16"
 				local pool_network = uci:get_first("profile_"..community, "community", "splash_network") or "10.104.0.0/16"
 				local pool = luci.ip.IPv4(pool_network)
 				local ip = tostring(node_ip)
@@ -1586,9 +1598,7 @@ function main.write(self, section, value)
 							end
 						end)
 				else
-					--local subnet_prefix = tonumber(uci:get("freifunk", community, "splash_prefix")) or 27
 					local subnet_prefix = tonumber(uci:get_first("profile_"..community, "splash_prefix")) or 27
-					--local pool_network = uci:get("freifunk", community, "splash_network") or "10.104.0.0/16"
 					local pool_network = uci:get_first("profile_"..community, "splash_network") or "10.104.0.0/16"
 					local pool = luci.ip.IPv4(pool_network)
 					local ip = tostring(node_ip)
