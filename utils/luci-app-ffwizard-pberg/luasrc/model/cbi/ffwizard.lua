@@ -22,8 +22,8 @@ local tools = require "luci.tools.ffwizard"
 local util = require "luci.util"
 local sys = require "luci.sys"
 local ip = require "luci.ip"
---local fs  = require "nixio.fs"
-local fs = require "luci.fs"
+local fs  = require "nixio.fs"
+local fs_luci = require "luci.fs"
 
 local has_pptp  = fs.access("/usr/sbin/pptp")
 local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
@@ -117,7 +117,7 @@ net.optional = false
 --	net:value(s[".name"], "%s (%s)" % {s.name, s.mesh_network or "?"})
 --end)
 local list = { }
-local list = fs.glob(profiles .. "*")
+local list = fs_luci.glob(profiles .. "*")
 
 for k,v in ipairs(list) do
 	local name = uci:get_first(v, "community", "name") or "?"
