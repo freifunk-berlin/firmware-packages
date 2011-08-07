@@ -114,14 +114,8 @@ net = f:field(ListValue, "net", "Freifunk Community", "Nutzen Sie die Einstellun
 net.rmempty = false
 net.optional = false
 
-local list = { }
+local list = {}
 local list = fs_luci.glob(profiles .. "*")
-
-for k,v in ipairs(list) do
-	local name = uci:get_first(v, "community", "name") or "?"
-	local n = string.gsub(v, profiles, "")
-	net:value(n, name)
-end
 
 function net.cfgvalue(self, section)
 	return uci:get("freifunk", "wizard", "net")
@@ -136,9 +130,11 @@ net_lon = f:field(ListValue, "net_lon", "", "")
 net_lon:depends("net", "0")
 
 for k,v in ipairs(list) do
-	local latitude = uci:get_first(v, "community", "latitude") or "?"
-	local longitude = uci:get_first(v, "community", "longitude") or "?"
 	local n = string.gsub(v, profiles, "")
+	local name     = uci:get_first("profile_"..n, "community", "name") or "?"
+	net:value(n, name)
+	local latitude = uci:get_first("profile_"..n, "community", "latitude") or "?"
+	local longitude = uci:get_first("profile_"..n, "community", "longitude") or "?"
 	net_lat:value(n, "%s" % {latitude or "?"})
 	net_lon:value(n, "%s" % {longitude or "?"})
 end
@@ -979,7 +975,7 @@ end
 function main.write(self, section, value)
 	local community = net:formvalue(section)
 	suffix = uci:get_first("profile_"..community, "community", "suffix") or "olsr"
-
+	
 	-- Invalidate fields
 	if not community then
 		net.tag_missing[section] = true
@@ -1032,8 +1028,7 @@ function main.write(self, section, value)
 	end
 	-- Delete olsrdv4
 	uci:delete_all("olsrd", "olsrd")
-	local olsrbase
-	olsrbase = uci:get_all("freifunk", "olsrd") or {}
+	local olsrbase = uci:get_all("freifunk", "olsrd") or {}
 	util.update(olsrbase, uci:get_all(external, "olsrd") or {})
 	if has_ipv6 then
 		olsrbase.IpVersion='6and4'
@@ -1168,7 +1163,7 @@ function main.write(self, section, value)
 		else
 			ssidshort = ssid
 		end
-		local devconfig = uci:get_all("freifunk", "wifi_device")
+		local devconfig = uci:get_all("freifunk", "wifi_device") or {}
 		util.update(devconfig, uci:get_all(external, "wifi_device") or {})
 		local channel = luci.http.formvalue("cbid.ffwizward.1.chan_" .. device)
 		local hwtype = sec.type
@@ -1289,7 +1284,7 @@ function main.write(self, section, value)
 		end
 		ifconfig.encryption="none"
 		-- Read Preset 
-		local prenetconfig = uci:get_all("freifunk", "interface")
+		local prenetconfig = uci:get_all("freifunk", "interface") or {}
 		util.update(prenetconfig, uci:get_all(external, "interface") or {})
 		prenetconfig.proto = "static"
 		prenetconfig.ipaddr = node_ip:string()
@@ -1316,7 +1311,7 @@ function main.write(self, section, value)
 		tools.firewall_zone_add_interface("freifunk", nif)
 		uci:save("firewall")
 		-- Write new olsrv4 interface
-		local olsrifbase = uci:get_all("freifunk", "olsr_interface")
+		local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
 		util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
 		olsrifbase.interface = nif
 		olsrifbase.ignore    = "0"
@@ -1377,7 +1372,7 @@ function main.write(self, section, value)
 			end
 			if dhcp_ip and dhcp_mask then
 				-- Create alias
-				local aliasbase = uci:get_all("freifunk", "alias")
+				local aliasbase = uci:get_all("freifunk", "alias") or {}
 				util.update(aliasbase, uci:get_all(external, "alias") or {})
 				aliasbase.ipaddr = dhcp_ip
 				aliasbase.netmask = dhcp_mask
@@ -1423,7 +1418,7 @@ function main.write(self, section, value)
 					uci:section("network", "alias", nif .. "dhcp", aliasbase)
 				end
 				-- Create dhcp
-				local dhcpbase = uci:get_all("freifunk", "dhcp")
+				local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
 				util.update(dhcpbase, uci:get_all(external, "dhcp") or {})
 				dhcpbase.interface = nif .. "dhcp"
 				dhcpbase.force = 1
@@ -1522,7 +1517,7 @@ function main.write(self, section, value)
 				uci:delete_all("radvd", "dnssl", {interface=device})
 			end
 			-- New Config
-			local prenetconfig = uci:get_all("freifunk", "interface")
+			local prenetconfig = uci:get_all("freifunk", "interface") or {}
 			util.update(prenetconfig, uci:get_all(external, "interface") or {})
 			prenetconfig.proto = "static"
 			prenetconfig.ipaddr = node_ip:string()
@@ -1558,7 +1553,7 @@ function main.write(self, section, value)
 			tools.firewall_zone_add_interface("freifunk", device)
 			uci:save("firewall")
 			-- Write new olsrv4 interface
-			local olsrifbase = uci:get_all("freifunk", "olsr_interface")
+			local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
 			util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
 			olsrifbase.interface = device
 			olsrifbase.ignore    = "0"
@@ -1617,7 +1612,7 @@ function main.write(self, section, value)
 				end
 				if dhcp_ip and dhcp_mask then
 					-- Create alias
-					local aliasbase = uci:get_all("freifunk", "alias")
+					local aliasbase = uci:get_all("freifunk", "alias") or {}
 					util.update(aliasbase, uci:get_all(external, "alias") or {})
 					aliasbase.interface = device
 					aliasbase.ipaddr = dhcp_ip
@@ -1625,7 +1620,7 @@ function main.write(self, section, value)
 					aliasbase.proto = "static"
 					uci:section("network", "alias", device .. "dhcp", aliasbase)
 					-- Create dhcp
-					local dhcpbase = uci:get_all("freifunk", "dhcp")
+					local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
 					util.update(dhcpbase, uci:get_all(external, "dhcp") or {})
 					dhcpbase.interface = device .. "dhcp"
 					dhcpbase.force = 1
@@ -1772,14 +1767,14 @@ function main.write(self, section, value)
 		end)
 
 	-- Create time rdate_servers
-	local rdate = uci:get_all("freifunk", "time")
-	uci:delete_all("system", "time")
-	uci:section("system", "time", "rdate_servers", rdate)
-	rdate.server = rdate.rdate_servers
-	rdate.rdate_servers = ""
-	uci:delete_all("system", "rdate", nil)
-	uci:section("system", "rdate", nil, rdate)
-	uci:save("system")
+	--local sys_time = uci:get_all("freifunk", "time")
+	--uci:delete_all("system", "time")
+	--uci:section("system", "time", "rdate_servers", sys_time)
+	--rdate.server = rdate.rdate_servers
+	--rdate.rdate_servers = ""
+	--uci:delete_all("system", "rdate", nil)
+	--uci:section("system", "rdate", nil, rdate)
+	--uci:save("system")
 
 	-- Create http splash port 8082
 	uci:set_list("uhttpd","main","listen_http",{"80"})
