@@ -79,6 +79,7 @@ cp_config "freifunk.radvd_rdnss"
 cp_config "freifunk.radvd_dnssl"
 cp_config "freifunk.olsr_gvpninterface"
 cp_config "freifunk.gvpn_node"
+[ "$(uci -q get freifunk.wizard)" == "settings" ] || uci set freifunk.wizard=settings
 uci set freifunk.interface.dns="2002:d596:2a92:1:71:53:: 2002:5968:c28e::53 88.198.178.18 141.54.1.1 212.204.49.83 8.8.8.8 8.8.4.4"
 uci commit freifunk
 uci set uhttpd.main.rfc1918_filter=0
