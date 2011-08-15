@@ -90,6 +90,11 @@ for i in $(echo $interfaces) ; do
 	#uci set "network.$i.ip6oldsufix=$IP6_SUFIX"
 	#Uniq 4Bybte from urandom
 	IP6_UNIQ="$(head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4)"
+	case $IP6_UNIQ in 
+		000*) IP6_UNIQ=$(echo $IP6_UNIQ | cut -b 4) ;; 
+		00*) IP6_UNIQ=$(echo $IP6_UNIQ | cut -b 3-4) ;; 
+		0*) IP6_UNIQ=$(echo $IP6_UNIQ | cut -b 2-4) ;;
+	esac
 	#uci set "network.$i.ip6olduniq=$IP6_UNIQ"
 	#uci commit network
 	[ -z $IP6_OLDSUFIX ] || {
