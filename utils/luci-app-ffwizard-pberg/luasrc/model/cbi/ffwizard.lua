@@ -91,11 +91,11 @@ if newpsswd ~= "" then
 	end
 end
 
-pw1 = f:field(Value, "pw1", _("password"))
+pw1 = f:field(Value, "pw1", translate("password"))
 pw1.password = true
 pw1.rmempty = false
 
-pw2 = f:field(Value, "pw2", _("confirmation"))
+pw2 = f:field(Value, "pw2", translate("confirmation"))
 pw2.password = true
 pw2.rmempty = false
 
@@ -261,7 +261,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "advanced_" .. device, value)
 				uci:save("freifunk")
 			end
-		local hwmode = f:field(ListValue, "hwmode_" .. device, device:upper() .. "  ".._("Mode"))
+		local hwmode = f:field(ListValue, "hwmode_" .. device, device:upper() .. "  "..translate("Mode"))
 			hwmode:depends("advanced_" .. device, "1")
 			hwmode.rmempty = true
 			hwmode.widget = "radio"
@@ -289,15 +289,15 @@ uci:foreach("wireless", "wifi-device",
 				uci:save("freifunk")
 			end
 		if hwtype == "mac80211" then
-			local htmode = f:field(ListValue, "htmode_" .. device, device:upper() .. "  ".._("HT mode"))
+			local htmode = f:field(ListValue, "htmode_" .. device, device:upper() .. "  "..translate("HT mode"))
 				htmode:depends("hwmode_" .. device, "11na")
 				htmode:depends("hwmode_" .. device, "11ng")
 				htmode.rmempty = true
 				htmode.widget = "radio"
 				htmode.orientation = "horizontal"
 				htmode:value("HT20", "20MHz")
-				htmode:value("HT40-", _("40MHz 2nd channel above"))
-				htmode:value("HT40+", _("40MHz 2nd channel below"))
+				htmode:value("HT40-", translate("40MHz 2nd channel above"))
+				htmode:value("HT40+", translate("40MHz 2nd channel below"))
 				function htmode.cfgvalue(self, section)
 					return uci:get("freifunk", "wizard", "htmode_" .. device)
 				end
@@ -316,7 +316,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "txpower_" .. device, value)
 				uci:save("freifunk")
 			end
-		local distance = f:field(Value, "distance_" .. device, device:upper().."  ".._("Distance Optimization"), _("Distance to farthest network member in meters."))
+		local distance = f:field(Value, "distance_" .. device, device:upper().."  "..translate("Distance Optimization"), translate("Distance to farthest network member in meters."))
 			distance:depends("advanced_" .. device, "1")
 			distance.rmempty = true
 			function distance.cfgvalue(self, section)
@@ -326,26 +326,26 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "distance_" .. device, value)
 				uci:save("freifunk")
 			end
-		local txantenna = f:field(ListValue, "txantenna_" .. device, device:upper() .."  ".. _("Transmitter Antenna"))
+		local txantenna = f:field(ListValue, "txantenna_" .. device, device:upper() .."  ".. translate("Transmitter Antenna"))
 			txantenna:depends("advanced_" .. device, "1")
 			txantenna.rmempty = true
 			txantenna.widget = "radio"
 			txantenna.orientation = "horizontal"
 			if hwtype == "atheros" then
-				txantenna:value("0", _("auto"))
-				txantenna:value("1", _("Antenna 1"))
-				txantenna:value("2", _("Antenna 2"))
+				txantenna:value("0", translate("auto"))
+				txantenna:value("1", translate("Antenna 1"))
+				txantenna:value("2", translate("Antenna 2"))
 			end
 			if hwtype == "broadcom" then
-				txantenna:value("3", _("auto"))
-				txantenna:value("0", _("Antenna 1"))
-				txantenna:value("1", _("Antenna 2"))
+				txantenna:value("3", translate("auto"))
+				txantenna:value("0", translate("Antenna 1"))
+				txantenna:value("1", translate("Antenna 2"))
 			end
 			if hwtype == "mac80211" then
-				txantenna:value("all", _("all"))
-				txantenna:value("1", _("Antenna 1"))
-				txantenna:value("2", _("Antenna 2"))
-				txantenna:value("4", _("Antenna 3"))
+				txantenna:value("all", translate("all"))
+				txantenna:value("1", translate("Antenna 1"))
+				txantenna:value("2", translate("Antenna 2"))
+				txantenna:value("4", translate("Antenna 3"))
 			end
 			function txantenna.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "txantenna_" .. device)
@@ -354,26 +354,26 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "txantenna_" .. device, value)
 				uci:save("freifunk")
 			end
-		local rxantenna = f:field(ListValue, "rxantenna_" .. device, device:upper().."  ".._("Receiver Antenna"))
+		local rxantenna = f:field(ListValue, "rxantenna_" .. device, device:upper().."  "..translate("Receiver Antenna"))
 			rxantenna:depends("advanced_" .. device, "1")
 			rxantenna.rmempty = true
 			rxantenna.widget = "radio"
 			rxantenna.orientation = "horizontal"
 			if hwtype == "atheros" then
-				rxantenna:value("0", _("auto"))
-				rxantenna:value("1", _("Antenna 1"))
-				rxantenna:value("2", _("Antenna 2"))
+				rxantenna:value("0", translate("auto"))
+				rxantenna:value("1", translate("Antenna 1"))
+				rxantenna:value("2", translate("Antenna 2"))
 			end
 			if hwtype == "broadcom" then
-				rxantenna:value("3", _("auto"))
-				rxantenna:value("0", _("Antenna 1"))
-				rxantenna:value("1", _("Antenna 2"))
+				rxantenna:value("3", translate("auto"))
+				rxantenna:value("0", translate("Antenna 1"))
+				rxantenna:value("1", translate("Antenna 2"))
 			end
 			if hwtype == "mac80211" then
-				rxantenna:value("all", _("all"))
-				rxantenna:value("1", _("Antenna 1"))
-				rxantenna:value("2", _("Antenna 2"))
-				rxantenna:value("4", _("Antenna 3"))
+				rxantenna:value("all", translate("all"))
+				rxantenna:value("1", translate("Antenna 1"))
+				rxantenna:value("2", translate("Antenna 2"))
+				rxantenna:value("4", translate("Antenna 3"))
 			end
 			function rxantenna.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "rxantenna_" .. device)
@@ -609,8 +609,8 @@ f:field(DummyValue, "dummynetconfig", "<b>Freifunk Netzwerk einrichten Ende</b>"
 if has_wan then
 	wanproto = f:field(ListValue, "wanproto", "<b>Internet WAN</b>", "Geben Sie das Protokol an ueber das eine Internet verbindung hergestellt werden kann.")
 	wanproto:depends("device_wan", "")
-	wanproto:value("static", _("manual", "manual"))
-	wanproto:value("dhcp", _("automatic", "automatic"))
+	wanproto:value("static", translate("manual", "manual"))
+	wanproto:value("dhcp", translate("automatic", "automatic"))
 	if has_pppoe then wanproto:value("pppoe", "PPPoE") end
 	if has_pptp  then wanproto:value("pptp",  "PPTP")  end
 	function wanproto.cfgvalue(self, section)
@@ -636,7 +636,7 @@ if has_wan then
 		uci:save("freifunk")
 	end
 
-	wanip = f:field(Value, "wanipaddr", _("ipaddress"))
+	wanip = f:field(Value, "wanipaddr", translate("ipaddress"))
 	wanip:depends("wanproto", "static")
 	function wanip.cfgvalue(self, section)
 		return uci:get("network", "wan", "ipaddr")
@@ -646,7 +646,7 @@ if has_wan then
 		uci:save("network")
 	end
 
-	wannm = f:field(Value, "wannetmask", _("netmask"))
+	wannm = f:field(Value, "wannetmask", translate("netmask"))
 	wannm:depends("wanproto", "static")
 	function wannm.cfgvalue(self, section)
 		return uci:get("network", "wan", "netmask")
@@ -656,7 +656,7 @@ if has_wan then
 		uci:save("network")
 	end
 
-	wangw = f:field(Value, "wangateway", _("gateway"))
+	wangw = f:field(Value, "wangateway", translate("gateway"))
 	wangw:depends("wanproto", "static")
 	wangw.rmempty = true
 	function wangw.cfgvalue(self, section)
@@ -671,7 +671,7 @@ if has_wan then
 		uci:save("network")
 	end
 
-	wandns = f:field(Value, "wandns", _("dnsserver"))
+	wandns = f:field(Value, "wandns", translate("dnsserver"))
 	wandns:depends("wanproto", "static")
 	wandns.rmempty = true
 	function wandns.cfgvalue(self, section)
@@ -686,7 +686,7 @@ if has_wan then
 		uci:save("network")
 	end
 
-	wanusr = f:field(Value, "wanusername", _("username"))
+	wanusr = f:field(Value, "wanusername", translate("username"))
 	wanusr:depends("wanproto", "pppoe")
 	wanusr:depends("wanproto", "pptp")
 	function wanusr.cfgvalue(self, section)
@@ -697,7 +697,7 @@ if has_wan then
 		uci:save("network")
 	end
 
-	wanpwd = f:field(Value, "wanpassword", _("password"))
+	wanpwd = f:field(Value, "wanpassword", translate("password"))
 	wanpwd.password = true
 	wanpwd:depends("wanproto", "pppoe")
 	wanpwd:depends("wanproto", "pptp")
@@ -754,8 +754,8 @@ end
 if has_lan then
 	lanproto = f:field(ListValue, "lanproto", "<b>Lokales Netzwerk LAN</b>", "Geben Sie das Protokol der LAN Schnittstelle an.")
 	lanproto:depends("device_lan", "")
-	lanproto:value("static", _("manual", "manual"))
-	lanproto:value("dhcp", _("automatic", "automatic"))
+	lanproto:value("static", translate("manual", "manual"))
+	lanproto:value("dhcp", translate("automatic", "automatic"))
 	function lanproto.cfgvalue(self, section)
 		return uci:get("network", "lan", "proto") or "dhcp"
 	end
@@ -775,7 +775,7 @@ if has_lan then
 		uci:save("freifunk")
 	end
 	
-	lanip = f:field(Value, "lanipaddr", _("ipaddress"))
+	lanip = f:field(Value, "lanipaddr", translate("ipaddress"))
 	lanip:depends("lanproto", "static")
 	function lanip.cfgvalue(self, section)
 		return uci:get("network", "lan", "ipaddr")
@@ -788,7 +788,7 @@ if has_lan then
 		uci:delete("network", "lan", "ipaddr")
 		uci:save("network")
 	end
-	lannm = f:field(Value, "lannetmask", _("netmask"))
+	lannm = f:field(Value, "lannetmask", translate("netmask"))
 	lannm:depends("lanproto", "static")
 	function lannm.cfgvalue(self, section)
 		return uci:get("network", "lan", "netmask")
@@ -801,7 +801,7 @@ if has_lan then
 		uci:delete("network", "lan", "netmask")
 		uci:save("network")
 	end
-	langw = f:field(Value, "langateway", _("gateway"))
+	langw = f:field(Value, "langateway", translate("gateway"))
 	langw:depends("lanproto", "static")
 	langw.rmempty = true
 	function langw.cfgvalue(self, section)
@@ -815,7 +815,7 @@ if has_lan then
 		uci:delete("network", "lan", "gateway")
 		uci:save("network")
 	end
-	landns = f:field(Value, "landns", _("dnsserver"))
+	landns = f:field(Value, "landns", translate("dnsserver"))
 	landns.rmempty = true
 	landns:depends("lanproto", "static")
 	function landns.cfgvalue(self, section)
@@ -876,7 +876,7 @@ if has_l2gvpn then
 		uci:set("freifunk", "wizard", "gvpn", value)
 		uci:save("freifunk")
 	end
-	gvpnip = f:field(Value, "gvpnipaddr", _("ipaddress"))
+	gvpnip = f:field(Value, "gvpnipaddr", translate("ipaddress"))
 	gvpnip:depends("gvpn", "1")
 	function gvpnip.cfgvalue(self, section)
 		return uci:get("l2gvpn", "bbb", "ip") or uci:get("network", "gvpn", "ipaddr")
@@ -909,9 +909,9 @@ function f.handle(self, state, data)
 			if data.pw1 then
 				local stat = luci.sys.user.setpasswd("root", data.pw1) == 0
 				if stat then
-					f.message = _("a_s_changepw_changed")
+					f.message = translate("a_s_changepw_changed")
 				else
-					f.errmessage = _("unknownerror")
+					f.errmessage = translate("unknownerror")
 				end
 			end
 			data.pw1 = nil
@@ -921,9 +921,9 @@ function f.handle(self, state, data)
 			if data.pw1 then
 				local stat = luci.sys.user.setpasswd("root", data.pw1) == 0
 --				if stat then
---					f.message = _("a_s_changepw_changed")
+--					f.message = translate("a_s_changepw_changed")
 --			else
---				f.errmessage = _("unknownerror")
+--				f.errmessage = translate("unknownerror")
 				end
 			data.pw1 = nil
 			data.pw2 = nil
