@@ -950,7 +950,7 @@ function f.handle(self, state, data)
 				uci:commit("radvd")
 			end
 -- the following line didn't work without admin-mini, for now i just replaced it with sys.exec... soma
-			luci.http.redirect(luci.dispatcher.build_url(unpack(luci.dispatcher.context.requested.path), "system", "reboot") .. "?reboot=1")
+			luci.http.redirect(luci.dispatcher.build_url("mini", "system", "reboot") .. "?reboot=1")
 --			sys.exec("reboot")
 		end
 		return false
