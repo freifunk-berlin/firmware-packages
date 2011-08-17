@@ -804,7 +804,6 @@ if has_lan then
 		uci:save("network")
 	end
 	landns = f:field(Value, "landns", translate("dnsserver"))
-	--landns.rmempty = true
 	landns:depends("lanproto", "static")
 	function landns.cfgvalue(self, section)
 		return uci:get("network", "lan", "dns")
@@ -813,10 +812,6 @@ if has_lan then
 		uci:set("network", "lan", "dns", value)
 		uci:save("network")
 	end
-	--function landns.remove(self, section)
-	--	uci:delete("network", "lan", "dns")
-	--	uci:save("network")
-	--end
 	
 	lansec = f:field(Flag, "lansec", "LAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
 	lansec.rmempty = false
