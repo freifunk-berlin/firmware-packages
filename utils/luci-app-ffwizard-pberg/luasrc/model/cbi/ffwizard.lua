@@ -673,7 +673,6 @@ if has_wan then
 
 	wandns = f:field(Value, "wandns", translate("dnsserver"))
 	wandns:depends("wanproto", "static")
-	wandns.rmempty = true
 	function wandns.cfgvalue(self, section)
 		return uci:get("network", "wan", "dns")
 	end
@@ -681,14 +680,11 @@ if has_wan then
 		uci:set("network", "wan", "dns", value)
 		uci:save("network")
 	end
-	function wandns.remove(self, section)
-		uci:delete("network", "wan", "dns")
-		uci:save("network")
-	end
 
 	wanusr = f:field(Value, "wanusername", translate("username"))
 	wanusr:depends("wanproto", "pppoe")
 	wanusr:depends("wanproto", "pptp")
+	wanusr.rmempty = true
 	function wanusr.cfgvalue(self, section)
 		return uci:get("network", "wan", "username")
 	end
@@ -701,6 +697,7 @@ if has_wan then
 	wanpwd.password = true
 	wanpwd:depends("wanproto", "pppoe")
 	wanpwd:depends("wanproto", "pptp")
+	wanpwd.rmempty = true
 	function wanpwd.cfgvalue(self, section)
 		return uci:get("network", "wan", "password")
 	end
@@ -774,7 +771,6 @@ if has_lan then
 		uci:set("freifunk", "wizard", "sharelan", value)
 		uci:save("freifunk")
 	end
-	
 	lanip = f:field(Value, "lanipaddr", translate("ipaddress"))
 	lanip:depends("lanproto", "static")
 	function lanip.cfgvalue(self, section)
@@ -784,10 +780,6 @@ if has_lan then
 		uci:set("network", "lan", "ipaddr", value)
 		uci:save("network")
 	end
-	function lanip.remove(self, section)
-		uci:delete("network", "lan", "ipaddr")
-		uci:save("network")
-	end
 	lannm = f:field(Value, "lannetmask", translate("netmask"))
 	lannm:depends("lanproto", "static")
 	function lannm.cfgvalue(self, section)
@@ -795,10 +787,6 @@ if has_lan then
 	end
 	function lannm.write(self, section, value)
 		uci:set("network", "lan", "netmask", value)
-		uci:save("network")
-	end
-	function lannm.remove(self, section)
-		uci:delete("network", "lan", "netmask")
 		uci:save("network")
 	end
 	langw = f:field(Value, "langateway", translate("gateway"))
@@ -816,7 +804,7 @@ if has_lan then
 		uci:save("network")
 	end
 	landns = f:field(Value, "landns", translate("dnsserver"))
-	landns.rmempty = true
+	--landns.rmempty = true
 	landns:depends("lanproto", "static")
 	function landns.cfgvalue(self, section)
 		return uci:get("network", "lan", "dns")
@@ -825,10 +813,10 @@ if has_lan then
 		uci:set("network", "lan", "dns", value)
 		uci:save("network")
 	end
-	function landns.remove(self, section)
-		uci:delete("network", "lan", "dns")
-		uci:save("network")
-	end
+	--function landns.remove(self, section)
+	--	uci:delete("network", "lan", "dns")
+	--	uci:save("network")
+	--end
 	
 	lansec = f:field(Flag, "lansec", "LAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
 	lansec.rmempty = false
@@ -916,7 +904,7 @@ function f.handle(self, state, data)
 			end
 			data.pw1 = nil
 			data.pw2 = nil
-			luci.http.redirect(luci.dispatcher.build_url(unpack(luci.dispatcher.context.requested.path), "system"))
+			luci.http.redirect(luci.dispatcher.build_url("mini", "system"))
 		else
 			if data.pw1 then
 				local stat = luci.sys.user.setpasswd("root", data.pw1) == 0
@@ -1519,6 +1507,9 @@ function main.write(self, section, value)
 			util.update(prenetconfig, uci:get_all(external, "interface") or {})
 			prenetconfig.proto = "static"
 			prenetconfig.ipaddr = node_ip:string()
+			prenetconfig.gateway = ''
+			prenetconfig.username = ''
+			prenetconfig.password = ''
 			if has_ipv6 then
 				if node_ip6 then
 					prenetconfig.ip6addr = node_ip6:string()
@@ -1739,25 +1730,25 @@ function main.write(self, section, value)
 	uci:foreach("system", "system",
 		function(s)
 			-- Make crond silent
-			uci:set("system", s['.name'], "cronloglevel", "10")
+			uci:set("system", s[".name"], "cronloglevel", "10")
 			-- Make set timzone and zonename
-			uci:set("system", s['.name'], "zonename", "Europe/Berlin")
-			uci:set("system", s['.name'], "timezone", 'CET-1CEST,M3.5.0,M10.5.0/3')
+			uci:set("system", s[".name"], "zonename", "Europe/Berlin")
+			uci:set("system", s[".name"], "timezone", 'CET-1CEST,M3.5.0,M10.5.0/3')
 			-- Set hostname
 			if custom_hostname then
 				if custom_hostname == "OpenWrt" or old_hostname:match("^%d+-%d+-%d+-%d+$") then
 					if new_hostname then
-						uci:set("system", s['.name'], "hostname", new_hostname)
+						uci:set("system", s[".name"], "hostname", new_hostname)
 						sys.hostname(new_hostname)
 					end
 				else
-					uci:set("system", s['.name'], "hostname", custom_hostname)
+					uci:set("system", s[".name"], "hostname", custom_hostname)
 					sys.hostname(custom_hostname)
 				end
 			else
 				if new_hostname then
 					if old_hostname == "OpenWrt" or old_hostname:match("^%d+-%d+-%d+-%d+$") then
-						uci:set("system", s['.name'], "hostname", new_hostname)
+						uci:set("system", s[".name"], "hostname", new_hostname)
 						sys.hostname(new_hostname)
 					end
 				end
