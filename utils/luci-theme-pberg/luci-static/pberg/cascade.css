@@ -5,6 +5,7 @@
 html {
 	min-height: 100%;
 	height: auto;
+	position:relative;
 }
 
 body {
@@ -13,7 +14,7 @@ body {
 	background-position: bottom center;
 	background-repeat: repeat-x;
 	font-family: Verdana, Arial, sans-serif;
-	font-size: 14pt;
+	font-size: 11pt;
 	line-height: 100%;
 	padding-bottom: 1.5em;
 }
@@ -255,14 +256,14 @@ textarea#syslog {
 	clear: both;
 	width: 96%;
 	margin: 0 auto;
+	height:100%;
 }
 
 #maincontent {
-	line-height: 120%;
 	padding: 0.5em;
 	background: #f5f5f5;
 	color: #000000;
-	font-size: 100%;
+	font-size: 80%;
 	border-width: 0 1px 1px 1px;
 	border-style: solid;
 	border-color: #444444;
@@ -290,63 +291,6 @@ textarea#syslog {
 #maincontent p {
 	margin-bottom: 1em;
 }
-
-#splash {
-	margin-top:3em;
-	text-align:center;
-}
-#splash td {
-	width:33%;
-	padding:2px;
-	vertical-align:middle;
-	text-align:center;
-}
-
-#splash_form input[type=submit]{
-	font-size:200%;
-	margin:10px;
-	width:90%;
-}
-
-#splash_form input[type=text]{
-	margin:0px;
-	margin-top:5px;
-	text-align:center;
-	width:auto;
-}
-
-#splash_form textarea {
-	margin:0px;
-}
-
-#splash_form counter {
-	margin:0.2em;
-}
-
-#splash_form .toolong {
-	color:#c00;
-	border: 2px solid #d00;
-}
-
-#splash_form table {
-	display:inline;
-}
-
-#splash_form #messages {
-	margin-top:35px;
-	padding:10px 30%;
-}
-
-#splash_form #messages .entry{
-	text-align:left;
-	border-bottom: 1px dashed #000;
-	padding:5px 7%;
-}
-
-#splash_form #messages .entry:first-line{
-	font-weight:bold;
-}
-
 
 .cbi-section {
 	margin-bottom: 0.5em;
@@ -442,6 +386,12 @@ td select,
 td input[type=text],
 td input[type=password] {
 	width: 99%;
+}
+
+img.cbi-image-button {
+	cursor: pointer;
+	margin: 0 2px;
+	vertical-align: middle;
 }
 
 input.cbi-input-user {
@@ -593,9 +543,14 @@ table.smalltext tr td {
 	border-left: 1px solid #666666;
 }
 
-table.cbi-section-table .cbi-rowstyle-1,
-table.cbi-section-table .cbi-rowstyle-1>* {
+table.cbi-section-table .cbi-rowstyle-1 {
 	background-color: #eeeeff;
+	color: #000000;
+}
+
+table.cbi-section-table .cbi-rowstyle-1:hover,
+table.cbi-section-table .cbi-rowstyle-2:hover {
+	background-color: #b2c8d4;
 	color: #000000;
 }
 
@@ -791,10 +746,11 @@ div.cbi-tab-descr {
 }
 
 .luci {
-	position: fixed;
+	position: absolute;
 	bottom: 0;
-	left: 0;
-	text-align: right;
+	left: 1em;
+	height: 1.5em;
+	font-size: 80%;
 }
 
 .luci a:link,
