@@ -25,7 +25,7 @@ local ip = require "luci.ip"
 local fs  = require "nixio.fs"
 local fs_luci = require "luci.fs"
 
-local has_pptp  = fs.access("/usr/sbin/pptp")
+local has_3g     = fs.access("/usr/bin/gcom")
 local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
 local has_l2gvpn  = fs.access("/usr/sbin/node")
 local has_radvd  = fs.access("/etc/config/radvd")
@@ -612,13 +612,13 @@ if has_wan then
 	wanproto:value("static", translate("manual", "manual"))
 	wanproto:value("dhcp", translate("automatic", "automatic"))
 	if has_pppoe then wanproto:value("pppoe", "PPPoE") end
-	if has_pptp  then wanproto:value("pptp",  "PPTP")  end
+	if has_3g    then wanproto:value("3g",    "UMTS/3G") end
 	function wanproto.cfgvalue(self, section)
 		return uci:get("network", "wan", "proto") or "dhcp"
 	end
 	function wanproto.write(self, section, value)
 		uci:set("network", "wan", "proto", value)
-		if value == "pptp" or value == "pppoe" then
+		if value == "3g" or value == "pppoe" then
 			uci:set("network", "wan", "peerdns", "1")
 			uci:set("network", "wan", "defaultroute", "1")
 		end
@@ -636,8 +636,9 @@ if has_wan then
 		uci:save("freifunk")
 	end
 
-	wanip = f:field(Value, "wanipaddr", translate("ipaddress"))
+	wanip = f:field(Value, "wanipaddr", translate("IPv4-Address"))
 	wanip:depends("wanproto", "static")
+	wanip.datatype = "ip4addr"
 	function wanip.cfgvalue(self, section)
 		return uci:get("network", "wan", "ipaddr")
 	end
@@ -646,8 +647,12 @@ if has_wan then
 		uci:save("network")
 	end
 
-	wannm = f:field(Value, "wannetmask", translate("netmask"))
+	wannm = f:field(Value, "wannetmask", translate("IPv4-Netmask"))
 	wannm:depends("wanproto", "static")
+	wannm.datatype = "ip4addr"
+	wannm:value("255.255.255.0")
+	wannm:value("255.255.0.0")
+	wannm:value("255.0.0.0")
 	function wannm.cfgvalue(self, section)
 		return uci:get("network", "wan", "netmask")
 	end
@@ -656,9 +661,9 @@ if has_wan then
 		uci:save("network")
 	end
 
-	wangw = f:field(Value, "wangateway", translate("gateway"))
+	wangw = f:field(Value, "wangateway", translate("IPv4-Gateway"))
 	wangw:depends("wanproto", "static")
-	wangw.rmempty = true
+	wangw.datatype = "ip4addr"
 	function wangw.cfgvalue(self, section)
 		return uci:get("network", "wan", "gateway")
 	end
@@ -671,8 +676,10 @@ if has_wan then
 		uci:save("network")
 	end
 
-	wandns = f:field(Value, "wandns", translate("dnsserver"))
+	wandns = f:field(Value, "wandns", translate("DNS-Server"))
 	wandns:depends("wanproto", "static")
+	wandns.cast = "string"
+	wandns.datatype = "ipaddr"
 	function wandns.cfgvalue(self, section)
 		return uci:get("network", "wan", "dns")
 	end
@@ -681,9 +688,8 @@ if has_wan then
 		uci:save("network")
 	end
 
-	wanusr = f:field(Value, "wanusername", translate("username"))
+	wanusr = f:field(Value, "wanusername", translate("Username"))
 	wanusr:depends("wanproto", "pppoe")
-	wanusr:depends("wanproto", "pptp")
 	wanusr.rmempty = true
 	function wanusr.cfgvalue(self, section)
 		return uci:get("network", "wan", "username")
@@ -693,10 +699,9 @@ if has_wan then
 		uci:save("network")
 	end
 
-	wanpwd = f:field(Value, "wanpassword", translate("password"))
+	wanpwd = f:field(Value, "wanpassword", translate("Password"))
 	wanpwd.password = true
 	wanpwd:depends("wanproto", "pppoe")
-	wanpwd:depends("wanproto", "pptp")
 	wanpwd.rmempty = true
 	function wanpwd.cfgvalue(self, section)
 		return uci:get("network", "wan", "password")
@@ -717,7 +722,55 @@ if has_wan then
 		uci:set("freifunk", "wizard", "wan_security", value)
 		uci:save("freifunk")
 	end
-	
+	if has_3g or has_pppoe then
+		wandevice = f:field(Value, "device",
+		 translate("Modem device"),
+		 translate("The device node of your modem, e.g. /dev/ttyUSB0")
+		)
+		wandevice:value("/dev/ttyUSB0")
+		wandevice:depends("wanproto", "ppp")
+		wandevice:depends("wanproto", "3g")
+		function wandevice.cfgvalue(self, section)
+			return uci:get("network", "wan", "device")
+		end
+		function wandevice.write(self, section, value)
+			uci:set("network", "wan", "device", value)
+			uci:save("network")
+		end
+	end
+	if has_3g then
+		service = f:field(ListValue, "service", translate("Service type"))
+		service:value("", translate("-- Please choose --"))
+		service:value("umts", "UMTS/GPRS")
+		service:value("cdma", "CDMA")
+		service:value("evdo", "EV-DO")
+		service:depends("wanproto", "3g")
+		service.rmempty = true
+		function service.cfgvalue(self, section)
+			return uci:get("network", "wan", "service")
+		end
+		function service.write(self, section, value)
+			uci:set("network", "wan", "service", value)
+			uci:save("network")
+		end
+
+		apn = f:field(Value, "apn", translate("Access point (APN)"))
+		apn:depends("wanproto", "3g")
+		function apn.cfgvalue(self, section)
+			return uci:get("network", "wan", "apn")
+		end
+		function apn.write(self, section, value)
+			uci:set("network", "wan", "apn", value)
+			uci:save("network")
+		end
+
+		pincode = f:field(Value, "pincode",
+		 translate("PIN code"),
+		 translate("Make sure that you provide the correct pin code here or you might lock your sim card!")
+		)
+		pincode:depends("wanproto", "3g")
+	end
+
 	if has_qos then
 		wanqosdown = f:field(Value, "wanqosdown", "Download Bandbreite begrenzen", "kb/s")
 		wanqosdown:depends("sharenet", "1")
@@ -1007,6 +1060,7 @@ function main.write(self, section, value)
 		uci:delete("manager", "heartbeat", "interface")
 		uci:save("manager")
 	end
+
 	-- Delete olsrdv4
 	uci:delete_all("olsrd", "olsrd")
 	local olsrbase = uci:get_all("freifunk", "olsrd") or {}
@@ -1016,6 +1070,7 @@ function main.write(self, section, value)
 	else
 		olsrbase.IpVersion='4'
 	end
+
 	-- Internet sharing
 	local share_value = 0
 	local sharelan_value = 0
@@ -1043,6 +1098,14 @@ function main.write(self, section, value)
 		tools.firewall_zone_add_interface("freifunk", "tunl0")
 	end
 	uci:section("olsrd", "olsrd", nil, olsrbase)
+
+	-- Delete interface defaults
+	uci:delete_all("olsrd", "InterfaceDefaults")
+	-- Write new olsrv4 interface
+	local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
+	util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
+	uci:section("olsrd", "InterfaceDefaults", nil, olsrifbase)
+
 	-- Delete olsrdv4 old p2pd settings
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_p2pd.so.0.1.0"})
@@ -1292,8 +1355,9 @@ function main.write(self, section, value)
 		tools.firewall_zone_add_interface("freifunk", nif)
 		uci:save("firewall")
 		-- Write new olsrv4 interface
-		local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
-		util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
+		-- local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
+		-- util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
+		local olsrifbase = {}
 		olsrifbase.interface = nif
 		olsrifbase.ignore    = "0"
 		uci:section("olsrd", "Interface", nil, olsrifbase)
@@ -1537,8 +1601,9 @@ function main.write(self, section, value)
 			tools.firewall_zone_add_interface("freifunk", device)
 			uci:save("firewall")
 			-- Write new olsrv4 interface
-			local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
-			util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
+			-- local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
+			-- util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
+			local olsrifbase = {}
 			olsrifbase.interface = device
 			olsrifbase.ignore    = "0"
 			olsrifbase.Mode = 'ether'
@@ -1830,6 +1895,7 @@ function main.write(self, section, value)
 
 	uci:save("dhcp")
 
+	local wproto
 	if has_wan then
 		if has_radvd then
 				uci:delete_all("radvd", "interface", {interface='wan'})
@@ -1838,8 +1904,9 @@ function main.write(self, section, value)
 				uci:delete_all("radvd", "dnssl", {interface='wan'})
 				uci:save("radvd")
 		end
-		local wproto = wanproto:formvalue(section)
+		wproto = wanproto:formvalue(section)
 	end
+	local lproto
 	if has_lan then
 		if has_radvd then
 				uci:delete_all("radvd", "interface", {interface='lan'})
@@ -1848,7 +1915,7 @@ function main.write(self, section, value)
 				uci:delete_all("radvd", "dnssl", {interface='lan'})
 				uci:save("radvd")
 		end
-		local lproto = lanproto:formvalue(section)
+		lproto = lanproto:formvalue(section)
 	end
 
 	if share_value == "1" or sharelan_value == "1" then
