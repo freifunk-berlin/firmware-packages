@@ -14,7 +14,7 @@ body {
 	background-position: bottom center;
 	background-repeat: repeat-x;
 	font-family: Verdana, Arial, sans-serif;
-	font-size: 11pt;
+	font-size: 15pt;
 	line-height: 100%;
 	padding-bottom: 1.5em;
 }
@@ -186,7 +186,7 @@ html #menubar a:visited {
 	background: #000000;
 	color: #ffffff;
 	text-decoration: none;
-	font-size: 80%;
+	font-size: 100%;
 	font-weight: normal;
 }
 
@@ -260,6 +260,7 @@ textarea#syslog {
 }
 
 #maincontent {
+	line-height: 120%;
 	padding: 0.5em;
 	background: #f5f5f5;
 	color: #000000;
@@ -290,6 +291,62 @@ textarea#syslog {
 
 #maincontent p {
 	margin-bottom: 1em;
+}
+
+#splash {
+	margin-top:3em;
+	text-align:center;
+}
+#splash td {
+	width:33%;
+	padding:2px;
+	vertical-align:middle;
+	text-align:center;
+}
+
+#splash_form input[type=submit]{
+	font-size:200%;
+	margin:10px;
+	width:90%;
+}
+
+#splash_form input[type=text]{
+	margin:0px;
+	margin-top:5px;
+	text-align:center;
+	width:auto;
+}
+
+#splash_form textarea {
+	margin:0px;
+}
+
+#splash_form counter {
+	margin:0.2em;
+}
+
+#splash_form .toolong {
+	color:#c00;
+	border: 2px solid #d00;
+}
+
+#splash_form table {
+	display:inline;
+}
+
+#splash_form #messages {
+	margin-top:35px;
+	padding:10px 30%;
+}
+
+#splash_form #messages .entry{
+	text-align:left;
+	border-bottom: 1px dashed #000;
+	padding:5px 7%;
+}
+
+#splash_form #messages .entry:first-line{
+	font-weight:bold;
 }
 
 .cbi-section {
