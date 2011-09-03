@@ -713,7 +713,7 @@ if has_wan then
 	
 	wansec = f:field(Flag, "wansec", "WAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
 	wansec.rmempty = false
-	wansec:depends("share", "1")
+	wansec:depends("sharenet", "1")
 	function wansec.cfgvalue(self, section)
 		return uci:get("freifunk", "wizard", "wan_security")
 	end
@@ -1038,7 +1038,7 @@ function main.write(self, section, value)
 	uci:save("firewall")
 	-- Create firewall zone and add default rules (first time)
 	--                    firewall_create_zone("name"    , "input" , "output", "forward ", Masqurade)
-	local newzone = tools.firewall_create_zone("freifunk", "ACCEPT", "ACCEPT", "REJECT"  , true)
+	local newzone = tools.firewall_create_zone("freifunk", "ACCEPT", "ACCEPT", "REJECT")
 	if newzone then
 		uci:foreach("freifunk", "fw_forwarding", function(section)
 			uci:section("firewall", "forwarding", nil, section)
@@ -1413,6 +1413,7 @@ function main.write(self, section, value)
 					dhcp_mask = subnet:mask(subnet_prefix):string()
 					dhcp_net = luci.ip.IPv4(dhcp_ip,dhcp_mask)
 					tools.firewall_zone_add_masq_src("freifunk", dhcp_net:string())
+					tools.firewall_zone_enable_masq("freifunk")
 				end
 			end
 			if dhcp_ip and dhcp_mask then
@@ -1656,6 +1657,7 @@ function main.write(self, section, value)
 						dhcp_mask = subnet:mask(subnet_prefix):string()
 						dhcp_net = luci.ip.IPv4(dhcp_ip,dhcp_mask)
 						tools.firewall_zone_add_masq_src("freifunk", dhcp_net:string())
+						tools.firewall_zone_enable_masq("freifunk")
 					end
 				end
 				if dhcp_ip and dhcp_mask then
@@ -1920,6 +1922,7 @@ function main.write(self, section, value)
 			local flannm=lannm:formvalue(section)
 			local flanipn=ip.IPv4(flanip,flannm)
 			tools.firewall_zone_add_masq_src("freifunk", flanipn:string())
+			tools.firewall_zone_enable_masq("freifunk")
 			uci:save("firewall")
 		end
 	end

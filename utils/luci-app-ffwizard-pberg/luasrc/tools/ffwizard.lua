@@ -103,6 +103,14 @@ function firewall_zone_add_masq_src(name, src)
 	cursor:save("firewall")
 end
 
+-- Adds masq to zone
+function firewall_zone_enable_masq(name)
+	local cursor = uci.cursor()
+	local zone = firewall_find_zone(name)
+	cursor:set("firewall", zone, "masq", "1")
+	cursor:save("firewall")
+end
+
 -- Removes interface from zone
 function firewall_zone_remove_interface(name, interface)
 	local cursor = uci.cursor()
