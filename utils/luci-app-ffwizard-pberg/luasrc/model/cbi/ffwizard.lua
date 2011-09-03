@@ -1024,7 +1024,7 @@ function main.write(self, section, value)
 	network = ip.IPv4(uci:get_first("profile_"..community, "community", "mesh_network") or "104.0.0.0/8")
 
 	-- Tune community settings
-	if community and uci:get("freifunk", community) then
+	if community and uci:get("profile_"..community, "profile") then
 		uci:tset("freifunk", "community", uci:get_all("profile_"..community, "profile"))
 	end
 	uci:set("freifunk", "community", "name", community)
