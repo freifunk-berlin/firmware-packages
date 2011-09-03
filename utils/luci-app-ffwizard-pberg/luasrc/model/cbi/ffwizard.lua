@@ -773,6 +773,9 @@ if has_wan then
 	if has_qos then
 		wanqosdown = f:field(Value, "wanqosdown", "Download Bandbreite begrenzen", "kb/s")
 		wanqosdown:depends("sharenet", "1")
+		wanqosdown:value("1000","1 MBit/s")
+		wanqosdown:value("10000","10 MBit/s")
+		wanqosdown:value("100000","100 MBit/s")
 		function wanqosdown.cfgvalue(self, section)
 			return uci:get("qos", "wan", "download")
 		end
@@ -786,6 +789,9 @@ if has_wan then
 		end
 		wanqosup = f:field(Value, "wanqosup", "Upload Bandbreite begrenzen", "kb/s")
 		wanqosup:depends("sharenet", "1")
+		wanqosup:value("1000","1 MBit/s")
+		wanqosup:value("10000","10 MBit/s")
+		wanqosup:value("100000","100 MBit/s")
 		function wanqosup.cfgvalue(self, section)
 			return uci:get("qos", "wan", "upload")
 		end
@@ -1086,8 +1092,10 @@ function main.write(self, section, value)
 		if has_qos then
 			qosd=wanqosdown:formvalue(section)
 			qosu=wanqosup:formvalue(section)
-			if qosd and qosu then
+			if (qosd and qosd ~= "") and (qosu and qosd ~= "")  then
 				olsrbase.SmartGatewaySpeed=qosu.." "..qosd
+			else
+				olsrbase.SmartGatewaySpeed="500 10000"
 			end
 		end
 		uci:section("network", "interface", "tunl0", {
