@@ -713,8 +713,7 @@ if has_wan then
 	
 	wansec = f:field(Flag, "wansec", "WAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
 	wansec.rmempty = false
-	wansec:depends("wanproto", "static")
-	wansec:depends("wanproto", "dhcp")
+	wansec:depends("share", "1")
 	function wansec.cfgvalue(self, section)
 		return uci:get("freifunk", "wizard", "wan_security")
 	end
@@ -824,7 +823,7 @@ if has_lan then
 		uci:set("freifunk", "wizard", "sharelan", value)
 		uci:save("freifunk")
 	end
-	lanip = f:field(Value, "lanipaddr", translate("ipaddress"))
+	lanip = f:field(Value, "lanipaddr", translate("IPv4-Address"))
 	lanip:depends("lanproto", "static")
 	function lanip.cfgvalue(self, section)
 		return uci:get("network", "lan", "ipaddr")
@@ -833,7 +832,7 @@ if has_lan then
 		uci:set("network", "lan", "ipaddr", value)
 		uci:save("network")
 	end
-	lannm = f:field(Value, "lannetmask", translate("netmask"))
+	lannm = f:field(Value, "lannetmask", translate("IPv4-Netmask"))
 	lannm:depends("lanproto", "static")
 	function lannm.cfgvalue(self, section)
 		return uci:get("network", "lan", "netmask")
@@ -842,7 +841,7 @@ if has_lan then
 		uci:set("network", "lan", "netmask", value)
 		uci:save("network")
 	end
-	langw = f:field(Value, "langateway", translate("gateway"))
+	langw = f:field(Value, "langateway", translate("IPv4-Gateway"))
 	langw:depends("lanproto", "static")
 	langw.rmempty = true
 	function langw.cfgvalue(self, section)
@@ -856,7 +855,7 @@ if has_lan then
 		uci:delete("network", "lan", "gateway")
 		uci:save("network")
 	end
-	landns = f:field(Value, "landns", translate("dnsserver"))
+	landns = f:field(Value, "landns", translate("DNS-Server"))
 	landns:depends("lanproto", "static")
 	function landns.cfgvalue(self, section)
 		return uci:get("network", "lan", "dns")
