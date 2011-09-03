@@ -1355,8 +1355,6 @@ function main.write(self, section, value)
 		tools.firewall_zone_add_interface("freifunk", nif)
 		uci:save("firewall")
 		-- Write new olsrv4 interface
-		-- local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
-		-- util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
 		local olsrifbase = {}
 		olsrifbase.interface = nif
 		olsrifbase.ignore    = "0"
@@ -1399,6 +1397,7 @@ function main.write(self, section, value)
 						end
 					end)
 			else
+				uci:delete("freifunk", "wizard", "dhcpmesh_" .. device)
 				local subnet_prefix = tonumber(uci:get_first("profile_"..community, "community", "splash_prefix")) or 27
 				local pool_network = uci:get_first("profile_"..community, "community", "splash_network") or "10.104.0.0/16"
 				local pool = luci.ip.IPv4(pool_network)
@@ -1413,6 +1412,8 @@ function main.write(self, section, value)
 					local subnet = pool:add(hosts_per_subnet * math.random(number_of_subnets))
 					dhcp_ip = subnet:network(subnet_prefix):add(1):string()
 					dhcp_mask = subnet:mask(subnet_prefix):string()
+					dhcp_net = luci.ip.IPv4(dhcp_ip,dhcp_mask)
+					tools.firewall_zone_add_masq_src("freifunk", dhcp_net:string())
 				end
 			end
 			if dhcp_ip and dhcp_mask then
@@ -1601,8 +1602,6 @@ function main.write(self, section, value)
 			tools.firewall_zone_add_interface("freifunk", device)
 			uci:save("firewall")
 			-- Write new olsrv4 interface
-			-- local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
-			-- util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
 			local olsrifbase = {}
 			olsrifbase.interface = device
 			olsrifbase.ignore    = "0"
@@ -1635,14 +1634,13 @@ function main.write(self, section, value)
 						function(s)		
 							if s.library == "olsrd_p2pd.so.0.1.0" then
 								uci:set("olsrd", s['.name'], "ignore", "0")
-								-- local nonolsr = uci:get("olsrd", s['.name'], "NonOlsrIf") or ""
-								-- uci:set("olsrd", s['.name'], "NonOlsrIf", device .." ".. nonolsr)
 								local nonolsr = uci:get_list("olsrd", s['.name'], "NonOlsrIf") or {}
 								table.insert(nonolsr,device)
 								uci:set_list("olsrd", s['.name'], "NonOlsrIf", nonolsr)
 							end
 						end)
 				else
+					uci:delete("freifunk", "wizard", "dhcpmesh_" .. device)
 					local subnet_prefix = tonumber(uci:get_first("profile_"..community, "splash_prefix")) or 27
 					local pool_network = uci:get_first("profile_"..community, "splash_network") or "10.104.0.0/16"
 					local pool = luci.ip.IPv4(pool_network)
@@ -1657,6 +1655,8 @@ function main.write(self, section, value)
 						local subnet = pool:add(hosts_per_subnet * math.random(number_of_subnets))
 						dhcp_ip = subnet:network(subnet_prefix):add(1):string()
 						dhcp_mask = subnet:mask(subnet_prefix):string()
+						dhcp_net = luci.ip.IPv4(dhcp_ip,dhcp_mask)
+						tools.firewall_zone_add_masq_src("freifunk", dhcp_net:string())
 					end
 				end
 				if dhcp_ip and dhcp_mask then
@@ -1916,6 +1916,13 @@ function main.write(self, section, value)
 				uci:save("radvd")
 		end
 		lproto = lanproto:formvalue(section)
+		if lproto == "static" then
+			local flanip=lanip:formvalue(section)
+			local flannm=lannm:formvalue(section)
+			local flanipn=ip.IPv4(flanip,flannm)
+			tools.firewall_zone_add_masq_src("freifunk", flanipn:string())
+			uci:save("firewall")
+		end
 	end
 
 	if share_value == "1" or sharelan_value == "1" then
