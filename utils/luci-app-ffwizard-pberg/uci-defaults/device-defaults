@@ -32,8 +32,6 @@ set_default_config()
 			uci set freifunk.wifi_device.txpower="15"
 			uci set freifunk.wifi_device.country=DE
 			uci set freifunk.wifi_device.distance=1000
-			uci set freifunk.wifi_device.htmode='HT40-'
-			uci set freifunk.wifi_device.hwmode=11ng
 			uci set freifunk.wifi_iface=defaults
 			uci set freifunk.wifi_iface.mode=adhoc
 			uci set freifunk.wifi_iface.bssid="02:CA:FF:EE:BA:BE"

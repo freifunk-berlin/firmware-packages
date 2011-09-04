@@ -1218,8 +1218,12 @@ function main.write(self, section, value)
 		util.update(devconfig, uci:get_all(external, "wifi_device") or {})
 		local channel = luci.http.formvalue("cbid.ffwizward.1.chan_" .. device)
 		local hwtype = sec.type
+		local hwmode
 		if hwtype == "mac80211" then
-			has_n = "n"
+			hwmode = sec.hwmode
+			if string.find(device, "n") then
+				has_n = "n"
+			end
 		end
 		local hwmode = "11"..(has_n or "")
 		--local bssid = "02:CA:FF:EE:BA:BE"
