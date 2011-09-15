@@ -29,6 +29,7 @@ local has_3g     = fs.access("/usr/bin/gcom")
 local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
 local has_l2gvpn  = fs.access("/usr/sbin/node")
 local has_radvd  = fs.access("/etc/config/radvd")
+local has_firewall = fs.access("/etc/config/firewall")
 local has_rom  = fs.access("/rom/etc")
 local has_autoipv6  = fs.access("/usr/bin/auto-ipv6")
 local has_qos  = fs.access("/etc/init.d/qos")
@@ -710,16 +711,17 @@ if has_wan then
 		uci:set("network", "wan", "password", value)
 		uci:save("network")
 	end
-	
-	wansec = f:field(Flag, "wansec", "WAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
-	wansec.rmempty = false
-	wansec:depends("sharenet", "1")
-	function wansec.cfgvalue(self, section)
-		return uci:get("freifunk", "wizard", "wan_security")
-	end
-	function wansec.write(self, section, value)
-		uci:set("freifunk", "wizard", "wan_security", value)
-		uci:save("freifunk")
+	if has_firewall then
+		wansec = f:field(Flag, "wansec", "WAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
+		wansec.rmempty = false
+		wansec:depends("sharenet", "1")
+		function wansec.cfgvalue(self, section)
+			return uci:get("freifunk", "wizard", "wan_security")
+		end
+		function wansec.write(self, section, value)
+			uci:set("freifunk", "wizard", "wan_security", value)
+			uci:save("freifunk")
+		end
 	end
 	if has_3g or has_pppoe then
 		wandevice = f:field(Value, "device",
@@ -870,12 +872,13 @@ if has_lan then
 		uci:set("network", "lan", "dns", value)
 		uci:save("network")
 	end
-	
-	lansec = f:field(Flag, "lansec", "LAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
-	lansec.rmempty = false
-	lansec:depends("sharelan", "1")
-	function lansec.cfgvalue(self, section)
-		return uci:get("freifunk", "wizard", "lan_security")
+	if has_firewall then
+		lansec = f:field(Flag, "lansec", "LAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
+		lansec.rmempty = false
+		lansec:depends("sharelan", "1")
+		function lansec.cfgvalue(self, section)
+			return uci:get("freifunk", "wizard", "lan_security")
+		end
 	end
 	if has_qos then
 		lanqosdown = f:field(Value, "lanqosdown", "Download Bandbreite begrenzen", "kb/s")
@@ -972,8 +975,10 @@ function f.handle(self, state, data)
 			uci:commit("wireless")
 			uci:commit("network")
 			uci:commit("dhcp")
-			uci:commit("luci_splash")
-			uci:commit("firewall")
+			if has_firewall then
+				uci:commit("luci_splash")
+				uci:commit("firewall")
+			end
 			uci:commit("system")
 			uci:commit("uhttpd")
 			uci:commit("olsrd")
@@ -1034,33 +1039,34 @@ function main.write(self, section, value)
 	end
 	uci:set("freifunk", "community", "name", community)
 	uci:save("freifunk")
-
-	-- Cleanup
-	uci:delete_all("firewall","zone", {name="freifunk"})
-	uci:delete_all("firewall","forwarding", {dest="freifunk"})
-	uci:delete_all("firewall","forwarding", {src="freifunk"})
-	uci:delete_all("firewall","rule", {dest="freifunk"})
-	uci:delete_all("firewall","rule", {src="freifunk"})
-	uci:save("firewall")
-	-- Create firewall zone and add default rules (first time)
-	--                    firewall_create_zone("name"    , "input" , "output", "forward ", Masqurade)
-	local newzone = tools.firewall_create_zone("freifunk", "ACCEPT", "ACCEPT", "REJECT")
-	if newzone then
-		uci:foreach("freifunk", "fw_forwarding", function(section)
-			uci:section("firewall", "forwarding", nil, section)
-		end)
-		uci:foreach(external, "fw_forwarding", function(section)
-			uci:section("firewall", "forwarding", nil, section)
-		end)
-
-		uci:foreach("freifunk", "fw_rule", function(section)
-			uci:section("firewall", "rule", nil, section)
-		end)
-		uci:foreach(external, "fw_rule", function(section)
-			uci:section("firewall", "rule", nil, section)
-		end)
+	if has_firewall then
+		-- Cleanup
+		uci:delete_all("firewall","zone", {name="freifunk"})
+		uci:delete_all("firewall","forwarding", {dest="freifunk"})
+		uci:delete_all("firewall","forwarding", {src="freifunk"})
+		uci:delete_all("firewall","rule", {dest="freifunk"})
+		uci:delete_all("firewall","rule", {src="freifunk"})
+		uci:save("firewall")
+		-- Create firewall zone and add default rules (first time)
+		--                    firewall_create_zone("name"    , "input" , "output", "forward ", Masqurade)
+		local newzone = tools.firewall_create_zone("freifunk", "ACCEPT", "ACCEPT", "REJECT")
+		if newzone then
+			uci:foreach("freifunk", "fw_forwarding", function(section)
+				uci:section("firewall", "forwarding", nil, section)
+			end)
+			uci:foreach(external, "fw_forwarding", function(section)
+				uci:section("firewall", "forwarding", nil, section)
+			end)
+	
+			uci:foreach("freifunk", "fw_rule", function(section)
+				uci:section("firewall", "rule", nil, section)
+			end)
+			uci:foreach(external, "fw_rule", function(section)
+				uci:section("firewall", "rule", nil, section)
+			end)
+		end
+		uci:save("firewall")
 	end
-	uci:save("firewall")
 	if has_hb then
 		uci:delete("manager", "heartbeat", "interface")
 		uci:save("manager")
@@ -1102,7 +1108,9 @@ function main.write(self, section, value)
 			proto  = "none",
 			ifname = "tunl0"
 		})
-		tools.firewall_zone_add_interface("freifunk", "tunl0")
+		if has_firewall then
+			tools.firewall_zone_add_interface("freifunk", "tunl0")
+		end
 	end
 	uci:section("olsrd", "olsrd", nil, olsrbase)
 
@@ -1180,19 +1188,21 @@ function main.write(self, section, value)
 		-- tools.network_remove_interface(device)
 		uci:delete("network", device .. "dhcp")
 		uci:delete("network", device)
-		tools.firewall_zone_remove_interface("freifunk", device)
+		if has_firewall then
+			tools.firewall_zone_remove_interface("freifunk", device)
+			tools.firewall_zone_remove_interface("freifunk", nif)
+			-- Delete old splash
+			uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
+			uci:delete_all("luci_splash", "iface", {network=nif.."dhcp", zone="freifunk"})
+		end
 		-- tools.network_remove_interface(nif)
 		uci:delete("network", nif .. "dhcp")
 		uci:delete("network", nif)
-		tools.firewall_zone_remove_interface("freifunk", nif)
 		-- Delete old dhcp
 		uci:delete("dhcp", device)
 		uci:delete("dhcp", device .. "dhcp")
 		uci:delete("dhcp", nif)
 		uci:delete("dhcp", nif .. "dhcp")
-		-- Delete old splash
-		uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
-		uci:delete_all("luci_splash", "iface", {network=nif.."dhcp", zone="freifunk"})
 		-- Delete old radvd
 		if has_radvd then
 			uci:delete_all("radvd", "interface", {interface=nif.."dhcp"})
@@ -1363,8 +1373,10 @@ function main.write(self, section, value)
 		local new_hostname = node_ip:string():gsub("%.", "-")
 		uci:set("freifunk", "wizard", "hostname", new_hostname)
 		uci:save("freifunk")
-		tools.firewall_zone_add_interface("freifunk", nif)
-		uci:save("firewall")
+		if has_firewall then
+			tools.firewall_zone_add_interface("freifunk", nif)
+			uci:save("firewall")
+		end
 		-- Write new olsrv4 interface
 		local olsrifbase = {}
 		olsrifbase.interface = nif
@@ -1424,8 +1436,10 @@ function main.write(self, section, value)
 					dhcp_ip = subnet:network(subnet_prefix):add(1):string()
 					dhcp_mask = subnet:mask(subnet_prefix):string()
 					dhcp_net = luci.ip.IPv4(dhcp_ip,dhcp_mask)
-					tools.firewall_zone_add_masq_src("freifunk", dhcp_net:string())
-					tools.firewall_zone_enable_masq("freifunk")
+					if has_firewall then
+						tools.firewall_zone_add_masq_src("freifunk", dhcp_net:string())
+						tools.firewall_zone_enable_masq("freifunk")
+					end
 				end
 			end
 			if dhcp_ip and dhcp_mask then
@@ -1467,7 +1481,9 @@ function main.write(self, section, value)
 						uci:section("radvd", "dnssl", nil, radvd_dnssl)
 						uci:save("radvd")
 					end
-					tools.firewall_zone_add_interface("freifunk", nif .. "dhcp")
+					if has_firewall then
+						tools.firewall_zone_add_interface("freifunk", nif .. "dhcp")
+					end
 					uci:save("wireless")
 					ifconfig.mcast_rate = nil
 					ifconfig.encryption="none"
@@ -1483,58 +1499,64 @@ function main.write(self, section, value)
 				dhcpbase.ignore = 0
 				uci:section("dhcp", "dhcp", nif .. "dhcp", dhcpbase)
 				uci:set_list("dhcp", nif .. "dhcp", "dhcp_option", "119,olsr")
-				-- Create firewall settings
-				uci:delete_all("firewall", "rule", {
-					src="freifunk",
-					proto="udp",
-					dest_port="53"
-				})
-				uci:section("firewall", "rule", nil, {
-					src="freifunk",
-					proto="udp",
-					dest_port="53",
-					target="ACCEPT"
-				})
-				uci:delete_all("firewall", "rule", {
-					src="freifunk",
-					proto="udp",
-					src_port="68",
-					dest_port="67"
-				})
-				uci:section("firewall", "rule", nil, {
-					src="freifunk",
-					proto="udp",
-					src_port="68",
-					dest_port="67",
-					target="ACCEPT"
-				})
-				uci:delete_all("firewall", "rule", {
-					src="freifunk",
-					proto="tcp",
-					dest_port="8082",
-				})
-				uci:section("firewall", "rule", nil, {
-					src="freifunk",
-					proto="tcp",
-					dest_port="8082",
-					target="ACCEPT"
-				})
-				-- Register splash
-				uci:section("luci_splash", "iface", nil, {network=nif.."dhcp", zone="freifunk"})
-				uci:save("luci_splash")
-				-- Make sure that luci_splash is enabled
-				sys.init.enable("luci_splash")
+				if has_firewall then
+					-- Create firewall settings
+					uci:delete_all("firewall", "rule", {
+						src="freifunk",
+						proto="udp",
+						dest_port="53"
+					})
+					uci:section("firewall", "rule", nil, {
+						src="freifunk",
+						proto="udp",
+						dest_port="53",
+						target="ACCEPT"
+					})
+					uci:delete_all("firewall", "rule", {
+						src="freifunk",
+						proto="udp",
+						src_port="68",
+						dest_port="67"
+					})
+					uci:section("firewall", "rule", nil, {
+						src="freifunk",
+						proto="udp",
+						src_port="68",
+						dest_port="67",
+						target="ACCEPT"
+					})
+					uci:delete_all("firewall", "rule", {
+						src="freifunk",
+						proto="tcp",
+						dest_port="8082",
+					})
+					uci:section("firewall", "rule", nil, {
+						src="freifunk",
+						proto="tcp",
+						dest_port="8082",
+						target="ACCEPT"
+					})
+					-- Register splash
+					uci:section("luci_splash", "iface", nil, {network=nif.."dhcp", zone="freifunk"})
+					uci:save("luci_splash")
+					-- Make sure that luci_splash is enabled
+					sys.init.enable("luci_splash")
+				end
 			end
 		else
-			-- Delete old splash
-			uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
+			if has_firewall then
+				-- Delete old splash
+				uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
+			end
 		end
 		--Write Ad-Hoc wifi section after AP wifi section
 		uci:section("wireless", "wifi-iface", nil, ifconfig)
 		uci:save("network")
 		uci:save("wireless")
 		uci:save("network")
-		uci:save("firewall")
+		if has_firewall then
+			uci:save("firewall")
+		end
 		uci:save("dhcp")
 	end)
 	-- Create wired ip and firewall config
@@ -1555,19 +1577,23 @@ function main.write(self, section, value)
 				node_ip = nil
 				return
 			end
-			-- Cleanup
-			tools.firewall_zone_remove_interface(device, device)
-			if device ~= "freifunk" then
-				uci:delete_all("firewall","zone", {name=device})
-				uci:delete_all("firewall","forwarding", {src=device})
-				uci:delete_all("firewall","forwarding", {dest=device})
+			if has_firewall then
+				-- Cleanup
+				tools.firewall_zone_remove_interface(device, device)
+				if device ~= "freifunk" then
+					uci:delete_all("firewall","zone", {name=device})
+					uci:delete_all("firewall","forwarding", {src=device})
+					uci:delete_all("firewall","forwarding", {dest=device})
+				end
 			end
 			uci:delete("network", device .. "dhcp")
 			-- Delete old dhcp
 			uci:delete("dhcp", device)
 			uci:delete("dhcp", device .. "dhcp")
-			-- Delete old splash
-			uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
+			if has_firewall then
+				-- Delete old splash
+				uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
+			end
 			if has_radvd then
 				uci:delete_all("radvd", "interface", {interface=device})
 				uci:delete_all("radvd", "prefix", {interface=device})
@@ -1611,8 +1637,10 @@ function main.write(self, section, value)
 			local new_hostname = node_ip:string():gsub("%.", "-")
 			uci:set("freifunk", "wizard", "hostname", new_hostname)
 			uci:save("freifunk")
-			tools.firewall_zone_add_interface("freifunk", device)
-			uci:save("firewall")
+			if has_firewall then
+				tools.firewall_zone_add_interface("freifunk", device)
+				uci:save("firewall")
+			end
 			-- Write new olsrv4 interface
 			local olsrifbase = {}
 			olsrifbase.interface = device
@@ -1668,8 +1696,10 @@ function main.write(self, section, value)
 						dhcp_ip = subnet:network(subnet_prefix):add(1):string()
 						dhcp_mask = subnet:mask(subnet_prefix):string()
 						dhcp_net = luci.ip.IPv4(dhcp_ip,dhcp_mask)
-						tools.firewall_zone_add_masq_src("freifunk", dhcp_net:string())
-						tools.firewall_zone_enable_masq("freifunk")
+						if has_firewall then
+							tools.firewall_zone_add_masq_src("freifunk", dhcp_net:string())
+							tools.firewall_zone_enable_masq("freifunk")
+						end
 					end
 				end
 				if dhcp_ip and dhcp_mask then
@@ -1689,52 +1719,56 @@ function main.write(self, section, value)
 					dhcpbase.ignore = 0
 					uci:section("dhcp", "dhcp", device .. "dhcp", dhcpbase)
 					uci:set_list("dhcp", device .. "dhcp", "dhcp_option", "119,olsr")
-					-- Create firewall settings
-					uci:delete_all("firewall", "rule", {
-						src="freifunk",
-						proto="udp",
-						dest_port="53"
-					})
-					uci:section("firewall", "rule", nil, {
-						src="freifunk",
-						proto="udp",
-						dest_port="53",
-						target="ACCEPT"
-					})
-					uci:delete_all("firewall", "rule", {
-						src="freifunk",
-						proto="udp",
-						src_port="68",
-						dest_port="67"
-					})
-					uci:section("firewall", "rule", nil, {
-						src="freifunk",
-						proto="udp",
-						src_port="68",
-						dest_port="67",
-						target="ACCEPT"
-					})
-					uci:delete_all("firewall", "rule", {
-						src="freifunk",
-						proto="tcp",
-						dest_port="8082",
-					})
-					uci:section("firewall", "rule", nil, {
-						src="freifunk",
-						proto="tcp",
-						dest_port="8082",
-						target="ACCEPT"
-					})
-					-- Register splash
-					uci:section("luci_splash", "iface", nil, {network=device.."dhcp", zone="freifunk"})
-					uci:save("luci_splash")
-					-- Make sure that luci_splash is enabled
-					sys.init.enable("luci_splash")
+					if has_firewall then
+						-- Create firewall settings
+						uci:delete_all("firewall", "rule", {
+							src="freifunk",
+							proto="udp",
+							dest_port="53"
+						})
+						uci:section("firewall", "rule", nil, {
+							src="freifunk",
+							proto="udp",
+							dest_port="53",
+							target="ACCEPT"
+						})
+						uci:delete_all("firewall", "rule", {
+							src="freifunk",
+							proto="udp",
+							src_port="68",
+							dest_port="67"
+						})
+						uci:section("firewall", "rule", nil, {
+							src="freifunk",
+							proto="udp",
+							src_port="68",
+							dest_port="67",
+							target="ACCEPT"
+						})
+						uci:delete_all("firewall", "rule", {
+							src="freifunk",
+							proto="tcp",
+							dest_port="8082",
+						})
+						uci:section("firewall", "rule", nil, {
+							src="freifunk",
+							proto="tcp",
+							dest_port="8082",
+							target="ACCEPT"
+						})
+						-- Register splash
+						uci:section("luci_splash", "iface", nil, {network=device.."dhcp", zone="freifunk"})
+						uci:save("luci_splash")
+						-- Make sure that luci_splash is enabled
+						sys.init.enable("luci_splash")
+					end
 				end
 			end
 			uci:save("wireless")
 			uci:save("network")
-			uci:save("firewall")
+			if has_firewall then
+				uci:save("firewall")
+			end
 			uci:save("dhcp")
 		end
 	end)
@@ -1742,37 +1776,39 @@ function main.write(self, section, value)
 	if has_radvd then
 		sys.init.enable("radvd")
 	end
-	-- Enforce firewall include
-	local has_include = false
-	uci:foreach("firewall", "include",
-		function(section)
-			if section.path == "/etc/firewall.freifunk" then
-				has_include = true
-			end
-		end)
-
-	if not has_include then
-		uci:section("firewall", "include", nil,
-			{ path = "/etc/firewall.freifunk" })
-	end
-	-- Allow state: invalid packets
-	uci:foreach("firewall", "defaults",
-		function(section)
-			uci:set("firewall", section[".name"], "drop_invalid", "0")
-		end)
-
-	-- Prepare advanced config
-	local has_advanced = false
-	uci:foreach("firewall", "advanced",
-		function(section) has_advanced = true end)
-
-	if not has_advanced then
-		uci:section("firewall", "advanced", nil,
-			{ tcp_ecn = "0", ip_conntrack_max = "8192", tcp_westwood = "1" })
+	if has_firewall then
+		-- Enforce firewall include
+		local has_include = false
+		uci:foreach("firewall", "include",
+			function(section)
+				if section.path == "/etc/firewall.freifunk" then
+					has_include = true
+				end
+			end)
+	
+		if not has_include then
+			uci:section("firewall", "include", nil,
+				{ path = "/etc/firewall.freifunk" })
+		end
+		-- Allow state: invalid packets
+		uci:foreach("firewall", "defaults",
+			function(section)
+				uci:set("firewall", section[".name"], "drop_invalid", "0")
+			end)
+	
+		-- Prepare advanced config
+		local has_advanced = false
+		uci:foreach("firewall", "advanced",
+			function(section) has_advanced = true end)
+	
+		if not has_advanced then
+			uci:section("firewall", "advanced", nil,
+				{ tcp_ecn = "0", ip_conntrack_max = "8192", tcp_westwood = "1" })
+		end
+		uci:save("firewall")
 	end
 	uci:save("wireless")
 	uci:save("network")
-	uci:save("firewall")
 	uci:save("dhcp")
 
 	local new_hostname = uci:get("freifunk", "wizard", "hostname")
@@ -1933,9 +1969,11 @@ function main.write(self, section, value)
 			local flanip=lanip:formvalue(section)
 			local flannm=lannm:formvalue(section)
 			local flanipn=ip.IPv4(flanip,flannm)
-			tools.firewall_zone_add_masq_src("freifunk", flanipn:string())
-			tools.firewall_zone_enable_masq("freifunk")
-			uci:save("firewall")
+			if has_firewall then
+				tools.firewall_zone_add_masq_src("freifunk", flanipn:string())
+				tools.firewall_zone_enable_masq("freifunk")
+				uci:save("firewall")
+			end
 		end
 	end
 
@@ -1954,34 +1992,40 @@ function main.write(self, section, value)
 		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 		-- Enable gateway_plain plugin
 		uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
-		sys.exec("chmod +x /etc/init.d/freifunk-p2pblock")
-		sys.init.enable("freifunk-p2pblock")
+		if has_firewall then
+			sys.exec("chmod +x /etc/init.d/freifunk-p2pblock")
+			sys.init.enable("freifunk-p2pblock")
+		end
 		sys.init.enable("qos")
 
 		if share_value == "1" then
-			uci:delete_all("firewall","zone", {name="wan"})
-			uci:section("firewall", "zone", nil, {
-				masq	= "1",
-				input   = "REJECT",
-				forward = "REJECT",
-				name    = "wan",
-				output  = "ACCEPT",
-				network = "wan"
-			})
-			uci:delete_all("firewall","forwarding", {src="freifunk", dest="wan"})
-			uci:section("firewall", "forwarding", nil, {src="freifunk", dest="wan"})
-			uci:delete_all("firewall","forwarding", {src="lan", dest="wan"})
-			uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
+			if has_firewall then
+				uci:delete_all("firewall","zone", {name="wan"})
+				uci:section("firewall", "zone", nil, {
+					masq	= "1",
+					input   = "REJECT",
+					forward = "REJECT",
+					name    = "wan",
+					output  = "ACCEPT",
+					network = "wan"
+				})
+				uci:delete_all("firewall","forwarding", {src="freifunk", dest="wan"})
+				uci:section("firewall", "forwarding", nil, {src="freifunk", dest="wan"})
+				uci:delete_all("firewall","forwarding", {src="lan", dest="wan"})
+				uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
+			end
 			sys.exec('grep wan /etc/crontabs/root >/dev/null || echo "0 6 * * * 	ifup wan" >> /etc/crontabs/root')
 			if wansec:formvalue(section) == "1" then
-				uci:foreach("firewall", "zone",
-					function(s)		
-						if s.name == "wan" then
-							uci:set("firewall", s['.name'], "local_restrict", "1")
-							uci:set("firewall", s['.name'], "masq", "1")
-							return false
-						end
-					end)
+				if has_firewall then
+					uci:foreach("firewall", "zone",
+						function(s)		
+							if s.name == "wan" then
+								uci:set("firewall", s['.name'], "local_restrict", "1")
+								uci:set("firewall", s['.name'], "masq", "1")
+								return false
+							end
+						end)
+				end
 			end
 		else
 			if has_radvd and wproto == "static" then
@@ -1997,28 +2041,30 @@ function main.write(self, section, value)
 			end
 		end
 		if sharelan_value == "1" then
-			uci:delete_all("firewall","zone", {name="lan"})
-			uci:section("firewall", "zone", nil, {
-				masq	= "1",
-				input   = "ACCEPT",
-				forward = "ACCEPT",
-				name    = "lan",
-				output  = "ACCEPT",
-				network = "lan"
-			})
-			uci:delete_all("firewall","forwarding", {src="freifunk", dest="lan"})
-			uci:section("firewall", "forwarding", nil, {src="freifunk", dest="lan"})
-			uci:delete_all("firewall","forwarding", {src="lan", dest="wan"})
-			uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
-			if lansec:formvalue(section) == "1" then
-				uci:foreach("firewall", "zone",
-					function(s)		
-						if s.name == "lan" then
-							uci:set("firewall", s['.name'], "local_restrict", "1")
-							uci:set("firewall", s['.name'], "masq", "1")
-							return false
-						end
-					end)
+			if has_firewall then
+				uci:delete_all("firewall","zone", {name="lan"})
+				uci:section("firewall", "zone", nil, {
+					masq	= "1",
+					input   = "ACCEPT",
+					forward = "ACCEPT",
+					name    = "lan",
+					output  = "ACCEPT",
+					network = "lan"
+				})
+				uci:delete_all("firewall","forwarding", {src="freifunk", dest="lan"})
+				uci:section("firewall", "forwarding", nil, {src="freifunk", dest="lan"})
+				uci:delete_all("firewall","forwarding", {src="lan", dest="wan"})
+				uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
+				if lansec:formvalue(section) == "1" then
+					uci:foreach("firewall", "zone",
+						function(s)		
+							if s.name == "lan" then
+								uci:set("firewall", s['.name'], "local_restrict", "1")
+								uci:set("firewall", s['.name'], "masq", "1")
+								return false
+							end
+						end)
+				end
 			end
 		else
 			if has_radvd and lproto == "static" then
@@ -2050,17 +2096,19 @@ function main.write(self, section, value)
 			library     = "olsrd_dyn_gw_plain.so.0.4",
 			ignore      = 1,
 		})
-		sys.init.disable("freifunk-p2pblock")
 		sys.init.disable("qos")
-		sys.exec("chmod -x /etc/init.d/freifunk-p2pblock")
-		uci:delete_all("firewall", "forwarding", {src="freifunk", dest="wan"})
-		uci:foreach("firewall", "zone",
-			function(s)		
-				if s.name == "wan" or s.name == "lan" then
-					uci:delete("firewall", s['.name'], "local_restrict")
-					return false
-				end
-			end)
+		if has_firewall then
+			sys.init.disable("freifunk-p2pblock")
+			sys.exec("chmod -x /etc/init.d/freifunk-p2pblock")
+			uci:delete_all("firewall", "forwarding", {src="freifunk", dest="wan"})
+			uci:foreach("firewall", "zone",
+				function(s)		
+					if s.name == "wan" or s.name == "lan" then
+						uci:delete("firewall", s['.name'], "local_restrict")
+						return false
+					end
+				end)
+		end
 		if has_radvd and wproto == "static" then
 			radvd_if.interface='wan'
 			radvd_pre.interface='wan'
@@ -2117,23 +2165,25 @@ function main.write(self, section, value)
 					gvpnif.up=""
 					gvpnif.down=""
 					gvpnif.mac="00:00:48:"..string.format("%X",string.gsub(vpnip:string(), ".*%." , "" ))..":00:00"
-					tools.firewall_zone_add_interface("freifunk", gvpnif.tundev)
-					uci:delete_all("firewall", "rule", {
-						src       ="wan",
-						proto     ="udp",
-						dest_port =gvpnif.localport or "8719",
-						target    ="ACCEPT"
-					})
-					uci:section("firewall", "rule", nil, {
-						src       ="wan",
-						proto     ="udp",
-						dest_port =gvpnif.localport or "8719",
-						target    ="ACCEPT"
-					})
+					if has_firewall then
+						tools.firewall_zone_add_interface("freifunk", gvpnif.tundev)
+						uci:delete_all("firewall", "rule", {
+							src       ="wan",
+							proto     ="udp",
+							dest_port =gvpnif.localport or "8719",
+							target    ="ACCEPT"
+						})
+						uci:section("firewall", "rule", nil, {
+							src       ="wan",
+							proto     ="udp",
+							dest_port =gvpnif.localport or "8719",
+							target    ="ACCEPT"
+						})
+						uci:save("firewall")
+					end
 					uci:section("l2gvpn", "node" , gvpnif.community , gvpnif)
 					uci:save("network")
 					uci:save("l2gvpn")
-					uci:save("firewall")
 					uci:save("olsrd")
 					sys.init.enable("l2gvpn")
 				end
@@ -2146,7 +2196,9 @@ function main.write(self, section, value)
 	end
 
 	uci:save("freifunk")
-	uci:save("firewall")
+	if has_firewall then
+		uci:save("firewall")
+	end
 	uci:save("olsrd")
 	uci:save("system")
 end
