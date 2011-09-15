@@ -92,11 +92,11 @@ if newpsswd ~= "" then
 	end
 end
 
-pw1 = f:field(Value, "pw1", translate("password"))
+pw1 = f:field(Value, "pw1", translate("Password"))
 pw1.password = true
 pw1.rmempty = false
 
-pw2 = f:field(Value, "pw2", translate("confirmation"))
+pw2 = f:field(Value, "pw2", translate("Confirmation"))
 pw2.password = true
 pw2.rmempty = false
 
@@ -920,7 +920,7 @@ if has_l2gvpn then
 		uci:set("freifunk", "wizard", "gvpn", value)
 		uci:save("freifunk")
 	end
-	gvpnip = f:field(Value, "gvpnipaddr", translate("ipaddress"))
+	gvpnip = f:field(Value, "gvpnipaddr", translate("IPv4-Address"))
 	gvpnip:depends("gvpn", "1")
 	function gvpnip.cfgvalue(self, section)
 		return uci:get("l2gvpn", "bbb", "ip") or uci:get("network", "gvpn", "ipaddr")
@@ -953,9 +953,9 @@ function f.handle(self, state, data)
 			if data.pw1 then
 				local stat = luci.sys.user.setpasswd("root", data.pw1) == 0
 				if stat then
-					f.message = translate("a_s_changepw_changed")
+					f.message = translate("Password successfully changed")
 				else
-					f.errmessage = translate("unknownerror")
+					f.errmessage = translate("Unknown Error")
 				end
 			end
 			data.pw1 = nil
