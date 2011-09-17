@@ -1421,24 +1421,24 @@ function main.write(self, section, value)
 					end)
 			else
 				uci:delete("freifunk", "wizard", "dhcpmesh_" .. device)
-				local subnet_prefix = tonumber(uci:get_first("profile_"..community, "community", "splash_prefix")) or 27
-				local pool_network = uci:get_first("profile_"..community, "community", "splash_network") or "10.104.0.0/16"
-				local pool = luci.ip.IPv4(pool_network)
-				local ip = tostring(node_ip)
-				if pool and ip then
-					local hosts_per_subnet = 2^(32 - subnet_prefix)
-					local number_of_subnets = (2^pool:prefix())/hosts_per_subnet
-					local seed1, seed2 = ip:match("(%d+)%.(%d+)$")
-					if seed1 and seed2 then
-						math.randomseed(seed1 * seed2)
-					end
-					local subnet = pool:add(hosts_per_subnet * math.random(number_of_subnets))
-					dhcp_ip = subnet:network(subnet_prefix):add(1):string()
-					dhcp_mask = subnet:mask(subnet_prefix):string()
-					dhcp_net = luci.ip.IPv4(dhcp_ip,dhcp_mask)
-					if has_firewall then
-						tools.firewall_zone_add_masq_src("freifunk", dhcp_net:string())
-						tools.firewall_zone_enable_masq("freifunk")
+				if has_firewall then
+					local subnet_prefix = tonumber(uci:get_first("profile_"..community, "community", "splash_prefix")) or 27
+					local pool_network = uci:get_first("profile_"..community, "community", "splash_network") or "10.104.0.0/16"
+					local pool = luci.ip.IPv4(pool_network)
+					local ip = tostring(node_ip)
+					if pool and ip then
+						local hosts_per_subnet = 2^(32 - subnet_prefix)
+						local number_of_subnets = (2^pool:prefix())/hosts_per_subnet
+						local seed1, seed2 = ip:match("(%d+)%.(%d+)$")
+						if seed1 and seed2 then
+							math.randomseed(seed1 * seed2)
+						end
+						local subnet = pool:add(hosts_per_subnet * math.random(number_of_subnets))
+						dhcp_ip = subnet:network(subnet_prefix):add(1):string()
+						dhcp_mask = subnet:mask(subnet_prefix):string()
+						dhcp_net = luci.ip.IPv4(dhcp_ip,dhcp_mask)
+							tools.firewall_zone_add_masq_src("freifunk", dhcp_net:string())
+							tools.firewall_zone_enable_masq("freifunk")
 					end
 				end
 			end
@@ -1845,7 +1845,7 @@ function main.write(self, section, value)
 			uci:set("system", s[".name"], "timezone", 'CET-1CEST,M3.5.0,M10.5.0/3')
 			-- Set hostname
 			if custom_hostname then
-				if custom_hostname == "OpenWrt" or old_hostname:match("^%d+-%d+-%d+-%d+$") then
+				if custom_hostname == "OpenWrt" or custom_hostname:match("^%d+-%d+-%d+-%d+$") then
 					if new_hostname then
 						uci:set("system", s[".name"], "hostname", new_hostname)
 						sys.hostname(new_hostname)
@@ -1964,6 +1964,8 @@ function main.write(self, section, value)
 				uci:delete_all("radvd", "dnssl", {interface='lan'})
 				uci:save("radvd")
 		end
+		-- Delete old dhcp
+		uci:delete("dhcp", "lan")
 		lproto = lanproto:formvalue(section)
 		if lproto == "static" then
 			local flanip=lanip:formvalue(section)
@@ -1974,6 +1976,12 @@ function main.write(self, section, value)
 				tools.firewall_zone_enable_masq("freifunk")
 				uci:save("firewall")
 			end
+			-- Create dhcp
+			local dhcpbase = {}
+			dhcpbase.interface = "lan"
+			dhcpbase.ignore = 0
+			uci:section("dhcp", "dhcp", "lan", dhcpbase)
+			uci:set_list("dhcp", "lan", "dhcp_option", "119,olsr")
 		end
 	end
 
