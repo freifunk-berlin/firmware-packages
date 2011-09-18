@@ -135,6 +135,8 @@ require("luci.http").prepare_content("application/xhtml+xml")
 	<%=hostname%> | <%=luci.version.distversion%> |
 	<%:Load%>: <%="%.2f" % load1%> <%="%.2f" % load5%> <%="%.2f" % load15%>
 	<%:Uptime%>: <%=luci.tools.webadmin.date_format(tonumber(uptime))%>
+	<%:Model%>: <%=model%>
+	<%:Identifier%>: <%=identifier%>
 </div>
 
 <ul id="modemenu"><%
