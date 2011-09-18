@@ -4,6 +4,7 @@ set_default_config()
 {
 	local cfg="$1"
 	config_get type "$cfg" "type"
+	config_get hwmode "$cfg" "hwmode"
 	case $type in
 		atheros)
 			uci set freifunk.wifi_device.channel=1
@@ -26,6 +27,7 @@ set_default_config()
 			uci commit freifunk
 		;;
 		mac80211)
+			uci set freifunk.wifi_device.hwmode=$hwmode
 			uci set freifunk.wifi_device.channel=1
 			uci set freifunk.wifi_device.diversity=""
 			uci set freifunk.wifi_device.disabled=0

@@ -1231,7 +1231,7 @@ function main.write(self, section, value)
 		local hwmode
 		if hwtype == "mac80211" then
 			hwmode = sec.hwmode
-			if string.find(device, "n") then
+			if string.find(hwmode, "n") then
 				has_n = "n"
 			end
 		end
