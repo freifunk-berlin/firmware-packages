@@ -1093,7 +1093,7 @@ function main.write(self, section, value)
 		sharelan_value = sharelan:formvalue(section) or 0
 		uci:set("freifunk", "wizard", "sharelan_value", sharelan_value)
 	end
-	if share_value == "1" or sharelan_value == "1" then
+	if share_value == "1" then
 		olsrbase.SmartGateway="yes"
 		if has_qos then
 			qosd=wanqosdown:formvalue(section)
@@ -1104,6 +1104,21 @@ function main.write(self, section, value)
 				olsrbase.SmartGatewaySpeed="500 10000"
 			end
 		end
+	end
+	if sharelan_value == "1" then
+		olsrbase.SmartGateway="yes"
+		if has_qos then
+			qosd=lanqosdown:formvalue(section)
+			qosu=lanqosup:formvalue(section)
+			if (qosd and qosd ~= "") and (qosu and qosd ~= "")  then
+				olsrbase.SmartGatewaySpeed=qosu.." "..qosd
+			else
+				olsrbase.SmartGatewaySpeed="500 10000"
+			end
+		end
+	end
+	
+	if share_value == "1" or sharelan_value == "1" then
 		uci:section("network", "interface", "tunl0", {
 			proto  = "none",
 			ifname = "tunl0"
@@ -2004,9 +2019,15 @@ function main.write(self, section, value)
 			sys.exec("chmod +x /etc/init.d/freifunk-p2pblock")
 			sys.init.enable("freifunk-p2pblock")
 		end
-		sys.init.enable("qos")
+		if has_qos then
+			sys.init.enable("qos")
+		end
+		
 
 		if share_value == "1" then
+			if has_qos then
+				uci:set("qos", "wan", "enabled", "1")
+			end
 			if has_firewall then
 				uci:delete_all("firewall","zone", {name="wan"})
 				uci:section("firewall", "zone", nil, {
@@ -2036,6 +2057,9 @@ function main.write(self, section, value)
 				end
 			end
 		else
+			if has_qos then
+				uci:set("qos", "wan", "enabled", "0")
+			end
 			if has_radvd and wproto == "static" then
 				radvd_if.interface='wan'
 				radvd_pre.interface='wan'
@@ -2049,6 +2073,9 @@ function main.write(self, section, value)
 			end
 		end
 		if sharelan_value == "1" then
+			if has_qos then
+				uci:set("qos", "lan", "enabled", "1")
+			end
 			if has_firewall then
 				uci:delete_all("firewall","zone", {name="lan"})
 				uci:section("firewall", "zone", nil, {
@@ -2075,6 +2102,9 @@ function main.write(self, section, value)
 				end
 			end
 		else
+			if has_qos then
+				uci:set("qos", "lan", "enabled", "0")
+			end
 			if has_radvd and lproto == "static" then
 				radvd_if.interface='lan'
 				radvd_pre.interface='lan'
@@ -2104,7 +2134,9 @@ function main.write(self, section, value)
 			library     = "olsrd_dyn_gw_plain.so.0.4",
 			ignore      = 1,
 		})
-		sys.init.disable("qos")
+--		if has_qos then
+--			sys.init.disable("qos")
+--		end
 		if has_firewall then
 			sys.init.disable("freifunk-p2pblock")
 			sys.exec("chmod -x /etc/init.d/freifunk-p2pblock")
