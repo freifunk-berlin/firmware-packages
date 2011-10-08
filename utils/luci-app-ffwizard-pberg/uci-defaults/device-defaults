@@ -84,6 +84,22 @@ uci set freifunk.interface.dns="2002:d596:2a92:1:71:53:: 2002:5968:c28e::53 88.1
 uci commit freifunk
 uci set uhttpd.main.rfc1918_filter=0
 uci commit uhttpd
+uci set luci_olsr.general.resolve=0
+uci commit luci_olsr
+uci set luci.general=internal
+uci set luci.general.resolve=0
+uci commit luci
+
+grep -q 'ff_luci_resolve' /etc/crontabs/root || echo '*/5 * * * *     /usr/sbin/ff_luci_resolve' >> /etc/crontabs/root
+sed -i '/exit 0/d' /etc/rc.local
+cat <<EOF >> /etc/rc.local
+uci -P /var/state set luci_olsr.general.resolve=0
+uci -q get luci.general >/dev/null || uci set luci.general=internal
+uci -q get luci.general.resolve >/dev/null || uci set luci.general.resolve=0
+uci -q changes luci | grep -q luci && uci commit luci
+uci -P /var/state set luci.general.resolve=0
+EOF
+echo 'exit 0' >> /etc/rc.local
 
 (
 while true ; do
