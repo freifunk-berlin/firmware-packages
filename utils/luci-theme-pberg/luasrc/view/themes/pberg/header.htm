@@ -25,6 +25,7 @@ local tree     = luci.dispatcher.node()
 local cattree  = category and luci.dispatcher.node(category)
 local node     = luci.dispatcher.context.dispatched
 local hostname = luci.sys.hostname()
+local identifier, model, total_mem, cache, buffer, free_mem = luci.sys.sysinfo()
 
 local c = tree
 for i,r in ipairs(request) do
