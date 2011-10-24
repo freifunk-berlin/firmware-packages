@@ -1,5 +1,0 @@
-Package: libcurl
-Priority: optional
-Section: libs
-Depends: zlib
-Description: a client-side URL transfer library
