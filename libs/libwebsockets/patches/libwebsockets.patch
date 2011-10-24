@@ -1,0 +1,553 @@
+diff --git a/test-server/test-client.c b/test-server/test-client.c
+index 3fecd47..c0d12a3 100644
+--- a/test-server/test-client.c
++++ b/test-server/test-client.c
+@@ -48,7 +48,7 @@ static struct libwebsocket *wsi_mirror;
+ 
+ enum demo_protocols {
+ 
+-	PROTOCOL_DUMB_INCREMENT,
++//	PROTOCOL_DUMB_INCREMENT,
+ 	PROTOCOL_LWS_MIRROR,
+ 
+ 	/* always last */
+@@ -56,47 +56,6 @@ enum demo_protocols {
+ };
+ 
+ 
+-/* dumb_increment protocol */
+-
+-static int
+-callback_dumb_increment(struct libwebsocket_context * this,
+-			struct libwebsocket *wsi,
+-			enum libwebsocket_callback_reasons reason,
+-					       void *user, void *in, size_t len)
+-{
+-	switch (reason) {
+-
+-	case LWS_CALLBACK_CLOSED:
+-		fprintf(stderr, "LWS_CALLBACK_CLOSED\n");
+-		was_closed = 1;
+-		break;
+-
+-	case LWS_CALLBACK_CLIENT_RECEIVE:
+-		((char *)in)[len] = '\0';
+-		fprintf(stderr, "rx %d '%s'\n", (int)len, (char *)in);
+-		break;
+-
+-	/* because we are protocols[0] ... */
+-
+-	case LWS_CALLBACK_CLIENT_CONFIRM_EXTENSION_SUPPORTED:
+-		if ((strcmp(in, "deflate-stream") == 0) && deny_deflate) {
+-			fprintf(stderr, "denied deflate-stream extension\n");
+-			return 1;
+-		}
+-		if ((strcmp(in, "x-google-mux") == 0) && deny_mux) {
+-			fprintf(stderr, "denied x-google-mux extension\n");
+-			return 1;
+-		}
+-
+-		break;
+-
+-	default:
+-		break;
+-	}
+-
+-	return 0;
+-}
+-
+ 
+ /* lws-mirror_protocol */
+ 
+@@ -135,11 +94,8 @@ callback_lws_mirror(struct libwebsocket_context * this,
+ 	case LWS_CALLBACK_CLIENT_WRITEABLE:
+ 
+ 		l = sprintf((char *)&buf[LWS_SEND_BUFFER_PRE_PADDING],
+-					"c #%06X %d %d %d;",
+-					(int)random() & 0xffffff,
+-					(int)random() % 500,
+-					(int)random() % 250,
+-					(int)random() % 24);
++					"Random 90: %d;",
++					(int)random() % 90);
+ 
+ 		libwebsocket_write(wsi,
+ 		   &buf[LWS_SEND_BUFFER_PRE_PADDING], l, opts | LWS_WRITE_TEXT);
+@@ -154,7 +110,7 @@ callback_lws_mirror(struct libwebsocket_context * this,
+ 		 * flow control
+ 		 */
+ 
+-		usleep(200);
++		usleep(1000000);
+ 		break;
+ 
+ 	default:
+@@ -169,11 +125,6 @@ callback_lws_mirror(struct libwebsocket_context * this,
+ 
+ static struct libwebsocket_protocols protocols[] = {
+ 	{
+-		"dumb-increment-protocol",
+-		callback_dumb_increment,
+-		0,
+-	},
+-	{
+ 		"lws-mirror-protocol",
+ 		callback_lws_mirror,
+ 		0,
+@@ -204,7 +155,7 @@ int main(int argc, char **argv)
+ 	int use_ssl = 0;
+ 	struct libwebsocket_context *context;
+ 	const char *address;
+-	struct libwebsocket *wsi_dumb;
++	//struct libwebsocket *wsi_dumb;
+ 	int ietf_version = -1; /* latest */
+ 	int mirror_lifetime = 0;
+ 
+@@ -265,19 +216,6 @@ int main(int argc, char **argv)
+ 	}
+ 
+ 
+-	/* create a client websocket using dumb increment protocol */
+-
+-	wsi_dumb = libwebsocket_client_connect(context, address, port, use_ssl,
+-			"/", argv[optind], argv[optind],
+-			 protocols[PROTOCOL_DUMB_INCREMENT].name, ietf_version);
+-
+-	if (wsi_dumb == NULL) {
+-		fprintf(stderr, "libwebsocket dumb connect failed\n");
+-		return -1;
+-	}
+-
+-	fprintf(stderr, "Websocket connections opened\n");
+-
+ 	/*
+ 	 * sit there servicing the websocket context to handle incoming
+ 	 * packets, and drawing random circles on the mirror protocol websocket
+diff --git a/test-server/test-server.c b/test-server/test-server.c
+index c1cfab8..e3fed1b 100644
+--- a/test-server/test-server.c
++++ b/test-server/test-server.c
+@@ -49,7 +49,7 @@ enum demo_protocols {
+ 	/* always first */
+ 	PROTOCOL_HTTP = 0,
+ 
+-	PROTOCOL_DUMB_INCREMENT,
++	//PROTOCOL_DUMB_INCREMENT,
+ 	PROTOCOL_LWS_MIRROR,
+ 
+ 	/* always last */
+@@ -159,83 +159,6 @@ dump_handshake_info(struct lws_tokens *lwst)
+ 	}
+ }
+ 
+-/* dumb_increment protocol */
+-
+-/*
+- * one of these is auto-created for each connection and a pointer to the
+- * appropriate instance is passed to the callback in the user parameter
+- *
+- * for this example protocol we use it to individualize the count for each
+- * connection.
+- */
+-
+-struct per_session_data__dumb_increment {
+-	int number;
+-};
+-
+-static int
+-callback_dumb_increment(struct libwebsocket_context * context,
+-			struct libwebsocket *wsi,
+-			enum libwebsocket_callback_reasons reason,
+-					       void *user, void *in, size_t len)
+-{
+-	int n;
+-	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 +
+-						  LWS_SEND_BUFFER_POST_PADDING];
+-	unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+-	struct per_session_data__dumb_increment *pss = user;
+-
+-	switch (reason) {
+-
+-	case LWS_CALLBACK_ESTABLISHED:
+-		fprintf(stderr, "callback_dumb_increment: LWS_CALLBACK_ESTABLISHED\n");
+-		pss->number = 0;
+-		break;
+-
+-	/*
+-	 * in this protocol, we just use the broadcast action as the chance to
+-	 * send our own connection-specific data and ignore the broadcast info
+-	 * that is available in the 'in' parameter
+-	 */
+-
+-	case LWS_CALLBACK_BROADCAST:
+-		n = sprintf((char *)p, "%d", pss->number++);
+-		n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT);
+-		if (n < 0) {
+-			fprintf(stderr, "ERROR writing to socket");
+-			return 1;
+-		}
+-		if (close_testing && pss->number == 50) {
+-			fprintf(stderr, "close tesing limit, closing\n");
+-			libwebsocket_close_and_free_session(context, wsi,
+-						       LWS_CLOSE_STATUS_NORMAL);
+-		}
+-		break;
+-
+-	case LWS_CALLBACK_RECEIVE:
+-		fprintf(stderr, "rx %d\n", (int)len);
+-		if (len < 6)
+-			break;
+-		if (strcmp(in, "reset\n") == 0)
+-			pss->number = 0;
+-		break;
+-	/*
+-	 * this just demonstrates how to use the protocol filter. If you won't
+-	 * study and reject connections based on header content, you don't need
+-	 * to handle this callback
+-	 */
+-
+-	case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
+-		dump_handshake_info((struct lws_tokens *)(long)user);
+-		/* you could return non-zero here and kill the connection */
+-		break;
+-
+-	default:
+-		break;
+-	}
+-
+-	return 0;
+-}
+ 
+ 
+ /* lws-mirror_protocol */
+@@ -361,11 +284,6 @@ static struct libwebsocket_protocols protocols[] = {
+ 		0			/* per_session_data_size */
+ 	},
+ 	{
+-		"dumb-increment-protocol",
+-		callback_dumb_increment,
+-		sizeof(struct per_session_data__dumb_increment),
+-	},
+-	{
+ 		"lws-mirror-protocol",
+ 		callback_lws_mirror,
+ 		sizeof(struct per_session_data__lws_mirror)
+@@ -400,9 +318,6 @@ int main(int argc, char **argv)
+ 	int opts = 0;
+ 	char interface_name[128] = "";
+ 	const char * interface = NULL;
+-#ifdef LWS_NO_FORK
+-	unsigned int oldus = 0;
+-#endif
+ 
+ 	fprintf(stderr, "libwebsockets test server\n"
+ 			"(C) Copyright 2010-2011 Andy Green <andy@warmcat.com> "
+@@ -462,40 +377,6 @@ int main(int argc, char **argv)
+ 	fprintf(stderr, " Using no-fork service loop\n");
+ 
+ 	while (1) {
+-		struct timeval tv;
+-
+-		gettimeofday(&tv, NULL);
+-
+-		/*
+-		 * This broadcasts to all dumb-increment-protocol connections
+-		 * at 20Hz.
+-		 *
+-		 * We're just sending a character 'x', in these examples the
+-		 * callbacks send their own per-connection content.
+-		 *
+-		 * You have to send something with nonzero length to get the
+-		 * callback actions delivered.
+-		 *
+-		 * We take care of pre-and-post padding allocation.
+-		 */
+-
+-		if (((unsigned int)tv.tv_usec - oldus) > 50000) {
+-			libwebsockets_broadcast(
+-					&protocols[PROTOCOL_DUMB_INCREMENT],
+-					&buf[LWS_SEND_BUFFER_PRE_PADDING], 1);
+-			oldus = tv.tv_usec;
+-		}
+-
+-		/*
+-		 * This example server does not fork or create a thread for
+-		 * websocket service, it all runs in this single loop.  So,
+-		 * we have to give the websockets an opportunity to service
+-		 * "manually".
+-		 *
+-		 * If no socket is needing service, the call below returns
+-		 * immediately and quickly.
+-		 */
+-
+ 		libwebsocket_service(context, 50);
+ 	}
+ 
+@@ -522,21 +403,6 @@ int main(int argc, char **argv)
+ 
+ 		usleep(50000);
+ 
+-		/*
+-		 * This broadcasts to all dumb-increment-protocol connections
+-		 * at 20Hz.
+-		 *
+-		 * We're just sending a character 'x', in these examples the
+-		 * callbacks send their own per-connection content.
+-		 *
+-		 * You have to send something with nonzero length to get the
+-		 * callback actions delivered.
+-		 *
+-		 * We take care of pre-and-post padding allocation.
+-		 */
+-
+-		libwebsockets_broadcast(&protocols[PROTOCOL_DUMB_INCREMENT],
+-					&buf[LWS_SEND_BUFFER_PRE_PADDING], 1);
+ 	}
+ 
+ #endif
+diff --git a/test-server/test.html b/test-server/test.html
+index 86c7eb3..5ff15c4 100644
+--- a/test-server/test.html
++++ b/test-server/test.html
+@@ -2,51 +2,28 @@
+ <html lang="en">
+ <head>
+  <meta charset=utf-8 />
+- <title>Minimal Websocket test app</title>
++ <title>Minimal Websocket Chat app</title>
+ </head>
+ 
+ <body>
+ <h3>Detected Browser: <div id=brow>...</div></h3>
+-<h2>libwebsockets "dumb-increment-protocol" test applet</h2>
+-The incrementing number is coming from the server and is individual for
+-each connection to the server... try opening a second browser window.
+-Click the button to send the server a websocket message to
+-reset the number.<br><br>
++<br><br>
+ 
+ <table>
+ 	<tr>
+-		<td align=center><input type=button id=offset value="Reset counter" onclick="reset();" ></td>
+-		<td width=100 align=center><div id=number> </div></td>
+-		<td id=wsdi_statustd align=center><div id=wsdi_status>Not initialized</div></td>
++		<td width=400 id=wsdi_statustd align=center><div id=wsdi_status>Not initialized</div></td>
+ 	</tr>
+ </table>
+ 
+-<h2>libwebsockets "lws-mirror-protocol" test applet</h2>
+-Use the mouse to draw on the canvas below -- all other browser windows open
+-on this page see your drawing in realtime and you can see any of theirs as
+-well.
+-<p>
+-The lws-mirror protocol doesn't interpret what is being sent to it, it just
+-re-sends it to every other websocket it has a connection with using that
+-protocol, including the guy who sent the packet.
+-<p>libwebsockets-test-client spams circles on to this shared canvas when
+-run.</p>
++<ol id=number>
++<li>Chat Console</li>
++</ol>
+ <br><br>
+ 
+ <table>
+ 	<tr>
+-		<td>Drawing color:
+-		<select id="color" onchange="update_color();">
+-			<option value=#000000>Black</option>
+-			<option value=#0000ff>Blue</option>
+-			<option value=#20ff20>Green</option>
+-			<option value=#802020>Dark Red</option>
+-		</select>
+-		</td>
+-		<td id=wslm_statustd align=center><div id=wslm_status>Not initialized</div></td>
+-	</tr>
+-	<tr>
+-		<td colspan=2 width=500 align=center style="background-color: #e0e0e0;"><div id=wslm_drawing> </div></td>
++		<td align=center><input type=text id=txtinput></td>
++		<td align=center><input type=button id=offset value="Send" onclick="socket_send();" ></td>
+ 	</tr>
+ </table>
+ 
+@@ -176,7 +153,6 @@ document.getElementById("brow").textContent = " " + BrowserDetect.browser + " "
+ 	+ BrowserDetect.version +" " + BrowserDetect.OS +" ";
+ 
+ 	var pos = 0;
+-
+ function get_appropriate_ws_url()
+ {
+ 	var pcol;
+@@ -202,7 +178,9 @@ function get_appropriate_ws_url()
+ }
+ 
+ 
+-document.getElementById("number").textContent = get_appropriate_ws_url();
++//document.getElementById("number").textContent = get_appropriate_ws_url();
++document.getElementById("number").removeChild(document.getElementById("number").firstChild);
++var i = 0;
+ 
+ /* dumb increment protocol */
+ 	
+@@ -210,10 +188,10 @@ document.getElementById("number").textContent = get_appropriate_ws_url();
+ 
+ 	if (BrowserDetect.browser == "Firefox") {
+ 		socket_di = new MozWebSocket(get_appropriate_ws_url(),
+-				   "dumb-increment-protocol");
++				   "lws-mirror-protocol");
+ 	} else {
+ 		socket_di = new WebSocket(get_appropriate_ws_url(),
+-				   "dumb-increment-protocol");
++				   "lws-mirror-protocol");
+ 	}
+ 
+ 
+@@ -221,11 +199,16 @@ document.getElementById("number").textContent = get_appropriate_ws_url();
+ 		socket_di.onopen = function() {
+ 			document.getElementById("wsdi_statustd").style.backgroundColor = "#40ff40";
+ 			document.getElementById("wsdi_status").textContent = " websocket connection opened ";
+-		} 
++		}
+ 
+ 		socket_di.onmessage =function got_packet(msg) {
+-			document.getElementById("number").textContent = msg.data + "\n";
+-		} 
++			i = i + 1;
++			console.log('idx:'+i+' Data:'+msg.data);
++			var newLI = document.createElement("li");
++			document.getElementById("number").appendChild(newLI);
++			var newtxt = document.createTextNode(msg.data + "\n");
++			document.getElementsByTagName("li")[i].appendChild(newtxt);
++		}
+ 
+ 		socket_di.onclose = function(){
+ 			document.getElementById("wsdi_statustd").style.backgroundColor = "#ff4040";
+@@ -235,126 +218,11 @@ document.getElementById("number").textContent = get_appropriate_ws_url();
+ 		alert('<p>Error' + exception);  
+ 	}
+ 
+-function reset() {
+-	socket_di.send("reset\n");
+-}
+-
+-
+-/* lws-mirror protocol */
+-
+-	var down = 0;
+-	var no_last = 1;
+-	var last_x = 0, last_y = 0;
+-	var ctx;
+-	var socket_lm;
+-	var color = "#000000";
+-
+-	if (BrowserDetect.browser == "Firefox") {
+-		socket_lm = new MozWebSocket(get_appropriate_ws_url(),
+-				   "lws-mirror-protocol");
+-	} else {
+-		socket_lm = new WebSocket(get_appropriate_ws_url(),
+-				   "lws-mirror-protocol");
+-	}
+-
+-
+-	try {
+-		socket_lm.onopen = function() {
+-			document.getElementById("wslm_statustd").style.backgroundColor = "#40ff40";
+-			document.getElementById("wslm_status").textContent = " websocket connection opened ";
+-		} 
+-
+-		socket_lm.onmessage =function got_packet(msg) {
+-			j = msg.data.split(';');
+-			f = 0;
+-			while (f < j.length - 1) {
+-				i = j[f].split(' ');
+-				if (i[0] == 'd') {
+-					ctx.strokeStyle = i[1];
+-					ctx.beginPath();
+-					ctx.moveTo(+(i[2]), +(i[3]));
+-					ctx.lineTo(+(i[4]), +(i[5]));
+-					ctx.stroke();
+-				}
+-				if (i[0] == 'c') {
+-					ctx.strokeStyle = i[1];
+-					ctx.beginPath();
+-					ctx.arc(+(i[2]), +(i[3]), +(i[4]), 0, Math.PI*2, true); 
+-					ctx.stroke();
+-				}
+-
+-				f++;
+-			}
+-		}
+-
+-		socket_lm.onclose = function(){
+-			document.getElementById("wslm_statustd").style.backgroundColor = "#ff4040";
+-			document.getElementById("wslm_status").textContent = " websocket connection CLOSED ";
+-		}
+-	} catch(exception) {
+-		alert('<p>Error' + exception);  
+-	}
+-
+-	var canvas = document.createElement('canvas');
+-	canvas.height = 300;
+-	canvas.width = 480;
+-	ctx = canvas.getContext("2d");
+-
+-	document.getElementById('wslm_drawing').appendChild(canvas);
+-
+-	canvas.addEventListener('mousemove', ev_mousemove, false);
+-	canvas.addEventListener('mousedown', ev_mousedown, false);
+-	canvas.addEventListener('mouseup', ev_mouseup, false);
+-
+-	offsetX = offsetY = 0;
+-	element = canvas;
+-      if (element.offsetParent) {
+-        do {
+-          offsetX += element.offsetLeft;
+-          offsetY += element.offsetTop;
+-        } while ((element = element.offsetParent));
+-      }
+- 
+-function update_color() {
+-	color = document.getElementById("color").value;
+-}
+-
+-function ev_mousedown (ev) {
+-	down = 1;
+-}
+-
+-function ev_mouseup(ev) {
+-	down = 0;
+-	no_last = 1;
+-}
+-
+-function ev_mousemove (ev) {
+-	var x, y;
+-
+-	if (ev.offsetX) {
+-		x = ev.offsetX;
+-		y = ev.offsetY;
+-	} else {
+-		x = ev.layerX - offsetX;
+-		y = ev.layerY - offsetY;
+-
+-	}
+-
+-	if (!down)
+-		return;
+-	if (no_last) {
+-		no_last = 0;
+-		last_x = x;
+-		last_y = y;
+-		return;
+-	}
+-	socket_lm.send("d " + color + " " + last_x + " " + last_y + " " + x + ' ' + y + ';');
+-
+-	last_x = x;
+-	last_y = y;
++function socket_send() {
++	txtsend = document.getElementById("txtinput").value
++	socket_di.send(txtsend);
+ }
+ 
+-
+ </script>
+ 
+ </body>
