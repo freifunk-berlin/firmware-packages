@@ -44,7 +44,7 @@ define Package/libwebsockets/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ipkg-install/usr/lib/libwebsockets.so* $(1)/usr/lib/
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ipkg-install/usr/bin/libwebsockets-test-server $(1)/usr/lib/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ipkg-install/usr/bin/libwebsockets-test-server $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/share/libwebsockets-test-server
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/ipkg-install/usr/share/libwebsockets-test-server/test.html $(1)/usr/share/libwebsockets-test-server/
 endef
