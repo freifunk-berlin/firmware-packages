@@ -1880,16 +1880,6 @@ function main.write(self, section, value)
 			end
 		end)
 
-	-- Create time rdate_servers
-	--local sys_time = uci:get_all("freifunk", "time")
-	--uci:delete_all("system", "time")
-	--uci:section("system", "time", "rdate_servers", sys_time)
-	--rdate.server = rdate.rdate_servers
-	--rdate.rdate_servers = ""
-	--uci:delete_all("system", "rdate", nil)
-	--uci:section("system", "rdate", nil, rdate)
-	--uci:save("system")
-
 	-- Create http splash port 8082
 	uci:set_list("uhttpd","main","listen_http",{"80"})
 	uci:set_list("uhttpd","main","listen_https",{"443"})
@@ -1970,6 +1960,16 @@ function main.write(self, section, value)
 				uci:save("radvd")
 		end
 		wproto = wanproto:formvalue(section)
+		if wproto == "static" then
+			local fwanip=wanip:formvalue(section)
+			local fwannm=wannm:formvalue(section)
+			local fwanipn=ip.IPv4(fwanip,flannm)
+			if has_firewall then
+				tools.firewall_zone_add_masq_src("freifunk", fwanipn:string())
+				tools.firewall_zone_enable_masq("freifunk")
+				uci:save("firewall")
+			end
+		end
 	end
 	local lproto
 	if has_lan then
