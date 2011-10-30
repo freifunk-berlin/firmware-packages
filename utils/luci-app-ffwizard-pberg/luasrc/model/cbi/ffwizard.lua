@@ -2009,6 +2009,12 @@ function main.write(self, section, value)
 			uci:set("autoipv6", "olsr_node", "enable", "0")
 			uci:set("autoipv6", "tunnel", "enable", "1")
 			uci:save("autoipv6")
+			-- Create tun6to4 interface
+			local tun6to4 = {}
+			tun6to4.ifname = "tun6to4"
+			dhcpbase.proto = "none"
+			uci:section("network", "interface", "6to4", tun6to4)
+			uci:save("network")
 		end
 
 		-- Delete/Disable gateway plugin
@@ -2041,22 +2047,26 @@ function main.write(self, section, value)
 				})
 				uci:delete_all("firewall","forwarding", {src="freifunk", dest="wan"})
 				uci:section("firewall", "forwarding", nil, {src="freifunk", dest="wan"})
+				uci:delete_all("firewall","forwarding", {src="wan", dest="freifunk"})
+				uci:section("firewall", "forwarding", nil, {src="wan", dest="freifunk"})
 				uci:delete_all("firewall","forwarding", {src="lan", dest="wan"})
 				uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
-			end
-			sys.exec('grep wan /etc/crontabs/root >/dev/null || echo "0 6 * * * 	ifup wan" >> /etc/crontabs/root')
-			if wansec:formvalue(section) == "1" then
-				if has_firewall then
-					uci:foreach("firewall", "zone",
-						function(s)		
-							if s.name == "wan" then
-								uci:set("firewall", s['.name'], "local_restrict", "1")
-								uci:set("firewall", s['.name'], "masq", "1")
-								return false
-							end
-						end)
+				if has_autoipv6 then
+					tools.firewall_zone_add_interface("wan", "6to4")
+					uci:save("firewall")
+				end
+				if wansec:formvalue(section) == "1" then
+						uci:foreach("firewall", "zone",
+							function(s)		
+								if s.name == "wan" then
+									uci:set("firewall", s['.name'], "local_restrict", "1")
+									uci:set("firewall", s['.name'], "masq", "1")
+									return false
+								end
+							end)
 				end
 			end
+			sys.exec('grep wan /etc/crontabs/root >/dev/null || echo "0 6 * * * 	ifup wan" >> /etc/crontabs/root')
 		else
 			if has_qos then
 				uci:set("qos", "wan", "enabled", "0")
@@ -2089,8 +2099,14 @@ function main.write(self, section, value)
 				})
 				uci:delete_all("firewall","forwarding", {src="freifunk", dest="lan"})
 				uci:section("firewall", "forwarding", nil, {src="freifunk", dest="lan"})
+				uci:delete_all("firewall","forwarding", {src="lan", dest="freifunk"})
+				uci:section("firewall", "forwarding", nil, {src="lan", dest="freifunk"})
 				uci:delete_all("firewall","forwarding", {src="lan", dest="wan"})
 				uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
+				if has_autoipv6 then
+					tools.firewall_zone_add_interface("lan", "6to4")
+					uci:save("firewall")
+				end
 				if lansec:formvalue(section) == "1" then
 					uci:foreach("firewall", "zone",
 						function(s)		
