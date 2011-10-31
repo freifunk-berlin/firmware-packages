@@ -2036,6 +2036,7 @@ function main.write(self, section, value)
 				uci:set("qos", "wan", "enabled", "1")
 			end
 			if has_firewall then
+				uci:set("freifunk_p2pblock", "p2pblock", "interface", "wan")
 				uci:delete_all("firewall","zone", {name="wan"})
 				uci:section("firewall", "zone", nil, {
 					masq	= "1",
@@ -2088,6 +2089,7 @@ function main.write(self, section, value)
 				uci:set("qos", "lan", "enabled", "1")
 			end
 			if has_firewall then
+				uci:set("freifunk_p2pblock", "p2pblock", "interface", "lan")
 				uci:delete_all("firewall","zone", {name="lan"})
 				uci:section("firewall", "zone", nil, {
 					masq	= "1",
