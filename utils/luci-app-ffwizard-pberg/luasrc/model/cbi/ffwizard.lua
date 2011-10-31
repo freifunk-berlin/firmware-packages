@@ -2012,7 +2012,7 @@ function main.write(self, section, value)
 			-- Create tun6to4 interface
 			local tun6to4 = {}
 			tun6to4.ifname = "tun6to4"
-			dhcpbase.proto = "none"
+			tun6to4.proto = "none"
 			uci:section("network", "interface", "6to4", tun6to4)
 			uci:save("network")
 		end
