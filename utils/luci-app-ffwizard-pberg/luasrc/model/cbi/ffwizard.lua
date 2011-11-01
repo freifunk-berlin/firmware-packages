@@ -978,6 +978,7 @@ function f.handle(self, state, data)
 			if has_firewall then
 				uci:commit("luci_splash")
 				uci:commit("firewall")
+				uci:commit("freifunk_p2pblock")
 			end
 			uci:commit("system")
 			uci:commit("uhttpd")
@@ -1997,13 +1998,14 @@ function main.write(self, section, value)
 			dhcpbase.interface = "lan"
 			dhcpbase.ignore = 0
 			uci:section("dhcp", "dhcp", "lan", dhcpbase)
-			uci:set_list("dhcp", "lan", "dhcp_option", "119,olsr")
+			uci:set_list("dhcp", "lan", "dhcp_option", {"119,lan","119,olsr"})
+			uci:save("dhcp")
 		end
 	end
 
 	if share_value == "1" or sharelan_value == "1" then
 		uci:set("freifunk", "wizard", "shareconfig", "1")
-
+		uci:save("freifunk")
 		if has_autoipv6 then
 			-- Set autoipv6 tunnel mode
 			uci:set("autoipv6", "olsr_node", "enable", "0")
@@ -2033,10 +2035,17 @@ function main.write(self, section, value)
 
 		if share_value == "1" then
 			if has_qos then
-				uci:set("qos", "wan", "enabled", "1")
+				uci:delete("qos","wan")
+				uci:delete("qos","lan")
+				uci:section("qos", 'interface', "wan", {
+					enabled     = "1",
+					classgroup  = "Default",
+				})
+				uci:save("qos")
 			end
 			if has_firewall then
 				uci:set("freifunk_p2pblock", "p2pblock", "interface", "wan")
+				uci:save("freifunk_p2pblock")
 				uci:delete_all("firewall","zone", {name="wan"})
 				uci:section("firewall", "zone", nil, {
 					masq	= "1",
@@ -2071,6 +2080,7 @@ function main.write(self, section, value)
 		else
 			if has_qos then
 				uci:set("qos", "wan", "enabled", "0")
+				uci:save("qos")
 			end
 			if has_radvd and wproto == "static" then
 				radvd_if.interface='wan'
@@ -2086,10 +2096,17 @@ function main.write(self, section, value)
 		end
 		if sharelan_value == "1" then
 			if has_qos then
-				uci:set("qos", "lan", "enabled", "1")
+				uci:delete("qos","wan")
+				uci:delete("qos","lan")
+				uci:section("qos", 'interface', "lan", {
+					enabled     = "1",
+					classgroup  = "Default",
+				})
+				uci:save("qos")
 			end
 			if has_firewall then
 				uci:set("freifunk_p2pblock", "p2pblock", "interface", "lan")
+				uci:save("freifunk_p2pblock")
 				uci:delete_all("firewall","zone", {name="lan"})
 				uci:section("firewall", "zone", nil, {
 					masq	= "1",
@@ -2107,14 +2124,15 @@ function main.write(self, section, value)
 				uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
 				if has_autoipv6 then
 					tools.firewall_zone_add_interface("lan", "6to4")
-					uci:save("firewall")
 				end
+				uci:save("firewall")
 				if lansec:formvalue(section) == "1" then
 					uci:foreach("firewall", "zone",
 						function(s)		
 							if s.name == "lan" then
 								uci:set("firewall", s['.name'], "local_restrict", "1")
 								uci:set("firewall", s['.name'], "masq", "1")
+								uci:save("firewall")
 								return false
 							end
 						end)
@@ -2123,6 +2141,7 @@ function main.write(self, section, value)
 		else
 			if has_qos then
 				uci:set("qos", "lan", "enabled", "0")
+				uci:save("qos")
 			end
 			if has_radvd and lproto == "static" then
 				radvd_if.interface='lan'
