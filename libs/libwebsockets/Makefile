@@ -40,13 +40,23 @@ endef
 
 #$(call Build/Compile/Default)
 
+define Build/InstallDev
+	$(INSTALL_DIR) $(1)/usr/bin $(2)/bin $(1)/usr/include $(1)/usr/lib \
+		$(1)/usr/lib/pkgconfig
+
+	$(INSTALL_DATA) \
+		$(PKG_INSTALL_DIR)/usr/include/* \
+		$(1)/usr/include/
+
+	$(CP) \
+		$(PKG_INSTALL_DIR)/usr/lib/libwebsockets.{la,a,so*} \
+		$(1)/usr/lib/
+endef
+
+
 define Package/libwebsockets/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ipkg-install/usr/lib/libwebsockets.so* $(1)/usr/lib/
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ipkg-install/usr/bin/libwebsockets-test-server $(1)/usr/bin/
-	$(INSTALL_DIR) $(1)/usr/share/libwebsockets-test-server
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/ipkg-install/usr/share/libwebsockets-test-server/test.html $(1)/usr/share/libwebsockets-test-server/
 endef
 
 $(eval $(call BuildPackage,libwebsockets))
