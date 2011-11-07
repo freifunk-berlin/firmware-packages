@@ -174,6 +174,7 @@ function get_appropriate_ws_url()
 {
 	var pcol;
 	var u = document.URL;
+	var n;
 
 	/*
 	 * We open the websocket encrypted if this page came on an
@@ -190,12 +191,15 @@ function get_appropriate_ws_url()
 	}
 
 	u = u.split('/');
-
-	return pcol + u[0];
+	n = u[0].split(':');
+	if (n[1]) {
+		return pcol + u[0];
+	} else {
+		return pcol + u[0]+':7681';
+	}
 }
 
 
-//document.getElementById("number").textContent = get_appropriate_ws_url();
 document.getElementById("number").removeChild(document.getElementById("number").firstChild);
 var i = 0;
 
@@ -214,20 +218,14 @@ var i = 0;
 
 	try {
 		socket_di.onopen = function(evt) {
-			console.log('onopen Data:');
-			console.log(evt);
-			console.log(evt.timeStamp);
 			CONFIG.id   = evt.timeStamp;
 			document.getElementById("wsdi_statustd").style.backgroundColor = "#40ff40";
 			document.getElementById("wsdi_status").textContent = " websocket connection opened ";
 		}
 
 		socket_di.onmessage =function got_packet(msg) {
-			console.log('onmessage Data:\n');
-			console.log(msg);
 			var msgd=msg.data;
 			msgd = msgd.split(',');
-			console.log(msgd[0]);
 			i = i + 1;
 			var newLI = document.createElement("li");
 			newLI.id = 'li_'+i;
