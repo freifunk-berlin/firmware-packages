@@ -10,7 +10,7 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/ws-mirror-server
+define Package/ws-mirror-server/default
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Web Servers/Proxies
@@ -18,8 +18,23 @@ define Package/ws-mirror-server
   DEPENDS:=libwebsockets
 endef
 
+define Package/ws-mirror-server
+  $(Package/ws-mirror-server/default)
+  MENU:=1
+endef
+
 define Package/ws-mirror-server/description
  ws-mirror-server Websocket Mirror Server for js chat
+ use libwebsockets http://git.warmcat.com/cgi-bin/cgit/libwebsockets
+endef
+
+define Package/ws-mirror-server-cmd
+  $(Package/ws-mirror-server/default)
+  TITLE:=ws-mirror-server-cmd - Commandline tool for Websocket Mirror Server
+endef
+
+define Package/ws-mirror-server-cmd/description
+ ws-mirror-server-cmd Commandline tool for Websocket Mirror Server
  use libwebsockets http://git.warmcat.com/cgi-bin/cgit/libwebsockets
 endef
 
@@ -37,5 +52,10 @@ define Package/ws-mirror-server/install
 	$(INSTALL_DATA) ./files/chat.html $(1)/www/chat.html
 endef
 
-$(eval $(call BuildPackage,ws-mirror-server))
+define Package/ws-mirror-server-cmd/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ws-mirror-server-cmd $(1)/usr/bin/
+endef
 
+$(eval $(call BuildPackage,ws-mirror-server))
+$(eval $(call BuildPackage,ws-mirror-server-cmd))
