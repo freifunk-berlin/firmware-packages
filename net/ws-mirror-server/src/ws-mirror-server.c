@@ -83,7 +83,7 @@ static int callback_http(struct libwebsocket_context * context,
 		/* send the script... when it runs it'll start websockets */
 
 		if (libwebsockets_serve_http_file(wsi,
-				  LOCAL_RESOURCE_PATH"/index.html", "text/html"))
+				  LOCAL_RESOURCE_PATH"/chat.html", "text/html"))
 			fprintf(stderr, "Failed to send HTTP file\n");
 		break;
 

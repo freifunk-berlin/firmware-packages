@@ -1,0 +1,23 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2010 Jo-Philipp Wich
+
+START=55
+SERVER="ws-mirror-server"
+SERVER_BIN="/usr/sbin/ws-mirror-server"
+SERVER_ARGS=""
+
+
+start() {
+	start-stop-daemon -S -x $SERVER_BIN \
+		-p /var/run/${SERVER}.pid \
+		-m -b -- ${SERVER_ARGS}
+}
+
+stop() {
+	[ -f /var/run/${SERVER}.pid ] && {
+		start-stop-daemon -K -q -n ${UHTTPD_BIN##*/} \
+			-p /var/run/${SERVER}.pid -s TERM
+
+		rm -f /var/run/${SERVER}.pid
+	}
+}
