@@ -368,8 +368,6 @@ int main(int argc, char **argv)
 
 	buf[LWS_SEND_BUFFER_PRE_PADDING] = 'x';
 
-#ifdef LWS_NO_FORK
-
 	/*
 	 * This example shows how to work with no forked service loop
 	 */
@@ -379,33 +377,6 @@ int main(int argc, char **argv)
 	while (1) {
 		libwebsocket_service(context, 50);
 	}
-
-#else
-
-	/*
-	 * This example shows how to work with the forked websocket service loop
-	 */
-
-	fprintf(stderr, " Using forked service loop\n");
-
-	/*
-	 * This forks the websocket service action into a subprocess so we
-	 * don't have to take care about it.
-	 */
-
-	n = libwebsockets_fork_service_loop(context);
-	if (n < 0) {
-		fprintf(stderr, "Unable to fork service loop %d\n", n);
-		return 1;
-	}
-
-	while (1) {
-
-		usleep(50000);
-
-	}
-
-#endif
 
 	libwebsocket_context_destroy(context);
 
