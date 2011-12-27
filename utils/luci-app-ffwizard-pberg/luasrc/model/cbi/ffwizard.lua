@@ -38,6 +38,7 @@ local has_hb = fs.access("/sbin/heartbeat")
 local has_hostapd = fs.access("/usr/sbin/hostapd")
 local has_wan = uci:get("network", "wan", "proto")
 local has_lan = uci:get("network", "lan", "proto")
+local has_pr  = fs.access("/etc/config/freifunk-policyrouting")
 local profiles = "/etc/config/profile_"
 
 function get_mac(ix)
@@ -462,7 +463,7 @@ uci:foreach("network", "interface",
 	function(section)
 		local device = section[".name"]
 		local ifname = uci_state:get("network",device,"ifname")
-		if device ~= "loopback" and not string.find(device, "tunl") and not string.find(device, "gvpn") and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
+		if device ~= "loopback" and not string.find(device, "6to4") and not string.find(device, "tun") and not string.find(device, "gvpn") and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
 			dev = f:field(Flag, "device_" .. device , "<b>Drahtgebundenes Freifunk Netzwerk \"" .. device:upper() .. "\"</b>", "Konfigurieren Sie Ihre drahtgebunde Schnittstelle: " .. device:upper() .. ".")
 				dev.rmempty = false
 				function dev.cfgvalue(self, section)
@@ -722,6 +723,17 @@ if has_wan then
 			uci:set("freifunk", "wizard", "wan_security", value)
 			uci:save("freifunk")
 		end
+		--wanopenfw open wan input fw
+		wanopenfw = f:field(Flag, "wanopenfw", "Zugriff vom WAN auf auf das Geraet erlauben", "Wenn der WAN Port mit Ihrem lokalen Netzwerk verbunden ist.")
+		wanopenfw.rmempty = false
+		wanopenfw:depends("sharenet", "1")
+		function wanopenfw.cfgvalue(self, section)
+			return uci:get("freifunk", "wizard", "wan_input_accept")
+		end
+		function wanopenfw.write(self, section, value)
+			uci:set("freifunk", "wizard", "wan_input_accept", value)
+			uci:save("freifunk")
+		end
 	end
 	if has_3g or has_pppoe then
 		wandevice = f:field(Value, "device",
@@ -820,17 +832,6 @@ if has_lan then
 		uci:set("network", "lan", "proto", value)
 		uci:save("network")
 	end
-	sharelan = f:field(Flag, "sharelan", "Eigenen Internetzugang freigeben", "Geben Sie Ihren Internetzugang ueber LAN frei.")
-	sharelan.rmempty = false
-	sharelan:depends("lanproto", "static")
-	sharelan:depends("lanproto", "dhcp")
-	function sharelan.cfgvalue(self, section)
-		return uci:get("freifunk", "wizard", "sharelan")
-	end
-	function sharelan.write(self, section, value)
-		uci:set("freifunk", "wizard", "sharelan", value)
-		uci:save("freifunk")
-	end
 	lanip = f:field(Value, "lanipaddr", translate("IPv4-Address"))
 	lanip:depends("lanproto", "static")
 	function lanip.cfgvalue(self, section)
@@ -871,42 +872,6 @@ if has_lan then
 	function landns.write(self, section, value)
 		uci:set("network", "lan", "dns", value)
 		uci:save("network")
-	end
-	if has_firewall then
-		lansec = f:field(Flag, "lansec", "LAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
-		lansec.rmempty = false
-		lansec:depends("sharelan", "1")
-		function lansec.cfgvalue(self, section)
-			return uci:get("freifunk", "wizard", "lan_security")
-		end
-	end
-	if has_qos then
-		lanqosdown = f:field(Value, "lanqosdown", "Download Bandbreite begrenzen", "kb/s")
-		lanqosdown:depends("sharelan", "1")
-		function lanqosdown.cfgvalue(self, section)
-			return uci:get("qos", "lan", "download")
-		end
-		function lanqosdown.write(self, section, value)
-			uci:set("qos", "lan", "download", value)
-			uci:save("qos")
-		end
-		function lanqosdown.remove(self, section)
-			uci:delete("qos", "lan", "download")
-			uci:save("qos")
-		end
-		lanqosup = f:field(Value, "lanqosup", "Upload Bandbreite begrenzen", "kb/s")
-		lanqosup:depends("sharelan", "1")
-		function lanqosup.cfgvalue(self, section)
-			return uci:get("qos", "lan", "upload")
-		end
-		function lanqosup.write(self, section, value)
-			uci:set("qos", "lan", "upload", value)
-			uci:save("qos")
-		end
-		function lanqosup.remove(self, section)
-			uci:delete("qos", "lan", "upload")
-			uci:save("qos")
-		end
 	end
 end
 
@@ -995,6 +960,9 @@ function f.handle(self, state, data)
 			end
 			if has_radvd then
 				uci:commit("radvd")
+			end
+			if has_pr then
+				uci:commit("freifunk-policyrouting")
 			end
 -- the following line didn't work without admin-mini, for now i just replaced it with sys.exec... soma
 			luci.http.redirect(luci.dispatcher.build_url("mini", "system", "reboot") .. "?reboot=1")
@@ -1086,41 +1054,24 @@ function main.write(self, section, value)
 
 	-- Internet sharing
 	local share_value = 0
-	local sharelan_value = 0
 	if has_wan then
 		share_value = share:formvalue(section) or 0
 		uci:set("freifunk", "wizard", "share_value", share_value)
 	end
-	if has_lan then
-		sharelan_value = sharelan:formvalue(section) or 0
-		uci:set("freifunk", "wizard", "sharelan_value", sharelan_value)
-	end
 	if share_value == "1" then
 		olsrbase.SmartGateway="yes"
+		olsrbase.SmartGatewaySpeed="500 10000"
 		if has_qos then
 			qosd=wanqosdown:formvalue(section)
 			qosu=wanqosup:formvalue(section)
 			if (qosd and qosd ~= "") and (qosu and qosd ~= "")  then
 				olsrbase.SmartGatewaySpeed=qosu.." "..qosd
-			else
-				olsrbase.SmartGatewaySpeed="500 10000"
 			end
 		end
-	end
-	if sharelan_value == "1" then
-		olsrbase.SmartGateway="yes"
-		if has_qos then
-			qosd=lanqosdown:formvalue(section)
-			qosu=lanqosup:formvalue(section)
-			if (qosd and qosd ~= "") and (qosu and qosd ~= "")  then
-				olsrbase.SmartGatewaySpeed=qosu.." "..qosd
-			else
-				olsrbase.SmartGatewaySpeed="500 10000"
-			end
+		if has_pr then
+			olsrbase.RtTable="111"
+			olsrbase.RtTableDefault="112"
 		end
-	end
-	
-	if share_value == "1" or sharelan_value == "1" then
 		uci:section("network", "interface", "tunl0", {
 			proto  = "none",
 			ifname = "tunl0"
@@ -1583,7 +1534,7 @@ function main.write(self, section, value)
 		if not luci.http.formvalue("cbid.ffwizward.1.device_" .. device) then
 			return
 		end
-		if device ~= "loopback" and not string.find(device, "tunl") and not string.find(device, "gvpn") and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
+		if device ~= "loopback" and not string.find(device, "6to4") and not string.find(device, "tun") and not string.find(device, "gvpn") and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
 			local node_ip
 			node_ip = luci.http.formvalue("cbid.ffwizward.1.meship_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.meship_" .. device))
 			if has_ipv6 then
@@ -1638,7 +1589,6 @@ function main.write(self, section, value)
 			end
 			if has_lan and device == "lan" then
 				has_lan=nil
-				sharelan_value=0
 			end
 			if has_radvd then
 				radvd_if.interface=device
@@ -1953,18 +1903,18 @@ function main.write(self, section, value)
 
 	local wproto
 	if has_wan then
-		if has_radvd then
-				uci:delete_all("radvd", "interface", {interface='wan'})
-				uci:delete_all("radvd", "prefix", {interface='wan'})
-				uci:delete_all("radvd", "rdnss", {interface='wan'})
-				uci:delete_all("radvd", "dnssl", {interface='wan'})
-				uci:save("radvd")
-		end
 		wproto = wanproto:formvalue(section)
+		if has_radvd then
+			uci:delete_all("radvd", "interface", {interface='wan'})
+			uci:delete_all("radvd", "prefix", {interface='wan'})
+			uci:delete_all("radvd", "rdnss", {interface='wan'})
+			uci:delete_all("radvd", "dnssl", {interface='wan'})
+			uci:save("radvd")
+		end
 		if wproto == "static" then
 			local fwanip=wanip:formvalue(section)
 			local fwannm=wannm:formvalue(section)
-			local fwanipn=ip.IPv4(fwanip,flannm)
+			local fwanipn=ip.IPv4(fwanip,fwannm)
 			if has_firewall then
 				tools.firewall_zone_add_masq_src("freifunk", fwanipn:string())
 				tools.firewall_zone_enable_masq("freifunk")
@@ -1974,16 +1924,28 @@ function main.write(self, section, value)
 	end
 	local lproto
 	if has_lan then
+		lproto = lanproto:formvalue(section)
 		if has_radvd then
-				uci:delete_all("radvd", "interface", {interface='lan'})
-				uci:delete_all("radvd", "prefix", {interface='lan'})
-				uci:delete_all("radvd", "rdnss", {interface='lan'})
-				uci:delete_all("radvd", "dnssl", {interface='lan'})
+			uci:delete_all("radvd", "interface", {interface='lan'})
+			uci:delete_all("radvd", "prefix", {interface='lan'})
+			uci:delete_all("radvd", "rdnss", {interface='lan'})
+			uci:delete_all("radvd", "dnssl", {interface='lan'})
+			uci:save("radvd")
+			if lproto == "static" then
+				radvd_if.interface='lan'
+				radvd_pre.interface='lan'
+				radvd_rdnss.interface='lan'
+				radvd_dnssl.interface='lan'
+				uci:section("radvd", "interface", nil, radvd_if)
+				uci:section("radvd", "prefix", nil, radvd_pre)
+				uci:section("radvd", "rdnss", nil, radvd_rdnss)
+				uci:section("radvd", "dnssl", nil, radvd_dnssl)
 				uci:save("radvd")
+			end
 		end
+
 		-- Delete old dhcp
 		uci:delete("dhcp", "lan")
-		lproto = lanproto:formvalue(section)
 		if lproto == "static" then
 			local flanip=lanip:formvalue(section)
 			local flannm=lannm:formvalue(section)
@@ -2003,7 +1965,7 @@ function main.write(self, section, value)
 		end
 	end
 
-	if share_value == "1" or sharelan_value == "1" then
+	if share_value == "1" then
 		uci:set("freifunk", "wizard", "shareconfig", "1")
 		uci:save("freifunk")
 		if has_autoipv6 then
@@ -2023,7 +1985,17 @@ function main.write(self, section, value)
 		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 		-- Enable gateway_plain plugin
-		uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
+		if has_pr then
+			uci:section("olsrd", "LoadPlugin", nil, {
+				library     = "olsrd_dyn_gw_plain.so.0.4",
+				ignore      = 1,
+			})
+			uci:set("freifunk-policyrouting","pr","enable","1")
+			uci:set("freifunk-policyrouting","pr","strict","1")
+			uci:save("freifunk-policyrouting")
+		else
+			uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
+		end
 		if has_firewall then
 			sys.exec("chmod +x /etc/init.d/freifunk-p2pblock")
 			sys.init.enable("freifunk-p2pblock")
@@ -2031,131 +2003,74 @@ function main.write(self, section, value)
 		if has_qos then
 			sys.init.enable("qos")
 		end
-		
-
-		if share_value == "1" then
-			if has_qos then
-				uci:delete("qos","wan")
-				uci:delete("qos","lan")
-				uci:section("qos", 'interface', "wan", {
-					enabled     = "1",
-					classgroup  = "Default",
-				})
-				uci:save("qos")
-			end
-			if has_firewall then
-				uci:set("freifunk_p2pblock", "p2pblock", "interface", "wan")
-				uci:save("freifunk_p2pblock")
-				uci:delete_all("firewall","zone", {name="wan"})
-				uci:section("firewall", "zone", nil, {
-					masq	= "1",
-					input   = "REJECT",
-					forward = "REJECT",
-					name    = "wan",
-					output  = "ACCEPT",
-					network = "wan"
-				})
-				uci:delete_all("firewall","forwarding", {src="freifunk", dest="wan"})
-				uci:section("firewall", "forwarding", nil, {src="freifunk", dest="wan"})
-				uci:delete_all("firewall","forwarding", {src="wan", dest="freifunk"})
-				uci:section("firewall", "forwarding", nil, {src="wan", dest="freifunk"})
-				uci:delete_all("firewall","forwarding", {src="lan", dest="wan"})
-				uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
-				if has_autoipv6 then
-					tools.firewall_zone_add_interface("wan", "6to4")
-					uci:save("firewall")
-				end
-				if wansec:formvalue(section) == "1" then
-						uci:foreach("firewall", "zone",
-							function(s)		
-								if s.name == "wan" then
-									uci:set("firewall", s['.name'], "local_restrict", "1")
-									uci:set("firewall", s['.name'], "masq", "1")
-									return false
-								end
-							end)
-				end
-			end
-			sys.exec('grep wan /etc/crontabs/root >/dev/null || echo "0 6 * * * 	ifup wan" >> /etc/crontabs/root')
-		else
-			if has_qos then
-				uci:set("qos", "wan", "enabled", "0")
-				uci:save("qos")
-			end
-			if has_radvd and wproto == "static" then
-				radvd_if.interface='wan'
-				radvd_pre.interface='wan'
-				radvd_rdnss.interface='wan'
-				radvd_dnssl.interface='wan'
-				uci:section("radvd", "interface", nil, radvd_if)
-				uci:section("radvd", "prefix", nil, radvd_pre)
-				uci:section("radvd", "rdnss", nil, radvd_rdnss)
-				uci:section("radvd", "dnssl", nil, radvd_dnssl)
-				uci:save("radvd")
-			end
+		if has_qos then
+			uci:delete("qos","wan")
+			uci:delete("qos","lan")
+			uci:section("qos", 'interface', "wan", {
+				enabled     = "1",
+				classgroup  = "Default",
+			})
+			uci:save("qos")
 		end
-		if sharelan_value == "1" then
-			if has_qos then
-				uci:delete("qos","wan")
-				uci:delete("qos","lan")
-				uci:section("qos", 'interface', "lan", {
-					enabled     = "1",
-					classgroup  = "Default",
-				})
-				uci:save("qos")
-			end
-			if has_firewall then
-				uci:set("freifunk_p2pblock", "p2pblock", "interface", "lan")
-				uci:save("freifunk_p2pblock")
-				uci:delete_all("firewall","zone", {name="lan"})
-				uci:section("firewall", "zone", nil, {
-					masq	= "1",
-					input   = "ACCEPT",
-					forward = "ACCEPT",
-					name    = "lan",
-					output  = "ACCEPT",
-					network = "lan"
-				})
-				uci:delete_all("firewall","forwarding", {src="freifunk", dest="lan"})
-				uci:section("firewall", "forwarding", nil, {src="freifunk", dest="lan"})
-				uci:delete_all("firewall","forwarding", {src="lan", dest="freifunk"})
-				uci:section("firewall", "forwarding", nil, {src="lan", dest="freifunk"})
-				uci:delete_all("firewall","forwarding", {src="lan", dest="wan"})
-				uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
-				if has_autoipv6 then
-					tools.firewall_zone_add_interface("lan", "6to4")
-				end
+		if has_firewall then
+			uci:set("freifunk_p2pblock", "p2pblock", "interface", "wan")
+			uci:save("freifunk_p2pblock")
+			uci:delete_all("firewall","zone", {name="wan"})
+			uci:section("firewall", "zone", nil, {
+				masq	= "1",
+				input   = "REJECT",
+				forward = "REJECT",
+				name    = "wan",
+				output  = "ACCEPT",
+				network = "wan"
+			})
+			uci:delete_all("firewall","forwarding", {src="freifunk", dest="wan"})
+			uci:section("firewall", "forwarding", nil, {src="freifunk", dest="wan"})
+			uci:delete_all("firewall","forwarding", {src="wan", dest="freifunk"})
+			uci:section("firewall", "forwarding", nil, {src="wan", dest="freifunk"})
+			uci:delete_all("firewall","forwarding", {src="lan", dest="wan"})
+			uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
+			if has_autoipv6 then
+				tools.firewall_zone_add_interface("wan", "6to4")
 				uci:save("firewall")
-				if lansec:formvalue(section) == "1" then
+			end
+			if wansec:formvalue(section) == "1" then
 					uci:foreach("firewall", "zone",
 						function(s)		
-							if s.name == "lan" then
+							if s.name == "wan" then
 								uci:set("firewall", s['.name'], "local_restrict", "1")
 								uci:set("firewall", s['.name'], "masq", "1")
-								uci:save("firewall")
 								return false
 							end
 						end)
-				end
 			end
-		else
-			if has_qos then
-				uci:set("qos", "lan", "enabled", "0")
-				uci:save("qos")
-			end
-			if has_radvd and lproto == "static" then
-				radvd_if.interface='lan'
-				radvd_pre.interface='lan'
-				radvd_rdnss.interface='lan'
-				radvd_dnssl.interface='lan'
-				uci:section("radvd", "interface", nil, radvd_if)
-				uci:section("radvd", "prefix", nil, radvd_pre)
-				uci:section("radvd", "rdnss", nil, radvd_rdnss)
-				uci:section("radvd", "dnssl", nil, radvd_dnssl)
-				uci:save("radvd")
+			if wanopenfw:formvalue(section) == "1" then
+					uci:foreach("firewall", "zone",
+						function(s)		
+							if s.name == "wan" then
+								uci:set("firewall", s['.name'], "input", "ACCEPT")
+								return false
+							end
+						end)
 			end
 		end
+		sys.exec('grep wan /etc/crontabs/root >/dev/null || echo "0 6 * * * 	ifup wan" >> /etc/crontabs/root')
 	else
+		if has_qos then
+			uci:set("qos", "wan", "enabled", "0")
+			uci:save("qos")
+		end
+		if has_radvd and wproto == "static" then
+			radvd_if.interface='wan'
+			radvd_pre.interface='wan'
+			radvd_rdnss.interface='wan'
+			radvd_dnssl.interface='wan'
+			uci:section("radvd", "interface", nil, radvd_if)
+			uci:section("radvd", "prefix", nil, radvd_pre)
+			uci:section("radvd", "rdnss", nil, radvd_rdnss)
+			uci:section("radvd", "dnssl", nil, radvd_dnssl)
+			uci:save("radvd")
+		end
 		uci:set("freifunk", "wizard", "shareconfig", "0")
 		uci:save("freifunk")
 		if has_autoipv6 then
@@ -2172,16 +2087,21 @@ function main.write(self, section, value)
 			library     = "olsrd_dyn_gw_plain.so.0.4",
 			ignore      = 1,
 		})
---		if has_qos then
---			sys.init.disable("qos")
---		end
+		if has_pr then
+			uci:set("freifunk-policyrouting","pr","enable","0")
+			uci:save("freifunk-policyrouting")
+		end
+
+		if has_qos then
+			sys.init.disable("qos")
+		end
 		if has_firewall then
 			sys.init.disable("freifunk-p2pblock")
 			sys.exec("chmod -x /etc/init.d/freifunk-p2pblock")
 			uci:delete_all("firewall", "forwarding", {src="freifunk", dest="wan"})
 			uci:foreach("firewall", "zone",
 				function(s)		
-					if s.name == "wan" or s.name == "lan" then
+					if s.name == "wan" then
 						uci:delete("firewall", s['.name'], "local_restrict")
 						return false
 					end
@@ -2192,17 +2112,6 @@ function main.write(self, section, value)
 			radvd_pre.interface='wan'
 			radvd_rdnss.interface='wan'
 			radvd_dnssl.interface='wan'
-			uci:section("radvd", "interface", nil, radvd_if)
-			uci:section("radvd", "prefix", nil, radvd_pre)
-			uci:section("radvd", "rdnss", nil, radvd_rdnss)
-			uci:section("radvd", "dnssl", nil, radvd_dnssl)
-			uci:save("radvd")
-		end
-		if has_radvd and lproto == "static" then
-			radvd_if.interface='lan'
-			radvd_pre.interface='lan'
-			radvd_rdnss.interface='lan'
-			radvd_dnssl.interface='lan'
 			uci:section("radvd", "interface", nil, radvd_if)
 			uci:section("radvd", "prefix", nil, radvd_pre)
 			uci:section("radvd", "rdnss", nil, radvd_rdnss)
