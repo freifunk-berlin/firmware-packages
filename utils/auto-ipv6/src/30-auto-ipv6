@@ -226,9 +226,9 @@ grep -q ping6 /etc/crontabs/root || {
 
 if [ $restart_crond -eq 1 ] ; then
 	if ! [ -z "$(pidof crond)" ] ; then
-		/etc/init.d/crond stop
+		/etc/init.d/cron stop
 		killall -9 crond
-		/etc/init.d/crond start
+		/etc/init.d/cron start
 	fi
 fi
 if [ $restart_radvd -eq 1 ] ; then
