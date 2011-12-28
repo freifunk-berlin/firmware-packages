@@ -49,7 +49,7 @@ define Package/ws-mirror-server/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ws-mirror-server $(1)/usr/sbin/
 	$(INSTALL_DIR) $(1)/www
-	$(INSTALL_DATA) ./files/chat.html $(1)/www/chat.html
+#	$(INSTALL_DATA) ./files/chat.html $(1)/www/chat.html
 endef
 
 define Package/ws-mirror-server-cmd/install
