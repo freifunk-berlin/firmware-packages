@@ -1,0 +1,37 @@
+<%+header%>
+
+<br></br>
+<br></br>
+<h3>Detected Browser: <div id="brow">...</div></h3>
+
+<table>
+	<tr>
+		<td width="400" id="wsdi_statustd" align="center"><div id="wsdi_status">Not initialized</div></td>
+	</tr>
+</table>
+<ol id="nick_list">
+<li>Nick Liste</li>
+</ol>
+<table>
+	<tr>
+		<td align="center"><input type="text" id="nick"></input></td>
+		<td align="center"><input type="button" id="nick" value="Update Nick" onclick="set_nick();" ></input></td>
+	</tr>
+</table>
+
+<ol id="number">
+<li>Chat Console</li>
+</ol>
+<br></br>
+<br></br>
+<table>
+	<tr>
+		<td align="center"><input type="text" id="txtinput"></input></td>
+		<td align="center"><input type="button" id="offset" value="Send" onclick="socket_send();" ></input></td>
+	</tr>
+</table>
+
+<script type="text/javascript" src="/luci-static/resources/chat.js"></script>
+
+<%+footer%>
+
