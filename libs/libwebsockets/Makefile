@@ -24,6 +24,7 @@ define Package/libwebsockets
   SECTION:=libs
   CATEGORY:=Libraries
   TITLE:=libwebsockets
+  DEPENDS:= +zlib
 endef
 
 define Package/libwebsockets/description
@@ -35,7 +36,7 @@ define Build/Configure
 endef
 
 define Build/Compile
-	$(MAKE) -C $(PKG_BUILD_DIR)
+	$(MAKE) -C $(PKG_BUILD_DIR) lib
 endef
 
 #$(call Build/Compile/Default)
