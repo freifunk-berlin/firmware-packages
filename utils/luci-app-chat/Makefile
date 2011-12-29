@@ -12,7 +12,7 @@ define Package/luci-app-chat
   CATEGORY:=LuCI
   SUBMENU:=Freifunk
   TITLE:=LocalChat
-  DEPENDS:=ws-mirror-server luci-lib-web luci-mod-freifunk
+  DEPENDS:=+ws-mirror-server +luci-lib-web +luci-mod-freifunk
 endef
 
 define Package/luci-app-chat/description
