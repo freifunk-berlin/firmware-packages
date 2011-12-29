@@ -4,12 +4,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libwebsockets
 PKG_VERSION:=0.5
-PKG_RELEASE:=1
-PKG_REV:=2f5b9bd30ef2b8556bf8ce808dbd60130c8ac0cb
-# PKG_MD5SUM:=46ce665e47d37fce1a0bad935cce58a9
+PKG_RELEASE:=2
+PKG_REV:=f2e5e985c3b51b8c50b8a7c9ee3fbd321c194c35
 
 PKG_SOURCE:=$(PKG_NAME).tar.bz2
-PKG_SOURCE_URL:=git://git.warmcat.com/libwebsockets
+PKG_SOURCE_URL:=http://git.warmcat.com/cgi-bin/cgit/libwebsockets
+
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)
 PKG_SOURCE_VERSION:=$(PKG_REV)
@@ -36,10 +36,8 @@ define Build/Configure
 endef
 
 define Build/Compile
-	$(MAKE) -C $(PKG_BUILD_DIR) lib
+	$(MAKE) -C $(PKG_BUILD_DIR)
 endef
-
-#$(call Build/Compile/Default)
 
 define Build/InstallDev
 	$(INSTALL_DIR) $(1)/usr/bin $(2)/bin $(1)/usr/include $(1)/usr/lib \
@@ -57,7 +55,7 @@ endef
 
 define Package/libwebsockets/install
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ipkg-install/usr/lib/libwebsockets.so* $(1)/usr/lib/
+	$(CP) $(PKG_BUILD_DIR)/ipkg-install/usr/lib/libwebsockets.so* $(1)/usr/lib/
 endef
 
 $(eval $(call BuildPackage,libwebsockets))
