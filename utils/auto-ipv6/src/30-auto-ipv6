@@ -220,7 +220,6 @@ fi
 grep -q ping6 /etc/crontabs/root || {
 	echo '* * * * *       ping6 -w 59 ipv6.google.com 1>/dev/null &' >> /etc/crontabs/root
 	echo '* * * * *       ping6 -w 59 six.heise.de 1>/dev/null &' >> /etc/crontabs/root
-	echo '* * * * *       ping6 -w 59 druschba.pberg.freifunk.net 1>/dev/null &' >> /etc/crontabs/root
 	restart_crond=1
 	}
 
