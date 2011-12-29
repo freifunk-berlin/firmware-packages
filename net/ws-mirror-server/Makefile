@@ -15,7 +15,7 @@ define Package/ws-mirror-server/default
   CATEGORY:=Network
   SUBMENU:=Web Servers/Proxies
   TITLE:=ws-mirror-server - Websocket Mirror Server for js chat
-  DEPENDS:=libwebsockets
+  DEPENDS:=+libwebsockets +zlib
 endef
 
 define Package/ws-mirror-server
