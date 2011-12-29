@@ -22,7 +22,7 @@ endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
-	cp -a ../* $(PKG_BUILD_DIR)
+	$(CP) ./luasrc $(PKG_BUILD_DIR)/
 endef
 
 define Build/Configure
@@ -38,7 +38,7 @@ define Package/luci-app-chat/install
 	$(CP) $(PKG_BUILD_DIR)/luasrc/controller/* $(1)/usr/lib/lua/luci/controller
 	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view
 	$(INSTALL_DIR) $(1)/www
-	$(CP) $(PKG_BUILD_DIR)/luci-static/* $(1)/www/luci-static
+	$(CP) ./luci-static/* $(1)/www/luci-static
 endef
 
 $(eval $(call BuildPackage,luci-app-chat))
