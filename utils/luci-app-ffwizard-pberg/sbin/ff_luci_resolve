@@ -19,7 +19,6 @@ else
 fi
 
 resolve_n=0
-resolve='1'
 resolve_uci="$(uci -P /var/state get luci_olsr.general.resolve)"
 remote_ip=""
 remote_ip="$(wget -q -O - http://localhost:2006/links | cut -s -f 2)"
@@ -29,22 +28,25 @@ for i in $remote_ip ; do
 		first=$((first+1))
 	else
 		remote_host="$(grep ^$i$'\t' /tmp/etc/hosts.olsr | cut -s -f 2)"
-		if nslookup $remote_host >/dev/null 2&>1 ; then
-			resolve_n=$((resolve_n+1))
-		else
-			resolve='0'
-			if [ "$resolve_uci" != "$resolve" ] ; then
-				sed -i '/.*luci_olsr\.general\.resolve.*/d' /var/state/luci_olsr
-				uci -P /var/state set luci_olsr.general.resolve=0
-				chmod 664 /var/state/luci_olsr
+		for j in $remote_host ; do
+			if nslookup $j >/dev/null 2&>1 ; then
+				resolve_n=$((resolve_n+1))
 			fi
-		fi
+		done
 	fi
 done
 
-if [ $resolve_n -ge 1  -a "$resolve_uci" != "$resolve" ] ; then
+if [ $resolve_n -ge 1 ] ; then
+	if [ $resolve_uci != 1 ] ; then
+		if [ -f /var/state/luci_olsr ] ; then
+			sed -i '/.*luci_olsr\.general\.resolve.*/d' /var/state/luci_olsr
+		fi
+		uci -P /var/state set luci_olsr.general.resolve=1
+		chmod 664 /var/state/luci_olsr
+	fi
+elif [ $resolve_uci == 1 ] ; then
 	sed -i '/.*luci_olsr\.general\.resolve.*/d' /var/state/luci_olsr
-	uci -P /var/state set luci_olsr.general.resolve=1
+	uci -P /var/state set luci_olsr.general.resolve=0
 	chmod 664 /var/state/luci_olsr
 fi
 
