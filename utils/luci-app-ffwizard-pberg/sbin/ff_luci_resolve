@@ -28,9 +28,8 @@ for i in $remote_ip ; do
 	if [ $first -le 1 ] ; then
 		first=$((first+1))
 	else
-		remote_host="$(grep ^$i /tmp/etc/hosts.olsr | cut -s -f 2)"
+		remote_host="$(grep ^$i$'\t' /tmp/etc/hosts.olsr | cut -s -f 2)"
 		if nslookup $remote_host >/dev/null 2&>1 ; then
-			echo 111$i
 			resolve_n=$((resolve_n+1))
 		else
 			resolve='0'
@@ -43,7 +42,7 @@ for i in $remote_ip ; do
 	fi
 done
 
-if [ "$resolve" == "1" -a $resolve_n -ge 1  -a "$resolve_uci" != "$resolve" ] ; then
+if [ $resolve_n -ge 1  -a "$resolve_uci" != "$resolve" ] ; then
 	sed -i '/.*luci_olsr\.general\.resolve.*/d' /var/state/luci_olsr
 	uci -P /var/state set luci_olsr.general.resolve=1
 	chmod 664 /var/state/luci_olsr
