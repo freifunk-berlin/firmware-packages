@@ -15,7 +15,7 @@ start() {
 
 stop() {
 	[ -f /var/run/${SERVER}.pid ] && {
-		start-stop-daemon -K -q -n ${UHTTPD_BIN##*/} \
+		start-stop-daemon -K -q -n ${SERVER_BIN##*/} \
 			-p /var/run/${SERVER}.pid -s TERM
 
 		rm -f /var/run/${SERVER}.pid
