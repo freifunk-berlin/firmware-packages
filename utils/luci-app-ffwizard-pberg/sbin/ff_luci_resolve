@@ -21,7 +21,7 @@ fi
 resolve_n=0
 resolve_uci="$(uci -P /var/state get luci_olsr.general.resolve)"
 remote_ip=""
-remote_ip="$(wget -q -O - http://localhost:2006/links | cut -s -f 2)"
+remote_ip="$(wget -4 -q -O - http://localhost:2006/links | cut -s -f 2)"
 first=0
 for i in $remote_ip ; do
 	if [ $first -le 1 ] ; then
