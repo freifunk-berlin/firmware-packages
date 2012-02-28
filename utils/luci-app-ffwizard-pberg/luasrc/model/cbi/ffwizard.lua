@@ -1242,13 +1242,13 @@ function main.write(self, section, value)
 					hwmode = hwmode.."a"
 					mrate = ""
 					outdoor = 0
-					bssid = "00:" .. channel ..":CA:FF:EE:EE"
+					bssid = "02:" .. channel ..":CA:FF:EE:EE"
 					ssid = "ch" .. channel .. ssidshort
 				elseif chan >= 100 and chan <= 140 then
 					hwmode = hwmode.."a"
 					mrate = ""
 					outdoor = 1
-					bssid = "01:" .. string.sub(channel, 2) .. ":CA:FF:EE:EE"
+					bssid = "12:" .. string.sub(channel, 2) .. ":CA:FF:EE:EE"
 					ssid = "ch" .. channel .. ssidshort
 				end
 			end
