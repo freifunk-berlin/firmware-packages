@@ -36,9 +36,8 @@ DMX4LINUX_AUTOLOAD:= \
 	usb2dmx
 
 define KernelPackage/dmx4linux
-  SUBMENU:=ISDN
+  SUBMENU:=Other modules
   TITLE:=Driver usb dmx
-  URL:=http://avm.de
   FILES:=$(DMX4LINUX_FILES)
   AUTOLOAD:=$(call AutoLoad,60,dmx4linux)
   DEPENDS:=+kmod-usb2
