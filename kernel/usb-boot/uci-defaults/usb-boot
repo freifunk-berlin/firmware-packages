@@ -1,0 +1,8 @@
+#!/bin/sh
+
+pkgs="kmod-usb-core kmod-usb2 kmod-usb-ohci kmod-usb-storage kmod-nls-base"
+
+for i in $pkgs ; do
+	opkg flag installed $i
+done
+
