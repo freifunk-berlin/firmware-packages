@@ -12,11 +12,12 @@ include $(TOPDIR)/rules.mk
 PKG_BRANCH:=trunk
 PKG_SOURCE_URL:=http://kifuse02.pberg.freifunk.net/dl/
 PKG_REV:=177
+#PKG_REV:=177
 #PKG_REV:=$(shell LC_ALL=C svn info ${PKG_SOURCE_URL} | sed -ne's/^Last Changed Rev: //p')
 
 PKG_NAME:=l2gvpn
 PKG_VERSION:=svn$(PKG_REV)
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE:=$(PKG_SOURCE_SUBDIR).tar.gz
@@ -69,14 +70,13 @@ define Package/l2gvpn/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/{,super}node $(1)/usr/sbin/
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/extra/examples/l2gvpn.initscript $(1)/etc/init.d/l2gvpn
+	$(INSTALL_BIN) ./etc/l2gvpn.init $(1)/etc/init.d/l2gvpn
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/extra/examples/l2gvpn.ucisample $(1)/etc/config/l2gvpn
+	$(INSTALL_DATA) ./etc/l2gvpn.config $(1)/etc/config/l2gvpn
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) ./sbin/l2gvpn-watchdog.sh $(1)/usr/sbin/l2gvpn-watchdog.sh
 	$(INSTALL_DIR) $(1)/etc/l2gvpn
 	$(INSTALL_BIN) ./etc/up_down $(1)/etc/l2gvpn/up_down
-	$(INSTALL_BIN) ./etc/l2gvpn.init $(1)/etc/init.d/l2gvpn
 endef
 
 $(eval $(call BuildPackage,l2gvpn))
