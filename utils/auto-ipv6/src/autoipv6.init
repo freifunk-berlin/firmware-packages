@@ -3,11 +3,11 @@
 START=49
 
 net_start_iface() {
-        local cfg="$1"
-        export ACTION="ifup"
-        export INTERFACE="$cfg"
-        /etc/hotplug.d/iface/30-auto-ipv6
-        return 0
+	local cfg="$1"
+	export ACTION="ifup"
+	export INTERFACE="$cfg"
+	/etc/hotplug.d/iface/30-auto-ipv6
+	return 0
 }
 
 
