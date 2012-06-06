@@ -26,8 +26,6 @@ start() {
 	grep -q l2gvpn-watchdog /etc/crontabs/root || {
 		echo '*/16 * * * * 	/usr/sbin/l2gvpn-watchdog.sh' >> /etc/crontabs/root
 	}
-
-	
 }
 
 stop() {
