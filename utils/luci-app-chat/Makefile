@@ -37,8 +37,8 @@ define Package/luci-app-chat/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
 	$(CP) $(PKG_BUILD_DIR)/luasrc/controller/* $(1)/usr/lib/lua/luci/controller
 	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view
-	$(INSTALL_DIR) $(1)/www
-	$(CP) ./luci-static/* $(1)/www/luci-static
+	$(INSTALL_DIR) $(1)/www/luci-static/resources
+	$(CP) ./luci-static/resources/* $(1)/www/luci-static/resources
 endef
 
 $(eval $(call BuildPackage,luci-app-chat))
