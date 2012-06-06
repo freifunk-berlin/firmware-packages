@@ -163,9 +163,9 @@ int main(int argc, char **argv)
 	//struct libwebsocket *wsi_dumb;
 	int ietf_version = -1; /* latest */
 	int mirror_lifetime = 0;
-	fprintf(stderr, "libwebsockets test client\n"
-			"(C) Copyright 2010 Andy Green <andy@warmcat.com> "
-						    "licensed under LGPL2.1\n");
+//	fprintf(stderr, "libwebsockets test client\n"
+//			"(C) Copyright 2010 Andy Green <andy@warmcat.com> "
+//						    "licensed under LGPL2.1\n");
 
 	if (argc < 2)
 		goto usage;
