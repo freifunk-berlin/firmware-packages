@@ -91,6 +91,7 @@ config_foreach net_find_iface interface
 
 local restart_dnsmasq=0
 local restart_olsrd=0
+local restart_crond=0
 local hna6s=""
 local dnsmasq_conf="/tmp/etc/dnsmasq-ra.conf"
 
@@ -203,12 +204,19 @@ if [ $restart_dnsmasq -eq 1 ] ; then
 		grep -q ALRM /etc/crontabs/root || {
 			logger -t auto-ipv6 "Add dnsmasq to crontab"
 			echo '* * * * *       killall -ALRM dnsmasq' >> /etc/crontabs/root
+			restart_crond=1
 		}
 		logger -t auto-ipv6 "Restarting dnsmasq..."
 		/etc/init.d/dnsmasq restart
 	fi
 fi
-
+if [ $restart_crond -eq 1 ] ; then
+	if ! [ -z "$(pidof crond)" ] ; then
+		/etc/init.d/cron stop
+		killall -9 crond
+		/etc/init.d/cron start
+	fi
+fi
 if [ $restart_olsrd -eq 1 ] ; then
 	if ! [ -z "$(pidof olsrd)" ] ; then
 		logger -t auto-ipv6 "Restarting olsrd..."

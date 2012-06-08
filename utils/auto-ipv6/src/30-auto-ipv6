@@ -137,12 +137,13 @@ local restart_dnsmasq=0
 local restart_olsrd=0
 local restart_crond=0
 local hna6s="::"
+local dnsmasq_conf="/tmp/etc/dnsmasq-ra.conf"
 
-[ -h /etc/dnsmasq.conf ] || ( rm -rf /etc/dnsmasq.conf ; ln -s /tmp/dnsmasq.conf /etc/dnsmasq.conf )
-> /tmp/dnsmasq.conf
-echo "enable-ra" >> /tmp/dnsmasq.conf
-echo "dhcp-option=option6:dns-server,[::]" >> /tmp/dnsmasq.conf
-echo "dhcp-option=option6:domain-search,olsr" >> /tmp/dnsmasq.conf
+[ -h /etc/dnsmasq.conf ] || ( rm -rf /etc/dnsmasq.conf ; ln -s $dnsmasq_conf /etc/dnsmasq.conf )
+> $dnsmasq_conf
+echo "enable-ra" >> $dnsmasq_conf
+echo "dhcp-option=option6:dns-server,[::]" >> $dnsmasq_conf
+echo "dhcp-option=option6:domain-search,olsr" >> $dnsmasq_conf
 restart_dnsmasq=1
 
 for i in $(echo $interfaces) ; do
@@ -165,8 +166,8 @@ for i in $(echo $interfaces) ; do
 	if [ "$IP6_SUFFIX" == "$IP6_OLDSUFFIX" ] ; then
 		if ifconfig "$DEV" | grep -q -e "$IP6_SUFFIX"".*1\/64" > /dev/null ; then
 			hna6s="$IP6_OLDSUFFIX:$IP6_OLDUNIQ::"" $hna6s"
-			echo "dhcp-range=$DEV,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::100,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::200,64,120s" >> /tmp/dnsmasq.conf
-			echo "dhcp-range=$DEV,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::,ra-only,64,120s" >> /tmp/dnsmasq.conf
+			echo "dhcp-range=$DEV,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::100,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::200,64,120s" >> $dnsmasq_conf
+			echo "dhcp-range=$DEV,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::,ra-only,64,120s" >> $dnsmasq_conf
 			restart_dnsmasq=1
 			logger -t auto-ipv6 "Found IP6_SUFFIX $IP6_OLDSUFFIX on interfaces $i DEV $DEV no update"
 			continue
@@ -204,8 +205,8 @@ for i in $(echo $interfaces) ; do
 
 	hna6s="$IP6_SUFFIX"":""$IP6_UNIQ""::"" $hna6s"
 
-	echo "dhcp-range=$DEV,$IP6_SUFFIX:$IP6_UNIQ::100,$IP6_SUFFIX:$IP6_UNIQ::200,64,120s" >> /tmp/dnsmasq.conf
-	echo "dhcp-range=$DEV,$IP6_SUFFIX:$IP6_UNIQ::100,$IP6_SUFFIX:$IP6_UNIQ::200,ra-only,64,120s" >> /tmp/dnsmasq.conf
+	echo "dhcp-range=$DEV,$IP6_SUFFIX:$IP6_UNIQ::100,$IP6_SUFFIX:$IP6_UNIQ::200,64,120s" >> $dnsmasq_conf
+	echo "dhcp-range=$DEV,$IP6_SUFFIX:$IP6_UNIQ::100,$IP6_SUFFIX:$IP6_UNIQ::200,ra-only,64,120s" >> $dnsmasq_conf
 	restart_dnsmasq=1
 
 done
