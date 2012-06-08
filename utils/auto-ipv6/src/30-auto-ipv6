@@ -94,9 +94,9 @@ olsrd_find_plugin(){
 
 find_public_ip(){
 	local ret
-	#FIXME
-	ret="$(wget -q -O - http://checkip.dyndns.org/index.html | awk {'print $6'} | sed 's/<.*$//')"
-	#ret="$(wget -q -O - http://204.13.248.70/index.html | awk {'print $6'} | sed 's/<.*$//')"
+	[ -z $ret ] && ret="$(wget -q -O - ifconfig.me/ip)"
+	[ -z $ret ] && ret="$(wget -q -O - ipv4.icanhazip.com)"
+	[ -z $ret ] && ret="$(wget -q -O - http://checkip.dyndns.org/index.html | awk {'print $6'} | sed 's/<.*$//')"
 	echo "$ret"
 }
 local IP4_LOCAL_IF="$IP4_LOCAL"
@@ -249,17 +249,25 @@ grep -q ping6 /etc/crontabs/root || {
 # clear all config variables here. else they will leak into the olsrd init script
 config_clear
 
+if [ $restart_dnsmasq -eq 1 ] ; then
+	if ! [ -z "$(pidof dnsmasq)" ] ; then
+		#BUG
+		#See dnsmasq 2.61 no periodic RA's
+		#http://permalink.gmane.org/gmane.network.dns.dnsmasq.general/5753
+		grep -q ALRM /etc/crontabs/root || {
+			logger -t auto-ipv6 "Add dnsmasq to crontab"
+			echo '* * * * *       killall -ALRM dnsmasq' >> /etc/crontabs/root
+			restart_crond=1
+		}
+		logger -t auto-ipv6 "Restarting dnsmasq..."
+		/etc/init.d/dnsmasq restart
+	fi
+fi
 if [ $restart_crond -eq 1 ] ; then
 	if ! [ -z "$(pidof crond)" ] ; then
 		/etc/init.d/cron stop
 		killall -9 crond
 		/etc/init.d/cron start
-	fi
-fi
-if [ $restart_dnsmasq -eq 1 ] ; then
-	if ! [ -z "$(pidof dnsmasq)" ] ; then
-		logger -t auto-ipv6 "Restarting dnsmasq..."
-		/etc/init.d/dnsmasq restart
 	fi
 fi
 if [ $restart_olsrd -eq 1 ] ; then

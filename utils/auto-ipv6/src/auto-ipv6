@@ -197,6 +197,13 @@ config_clear
 
 if [ $restart_dnsmasq -eq 1 ] ; then
 	if ! [ -z "$(pidof dnsmasq)" ] ; then
+		#BUG
+		#See dnsmasq 2.61 no periodic RA's
+		#http://permalink.gmane.org/gmane.network.dns.dnsmasq.general/5753
+		grep -q ALRM /etc/crontabs/root || {
+			logger -t auto-ipv6 "Add dnsmasq to crontab"
+			echo '* * * * *       killall -ALRM dnsmasq' >> /etc/crontabs/root
+		}
 		logger -t auto-ipv6 "Restarting dnsmasq..."
 		/etc/init.d/dnsmasq restart
 	fi
