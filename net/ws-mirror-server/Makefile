@@ -3,7 +3,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ws-mirror-server
-PKG_VERSION:=0.5
+PKG_VERSION:=0.6
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
@@ -15,14 +15,14 @@ define Package/ws-mirror-server/default
   CATEGORY:=Network
   SUBMENU:=Web Servers/Proxies
   TITLE:=ws-mirror-server - Websocket Mirror Server for js chat
-  DEPENDS:=+libwebsockets +zlib
+  DEPENDS:=+libwebsockets +zlib +libubox +ubus
 endef
 
 define Package/ws-mirror-server
   $(Package/ws-mirror-server/default)
   MENU:=1
 endef
-
+                            
 define Package/ws-mirror-server/description
  ws-mirror-server Websocket Mirror Server for js chat
  use libwebsockets http://git.warmcat.com/cgi-bin/cgit/libwebsockets

@@ -309,7 +309,7 @@ static struct option options[] = {
 };
 
 /* ubus function */
-static void receive_event(struct ubus_context *ctx, struct ubus_event_handler *ev,
+/* static void receive_event(struct ubus_context *ctx, struct ubus_event_handler *ev,
 			  const char *type, struct blob_attr *msg)
 {
 	char *str;
@@ -317,9 +317,9 @@ static void receive_event(struct ubus_context *ctx, struct ubus_event_handler *e
 	str = blobmsg_format_json(msg, true);
 	printf("{ \"%s\": %s }\n", type, str);
 	free(str);
-}
+} */
 
-static int ubus_cli_listen(struct ubus_context *ctx, int argc, char **argv)
+/* static int ubus_cli_listen(struct ubus_context *ctx, int argc, char **argv)
 {
 	static struct ubus_event_handler listener;
 	const char *event;
@@ -349,7 +349,7 @@ static int ubus_cli_listen(struct ubus_context *ctx, int argc, char **argv)
 	} while (1);
 
 	if (ret) {
-		if (!simple_output)
+		//if (!simple_output)
 			fprintf(stderr, "Error while registering for event '%s': %s\n",
 				event, ubus_strerror(ret));
 		return -1;
@@ -359,10 +359,9 @@ static int ubus_cli_listen(struct ubus_context *ctx, int argc, char **argv)
 	ubus_add_uloop(ctx);
 	uloop_run();
 	uloop_done();
-/* Dont forget 	ubus_free(ctx); */
+//Dont forget 	ubus_free(ctx);
 	return 0;
-}
-
+} */
 
 
 int main(int argc, char **argv)
