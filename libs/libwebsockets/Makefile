@@ -1,21 +1,16 @@
-# $Id$
-
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libwebsockets
-PKG_VERSION:=0.5
-PKG_RELEASE:=2
-PKG_REV:=f2e5e985c3b51b8c50b8a7c9ee3fbd321c194c35
-
-PKG_SOURCE:=$(PKG_NAME).tar.bz2
-PKG_SOURCE_URL:=http://git.warmcat.com/cgi-bin/cgit/libwebsockets
+PKG_VERSION:=2012-06-04
+PKG_RELEASE:=$(PKG_SOURCE_VERSION)
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)
-PKG_SOURCE_VERSION:=$(PKG_REV)
+PKG_SOURCE_URL:=git://git.warmcat.com/libwebsockets
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE_VERSION:=86e82ab22fe69fc263ec185c0e9ee70347546087
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.gz
 
-
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
@@ -32,7 +27,7 @@ define Package/libwebsockets/description
 endef
 
 define Build/Configure
-	$(call Build/Configure/Default,--enable-nofork)
+	$(call Build/Configure/Default)
 endef
 
 define Build/Compile
