@@ -26,10 +26,13 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include <libubox/blobmsg_json.h>
+#include <libubox/uloop.h>
+#include "libubus.h"
 #include "libwebsockets.h"
 
 static int close_testing;
-
+	
 /*
  * This demo server shows how to use libwebsockets for one or more
  * websocket protocols in the same server
@@ -191,7 +194,6 @@ callback_lws_mirror(struct libwebsocket_context * context,
 	switch (reason) {
 
 	case LWS_CALLBACK_ESTABLISHED:
-		fprintf(stderr, "callback_lws_mirror: LWS_CALLBACK_ESTABLISHED\n");
 		pss->ringbuffer_tail = ringbuffer_head;
 		pss->wsi = wsi;
 		break;
@@ -210,7 +212,7 @@ callback_lws_mirror(struct libwebsocket_context * context,
 				fprintf(stderr, "ERROR writing to socket");
 				exit(1);
 			}
-
+			
 			if (pss->ringbuffer_tail == (MAX_MESSAGE_QUEUE - 1))
 				pss->ringbuffer_tail = 0;
 			else
@@ -253,6 +255,20 @@ callback_lws_mirror(struct libwebsocket_context * context,
 
 		libwebsocket_callback_on_writable_all_protocol(
 					       libwebsockets_get_protocol(wsi));
+
+		const char *ubus_socket = NULL;
+		struct ubus_context *ctx;
+		static struct blob_buf b;
+		ctx = ubus_connect(ubus_socket);
+		if (!ctx) {
+			fprintf(stderr, "Failed to connect to ubus\n");
+			return -1;
+		}		
+		blob_buf_init(&b, 0);
+		blobmsg_add_json_from_string(&b, (char *)in);
+		ubus_send_event(ctx, "wschat", b.head);
+		ubus_free(ctx);
+
 		break;
 	/*
 	 * this just demonstrates how to use the protocol filter. If you won't
@@ -293,6 +309,53 @@ static struct libwebsocket_protocols protocols[] = {
 	}
 };
 
+static void receive_event(struct ubus_context *ctx, struct ubus_event_handler *ev,
+			  const char *type, struct blob_attr *msg)
+{
+	int wlen = 0;
+	unsigned char tbuf[LWS_SEND_BUFFER_PRE_PADDING + 4096 +
+						  LWS_SEND_BUFFER_POST_PADDING];
+	char *str;
+	char *message;
+	str = blobmsg_format_json(msg, true);
+	message = str;
+	wlen = strlen(message);
+	memcpy(&tbuf[LWS_SEND_BUFFER_PRE_PADDING], message, wlen);
+	
+	libwebsockets_broadcast(&protocols[PROTOCOL_LWS_MIRROR],
+					&tbuf[LWS_SEND_BUFFER_PRE_PADDING], wlen);
+
+	free(str);
+}
+
+
+
+static int ubus_cli_listen(struct ubus_context *ctx, struct libwebsocket_context *context)
+{
+	static struct ubus_event_handler listener;
+	int ret;
+	const char *event;
+
+		memset(&listener, 0, sizeof(listener));
+		listener.cb = receive_event;
+
+		event = "chat";
+		//event = "*";
+
+		ret = ubus_register_event_handler(ctx, &listener, event);
+		if (ret) {
+			fprintf(stderr, "Error while registering for event '%s': %s\n",
+					event, ubus_strerror(ret));
+			return -1;
+		}
+		uloop_init();
+		ubus_add_uloop(ctx);
+		uloop_run();
+		uloop_done();
+		return 0;
+}
+
+
 static struct option options[] = {
 	{ "help",	no_argument,		NULL, 'h' },
 	{ "port",	required_argument,	NULL, 'p' },
@@ -307,22 +370,20 @@ int main(int argc, char **argv)
 {
 	int n = 0;
 	const char *cert_path =
-			    LOCAL_RESOURCE_PATH"/ws-server.pem";
+			LOCAL_RESOURCE_PATH"/ws-server.pem";
 	const char *key_path =
 			LOCAL_RESOURCE_PATH"/ws-server.key.pem";
-	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 1024 +
-						  LWS_SEND_BUFFER_POST_PADDING];
+	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 4096 +
+			LWS_SEND_BUFFER_POST_PADDING];
 	int port = 7681;
 	int use_ssl = 0;
 	struct libwebsocket_context *context;
 	int opts = 0;
 	char interface_name[128] = "";
 	const char * interface = NULL;
-
-//	fprintf(stderr, "libwebsockets test server\n"
-//			"(C) Copyright 2010-2011 Andy Green <andy@warmcat.com> "
-//						    "licensed under LGPL2.1\n");
-
+	const char *ubus_socket = NULL;
+	struct ubus_context *ctx;
+	
 	while (n >= 0) {
 		n = getopt_long(argc, argv, "ci:khsp:", options, NULL);
 		if (n < 0)
@@ -358,6 +419,12 @@ int main(int argc, char **argv)
 	if (!use_ssl)
 		cert_path = key_path = NULL;
 
+	ctx = ubus_connect(ubus_socket);
+	if (!ctx) {
+		fprintf(stderr, "Failed to connect to ubus\n");
+		return -1;
+	}
+
 	context = libwebsocket_create_context(port, interface, protocols,
 				libwebsocket_internal_extensions,
 				cert_path, key_path, -1, -1, opts);
@@ -368,16 +435,21 @@ int main(int argc, char **argv)
 
 	buf[LWS_SEND_BUFFER_PRE_PADDING] = 'x';
 
-	/*
-	 * This example shows how to work with no forked service loop
-	 */
-
-	fprintf(stderr, " Using no-fork service loop\n");
-
-	while (1) {
-		libwebsocket_service(context, 50);
+	n = libwebsockets_fork_service_loop(context);
+	if (n < 0) {
+		fprintf(stderr, "Unable to fork service loop %d\n", n);
+		return 1;
 	}
 
+	libwebsockets_broadcast(&protocols[PROTOCOL_LWS_MIRROR],
+				&buf[LWS_SEND_BUFFER_PRE_PADDING], 1);
+
+	int ret = -2;
+	ret = ubus_cli_listen(ctx,context);
+	if (ret > 0)
+		fprintf(stderr, "Command failed: %s\n", ubus_strerror(ret));
+
+	ubus_free(ctx);
 	libwebsocket_context_destroy(context);
 
 	return 0;

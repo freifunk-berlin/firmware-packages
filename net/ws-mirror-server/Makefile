@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ws-mirror-server
 PKG_VERSION:=0.6
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -48,8 +48,6 @@ define Package/ws-mirror-server/install
 	$(INSTALL_BIN) ./files/ws-mirror-server.init $(1)/etc/init.d/ws-mirror-server
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ws-mirror-server $(1)/usr/sbin/
-	$(INSTALL_DIR) $(1)/www
-#	$(INSTALL_DATA) ./files/chat.html $(1)/www/chat.html
 endef
 
 define Package/ws-mirror-server-cmd/install
