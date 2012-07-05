@@ -162,13 +162,13 @@ function get_appropriate_ws_url()
 
 
 document.getElementById("number").removeChild(document.getElementById("number").firstChild);
-var i = 0;
+	var idx = 0;
 
-/* dumb increment protocol */
+/* dumb mirror protocol */
 	
 	var socket_di;
 
-	if (BrowserDetect.browser == "Firefox") {
+	if (BrowserDetect.browser == "Firefox" && BrowserDetect.version < 12) {
 		socket_di = new MozWebSocket(get_appropriate_ws_url(),
 				   "lws-mirror-protocol");
 	} else {
@@ -185,24 +185,23 @@ var i = 0;
 		}
 
 		socket_di.onmessage =function got_packet(msg) {
-			var msgd=msg.data;
-			msgd = msgd.split(',');
-			i = i + 1;
+			var obj = JSON.parse(msg.data);
 			var newLI = document.createElement("li");
-			newLI.id = 'li_'+i;
+			newLI.id = 'li_'+idx;
 			document.getElementById("number").appendChild(newLI);
-			var newtxt = document.createTextNode(msgd[1]+' : '+msgd[2]+"\n");
-			document.getElementById('li_'+i).appendChild(newtxt);
-			var nick_obj = document.getElementById(msgd[0]);
+			var newtxt = document.createTextNode(obj.nick+' : '+obj.msg+"\n");
+			document.getElementById('li_'+idx).appendChild(newtxt);
+			var nick_obj = document.getElementById(obj.id);
 			if (nick_obj) {
-				document.getElementById(msgd[0]).firstChild.data=msgd[1];
+				document.getElementById(obj.id).firstChild.data=obj.nick;
 			} else {
 				var newLI = document.createElement("li");
-				newLI.id = msgd[0];
+				newLI.id = obj.id;
 				document.getElementById("nick_list").appendChild(newLI);
-				var newtxt = document.createTextNode(msgd[1]);
-				document.getElementById(msgd[0]).appendChild(newtxt);
+				var newtxt = document.createTextNode(obj.nick);
+				document.getElementById(obj.id).appendChild(newtxt);
 			}
+			idx = idx + 1;
 		}
 
 		socket_di.onclose = function(){
@@ -214,13 +213,17 @@ var i = 0;
 	}
 
 function socket_send() {
-	txtsend = document.getElementById("txtinput").value
-	socket_di.send(CONFIG.id+','+CONFIG.nick+','+txtsend);
+	txtsend = document.getElementById("txtinput").value;
+	var obj = {"id": CONFIG.id, "nick": CONFIG.nick, "msg": txtsend};
+	var JSONobj = JSON.stringify(obj);
+	socket_di.send(JSONobj);
 }
 function set_nick() {
-	var nick
-	nick = document.getElementById("nick").value
+	var nick;
+	nick = document.getElementById("nick").value;
 	CONFIG.nick = nick;
-	socket_di.send(CONFIG.id+','+CONFIG.nick+','+'New Nick Name');
+	var obj = {"id": CONFIG.id, "nick": CONFIG.nick, "msg": "Update or New Nick Name "+CONFIG.nick};
+	var JSONobj = JSON.stringify(obj);
+	socket_di.send(JSONobj);
 }
 
