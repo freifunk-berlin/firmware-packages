@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/luci-app-chat
   SECTION:=luci
   CATEGORY:=LuCI
-  SUBMENU:=Freifunk
+  SUBMENU:=3. Applications
   TITLE:=LocalChat
   DEPENDS:=+ws-mirror-server +luci-lib-web +luci-mod-freifunk
 endef

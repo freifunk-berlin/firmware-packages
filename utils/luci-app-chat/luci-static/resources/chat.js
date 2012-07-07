@@ -214,7 +214,10 @@ document.getElementById("number").removeChild(document.getElementById("number").
 
 function socket_send() {
 	txtsend = document.getElementById("txtinput").value;
-	var obj = {"id": CONFIG.id, "nick": CONFIG.nick, "msg": txtsend};
+	var obj = {};
+	obj.id = CONFIG.id;
+	obj.nick = CONFIG.nick;
+	obj.msg = txtsend;
 	var JSONobj = JSON.stringify(obj);
 	socket_di.send(JSONobj);
 }
@@ -222,7 +225,10 @@ function set_nick() {
 	var nick;
 	nick = document.getElementById("nick").value;
 	CONFIG.nick = nick;
-	var obj = {"id": CONFIG.id, "nick": CONFIG.nick, "msg": "Update or New Nick Name "+CONFIG.nick};
+	var obj = {};
+	obj.id = CONFIG.id;
+	obj.nick = CONFIG.nick;
+	obj.msg = "Update or New Nick Name "+CONFIG.nick;
 	var JSONobj = JSON.stringify(obj);
 	socket_di.send(JSONobj);
 }
