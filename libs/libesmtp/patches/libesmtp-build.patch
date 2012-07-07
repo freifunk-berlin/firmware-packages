@@ -1,0 +1,36 @@
+diff -urN libesmtp-1.0.4-orig/crammd5/Makefile.in libesmtp-1.0.4/crammd5/Makefile.in
+--- libesmtp-1.0.4-orig/crammd5/Makefile.in	2005-12-16 14:34:07.000000000 +0100
++++ libesmtp-1.0.4/crammd5/Makefile.in	2007-10-03 23:26:29.000000000 +0200
+@@ -59,7 +59,7 @@
+ LTLIBRARIES = $(lib_LTLIBRARIES)
+ am_sasl_cram_md5_la_OBJECTS = client-crammd5.lo hmacmd5.lo
+ sasl_cram_md5_la_OBJECTS = $(am_sasl_cram_md5_la_OBJECTS)
+-DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
++DEFAULT_INCLUDES = -I$(top_srcdir) -I$(srcdir) -I$(top_builddir)
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__depfiles_maybe = depfiles
+ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+diff -urN libesmtp-1.0.4-orig/login/Makefile.in libesmtp-1.0.4/login/Makefile.in
+--- libesmtp-1.0.4-orig/login/Makefile.in	2005-12-16 14:34:07.000000000 +0100
++++ libesmtp-1.0.4/login/Makefile.in	2007-10-03 23:26:14.000000000 +0200
+@@ -60,7 +60,7 @@
+ sasl_login_la_LIBADD =
+ am_sasl_login_la_OBJECTS = client-login.lo
+ sasl_login_la_OBJECTS = $(am_sasl_login_la_OBJECTS)
+-DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
++DEFAULT_INCLUDES = -I$(top_srcdir) -I$(srcdir) -I$(top_builddir)
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__depfiles_maybe = depfiles
+ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+diff -urN libesmtp-1.0.4-orig/plain/Makefile.in libesmtp-1.0.4/plain/Makefile.in
+--- libesmtp-1.0.4-orig/plain/Makefile.in	2005-12-16 14:34:07.000000000 +0100
++++ libesmtp-1.0.4/plain/Makefile.in	2007-10-03 23:25:58.000000000 +0200
+@@ -60,7 +60,7 @@
+ sasl_plain_la_LIBADD =
+ am_sasl_plain_la_OBJECTS = client-plain.lo
+ sasl_plain_la_OBJECTS = $(am_sasl_plain_la_OBJECTS)
+-DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
++DEFAULT_INCLUDES = -I$(top_srcdir) -I$(srcdir) -I$(top_builddir)
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__depfiles_maybe = depfiles
+ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
