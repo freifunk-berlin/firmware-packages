@@ -32,7 +32,11 @@
 #include "libwebsockets.h"
 
 static int close_testing;
-	
+char ubus_event[128] = "";
+const char * ubusevent = NULL;
+char ubus_xevent[128] = "";
+const char * ubusxevent = NULL;
+
 /*
  * This demo server shows how to use libwebsockets for one or more
  * websocket protocols in the same server
@@ -266,7 +270,7 @@ callback_lws_mirror(struct libwebsocket_context * context,
 		}		
 		blob_buf_init(&b, 0);
 		blobmsg_add_json_from_string(&b, (char *)in);
-		ubus_send_event(ctx, "wschat", b.head);
+		ubus_send_event(ctx, ubusxevent, b.head);
 		ubus_free(ctx);
 
 		break;
@@ -330,29 +334,25 @@ static void receive_event(struct ubus_context *ctx, struct ubus_event_handler *e
 
 
 
-static int ubus_cli_listen(struct ubus_context *ctx, struct libwebsocket_context *context)
+static int ubus_cli_listen(struct ubus_context *ctx, struct libwebsocket_context *context,char *event)
 {
 	static struct ubus_event_handler listener;
 	int ret;
-	const char *event;
 
-		memset(&listener, 0, sizeof(listener));
-		listener.cb = receive_event;
+	memset(&listener, 0, sizeof(listener));
+	listener.cb = receive_event;
 
-		event = "chat";
-		//event = "*";
-
-		ret = ubus_register_event_handler(ctx, &listener, event);
-		if (ret) {
-			fprintf(stderr, "Error while registering for event '%s': %s\n",
-					event, ubus_strerror(ret));
-			return -1;
-		}
-		uloop_init();
-		ubus_add_uloop(ctx);
-		uloop_run();
-		uloop_done();
-		return 0;
+	ret = ubus_register_event_handler(ctx, &listener, event);
+	if (ret) {
+		fprintf(stderr, "Error while registering for event '%s': %s\n",
+				event, ubus_strerror(ret));
+		return -1;
+	}
+	uloop_init();
+	ubus_add_uloop(ctx);
+	uloop_run();
+	uloop_done();
+	return 0;
 }
 
 
@@ -363,6 +363,8 @@ static struct option options[] = {
 	{ "killmask",	no_argument,		NULL, 'k' },
 	{ "interface",  required_argument, 	NULL, 'i' },
 	{ "closetest",  no_argument,		NULL, 'c' },
+	{ "ubusevent",  required_argument,		NULL, 'r' },
+	{ "ubusxevent",  required_argument,		NULL, 'x' },
 	{ NULL, 0, 0, 0 }
 };
 
@@ -385,7 +387,7 @@ int main(int argc, char **argv)
 	struct ubus_context *ctx;
 	
 	while (n >= 0) {
-		n = getopt_long(argc, argv, "ci:khsp:", options, NULL);
+		n = getopt_long(argc, argv, "r:x:i:u:khsp:", options, NULL);
 		if (n < 0)
 			continue;
 		switch (n) {
@@ -409,9 +411,21 @@ int main(int argc, char **argv)
 					   "client after 50 dumb increments"
 					   "and suppresses lws_mirror spam\n");
 			break;
+		case 'r':
+			strncpy(ubus_event, optarg, sizeof ubus_event);
+			ubus_event[(sizeof ubus_event) - 1] = '\0';
+			ubusevent = ubus_event;
+			break;
+		case 'x':
+			strncpy(ubus_xevent, optarg, sizeof ubus_xevent);
+			ubus_xevent[(sizeof ubus_xevent) - 1] = '\0';
+			ubusxevent = ubus_xevent;
+			break;
 		case 'h':
-			fprintf(stderr, "Usage: test-server "
-					     "[--port=<p>] [--ssl]\n");
+			fprintf(stderr, "Usage: ws-mirror-server "
+					     "-r <r> -x <x> -[--port=<p>] [--ssl]\n"
+					     "-r <r> ubus receive path to forward ws e.g. \"*\" or \"chat\"\n"
+					     "-x <x> ubus send path from ws e.g. \"linknxws\" or \"ws\"\n");
 			exit(1);
 		}
 	}
@@ -445,7 +459,7 @@ int main(int argc, char **argv)
 				&buf[LWS_SEND_BUFFER_PRE_PADDING], 1);
 
 	int ret = -2;
-	ret = ubus_cli_listen(ctx,context);
+	ret = ubus_cli_listen(ctx,context,ubusevent);
 	if (ret > 0)
 		fprintf(stderr, "Command failed: %s\n", ubus_strerror(ret));
 
