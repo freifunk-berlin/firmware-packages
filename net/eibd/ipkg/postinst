@@ -1,0 +1,7 @@
+#!/bin/sh
+[ -n "${IPKG_INSTROOT}" ] || {
+	( . /etc/uci-defaults/eibd ) &&	rm -f /etc/uci-defaults/eibd
+	/etc/init.d/eibd enable
+	/etc/init.d/eibd start
+}
+
