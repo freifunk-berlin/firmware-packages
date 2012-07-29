@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libwebsockets
 PKG_VERSION:=2012-06-04
-PKG_RELEASE:=$(PKG_SOURCE_VERSION)
+PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=git://git.warmcat.com/libwebsockets
@@ -27,7 +27,7 @@ define Package/libwebsockets/description
 endef
 
 define Build/Configure
-	$(call Build/Configure/Default)
+	$(call Build/Configure/Default,--enable-libcrypto --enable-openssl)
 endef
 
 define Build/Compile
