@@ -15,7 +15,7 @@ PKG_VERSION:=0.2.6.6.1
 PKG_RELEASE:=2
 PKG_SOURCE:=bcu1driver-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://www.auto.tuwien.ac.at/~mkoegler/eib/drv/
-#PKG_MD5SUM:=3ee301b5d0e8df9e4b915af58b725556
+PKG_MD5SUM:=69cec37c4322b9740cd78948d797f8fb
 PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/bcu1driver-$(PKG_VERSION)
 PATCH_DIR=./patches
 
