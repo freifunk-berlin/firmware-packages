@@ -6,7 +6,19 @@ local uci 	= require "luci.model.uci".cursor()
 local http 	= require "luci.http"
 local util 	= require "luci.util"
 
+
 function index()
-	entry({"freifunk", "chat"}, template("chat"), "Chat", 100)
+
+	local page  = node()
+	page.lock   = true
+	page.target = alias("chat")
+	page.subindex = true
+	page.index = false
+
+	local page = node("chat")
+	page.target = template("chat")
+	page.title = "Chat"
+	page.order = 100
+
 end
 
