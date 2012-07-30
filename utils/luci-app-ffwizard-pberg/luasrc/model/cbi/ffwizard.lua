@@ -452,10 +452,10 @@ uci:foreach("wireless", "wifi-device",
 			function vapssid.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "vapssid_" .. device)
 			end
-			function vapssid.write(self, sec, value)
-				uci:set("freifunk", "wizard", "vapssid_" .. device, value)
-				uci:save("freifunk")
-			end
+			--function vapssid.write(self, sec, value)
+			--	uci:set("freifunk", "wizard", "vapssid_" .. device, value)
+			--	uci:save("freifunk")
+			--end
 		end
 		if has_ipv6 then
 			dhcpip6 = f:field(Value, "dhcpip6_" .. device, device:upper() .. "  Mesh DHCP IPv6 Adresse einrichten", "Ihre Mesh IP Adresse wird automatisch berechnet")
@@ -1386,8 +1386,7 @@ function main.write(self, section, value)
 				aliasbase.ipaddr = dhcp_ip
 				aliasbase.netmask = dhcp_mask
 				aliasbase.proto = "static"
-				vap = luci.http.formvalue("cbid.ffwizward.1.vap_" .. device)
-				vapssid = luci.http.formvalue("cbid.ffwizward.1.vapssid_" .. device)
+				local vap = luci.http.formvalue("cbid.ffwizward.1.vap_" .. device)
 				if vap then
 					if has_ipv6 then
 						if dhcp_ip6 then
@@ -1400,18 +1399,25 @@ function main.write(self, section, value)
 							uci:save("olsrd")
 						end
 					end
+					local vap_ssid = luci.http.formvalue("cbid.ffwizward.1.vapssid_" .. device)
+					if(string.len(vap_ssid)==0) then
+						vap_ssid = "AP"..channel..ssidshort
+					end
+					uci:set("freifunk", "wizard", "vapssid_" .. device, vap_ssid)
 					uci:section("network", "interface", nif .. "dhcp", aliasbase)
 					uci:section("wireless", "wifi-iface", nil, {
 						device     =device,
 						mode       ="ap",
 						encryption ="none",
 						network    =nif.."dhcp",
-						ssid       =vapssid or "AP"..channel..ssidshort
+						ssid       =vap_ssid
 					})
 					if has_firewall then
 						tools.firewall_zone_add_interface("freifunk", nif .. "dhcp")
 					end
 					uci:save("wireless")
+					uci:save("network")
+					uci:save("freifunk")
 					ifconfig.mcast_rate = nil
 					ifconfig.encryption="none"
 				else

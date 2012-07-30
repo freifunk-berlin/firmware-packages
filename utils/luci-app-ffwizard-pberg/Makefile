@@ -13,7 +13,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/luci-app-ffwizard-pberg
   SECTION:=luci
   CATEGORY:=LuCI
-  SUBMENU:=Applications
+  SUBMENU:=3. Applications
   TITLE:=Freifunk Prenzlauerberg configuration wizard
   URL:=http://pberg.freifunk.net
   DEPENDS+= +luci-lib-web +luci-mod-freifunk
