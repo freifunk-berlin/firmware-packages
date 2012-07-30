@@ -156,7 +156,7 @@ function get_appropriate_ws_url()
 	if (n[1]) {
 		return pcol + u[0];
 	} else {
-		return pcol + u[0]+':7681';
+		return pcol + u[0]+':7682';
 	}
 }
 
