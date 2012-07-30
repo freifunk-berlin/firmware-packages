@@ -34,6 +34,7 @@ define Build/Compile
 endef
 
 define Package/auto-ipv6/install
+	$(CP) -a ./ipkg/* $(1)/CONTROL/ 2>/dev/null || true
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
 	$(INSTALL_BIN) ./src/30-auto-ipv6 $(1)/etc/hotplug.d/iface/30-auto-ipv6
 	$(INSTALL_DIR) $(1)/etc/init.d
