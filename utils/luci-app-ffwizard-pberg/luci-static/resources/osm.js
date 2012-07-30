@@ -99,7 +99,8 @@ function drawmap() {
 		projection: new OpenLayers.Projection("EPSG:900913"),
 		displayProjection: new OpenLayers.Projection("EPSG:4326"),
 		controls: [
-			new OpenLayers.Control.MouseDefaults(),
+			// This class is DEPRECATED in 2.4 and will be removed by 3.0.
+			// new OpenLayers.Control.MouseDefaults(),
 			new OpenLayers.Control.PanZoomBar()],
 		maxExtent:
 			new OpenLayers.Bounds(-20037508.34,-20037508.34, 20037508.34, 20037508.34),
