@@ -1,8 +1,8 @@
 
-CFLAGS += -Wall -std=gnu99 -pedantic -DDATADIR=\"/www\"
+CFLAGS += -Wall -std=gnu99 -pedantic -DDATADIR=\"/www\" -DCONFIGDIR=\"/etc\"
 OBJ = ws-mirror-server.o
 OBJ_CMD = ws-mirror-server-cmd.o
-LIB = -lwebsockets -lz -lubus -lubox -lblobmsg_json -ljson
+LIB = -lwebsockets -lz -lubus -lubox -lblobmsg_json -ljson -lssl
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<

@@ -4,7 +4,7 @@
 START=55
 SERVER="ws-mirror-server"
 SERVER_BIN="/usr/sbin/ws-mirror-server"
-SERVER_ARGS="-r chat -x ws"
+SERVER_ARGS="-r chat -x ws -p 7688" #--ssl !chromium 
 
 
 start() {
@@ -12,7 +12,7 @@ start() {
 		-p /var/run/${SERVER}.pid \
 		-m -b -- ${SERVER_ARGS}
 }
-
+                           
 stop() {
 	[ -f /var/run/${SERVER}.pid ] && {
 		start-stop-daemon -K -q -n ${SERVER_BIN##*/} \

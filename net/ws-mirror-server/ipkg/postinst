@@ -1,7 +1,10 @@
 #!/bin/sh
 [ -n "${IPKG_INSTROOT}" ] || {
 	#( . /etc/uci-defaults/ws-mirror-server ) &&	rm -f /etc/uci-defaults/ws-mirror-server
+	/etc/init.d/ubus enable
+	[ -n "$(pidof ubusd)" ] || /etc/init.d/ubus start
 	/etc/init.d/ws-mirror-server enable
 	/etc/init.d/ws-mirror-server start
+	exit 0
 }
 

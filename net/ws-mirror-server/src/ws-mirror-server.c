@@ -65,6 +65,7 @@ enum demo_protocols {
 
 
 #define LOCAL_RESOURCE_PATH DATADIR
+#define LOCAL_CONFIG_PATH CONFIGDIR
 
 /* this protocol server (always the first one) just knows how to do HTTP */
 
@@ -90,7 +91,7 @@ static int callback_http(struct libwebsocket_context * context,
 		/* send the script... when it runs it'll start websockets */
 
 		if (libwebsockets_serve_http_file(wsi,
-				  LOCAL_RESOURCE_PATH"/chat.html", "text/html"))
+				  LOCAL_RESOURCE_PATH"/ws-server.html", "text/html"))
 			fprintf(stderr, "Failed to send HTTP file\n");
 		break;
 
@@ -372,9 +373,9 @@ int main(int argc, char **argv)
 {
 	int n = 0;
 	const char *cert_path =
-			LOCAL_RESOURCE_PATH"/ws-server.pem";
+			LOCAL_CONFIG_PATH"/ws-server.pem";
 	const char *key_path =
-			LOCAL_RESOURCE_PATH"/ws-server.key.pem";
+			LOCAL_CONFIG_PATH"/ws-server.key.pem";
 	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 4096 +
 			LWS_SEND_BUFFER_POST_PADDING];
 	int port = 7681;

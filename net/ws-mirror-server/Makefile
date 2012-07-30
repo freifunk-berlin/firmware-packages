@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ws-mirror-server
 PKG_VERSION:=0.6
-PKG_RELEASE:=7
+PKG_RELEASE:=13
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -15,7 +15,7 @@ define Package/ws-mirror-server/default
   CATEGORY:=Network
   SUBMENU:=Web Servers/Proxies
   TITLE:=ws-mirror-server - Websocket Mirror Server for js chat
-  DEPENDS:=+libwebsockets +zlib +libubox +ubusd
+  DEPENDS:=+libwebsockets +zlib +libubox +ubusd +libblobmsg-json
 endef
 
 define Package/ws-mirror-server
@@ -47,8 +47,12 @@ define Package/ws-mirror-server/install
 	$(CP) -a ./ipkg/* $(1)/CONTROL/ 2>/dev/null || true
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/ws-mirror-server.init $(1)/etc/init.d/ws-mirror-server
+	$(INSTALL_DATA) ./files/ws-server.key.pem $(1)/etc/ws-server.key.pem
+	$(INSTALL_DATA) ./files/ws-server.pem $(1)/etc/ws-server.pem
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ws-mirror-server $(1)/usr/sbin/
+	$(INSTALL_DIR) $(1)/www
+	$(INSTALL_DATA) ./files/ws-server.html $(1)/www
 endef
 
 define Package/ws-mirror-server-cmd/install
