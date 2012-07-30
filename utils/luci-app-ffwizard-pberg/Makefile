@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ffwizard-pberg
 PKG_VERSION:=0.0.2
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -46,8 +46,6 @@ define Package/luci-app-ffwizard-pberg/install
 	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
-	$(INSTALL_DIR) $(1)/www/luci-static
-	$(CP) ./luci-static/* $(1)/www/luci-static
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) ./sbin/ff_luci_resolve $(1)/usr/sbin
 endef
