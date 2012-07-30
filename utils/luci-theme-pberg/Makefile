@@ -13,7 +13,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/luci-theme-pberg
   SECTION:=luci
   CATEGORY:=LuCI
-  SUBMENU:=Themes
+  SUBMENU:=4. Themes
   TITLE:=Pberg Freifunk Theme
   DEPENDS+=+luci-theme-base
 endef
