@@ -123,8 +123,8 @@ for i in $(echo $interfaces) ; do
 		if ifconfig "$DEV" | grep -q -e "$IP6_SUFFIX"".*1\/64" > /dev/null ; then
 			hna6s="$IP6_OLDSUFFIX:$IP6_OLDUNIQ::"" $hna6s"
 			#echo "dhcp-range=$DEV,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::100,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::200,64,300,ra-stateless,ra-names,slaac" >> $dnsmasq_conf
-			echo "dhcp-range=$DEV,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::100,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::200,64,120s" >> $dnsmasq_conf
-			echo "dhcp-range=$DEV,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::,ra-only,64,120s" >> $dnsmasq_conf
+			echo "dhcp-range=$DEV,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::100,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::200,64,240s" >> $dnsmasq_conf
+			echo "dhcp-range=$DEV,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::,ra-only,64,240s" >> $dnsmasq_conf
 			restart_dnsmasq=1
 			logger -t auto-ipv6 "Found IP6_SUFFIX $IP6_OLDSUFFIX on interfaces $i DEV $DEV no update"
 			continue
@@ -162,8 +162,8 @@ for i in $(echo $interfaces) ; do
 
 	hna6s="$IP6_SUFFIX"":""$IP6_UNIQ""::"" $hna6s"
 
-	echo "dhcp-range=$DEV,$IP6_SUFFIX:$IP6_UNIQ::100,$IP6_SUFFIX:$IP6_UNIQ::200,64,120s" >> $dnsmasq_conf
-	echo "dhcp-range=$DEV,$IP6_SUFFIX:$IP6_UNIQ::,ra-only,64,120s" >> $dnsmasq_conf
+	echo "dhcp-range=$DEV,$IP6_SUFFIX:$IP6_UNIQ::100,$IP6_SUFFIX:$IP6_UNIQ::200,64,240s" >> $dnsmasq_conf
+	echo "dhcp-range=$DEV,$IP6_SUFFIX:$IP6_UNIQ::,ra-only,64,240s" >> $dnsmasq_conf
 	restart_dnsmasq=1
 
 done
