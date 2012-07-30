@@ -4,7 +4,7 @@
 START=55
 SERVER="ws-mirror-server"
 SERVER_BIN="/usr/sbin/ws-mirror-server"
-SERVER_ARGS="-r chat -x ws -p 7688" #--ssl !chromium 
+SERVER_ARGS="-r chat -x ws -p 7682" #--ssl !chromium 
 
 
 start() {
