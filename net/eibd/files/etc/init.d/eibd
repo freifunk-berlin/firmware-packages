@@ -47,15 +47,16 @@ startinterface() {
 	append_parm "$cfg" eibaddr "eibaddr" "0.0.1"
 #	append_parm "$cfg" daemon "daemon" "/tmp/eibd.log"
 	append args "--daemon"
-#	append_parm "$cfg" trace "trace" "1023"
-	config_get interface "$cfg" "interface"
-	case $interface in
+	append_parm "$cfg" trace "trace" # "7"
+	append_parm "$cfg" error "error" # "5"
+	config_get url "$cfg" "url"
+	case $url in
 	    usb*)
-		local usbdev="$(findknxusb | grep "device [0-9]:[0-9]:[0-9]:[0-9]"| cut -d ' ' -f 2)"
+		local usbdev="$(findknxusb | grep "device: [0-9]:[0-9]:[0-9]:[0-9]"| cut -d ' ' -f 2)"
 		[ -z "$usbdev" ] && return 0 || append args "usb:$usbdev"
 	    ;;
 	    ip) append args "ip:" ;;
-	    *) append args "$interface" ;;
+	    *) append args "$url" ;;
 	esac
 
 	/usr/sbin/eibd $args

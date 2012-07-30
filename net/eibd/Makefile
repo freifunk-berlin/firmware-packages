@@ -47,15 +47,15 @@ endef
 define Build/Configure
 	$(call Build/Configure/Default,--without-pth-test \
 		--enable-onlyeibd \
-		--disable-ft12 \
+		--enable-ft12 \
 		--enable-eibnetip \
 		--enable-eibnetiptunnel \
 		--enable-eibnetipserver \
 		--enable-usb \
-		--disable-tpuart \
-		--disable-tpuarts \
-		--disable-pei16 \
-		--disable-pei16s \
+		--enable-tpuart \
+		--enable-tpuarts \
+		--enable-pei16 \
+		--enable-pei16s \
 		--enable-groupcache \
 		--without-pth-test \
 		--without-libstdc )
