@@ -1284,6 +1284,7 @@ function main.write(self, section, value)
 		local ifconfig = uci:get_all("freifunk", "wifi_iface")
 		util.update(ifconfig, uci:get_all(external, "wifi_iface") or {})
 		ifconfig.device = device
+		ifconfig.mcast_rate = mrate
 		ifconfig.network = nif
 		if ssid then
 			-- See Table https://kifuse02.pberg.freifunk.net/moin/channel-bssid-essid 
