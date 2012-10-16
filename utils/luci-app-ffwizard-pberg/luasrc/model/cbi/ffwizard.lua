@@ -582,7 +582,7 @@ OpenStreetMapLonLat = class(AbstractValue)
 
 function OpenStreetMapLonLat.__init__(self, ...)
 	AbstractValue.__init__(self, ...)
-	self.template = "cbi/osmll_value"
+	self.template = "cbi/osmll_value_pberg"
 	self.latfield = nil
 	self.lonfield = nil
 	self.centerlat = ""
