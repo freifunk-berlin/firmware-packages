@@ -175,15 +175,12 @@ if nid then
 end
 
 -- location
+local loc=uci:get_first("system", "system", "location") or uci:get("freifunk", "contact", "location")
 location = f:field(Value, "location", "Standort", "Geben Sie den Standort ihres Gerätes an")
 location.rmempty = false
 location.optional = false
 function location.cfgvalue(self, section)
-	return uci:get("freifunk", "contact", "location")
-end
-function location.write(self, section, value)
-	uci:set("freifunk", "contact", "location", value)
-	uci:save("freifunk")
+	return loc
 end
 
 -- mail
@@ -1722,6 +1719,14 @@ function main.write(self, section, value)
 	uci:save("wireless")
 	uci:save("network")
 	uci:save("dhcp")
+
+	local loc = location:formvalue(section)
+	if loc then
+		uci:foreach("system", "system", function(s)
+			uci:set("system", s[".name"], "location",loc)
+		end)
+	end
+	uci:save("system")
 
 	local new_hostname = uci:get("freifunk", "wizard", "hostname")
 	local old_hostname = sys.hostname()
