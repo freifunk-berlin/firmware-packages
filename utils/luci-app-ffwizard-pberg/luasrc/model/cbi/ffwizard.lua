@@ -84,7 +84,7 @@ end
 f = SimpleForm("ffwizward", "Freifunkassistent",
  "Dieser Assistent unterstützt Sie bei der Einrichtung des Routers für das Freifunknetz. Eine ausführliche Dokumentation ist auf http://wiki.freifunk.net/Freifunk_Berlin_Pberg:Firmware#FF_Wizard nach zu lesen")
 
-local newpsswd = has_rom and sys.exec("diff /rom/etc/passwd /etc/passwd")
+local newpsswd = has_rom and sys.exec("diff /rom/etc/shadow /etc/shadow")
 if newpsswd ~= "" then
 	pw = f:field(Flag, "pw", "Router Passwort", "Setzen Sie den Haken, um Ihr Passwort zu ändern.")
 	function pw.cfgvalue(self, section)
