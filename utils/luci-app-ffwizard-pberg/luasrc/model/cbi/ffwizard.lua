@@ -1188,6 +1188,7 @@ function main.write(self, section, value)
 		if channel then
 			if channel == "default" then
 				channel = devconfig.channel
+				bssid = uci:get(external,"bssidscheme",channel)
 				chan = tonumber(channel)
 				if chan > 0 and chan < 14 then
 					hwmode = hwmode.."g"
@@ -1228,6 +1229,7 @@ function main.write(self, section, value)
 					bssid = "12:" .. string.sub(channel, 2) .. ":CA:FF:EE:EE"
 					ssid = "ch" .. channel .. ssidshort
 				end
+				bssid = uci:get(external,"bssidscheme",channel) or bssid
 			end
 			devconfig.hwmode = hwmode
 			devconfig.outdoor = outdoor
