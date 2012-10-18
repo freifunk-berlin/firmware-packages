@@ -989,7 +989,7 @@ local function _strip_internals(tbl)
 end
 -- Configure Freifunk checked
 function main.write(self, section, value)
-	local community = net:formvalue(section)
+	local community = net:formvalue(section) or "Freifunk"
 	suffix = uci:get_first("profile_"..community, "community", "suffix") or "olsr"
 	
 	-- Invalidate fields
