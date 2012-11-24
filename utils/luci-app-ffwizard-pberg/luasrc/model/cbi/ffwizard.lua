@@ -1422,7 +1422,9 @@ function main.write(self, section, value)
 					ifconfig.encryption="none"
 				else
 					aliasbase.interface = nif
-					uci:section("network", "alias", nif .. "dhcp", aliasbase)
+					--uci:section("network", "alias", nif .. "dhcp", aliasbase)
+					uci:section("network", "interface", nif .. "dhcp", aliasbase)
+					ifconfig.network = nif .. " " .. nif .. "dhcp"
 				end
 				-- Create dhcp
 				local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
@@ -1625,7 +1627,9 @@ function main.write(self, section, value)
 					aliasbase.ipaddr = dhcp_ip
 					aliasbase.netmask = dhcp_mask
 					aliasbase.proto = "static"
-					uci:section("network", "alias", device .. "dhcp", aliasbase)
+					--uci:section("network", "alias", device .. "dhcp", aliasbase)
+					uci:section("network", "interface", device .. "dhcp", aliasbase)
+					ifconfig.network = device .. " " .. device .. "dhcp"
 					-- Create dhcp
 					local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
 					util.update(dhcpbase, uci:get_all(external, "dhcp") or {})
