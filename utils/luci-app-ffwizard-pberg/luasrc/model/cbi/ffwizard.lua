@@ -1416,7 +1416,6 @@ function main.write(self, section, value)
 						tools.firewall_zone_add_interface("freifunk", nif .. "dhcp")
 					end
 					uci:save("wireless")
-					uci:save("network")
 					uci:save("freifunk")
 					ifconfig.mcast_rate = nil
 					ifconfig.encryption="none"
@@ -1425,7 +1424,11 @@ function main.write(self, section, value)
 					--uci:section("network", "alias", nif .. "dhcp", aliasbase)
 					uci:section("network", "interface", nif .. "dhcp", aliasbase)
 					ifconfig.network = nif .. " " .. nif .. "dhcp"
+					if has_firewall then
+						tools.firewall_zone_add_interface("freifunk", nif .. "dhcp")
+					end
 				end
+				uci:save("network")
 				-- Create dhcp
 				local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
 				util.update(dhcpbase, uci:get_all(external, "dhcp") or {})
@@ -1630,6 +1633,9 @@ function main.write(self, section, value)
 					--uci:section("network", "alias", device .. "dhcp", aliasbase)
 					uci:section("network", "interface", device .. "dhcp", aliasbase)
 					ifconfig.network = device .. " " .. device .. "dhcp"
+					if has_firewall then
+						tools.firewall_zone_add_interface("freifunk", device .. "dhcp")
+					end
 					-- Create dhcp
 					local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
 					util.update(dhcpbase, uci:get_all(external, "dhcp") or {})
