@@ -1420,8 +1420,6 @@ function main.write(self, section, value)
 					ifconfig.mcast_rate = nil
 					ifconfig.encryption="none"
 				else
-					aliasbase.interface = nif
-					--uci:section("network", "alias", nif .. "dhcp", aliasbase)
 					uci:section("network", "interface", nif .. "dhcp", aliasbase)
 					ifconfig.network = nif .. " " .. nif .. "dhcp"
 					if has_firewall then
@@ -1626,13 +1624,11 @@ function main.write(self, section, value)
 					-- Create alias
 					local aliasbase = uci:get_all("freifunk", "alias") or {}
 					util.update(aliasbase, uci:get_all(external, "alias") or {})
-					aliasbase.interface = device
+					aliasbase.ifname = "br-" .. device
 					aliasbase.ipaddr = dhcp_ip
 					aliasbase.netmask = dhcp_mask
 					aliasbase.proto = "static"
-					--uci:section("network", "alias", device .. "dhcp", aliasbase)
 					uci:section("network", "interface", device .. "dhcp", aliasbase)
-					ifconfig.network = device .. " " .. device .. "dhcp"
 					if has_firewall then
 						tools.firewall_zone_add_interface("freifunk", device .. "dhcp")
 					end
