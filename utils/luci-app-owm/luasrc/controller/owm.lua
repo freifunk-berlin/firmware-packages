@@ -15,9 +15,6 @@ $Id$
 module("luci.controller.owm", package.seeall)
 
 function index()
-	local uci = require "luci.model.uci".cursor()
-	
-	--entry({"freifunk", "owm.json"}, call("jsonowm"))
 	entry({"owm.json"}, call("jsonowm"))
 end
 
@@ -166,11 +163,6 @@ function jsonowm()
 
 	local cursor = uci.cursor_state()
 
-	local ffzone = webadmin.firewall_find_zone("freifunk")
-	local ffznet = ffzone and cursor:get("firewall", ffzone, "network")
-	local ffwifs = ffznet and util.split(ffznet, " ") or {}
-
-
 	--root.protocol = 1
 	root.type = 'node' --owm
 
@@ -208,52 +200,64 @@ function jsonowm()
 
 	root.interfaces = {} --owm
 	root.wireless = {devices = {}, interfaces = {}, status = {}}
-	local wifs = root.wireless.interfaces
-	local netdata = luci.sys.net.deviceinfo() or {}
-	local devices = {}
-
-	for _, vif in ipairs(ffwifs) do
-		root.interfaces[#root.interfaces+1] = cursor:get_all("network", vif) --owm
-		--root.interfaces[#root.interfaces].name = root.interfaces[#root.interfaces]['.name'] --owm
-		root.interfaces[#root.interfaces].name = vif --owm
-		root.interfaces[#root.interfaces].ipv4Addresses = {root.interfaces[#root.interfaces].ipaddr} --owm
-		root.interfaces[#root.interfaces].ipv6Addresses = {root.interfaces[#root.interfaces].ip6addr} --owm
+	
+	cursor:foreach("network", "interface",function(vif)
+		if 'lo' == vif.ifname then
+			return
+		end
+		root.interfaces[#root.interfaces+1] =  vif
+		root.interfaces[#root.interfaces].name = vif['.name'] --owm
+		root.interfaces[#root.interfaces].ifname = vif.ifname --owm
+		root.interfaces[#root.interfaces].ipv4Addresses = {vif.ipaddr} --owm
+		root.interfaces[#root.interfaces].ipv6Addresses = {vif.ip6addr} --owm
 		root.interfaces[#root.interfaces]['.name'] = nil
 		root.interfaces[#root.interfaces]['.anonymous'] = nil
 		root.interfaces[#root.interfaces]['.type'] = nil
-		cursor:foreach("wireless", "wifi-iface", function(s)
-			if s.network == vif then
-				wifs[#wifs+1] = s
-				wifs[#wifs]['.name'] = nil
-				wifs[#wifs]['.anonymous'] = nil
-				wifs[#wifs]['.type'] = nil
-				wifs[#wifs]['.index'] = nil
-				if s.ifname then
-					if s.device then
-						devices[#devices+1] = s.device
-					end
-					local iwinfo = luci.sys.wifi.getiwinfo(s.ifname)
-					if iwinfo then
-						root.wireless.status[s.ifname] = { }
+		root.interfaces[#root.interfaces]['.index'] = nil
+	end)
+	
+	cursor:foreach("wireless", "wifi-device",function(s)
+		root.wireless.devices[#root.wireless.devices+1] = s
+		root.wireless.devices[#root.wireless.devices]['.name'] = nil
+		root.wireless.devices[#root.wireless.devices]['.anonymous'] = nil
+		root.wireless.devices[#root.wireless.devices]['.type'] = nil
+		root.wireless.devices[#root.wireless.devices]['.index'] = nil
+	end)
 
-						local _, f
-						for _, f in ipairs({
-							"channel", "txpower", "bitrate", "signal", "noise",
-							"quality", "quality_max", "mode", "ssid", "bssid", "encryption", "ifname"
-						}) do
-							root.wireless.status[s.ifname][f] = iwinfo[f]
-						end
-					end
-				end
+	cursor:foreach("wireless", "wifi-iface",function(s)
+		root.wireless.interfaces[#root.wireless.interfaces+1] = s
+		root.wireless.interfaces[#root.wireless.interfaces]['.name'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['.anonymous'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['.type'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['.index'] = nil
+		local iwinfo = luci.sys.wifi.getiwinfo(s.ifname)
+		if iwinfo then
+			local _, f
+			for _, f in ipairs({
+			"channel", "txpower", "bitrate", "signal", "noise",
+			"quality", "quality_max", "mode", "ssid", "bssid", "encryption", "ifname"
+			}) do
+				root.wireless.interfaces[#root.wireless.interfaces][f] = iwinfo[f]
 			end
-		end)
-	end
-	for i, v in ipairs(devices) do
-		root.wireless.devices[v] = cursor:get_all("wireless", v)
-		root.wireless.devices[v]['.name'] = nil
-		root.wireless.devices[v]['.anonymous'] = nil
-		root.wireless.devices[v]['.type'] = nil
-	end
+		end
+	end)
+
+	cursor:foreach("wireless", "wifi-iface",function(s)
+		local iwinfo = luci.sys.wifi.getiwinfo(s.ifname)
+		if iwinfo then
+			root.wireless.status[#root.wireless.status+1] = {}
+			root.wireless.status[#root.wireless.status]['network'] = s.network
+			root.wireless.status[#root.wireless.status]['device'] = s.device
+			local _, f
+			for _, f in ipairs({
+			"channel", "txpower", "bitrate", "signal", "noise",
+			"quality", "quality_max", "mode", "ssid", "bssid", "encryption", "ifname"
+			}) do
+				root.wireless.status[#root.wireless.status][f] = iwinfo[f]
+			end
+		end
+	end)
+
 	root.wifistatus = status.wifi_networks()
 
 	local dr4 = sys.net.defaultroute()
