@@ -468,7 +468,41 @@ uci:foreach("network", "interface",
 	function(section)
 		local device = section[".name"]
 		local ifname = uci_state:get("network",device,"ifname")
-		if device ~= "loopback" and not string.find(device, "6to4") and not string.find(device, "tun") and not string.find(device, "gvpn") and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") and not string.find(device, "eth") then
+		if string.find(device, "loopback") then
+			return
+		end
+		if string.find(device, "6to4") then
+			return
+		end
+		if string.find(device, "tun") then
+			return
+		end
+		if string.find(device, "gvpn") then
+			return
+		end
+		if string.find(device, "wifi") then
+			return
+		end
+		if string.find(device, "wl") then
+			return
+		end
+		if string.find(device, "wlan") then
+			return
+		end
+		if string.find(device, "wireless") then
+			return
+		end
+		if string.find(device, "radio") then
+			return
+		end
+		if string.find(device, "eth") then
+			return
+		end
+		if string.find(device, "dhcp") then
+			return
+		end
+
+--		if device ~= "loopback" and not string.find(device, "6to4") and not string.find(device, "tun") and not string.find(device, "gvpn") and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") and not string.find(device, "eth") then
 			local dev = f:field(Flag, "device_" .. device , "<b>Drahtgebundenes Freifunk Netzwerk \"" .. device:upper() .. "\"</b>", "Konfigurieren Sie Ihre drahtgebunde Schnittstelle: " .. device:upper() .. ".")
 				dev.rmempty = false
 				function dev.cfgvalue(self, section)
@@ -524,7 +558,7 @@ uci:foreach("network", "interface",
 					uci:set("freifunk", "wizard", "dhcpmesh_" .. device, value)
 					uci:save("freifunk")
 				end
-		end
+--		end
 	end)
 
 
@@ -1502,7 +1536,40 @@ function main.write(self, section, value)
 		if not luci.http.formvalue("cbid.ffwizward.1.device_" .. device) then
 			return
 		end
-		if device ~= "loopback" and not string.find(device, "6to4") and not string.find(device, "tun") and not string.find(device, "gvpn") and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
+				if string.find(device, "loopback") then
+			return
+		end
+		if string.find(device, "6to4") then
+			return
+		end
+		if string.find(device, "tun") then
+			return
+		end
+		if string.find(device, "gvpn") then
+			return
+		end
+		if string.find(device, "wifi") then
+			return
+		end
+		if string.find(device, "wl") then
+			return
+		end
+		if string.find(device, "wlan") then
+			return
+		end
+		if string.find(device, "wireless") then
+			return
+		end
+		if string.find(device, "radio") then
+			return
+		end
+		if string.find(device, "eth") then
+			return
+		end
+		if string.find(device, "dhcp") then
+			return
+		end
+--		if device ~= "loopback" and not string.find(device, "6to4") and not string.find(device, "tun") and not string.find(device, "gvpn") and not string.find(device, "wifi") and not string.find(device, "wl") and not string.find(device, "wlan") and not string.find(device, "wireless") and not string.find(device, "radio") then
 			local node_ip
 			node_ip = luci.http.formvalue("cbid.ffwizward.1.meship_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.meship_" .. device))
 			if has_ipv6 then
@@ -1691,7 +1758,7 @@ function main.write(self, section, value)
 				uci:save("firewall")
 			end
 			uci:save("dhcp")
-		end
+--		end
 	end)
 	if has_firewall then
 		-- Enforce firewall include
