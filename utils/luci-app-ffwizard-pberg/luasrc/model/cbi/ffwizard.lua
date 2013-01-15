@@ -25,19 +25,21 @@ local ip = require "luci.ip"
 local fs  = require "nixio.fs"
 local fs_luci = require "luci.fs"
 
-local has_3g     = fs.access("/usr/bin/gcom")
+local has_3g = fs.access("/usr/bin/gcom")
 local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
 local has_l2gvpn  = fs.access("/usr/sbin/node")
 local has_firewall = fs.access("/etc/config/firewall")
-local has_rom  = fs.access("/rom/etc")
-local has_autoipv6  = fs.access("/usr/bin/auto-ipv6")
-local has_qos  = fs.access("/etc/init.d/qos")
+local has_rom = fs.access("/rom/etc")
+local has_autoipv6 = fs.access("/usr/bin/auto-ipv6")
+local has_qos = fs.access("/etc/init.d/qos")
 local has_ipv6 = fs.access("/proc/sys/net/ipv6")
 local has_hb = fs.access("/sbin/heartbeat")
 local has_hostapd = fs.access("/usr/sbin/hostapd")
 local has_wan = uci:get("network", "wan", "proto")
 local has_lan = uci:get("network", "lan", "proto")
-local has_pr  = fs.access("/etc/config/freifunk-policyrouting")
+local has_pr = fs.access("/etc/config/freifunk-policyrouting")
+local has_splash = fs.access("/etc/config/luci_splash")
+local has_splash_enable
 local profiles = "/etc/config/profile_"
 
 function get_mac(ix)
@@ -432,6 +434,18 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "dhcpmesh_" .. device, value)
 				uci:save("freifunk")
 			end
+		if has_splash then
+			local dhcpsplash = f:field(Flag, "dhcpsplash_" .. device, device:upper() .. "  DHCP Splash Seite", "Soll eine Splash Seite angezeigt werden?")
+				dhcpsplash:depends("client_" .. device, "1")
+				dhcpsplash.rmempty = true
+				function dhcpsplash.cfgvalue(self, section)
+					return uci:get("freifunk", "wizard", "dhcpsplash_" .. device) or "1"
+				end
+				function dhcpsplash.write(self, sec, value)
+					uci:set("freifunk", "wizard", "dhcpsplash_" .. device, value)
+					uci:save("freifunk")
+				end
+		end
 		if hwtype == "atheros" or ( hwtype == "mac80211" and has_hostapd ) then
 			local vap = f:field(Flag, "vap_" .. device , "Virtueller Drahtloser Zugangspunkt", "Konfigurieren Sie Ihren Virtuellen AP")
 			vap:depends("client_" .. device, "1")
@@ -556,6 +570,18 @@ uci:foreach("network", "interface",
 				uci:set("freifunk", "wizard", "dhcpmesh_" .. device, value)
 				uci:save("freifunk")
 			end
+		if has_splash then
+			local dhcpsplash = f:field(Flag, "dhcpsplash_" .. device, device:upper() .. "  DHCP Splash Seite", "Soll eine Splash Seite angezeigt werden?")
+				dhcpsplash:depends("client_" .. device, "1")
+				dhcpsplash.rmempty = true
+				function dhcpsplash.cfgvalue(self, section)
+					return uci:get("freifunk", "wizard", "dhcpsplash_" .. device) or "1"
+				end
+				function dhcpsplash.write(self, sec, value)
+					uci:set("freifunk", "wizard", "dhcpsplash_" .. device, value)
+					uci:save("freifunk")
+				end
+		end
 	end)
 
 
@@ -978,9 +1004,14 @@ function f.handle(self, state, data)
 			uci:commit("network")
 			uci:commit("dhcp")
 			if has_firewall then
-				uci:commit("luci_splash")
 				uci:commit("firewall")
 				uci:commit("freifunk_p2pblock")
+			end
+			if has_splash then
+				uci:commit("luci_splash")
+			end
+			if has_splash_enable then
+				sys.init.enable("luci_splash")
 			end
 			uci:commit("system")
 			uci:commit("uhttpd")
@@ -1071,6 +1102,11 @@ function main.write(self, section, value)
 		end
 		uci:save("firewall")
 	end
+	if has_splash then
+		-- Delete old splash
+		uci:delete_all("luci_splash", "subnet")
+	end
+
 	if has_hb then
 		uci:delete("manager", "heartbeat", "interface")
 		uci:save("manager")
@@ -1178,6 +1214,8 @@ function main.write(self, section, value)
 		if has_firewall then
 			tools.firewall_zone_remove_interface("freifunk", device)
 			tools.firewall_zone_remove_interface("freifunk", nif)
+		end
+		if has_splash then
 			-- Delete old splash
 			uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
 			uci:delete_all("luci_splash", "iface", {network=nif.."dhcp", zone="freifunk"})
@@ -1423,11 +1461,11 @@ function main.write(self, section, value)
 						if dhcp_ip6 then
 							aliasbase.ip6addr = dhcp_ip6:string()
 							dhcpnetaddr = dhcp_ip6:network(64):string()
-							uci:section("olsrd", "Hna6", nil, {
-								prefix = 64,
-								netaddr = dhcpnetaddr
-							})
-							uci:save("olsrd")
+							--uci:section("olsrd", "Hna6", nil, {
+							--	prefix = 64,
+							--	netaddr = dhcpnetaddr
+							--})
+							--uci:save("olsrd")
 						end
 					end
 					local vap_ssid = luci.http.formvalue("cbid.ffwizward.1.vapssid_" .. device)
@@ -1503,17 +1541,16 @@ function main.write(self, section, value)
 						dest_port="8082",
 						target="ACCEPT"
 					})
-					-- Register splash
-					uci:section("luci_splash", "iface", nil, {network=nif.."dhcp", zone="freifunk"})
-					uci:save("luci_splash")
-					-- Make sure that luci_splash is enabled
-					sys.init.enable("luci_splash")
+					if has_splash then
+						local dhcpsplash = luci.http.formvalue("cbid.ffwizward.1.dhcpsplash_" .. device)
+						if dhcpsplash  then
+							-- Register splash interface
+							uci:section("luci_splash", "iface", nil, {network=nif.."dhcp", zone="freifunk"})
+							-- Make sure that luci_splash is enabled
+							has_splash_enable = 1
+						end
+					end
 				end
-			end
-		else
-			if has_firewall then
-				-- Delete old splash
-				uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
 			end
 		end
 		--Write Ad-Hoc wifi section after AP wifi section
@@ -1523,6 +1560,9 @@ function main.write(self, section, value)
 		uci:save("network")
 		if has_firewall then
 			uci:save("firewall")
+		end
+		if has_splash then
+			uci:save("luci_splash")
 		end
 		uci:save("dhcp")
 	end)
@@ -1589,7 +1629,7 @@ function main.write(self, section, value)
 		-- Delete old dhcp
 		uci:delete("dhcp", device)
 		uci:delete("dhcp", device .. "dhcp")
-		if has_firewall then
+		if has_splash then
 			-- Delete old splash
 			uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
 		end
@@ -1741,10 +1781,15 @@ function main.write(self, section, value)
 						target="ACCEPT"
 					})
 					-- Register splash
-					uci:section("luci_splash", "iface", nil, {network=device.."dhcp", zone="freifunk"})
-					uci:save("luci_splash")
-					-- Make sure that luci_splash is enabled
-					sys.init.enable("luci_splash")
+					if has_splash then
+						local dhcpsplash = luci.http.formvalue("cbid.ffwizward.1.dhcpsplash_" .. device)
+						if dhcpsplash then
+							-- Register splash interface
+							uci:section("luci_splash", "iface", nil, {network=device.."dhcp", zone="freifunk"})
+							-- Make sure that luci_splash is enabled
+							has_splash_enable = 1
+						end
+					end
 				end
 			end
 		end
@@ -1753,8 +1798,13 @@ function main.write(self, section, value)
 		if has_firewall then
 			uci:save("firewall")
 		end
+		if has_splash then
+			uci:save("luci_splash")
+		end
 		uci:save("dhcp")
 	end)
+	-- END Create wired ip and firewall config
+
 	if has_firewall then
 		-- Enforce firewall include
 		local has_include = false
@@ -1785,10 +1835,15 @@ function main.write(self, section, value)
 				{ tcp_ecn = "0", ip_conntrack_max = "8192", tcp_westwood = "1" })
 		end
 		uci:save("firewall")
+
+		if has_splash_enable then
+			network_mask = network:mask():string()
+			network_network = network:network():string()
+			-- Add community ip range
+			uci:section("luci_splash", "subnet", nil, {ipaddr=network_network, netmask=network_mask})
+			uci:save("luci_splash")
+		end
 	end
-	uci:save("wireless")
-	uci:save("network")
-	uci:save("dhcp")
 
 	local loc = location:formvalue(section)
 	if loc then
