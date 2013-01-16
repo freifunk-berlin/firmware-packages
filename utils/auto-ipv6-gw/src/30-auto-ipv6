@@ -5,20 +5,20 @@
 # IFUP?
 [ "$ACTION" = "ifup" ] || exit 0
 
-#Enable/Disable auto-ipv6
-if ! [ "$(uci get autoipv6.tunnel.enable)" == 1 ] ; then
-        logger -t auto-ipv6 "If you have a Internet uplink then uci set  autoipv6.tunnel.enable=1"
+#Enable/Disable auto-ipv6-gw
+if ! [ "$(uci get autoipv6gw.tunnel.enable)" == 1 ] ; then
+        logger -t auto-ipv6-gw "If you have a Internet uplink then uci set  autoipv6gw.tunnel.enable=1"
         exit 0
 fi
 
 #Kernel Tunnel Modul?
 if [ "a""$(lsmod | grep '^sit ')" == "a" ] ; then
-        logger -t auto-ipv6 "Please install kmod-sit and kmod-iptunnel4"
+        logger -t auto-ipv6-gw "Please install kmod-sit and kmod-iptunnel4"
         exit 0
 fi
 #IPutils?
 if ! ip 2>&1 | grep -q tunnel ; then
-        logger -t auto-ipv6 "Please install ip with tunnel support"
+        logger -t auto-ipv6-gw "Please install ip with tunnel support"
         exit 0
 fi
 
@@ -27,13 +27,13 @@ fi
 local IP4_GW
 IP4_GW="$(uci -p /var/state get network.$INTERFACE.gateway)"
 if [ "$IP4_GW" == "" ] ; then
-	logger -t auto-ipv6 "No Gateway found on $INTERFACE"
+	logger -t auto-ipv6-gw "No Gateway found on $INTERFACE"
 	exit 0
 fi
 
 local IP4_LOCAL="$(uci -p /var/state get network.$INTERFACE.ipaddr)"
 if [ "$IP4_LOCAL" == "" ] ; then
-	logger -t auto-ipv6 "No Local IPv4 found"
+	logger -t auto-ipv6-gw "No Local IPv4 found"
 	exit 0
 fi
 
@@ -108,7 +108,7 @@ case $IP4_LOCAL in
 esac
 
 if [ "$IP4_LOCAL" == "" ] ; then
-	logger -t auto-ipv6 "No Local Public IPv4 found"
+	logger -t auto-ipv6-gw "No Local Public IPv4 found"
 	exit 0
 fi
 
@@ -116,7 +116,7 @@ fi
 umask 022
 
 IP6_SUFFIX=$(printf "2002:%02x%02x:%02x%02x" $(echo $IP4_LOCAL|sed 's/\./ /g'))
-logger -t auto-ipv6 "Applying IPv6 Sufix $IP6_SUFFIX"
+logger -t auto-ipv6-gw "Applying IPv6 Sufix $IP6_SUFFIX"
 ifconfig tun6to4 down 2&>1 1>/dev/null
 ip tunnel del tun6to4 2&>1 1>/dev/null
 ip tunnel add tun6to4 mode sit remote any local $IP4_LOCAL_IF ttl 64
@@ -127,12 +127,12 @@ route -A inet6 add "2000::/3" gw "::192.88.99.1" dev tun6to4 metric 1
 route -A inet6 add "::/0" gw "::192.88.99.1" dev tun6to4 metric 1
 
 (
-lock -w /var/run/auto-ipv6.lock && lock /var/run/auto-ipv6.lock
+lock -w /var/run/auto-ipv6-gw.lock && lock /var/run/auto-ipv6-gw.lock
 sleep 30
 config_load network
 interfaces=""
 config_foreach net_find_iface interface
-logger -t auto-ipv6 "found $interfaces"
+logger -t auto-ipv6-gw "found $interfaces"
 local restart_dnsmasq=0
 local restart_olsrd=0
 local restart_crond=0
@@ -150,11 +150,11 @@ for i in $(echo $interfaces) ; do
 	[ "$(uci get network.$i.proto)" == "static" ] || continue
 	DEV="$(uci -q -p/var/state get network.$i.ifname)"
 	[ -z "$DEV" ]  && {
-		logger -t auto-ipv6 "uci Device Not Found IP6_SUFFIX $IP6_SUFFIX interfaces $i DEV $DEV check your uci config"
+		logger -t auto-ipv6-gw "uci Device Not Found IP6_SUFFIX $IP6_SUFFIX interfaces $i DEV $DEV check your uci config"
 		continue
 	}
 	grep -q $DEV /proc/net/dev || {
-		logger -t auto-ipv6 "Device Not Found IP6_SUFFIX $IP6_SUFFIX interfaces $i DEV $DEV check your uci config"
+		logger -t auto-ipv6-gw "Device Not Found IP6_SUFFIX $IP6_SUFFIX interfaces $i DEV $DEV check your uci config"
 		continue
 	}
 	IP6_UCI=$(uci get network.$i.ip6addr)
@@ -169,7 +169,7 @@ for i in $(echo $interfaces) ; do
 			echo "dhcp-range=$DEV,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::100,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::200,64,240s" >> $dnsmasq_conf
 			echo "dhcp-range=$DEV,$IP6_OLDSUFFIX:$IP6_OLDUNIQ::,ra-only,64,240s" >> $dnsmasq_conf
 			restart_dnsmasq=1
-			logger -t auto-ipv6 "Found IP6_SUFFIX $IP6_OLDSUFFIX on interfaces $i DEV $DEV no update"
+			logger -t auto-ipv6-gw "Found IP6_SUFFIX $IP6_OLDSUFFIX on interfaces $i DEV $DEV no update"
 			continue
 		fi
 	fi
@@ -192,7 +192,7 @@ for i in $(echo $interfaces) ; do
 
 	if [ $ifconfig_add -eq 1 ] ; then
 		ifconfig "$DEV" add "$IP6_ADDRESS"
-		logger -t auto-ipv6 "ifconfig $DEV add $IP6_ADDRESS"
+		logger -t auto-ipv6-gw "ifconfig $DEV add $IP6_ADDRESS"
 		uci -P /var/state set network.$i.ip6addr="$IP6_ADDRESS"
 		uci set network.$i.ip6addr="$IP6_ADDRESS"
 		uci commit network
@@ -255,12 +255,12 @@ if [ $restart_dnsmasq -eq 1 ] ; then
 		#BUG
 		#See dnsmasq 2.61 no periodic RA's
 		#http://permalink.gmane.org/gmane.network.dns.dnsmasq.general/5753
-		grep -q ALRM /etc/crontabs/root || {
-			logger -t auto-ipv6 "Add dnsmasq to crontab"
-			echo '* * * * *       killall -ALRM dnsmasq' >> /etc/crontabs/root
-			restart_crond=1
-		}
-		logger -t auto-ipv6 "Restarting dnsmasq..."
+		#grep -q ALRM /etc/crontabs/root || {
+		#	logger -t auto-ipv6-gw "Add dnsmasq to crontab"
+		#	echo '* * * * *       killall -ALRM dnsmasq' >> /etc/crontabs/root
+		#	restart_crond=1
+		#}
+		logger -t auto-ipv6-gw "Restarting dnsmasq..."
 		/etc/init.d/dnsmasq restart
 	fi
 fi
@@ -283,6 +283,6 @@ if [ $restart_olsrd -eq 1 ] ; then
 		#FIXME
 	fi
 fi
-lock -u /var/run/auto-ipv6.lock
+lock -u /var/run/auto-ipv6-gw.lock
 ) &
 

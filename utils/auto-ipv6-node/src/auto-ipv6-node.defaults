@@ -1,5 +1,8 @@
 #!/bin/sh
 
+#Migrate auto-ipv6 to auto-ipv6-node
+[ "$(uci get autoipv6.olsr_node.enable)" == 1 ] && uci set autoipv6node.olsr_node.enable=1
+
 #add cron entry
 grep -q 'auto-ipv6' /etc/crontabs/root || echo '*/4 * * * * /usr/bin/auto-ipv6' >> /etc/crontabs/root
 

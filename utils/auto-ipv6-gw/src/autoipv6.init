@@ -12,7 +12,7 @@ net_start_iface() {
 
 
 start() {
-	config_load autoipv6
+	config_load autoipv6gw
 	config_get enable tunnel enable
 	[ "$enable" == "1" ] || exit 0
 	config_load network
