@@ -30,7 +30,8 @@ local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
 local has_l2gvpn  = fs.access("/usr/sbin/node")
 local has_firewall = fs.access("/etc/config/firewall")
 local has_rom = fs.access("/rom/etc")
-local has_autoipv6 = fs.access("/usr/bin/auto-ipv6")
+local has_autoipv6node = fs.access("/etc/config/autoipv6node")
+local has_autoipv6gw = fs.access("/etc/config/autoipv6gw")
 local has_qos = fs.access("/etc/init.d/qos")
 local has_ipv6 = fs.access("/proc/sys/net/ipv6")
 local has_hb = fs.access("/sbin/heartbeat")
@@ -1017,8 +1018,11 @@ function f.handle(self, state, data)
 			uci:commit("uhttpd")
 			uci:commit("olsrd")
 			uci:commit("manager")
-			if has_autoipv6 then
-				uci:commit("autoipv6")
+			if has_autoipv6gw then
+				uci:commit("autoipv6gw")
+			end
+			if has_autoipv6node then
+				uci:commit("autoipv6node")
 			end
 			if has_qos then
 				uci:commit("qos")
@@ -1475,11 +1479,11 @@ function main.write(self, section, value)
 					uci:set("freifunk", "wizard", "vapssid_" .. device, vap_ssid)
 					uci:section("network", "interface", nif .. "dhcp", aliasbase)
 					uci:section("wireless", "wifi-iface", nil, {
-						device     =device,
-						mode       ="ap",
+						device=device,
+						mode="ap",
 						encryption ="none",
-						network    =nif.."dhcp",
-						ssid       =vap_ssid
+						network=nif.."dhcp",
+						ssid=vap_ssid
 					})
 					if has_firewall then
 						tools.firewall_zone_add_interface("freifunk", nif .. "dhcp")
@@ -1489,7 +1493,10 @@ function main.write(self, section, value)
 					ifconfig.mcast_rate = nil
 					ifconfig.encryption="none"
 				else
+					--this does not work
+					--aliasbase.ifname = "@"..nif
 					uci:section("network", "interface", nif .. "dhcp", aliasbase)
+					--but a second network entry in wireless work
 					ifconfig.network = nif .. " " .. nif .. "dhcp"
 					if has_firewall then
 						tools.firewall_zone_add_interface("freifunk", nif .. "dhcp")
@@ -1727,7 +1734,15 @@ function main.write(self, section, value)
 				-- Create alias
 				local aliasbase = uci:get_all("freifunk", "alias") or {}
 				util.update(aliasbase, uci:get_all(external, "alias") or {})
-				aliasbase.ifname = "br-" .. device
+				--does not work
+				--aliasbase.ifname = "@" .. device
+				local devtype = uci:get("network",device,"type") or ""
+				if devtype == "bridge" then
+					aliasbase.ifname = "br-" .. device
+				else
+					local ifname = uci:get("network",device,"ifname") or ""
+					aliasbase.ifname = ifname
+				end
 				aliasbase.ipaddr = dhcp_ip
 				aliasbase.netmask = dhcp_mask
 				aliasbase.proto = "static"
@@ -2017,11 +2032,11 @@ function main.write(self, section, value)
 	if share_value == "1" then
 		uci:set("freifunk", "wizard", "shareconfig", "1")
 		uci:save("freifunk")
-		if has_autoipv6 then
+		if has_autoipv6gw then
 			-- Set autoipv6 tunnel mode
-			uci:set("autoipv6", "olsr_node", "enable", "0")
-			uci:set("autoipv6", "tunnel", "enable", "1")
-			uci:save("autoipv6")
+			uci:set("autoipv6gw", "olsr_node", "enable", "0")
+			uci:set("autoipv6gw", "tunnel", "enable", "1")
+			uci:save("autoipv6gw")
 			-- Create tun6to4 interface
 			local tun6to4 = {}
 			tun6to4.ifname = "tun6to4"
@@ -2079,7 +2094,7 @@ function main.write(self, section, value)
 			uci:section("firewall", "forwarding", nil, {src="wan", dest="freifunk"})
 			uci:delete_all("firewall","forwarding", {src="lan", dest="wan"})
 			uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
-			if has_autoipv6 then
+			if has_autoipv6gw then
 				tools.firewall_zone_add_interface("wan", "6to4")
 				uci:save("firewall")
 			end
@@ -2112,11 +2127,15 @@ function main.write(self, section, value)
 		end
 		uci:set("freifunk", "wizard", "shareconfig", "0")
 		uci:save("freifunk")
-		if has_autoipv6 then
-			-- Set autoipv6 olsrd mode
-			uci:set("autoipv6", "olsr_node", "enable", "1")
-			uci:set("autoipv6", "tunnel", "enable", "0")
+		if has_autoipv6node then
+			-- Set autoipv6node olsrd mode
+			uci:set("autoipv6node", "olsr_node", "enable", "1")
 			uci:save("autoipv6")
+		end
+		if has_autoipv6gw then
+			-- Disable autoipv6gw
+			uci:set("autoipv6gw", "tunnel", "enable", "0")
+			uci:save("autoipv6gw")
 		end
 		-- Delete gateway plugins
 		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
