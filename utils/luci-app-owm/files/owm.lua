@@ -3,7 +3,9 @@
 require("luci.util")
 require("luci.model.uci")
 require("luci.sys")
-require "luci.httpclient"
+require("luci.fs")
+require("luci.httpclient")
+
 
 
 local function fetch_olsrd_config()
@@ -294,13 +296,20 @@ end
 local uci = luci.model.uci.cursor_state()
 local httpc = luci.httpclient
 local etag = ""
+local lockfile = "/var/run/owm.lock"
 
 function lock()
-	os.execute("lock /var/run/owm.lock")
+	if luci.fs.isfile(lockfile) then
+		print(lockfile.." exist")
+		os.exit()
+	else
+		os.execute("lock "..lockfile)
+	end
 end
 
 function unlock()
-	os.execute("lock -u /var/run/owm.lock")
+	os.execute("lock -u "..lockfile)
+	os.execute("rm -f "..lockfile)
 end
 
 lock()
