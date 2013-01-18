@@ -291,27 +291,50 @@ end
 
 
 -- Init state session
---local uci = luci.model.uci.cursor_state()
---local net = luci.sys.net
+local uci = luci.model.uci.cursor_state()
 local httpc = luci.httpclient
 local etag = ""
 
+local limit_up = 0
+local limit_down = 0
+
+function lock()
+	os.execute("lock /var/run/owm.lock")
+end
+
+function unlock()
+	os.execute("lock -u /var/run/owm.lock")
+end
+
+lock()
+
+local hostname
+uci:foreach("system", "system", function(s) --owm
+	hostname = s.hostname
+end)
+
+local mapserver = uci:get("freifunk", "community", "mapserver") or "http://104.13.8.86:5984/openwifimap/"
+local cname = uci:get("freifunk", "community", "name") or ""
+local suffix = uci:get("freifunk", "community", "suffix") or ""
+local uri = mapserver..cname.."."..hostname.."."..suffix
+
 local options = {
         method = "HEAD",
-    }
-local code,response, msg, csock = httpc.request_raw("http://104.13.8.86:5984/openwifimap/druschba.olsr", options)
+}
+
+local code,response, msg, csock = httpc.request_raw(uri, options)
+
 if not response then
         print("fail")
 else
         print(code)
-        etag = response.headers['ETag']
+        etag = response.headers['ETag'] or ""
         etag = string.gsub(etag, '\"', '')
-        print(etag)
-        print(msg)
 end
 
 
 local body = jsonowm()
+
 local options = {
 	method = "PUT",
 	body = body,
@@ -320,13 +343,17 @@ local options = {
 	},
 }
 
-local response, code, msg = httpc.request_to_buffer("http://104.13.8.86:5984/openwifimap/druschba.olsr".."?rev="..etag, options)
+if etag == "" then
+	local response, code, msg = httpc.request_to_buffer(uri, options)
+else
+	local response, code, msg = httpc.request_to_buffer(uri.."?rev="..etag, options)
+end
 
 if not response then
         print("fail")
 else
         print(code)
-        print(response)
-        print(msg)
 end
+
+unlock()
 
