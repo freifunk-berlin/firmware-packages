@@ -295,9 +295,6 @@ local uci = luci.model.uci.cursor_state()
 local httpc = luci.httpclient
 local etag = ""
 
-local limit_up = 0
-local limit_down = 0
-
 function lock()
 	os.execute("lock /var/run/owm.lock")
 end
