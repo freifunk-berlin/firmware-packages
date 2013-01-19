@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-owm
-PKG_RELEASE:=0.0.1
+PKG_RELEASE:=0.0.2
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 
@@ -12,7 +12,7 @@ define Package/luci-app-owm
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
   TITLE:=Luci JSON Export for Open Wireless Map
-  DEPENDS:=+luci-lib-web +luci-lib-json +luci-mod-freifunk
+  DEPENDS:=+luci-lib-web +luci-lib-json +luci-mod-freifunk +olsrd-mod-jsoninfo
 endef
 
 define Package/luci-app-owm/description
@@ -31,9 +31,22 @@ define Build/Compile
 	$(MAKE) -C $(PKG_BUILD_DIR)/luasrc
 endef
 
+define Package/luci-app-owm/postinst
+#!/bin/sh
+[ -n "${IPKG_INSTROOT}" ] || {
+	( . /etc/uci-defaults/owm ) && rm -f /etc/uci-defaults/owm
+	rm -f /tmp/luci-indexcache
+	exit 0
+}
+endef
+
 define Package/luci-app-owm/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
 	$(CP) $(PKG_BUILD_DIR)/luasrc/controller/* $(1)/usr/lib/lua/luci/controller
+	$(INSTALL_DIR) $(1)/usr/sbin/
+	$(CP) files/owm.lua $(1)/usr/sbin/
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(CP) files/owm-defaults $(1)/etc/uci-defaults/owm
 endef
 
 $(eval $(call BuildPackage,luci-app-owm))
