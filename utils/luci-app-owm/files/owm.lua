@@ -319,7 +319,7 @@ uci:foreach("system", "system", function(s) --owm
 	hostname = s.hostname
 end)
 
-local mapserver = uci:get("freifunk", "community", "mapserver") or "http://104.13.8.86:5984/openwifimap/"
+local mapserver = uci:get("freifunk", "community", "mapserver") or "http://openwifimap.net/openwifimap/"
 local cname = uci:get("freifunk", "community", "name") or ""
 local suffix = uci:get("freifunk", "community", "suffix") or ""
 local uri = mapserver..cname.."."..hostname.."."..suffix
