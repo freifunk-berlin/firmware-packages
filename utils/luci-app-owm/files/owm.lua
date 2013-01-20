@@ -154,6 +154,8 @@ function jsonowm()
 
 	--root.protocol = 1
 	root.type = 'node' --owm
+	root.lastupdate = os.date("!%Y-%m-%dT%H:%M:%SZ") --owm
+	root.updateInterval = 60 --owm
 
 	root.system = {
 		uptime = {sys.uptime()},

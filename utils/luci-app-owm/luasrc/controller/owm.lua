@@ -183,6 +183,8 @@ function jsonowm()
 		sysinfo = {sys.sysinfo()},
 	}
 	root.hostname = sys.hostname() --owm
+	root.lastupdate = os.date("!%Y-%m-%dT%H:%M:%SZ") --owm
+	root.updateInterval = 60 --owm
 
 
 	-- s system,a arch,r ram owm
