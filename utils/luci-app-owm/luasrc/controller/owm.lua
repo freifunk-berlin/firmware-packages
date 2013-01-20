@@ -16,6 +16,17 @@ module("luci.controller.owm", package.seeall)
 
 function index()
 	entry({"owm.json"}, call("jsonowm"))
+
+	local page  = node()
+	page.lock   = true
+	page.target = alias("owm")
+	page.subindex = true
+	page.index = false
+
+	local page = node("owm")
+	page.target = template("owm")
+	page.title = "OpenWifiMap"
+	page.order = 100
 end
 
 local function fetch_olsrd_config()

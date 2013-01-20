@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-owm
-PKG_RELEASE:=0.0.2
+PKG_RELEASE:=0.0.3
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 
@@ -43,6 +43,8 @@ endef
 define Package/luci-app-owm/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
 	$(CP) $(PKG_BUILD_DIR)/luasrc/controller/* $(1)/usr/lib/lua/luci/controller
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
+	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view
 	$(INSTALL_DIR) $(1)/usr/sbin/
 	$(CP) files/owm.lua $(1)/usr/sbin/
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
