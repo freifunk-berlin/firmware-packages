@@ -324,7 +324,8 @@ end)
 local mapserver = uci:get("freifunk", "community", "mapserver") or "http://openwifimap.net/openwifimap/"
 local cname = uci:get("freifunk", "community", "name") or ""
 local suffix = uci:get("freifunk", "community", "suffix") or ""
-local uri = mapserver..cname.."."..hostname.."."..suffix
+--local uri = mapserver..cname.."."..hostname.."."..suffix
+local uri = mapserver.."/"..hostname.."."..suffix
 
 local options = {
         method = "HEAD",
