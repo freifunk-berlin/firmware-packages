@@ -6,7 +6,7 @@ local mapserver = uci:get("freifunk", "community", "mapserver") or "http://openw
 <%+header%>
 
 <h3>
-	<a href=<%=mapserver%>>OpenWifiMap on <%=mapserver%></a>
+	<a href=<%=mapserver%>/_design/openwifimap/index.html>OpenWifiMap on <%=mapserver%></a>
 </h3>
 <iframe src=<%=mapserver%>/_design/openwifimap/index.html name="owm-iframe" width="100%" height="640px" frameborder="0" scrolling="no">
 </iframe>
