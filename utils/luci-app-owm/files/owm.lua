@@ -179,10 +179,19 @@ function jsonowm()
 		revision=version.distversion --owm
 	}
 
-	--root.freifunk = {}
-	--cursor:foreach("freifunk", "public", function(s)
-	--	root.freifunk[s[".name"]] = s
-	--end)
+	root.freifunk = {}
+	cursor:foreach("freifunk", "public", function(s)
+		local pname = s[".name"]
+		s['.name'] = nil
+		s['.anonymous'] = nil
+		s['.type'] = nil
+		s['.index'] = nil
+		if s['mail'] then
+			s['mail'] = string.gsub(s['mail'], "@", "./-\\.T.")
+		end
+		root.freifunk[pname] = s
+	end)
+
 
 	cursor:foreach("system", "system", function(s) --owm
 		root.latitude = tonumber(s.latitude) --owm
@@ -322,8 +331,8 @@ uci:foreach("system", "system", function(s) --owm
 end)
 
 local mapserver = uci:get("freifunk", "community", "mapserver") or "http://openwifimap.net/openwifimap/"
-local cname = uci:get("freifunk", "community", "name") or ""
-local suffix = uci:get("freifunk", "community", "suffix") or ""
+local cname = uci:get("freifunk", "community", "name") or "freifunk"
+local suffix = uci:get("freifunk", "community", "suffix") or "olsr"
 --local uri = mapserver..cname.."."..hostname.."."..suffix
 local uri = mapserver.."/"..hostname.."."..suffix
 
