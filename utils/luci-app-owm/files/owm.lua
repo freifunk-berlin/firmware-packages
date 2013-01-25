@@ -139,6 +139,13 @@ local function fetch_olsrd()
 	return data
 end
 
+local function showmac(mac)
+    if not is_admin then
+        mac = mac:gsub("(%S%S:%S%S):%S%S:%S%S:(%S%S:%S%S)", "%1:XX:XX:%2")
+    end
+    return mac
+end
+
 function jsonowm()
 	local root = {}
 	local sys = require "luci.sys"
@@ -214,6 +221,20 @@ function jsonowm()
 		root.interfaces[#root.interfaces]['.anonymous'] = nil
 		root.interfaces[#root.interfaces]['.type'] = nil
 		root.interfaces[#root.interfaces]['.index'] = nil
+		root.interfaces[#root.interfaces]['username'] = nil
+		root.interfaces[#root.interfaces]['password'] = nil
+		root.interfaces[#root.interfaces]['password'] = nil
+		root.interfaces[#root.interfaces]['clientid'] = nil
+		root.interfaces[#root.interfaces]['reqopts'] = nil
+		root.interfaces[#root.interfaces]['pincode'] = nil
+		root.interfaces[#root.interfaces]['tunnelid'] = nil
+		root.interfaces[#root.interfaces]['tunnel_id'] = nil
+		root.interfaces[#root.interfaces]['peer_tunnel_id'] = nil
+		root.interfaces[#root.interfaces]['session_id'] = nil
+		root.interfaces[#root.interfaces]['peer_session_id'] = nil
+		if vif.macaddr then
+			root.interfaces[#root.interfaces]['macaddr'] = showmac(vif.macaddr)
+		end
 	end)
 	
 	cursor:foreach("wireless", "wifi-device",function(s)
@@ -222,6 +243,9 @@ function jsonowm()
 		root.wireless.devices[#root.wireless.devices]['.anonymous'] = nil
 		root.wireless.devices[#root.wireless.devices]['.type'] = nil
 		root.wireless.devices[#root.wireless.devices]['.index'] = nil
+		if s.macaddr then
+			root.wireless.devices[#root.wireless.devices]['macaddr'] = showmac(s.macaddr)
+		end
 	end)
 
 	cursor:foreach("wireless", "wifi-iface",function(s)
@@ -230,6 +254,16 @@ function jsonowm()
 		root.wireless.interfaces[#root.wireless.interfaces]['.anonymous'] = nil
 		root.wireless.interfaces[#root.wireless.interfaces]['.type'] = nil
 		root.wireless.interfaces[#root.wireless.interfaces]['.index'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['key'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['key1'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['key2'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['key3'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['key4'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['auth_secret'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['acct_secret'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['nasid'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['identity'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['password'] = nil
 		local iwinfo = luci.sys.wifi.getiwinfo(s.ifname)
 		if iwinfo then
 			local _, f
@@ -258,7 +292,8 @@ function jsonowm()
 		end
 	end)
 
-	--root.wifistatus = status.wifi_networks() or {}
+	--TODO use showmac for root.wifistatus[networks][assoclist][showmac()][signal]
+	--root.wifistatus = status.wifi_networks()
 
 	local dr4 = sys.net.defaultroute()
 	local dr6 = sys.net.defaultroute6()
@@ -301,12 +336,56 @@ function jsonowm()
 	return json.encode(root)
 end
 
+function db_put(uri,body)
+	local httpc = luci.httpclient
+	local etag = ""
+	local options = {
+		method = "HEAD",
+	}
+	
+	local code,response, msg, csock = httpc.request_raw(uri, options)
+	
+	if not response then
+		print("get ETag fail "..uri)
+	else
+		if code == 404 then
+			print("new ETag   Statuscode: "..code.." "..uri)
+			etag = ""
+		else
+			etag = response.headers['ETag'] or ""
+			etag = string.gsub(etag, '\"', '')
+			print("get ETag   Statuscode: "..code.." "..uri.." "..etag)
+		end
+	end
+	
+	local options = {
+		method = "PUT",
+		body = body,
+		headers = {
+			["Content-Type"] = "application/json",
+		},
+	}
+	
+	if etag == "" then
+		local response, code, msg = httpc.request_to_buffer(uri, options)
+	else
+		local response, code, msg = httpc.request_to_buffer(uri.."?rev="..etag, options)
+	end
+	
+	if not response then
+		print("fail "..uri)
+	else
+		if code == 404 then
+			print("new Doc    Statuscode: "..code.." "..uri)
+		else
+			print("update Doc Statuscode: "..code.." "..uri)
+		end
+	end
+end
 
 
 -- Init state session
 local uci = luci.model.uci.cursor_state()
-local httpc = luci.httpclient
-local etag = ""
 local lockfile = "/var/run/owm.lock"
 
 function lock()
@@ -333,44 +412,16 @@ end)
 local mapserver = uci:get("freifunk", "community", "mapserver") or "http://openwifimap.net/openwifimap/"
 local cname = uci:get("freifunk", "community", "name") or "freifunk"
 local suffix = uci:get("freifunk", "community", "suffix") or "olsr"
---local uri = mapserver..cname.."."..hostname.."."..suffix
-local uri = mapserver.."/"..hostname.."."..suffix
-
-local options = {
-        method = "HEAD",
-}
-
-local code,response, msg, csock = httpc.request_raw(uri, options)
-
-if not response then
-        print("fail")
-else
-        print(code)
-        etag = response.headers['ETag'] or ""
-        etag = string.gsub(etag, '\"', '')
-end
-
-
 local body = jsonowm()
 
-local options = {
-	method = "PUT",
-	body = body,
-	headers = {
-		["Content-Type"] = "application/json",
-	},
-}
-
-if etag == "" then
-	local response, code, msg = httpc.request_to_buffer(uri, options)
+if type(mapserver)=="table" then
+	for i,v in ipairs(mapserver) do 
+		local uri = v.."/"..hostname.."."..suffix
+		db_put(uri,body)
+	end
 else
-	local response, code, msg = httpc.request_to_buffer(uri.."?rev="..etag, options)
-end
-
-if not response then
-        print("fail")
-else
-        print(code)
+	local uri = mapserver.."/"..hostname.."."..suffix
+	db_put(uri,body)
 end
 
 unlock()
