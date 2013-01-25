@@ -154,6 +154,13 @@ local function fetch_olsrd()
 	return data
 end
 
+local function showmac(mac)
+    if not is_admin then
+        mac = mac:gsub("(%S%S:%S%S):%S%S:%S%S:(%S%S:%S%S)", "%1:XX:XX:%2")
+    end
+    return mac
+end
+
 function jsonowm()
 	local root = {}
 	local sys = require "luci.sys"
@@ -229,6 +236,20 @@ function jsonowm()
 		root.interfaces[#root.interfaces]['.anonymous'] = nil
 		root.interfaces[#root.interfaces]['.type'] = nil
 		root.interfaces[#root.interfaces]['.index'] = nil
+		root.interfaces[#root.interfaces]['username'] = nil
+		root.interfaces[#root.interfaces]['password'] = nil
+		root.interfaces[#root.interfaces]['password'] = nil
+		root.interfaces[#root.interfaces]['clientid'] = nil
+		root.interfaces[#root.interfaces]['reqopts'] = nil
+		root.interfaces[#root.interfaces]['pincode'] = nil
+		root.interfaces[#root.interfaces]['tunnelid'] = nil
+		root.interfaces[#root.interfaces]['tunnel_id'] = nil
+		root.interfaces[#root.interfaces]['peer_tunnel_id'] = nil
+		root.interfaces[#root.interfaces]['session_id'] = nil
+		root.interfaces[#root.interfaces]['peer_session_id'] = nil
+		if vif.macaddr then
+			root.interfaces[#root.interfaces]['macaddr'] = showmac(vif.macaddr)
+		end
 	end)
 	
 	cursor:foreach("wireless", "wifi-device",function(s)
@@ -237,6 +258,9 @@ function jsonowm()
 		root.wireless.devices[#root.wireless.devices]['.anonymous'] = nil
 		root.wireless.devices[#root.wireless.devices]['.type'] = nil
 		root.wireless.devices[#root.wireless.devices]['.index'] = nil
+		if s.macaddr then
+			root.wireless.devices[#root.wireless.devices]['macaddr'] = showmac(s.macaddr)
+		end
 	end)
 
 	cursor:foreach("wireless", "wifi-iface",function(s)
@@ -245,6 +269,16 @@ function jsonowm()
 		root.wireless.interfaces[#root.wireless.interfaces]['.anonymous'] = nil
 		root.wireless.interfaces[#root.wireless.interfaces]['.type'] = nil
 		root.wireless.interfaces[#root.wireless.interfaces]['.index'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['key'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['key1'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['key2'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['key3'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['key4'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['auth_secret'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['acct_secret'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['nasid'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['identity'] = nil
+		root.wireless.interfaces[#root.wireless.interfaces]['password'] = nil
 		local iwinfo = luci.sys.wifi.getiwinfo(s.ifname)
 		if iwinfo then
 			local _, f
@@ -273,7 +307,8 @@ function jsonowm()
 		end
 	end)
 
-	root.wifistatus = status.wifi_networks()
+	--TODO use showmac for root.wifistatus[networks][assoclist][showmac()][signal]
+	--root.wifistatus = status.wifi_networks()
 
 	local dr4 = sys.net.defaultroute()
 	local dr6 = sys.net.defaultroute6()
