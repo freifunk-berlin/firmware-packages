@@ -220,15 +220,56 @@ function jsonowm()
 		root.longitude = tonumber(s.longitude) --owm
 	end)
 
+	local devices = {}
+	cursor:foreach("wireless", "wifi-device",function(s)
+		devices[#devices+1] = s
+		devices[#devices]['name'] = s['.name']
+		devices[#devices]['.name'] = nil
+		devices[#devices]['.anonymous'] = nil
+		devices[#devices]['.type'] = nil
+		devices[#devices]['.index'] = nil
+		if s.macaddr then
+			devices[#devices]['macaddr'] = showmac(s.macaddr)
+		end
+	end)
+
+	local interfaces = {}
+	cursor:foreach("wireless", "wifi-iface",function(s)
+		interfaces[#interfaces+1] = s
+		interfaces[#interfaces]['.name'] = nil
+		interfaces[#interfaces]['.anonymous'] = nil
+		interfaces[#interfaces]['.type'] = nil
+		interfaces[#interfaces]['.index'] = nil
+		interfaces[#interfaces]['key'] = nil
+		interfaces[#interfaces]['key1'] = nil
+		interfaces[#interfaces]['key2'] = nil
+		interfaces[#interfaces]['key3'] = nil
+		interfaces[#interfaces]['key4'] = nil
+		interfaces[#interfaces]['auth_secret'] = nil
+		interfaces[#interfaces]['acct_secret'] = nil
+		interfaces[#interfaces]['nasid'] = nil
+		interfaces[#interfaces]['identity'] = nil
+		interfaces[#interfaces]['password'] = nil
+		local iwinfo = luci.sys.wifi.getiwinfo(s.ifname)
+		if iwinfo then
+			local _, f
+			for _, f in ipairs({
+			"channel", "txpower", "bitrate", "signal", "noise",
+			"quality", "quality_max", "mode", "ssid", "bssid", "encryption", "ifname"
+			}) do
+				interfaces[#interfaces][f] = iwinfo[f]
+			end
+		end
+	end)
+
 	root.interfaces = {} --owm
-	root.wireless = {devices = {}, interfaces = {}, status = {}}
-	
 	cursor:foreach("network", "interface",function(vif)
 		if 'lo' == vif.ifname then
 			return
 		end
+		local name = vif['.name']
 		root.interfaces[#root.interfaces+1] =  vif
-		root.interfaces[#root.interfaces].name = vif['.name'] --owm
+		root.interfaces[#root.interfaces].name = name --owm
 		root.interfaces[#root.interfaces].ifname = vif.ifname --owm
 		root.interfaces[#root.interfaces].ipv4Addresses = {vif.ipaddr} --owm
 		root.interfaces[#root.interfaces].ipv6Addresses = {vif.ip6addr} --owm
@@ -250,63 +291,31 @@ function jsonowm()
 		if vif.macaddr then
 			root.interfaces[#root.interfaces]['macaddr'] = showmac(vif.macaddr)
 		end
+
+		for i,v in ipairs(interfaces) do
+			print(v['network'].." "..name)
+			if v['network'] == name then
+				root.interfaces[#root.interfaces].type = 'wifi' --owm
+				for ii,vv in ipairs(devices) do
+					print(v['device'].." "..vv.name)
+					if v['device'] == vv.name then
+						v.wirelessdevice = vv
+					end
+				end
+				root.interfaces[#root.interfaces].mode = v.mode
+				root.interfaces[#root.interfaces].encryption = v.encryption
+				root.interfaces[#root.interfaces].access = 'free'
+				root.interfaces[#root.interfaces].accessNote = "everyone is welcome!"
+				root.interfaces[#root.interfaces].channel = v.wirelessdevice.channel
+				root.interfaces[#root.interfaces].txpower = v.wirelessdevice.txpower
+				root.interfaces[#root.interfaces].bssid = v.bssid
+				root.interfaces[#root.interfaces].ssid = v.ssid
+				root.interfaces[#root.interfaces].wireless = v --owm
+			end
+		end
+
 	end)
 	
-	cursor:foreach("wireless", "wifi-device",function(s)
-		root.wireless.devices[#root.wireless.devices+1] = s
-		root.wireless.devices[#root.wireless.devices]['.name'] = nil
-		root.wireless.devices[#root.wireless.devices]['.anonymous'] = nil
-		root.wireless.devices[#root.wireless.devices]['.type'] = nil
-		root.wireless.devices[#root.wireless.devices]['.index'] = nil
-		if s.macaddr then
-			root.wireless.devices[#root.wireless.devices]['macaddr'] = showmac(s.macaddr)
-		end
-	end)
-
-	cursor:foreach("wireless", "wifi-iface",function(s)
-		root.wireless.interfaces[#root.wireless.interfaces+1] = s
-		root.wireless.interfaces[#root.wireless.interfaces]['.name'] = nil
-		root.wireless.interfaces[#root.wireless.interfaces]['.anonymous'] = nil
-		root.wireless.interfaces[#root.wireless.interfaces]['.type'] = nil
-		root.wireless.interfaces[#root.wireless.interfaces]['.index'] = nil
-		root.wireless.interfaces[#root.wireless.interfaces]['key'] = nil
-		root.wireless.interfaces[#root.wireless.interfaces]['key1'] = nil
-		root.wireless.interfaces[#root.wireless.interfaces]['key2'] = nil
-		root.wireless.interfaces[#root.wireless.interfaces]['key3'] = nil
-		root.wireless.interfaces[#root.wireless.interfaces]['key4'] = nil
-		root.wireless.interfaces[#root.wireless.interfaces]['auth_secret'] = nil
-		root.wireless.interfaces[#root.wireless.interfaces]['acct_secret'] = nil
-		root.wireless.interfaces[#root.wireless.interfaces]['nasid'] = nil
-		root.wireless.interfaces[#root.wireless.interfaces]['identity'] = nil
-		root.wireless.interfaces[#root.wireless.interfaces]['password'] = nil
-		local iwinfo = luci.sys.wifi.getiwinfo(s.ifname)
-		if iwinfo then
-			local _, f
-			for _, f in ipairs({
-			"channel", "txpower", "bitrate", "signal", "noise",
-			"quality", "quality_max", "mode", "ssid", "bssid", "encryption", "ifname"
-			}) do
-				root.wireless.interfaces[#root.wireless.interfaces][f] = iwinfo[f]
-			end
-		end
-	end)
-
-	cursor:foreach("wireless", "wifi-iface",function(s)
-		local iwinfo = luci.sys.wifi.getiwinfo(s.ifname)
-		if iwinfo then
-			root.wireless.status[#root.wireless.status+1] = {}
-			root.wireless.status[#root.wireless.status]['network'] = s.network
-			root.wireless.status[#root.wireless.status]['device'] = s.device
-			local _, f
-			for _, f in ipairs({
-			"channel", "txpower", "bitrate", "signal", "noise",
-			"quality", "quality_max", "mode", "ssid", "bssid", "encryption", "ifname"
-			}) do
-				root.wireless.status[#root.wireless.status][f] = iwinfo[f]
-			end
-		end
-	end)
-
 	--TODO use showmac for root.wifistatus[networks][assoclist][showmac()][signal]
 	--root.wifistatus = status.wifi_networks()
 
