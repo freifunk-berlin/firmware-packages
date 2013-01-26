@@ -2,9 +2,8 @@
 local uci = require "luci.model.uci".cursor()
 local mapserver = uci:get("freifunk", "community", "mapserver") or "http://openwifimap.net/openwifimap/"
 if type(mapserver)=="table" then
-		mapserver = mapserver[#mapserver]
+	mapserver = mapserver[#mapserver]
 end
-
 %>
 
 <%+header%>
