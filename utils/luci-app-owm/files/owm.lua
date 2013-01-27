@@ -353,16 +353,18 @@ function db_put(uri,body)
 	
 	local code,response, msg, csock = httpc.request_raw(uri, options)
 	
-	if not response then
+	if not response or not code then
 		print("get ETag fail "..uri)
 	else
 		if code == 404 then
-			print("new ETag   Statuscode: "..code.." "..uri)
+			print("new    ETag Statuscode: "..code.." "..uri)
 			etag = ""
-		else
+		elseif code == 200 then
 			etag = response.headers['ETag'] or ""
 			etag = string.gsub(etag, '\"', '')
-			print("get ETag   Statuscode: "..code.." "..uri.." "..etag)
+			print("get    ETag Statuscode: "..code.." "..uri.." "..etag)
+		elseif code then
+			print("fail   ETag Statuscode: "..code.." "..uri)
 		end
 	end
 	
@@ -380,13 +382,15 @@ function db_put(uri,body)
 		local response, code, msg = httpc.request_to_buffer(uri.."?rev="..etag, options)
 	end
 	
-	if not response then
+	if not response or not code then
 		print("fail "..uri)
 	else
 		if code == 404 then
-			print("new Doc    Statuscode: "..code.." "..uri)
-		else
-			print("update Doc Statuscode: "..code.." "..uri)
+			print("new    Doc  Statuscode: "..code.." "..uri)
+		elseif code == 200 then
+			print("update Doc  Statuscode: "..code.." "..uri)
+		elseif code then
+			print("fail   Doc  Statuscode: "..code.." "..uri)
 		end
 	end
 end
