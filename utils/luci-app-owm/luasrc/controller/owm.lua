@@ -293,11 +293,9 @@ function jsonowm()
 		end
 
 		for i,v in ipairs(interfaces) do
-			print(v['network'].." "..name)
 			if v['network'] == name then
 				root.interfaces[#root.interfaces].type = 'wifi' --owm
 				for ii,vv in ipairs(devices) do
-					print(v['device'].." "..vv.name)
 					if v['device'] == vv.name then
 						v.wirelessdevice = vv
 					end
