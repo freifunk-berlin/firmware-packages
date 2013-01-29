@@ -1734,15 +1734,7 @@ function main.write(self, section, value)
 				-- Create alias
 				local aliasbase = uci:get_all("freifunk", "alias") or {}
 				util.update(aliasbase, uci:get_all(external, "alias") or {})
-				--does not work
-				--aliasbase.ifname = "@" .. device
-				local devtype = uci:get("network",device,"type") or ""
-				if devtype == "bridge" then
-					aliasbase.ifname = "br-" .. device
-				else
-					local ifname = uci:get("network",device,"ifname") or ""
-					aliasbase.ifname = ifname
-				end
+				aliasbase.ifname = "@" .. device
 				aliasbase.ipaddr = dhcp_ip
 				aliasbase.netmask = dhcp_mask
 				aliasbase.proto = "static"
