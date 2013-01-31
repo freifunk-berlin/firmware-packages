@@ -81,45 +81,59 @@ local function fetch_olsrd_neighbors(interfaces)
 	if #jsonreq4 ~= 0 then
 		jsondata4 = json.decode(jsonreq4)
 		local links = jsondata4['data'][1]['links']
-		for i,v in ipairs(links) do
-			links[i]['quality'] = v['linkQuality'] --owm
-			links[i]['sourceAddr'] = v['localIP'] --owm
-			links[i]['destAddr'] = v['remoteIP'] --owm
-			hostname = nixio.getnameinfo(v['remoteIP'], "inet")
+		for _,v in ipairs(links) do
+			local hostname = nixio.getnameinfo(v['remoteIP'], "inet")
+			hostname = string.gsub(hostname, "mid..", "")
 			if hostname then
-				links[i]['id'] = string.gsub(hostname, "mid..", "") --owm
-			end
-			if #interfaces ~= 0 then
-			for _,iface in ipairs(interfaces) do
-				if iface['ipaddr'] == v['localIP'] then
-					links[i]['interface'] = iface['name'] --owm
+				local index = #data+1
+				data[index] = {}
+				data[index]['id'] = hostname --owm
+				data[index]['quality'] = v['linkQuality'] --owm
+				data[index]['sourceAddr4'] = v['localIP'] --owm
+				data[index]['destAddr4'] = v['remoteIP'] --owm
+				if #interfaces ~= 0 then
+					for _,iface in ipairs(interfaces) do
+						if iface['ipaddr'] == v['localIP'] then
+							data[index]['interface'] = iface['name'] --owm
+						end
+					end
 				end
-			end
+				data[index]['olsr_ipv4'] = v
 			end
 		end
-		data = links
 	end
 	if #jsonreq6 ~= 0 then
 		jsondata6 = json.decode(jsonreq6)
 		local links = jsondata6['data'][1]['links']
-		for i,v in ipairs(links) do
-			links[i]['quality'] = v['linkQuality'] --owm
-			links[i]['sourceAddr'] = v['localIP'] --owm
-			links[i]['destAddr'] = v['remoteIP'] --owm
-			hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
+		for _,v in ipairs(links) do
+			local hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
+			hostname = string.gsub(hostname, "mid..", "")
 			if hostname then
-				links[i]['id'] = string.gsub(hostname, "mid..", "") --owm
-			end
-			if #interfaces ~= 0 then
-			for _,iface in ipairs(interfaces) do
-				if iface['ip6addr'] then
-				if string.gsub(iface['ip6addr'], "/64", "") == v['localIP'] then
-					links[i]['interface'] = iface['name'] --owm
+				local index = 0
+				for i, v in ipairs(data) do
+					if v.id == hostname then
+						index = i
+					end
 				end
+				if index == 0 then
+					index = #data+1
+					data[index] = {}
+					data[index]['id'] = string.gsub(hostname, "mid..", "") --owm
+					data[index]['quality'] = v['linkQuality'] --owm
+					if #interfaces ~= 0 then
+						for _,iface in ipairs(interfaces) do
+							if iface['ip6addr'] then
+								if string.gsub(iface['ip6addr'], "/64", "") == v['localIP'] then
+									data[index]['interface'] = iface['name'] --owm
+								end
+							end
+						end
+					end
 				end
+				data[index]['sourceAddr6'] = v['localIP'] --owm
+				data[index]['destAddr6'] = v['remoteIP'] --owm
+				data[index]['olsr_ipv6'] = v
 			end
-			end
-			data[#data+1] = links[i]
 		end
 	end
 	return data
@@ -155,11 +169,9 @@ function jsonowm()
 	local webadmin = require "luci.tools.webadmin"
 	local status = require "luci.tools.status"
 	local json = require "luci.json"
-
-
+	local ntm = require "luci.model.network".init()
 	local cursor = uci.cursor_state()
 
-	--root.protocol = 1
 	root.type = 'node' --owm
 	root.lastupdate = os.date("!%Y-%m-%dT%H:%M:%SZ") --owm
 	root.updateInterval = 60 --owm
@@ -198,7 +210,6 @@ function jsonowm()
 		end
 		root.freifunk[pname] = s
 	end)
-
 
 	cursor:foreach("system", "system", function(s) --owm
 		root.latitude = tonumber(s.latitude) --owm
@@ -300,9 +311,6 @@ function jsonowm()
 
 	end)
 
-	--TODO use showmac for root.wifistatus[networks][assoclist][showmac()][signal]
-	--root.wifistatus = status.wifi_networks()
-
 	local dr4 = sys.net.defaultroute()
 	local dr6 = sys.net.defaultroute6()
 	
@@ -335,12 +343,49 @@ function jsonowm()
         
 	root.ipv4defaultGateway = def4
 	root.ipv6defaultGateway = def6
-       
-	root.neighbors = fetch_olsrd_neighbors(root.interfaces)
-
-	root.routingNeighbors = {}
-	root.routingNeighbors.olsr = fetch_olsrd()
+	local neighbors = fetch_olsrd_neighbors(root.interfaces)
+	local arptable = sys.net.arptable()
+	local devices  = ntm:get_wifidevs()
+	local assoclist = {}
+	local has_iwinfo = pcall(require, "iwinfo")
+	for _, dev in ipairs(devices) do
+		for _, net in ipairs(dev:get_wifinets()) do
+			assoclist[#assoclist+1] = net.iwinfo.assoclist
+		end
+	end
 	
+	--TODO read neighbors discovery cache for mac,ipv6 table
+	for _, arpt in ipairs(arptable) do
+		local mac = arpt['HW address']:lower()
+		local ip = arpt['IP address']
+		for i, neigh in ipairs(neighbors) do
+			if neigh['destAddr4'] == ip then
+				neighbors[i]['arp'] = arpt
+				neighbors[i]['arp']['HW address'] = showmac(mac)
+				neighbors[i]['mac'] = showmac(mac)
+				neighbors[i]['dev'] = arpt['Device']
+				neighbors[i]['mask'] = arpt['Mask']
+				neighbors[i]['flags'] = arpt['Flags']
+				neighbors[i]['hwtype'] = arpt['HW type']
+			end
+		end
+	end
+	for _, val in ipairs(assoclist) do
+		for assocmac, assot in pairs(val) do
+			for i, neigh in ipairs(neighbors) do
+				local mac = assocmac:lower()
+				if neigh['mac'] == showmac(mac) then
+					neighbors[i]['wifi'] = assot
+					neighbors[i]['signal'] = assot.signal
+					neighbors[i]['noise'] = assot.noise
+				end
+			end
+		end
+	end
+	root.neighbors = neighbors
+
+	root.olsr = fetch_olsrd()
+
 	return json.encode(root)
 end
 
