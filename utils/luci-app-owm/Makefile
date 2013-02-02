@@ -1,22 +1,55 @@
+#
+# Copyright (C) 2012-2013 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
+
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-owm
-PKG_RELEASE:=0.1.2
+PKG_RELEASE:=0.2.0
+
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 
+
+
 include $(INCLUDE_DIR)/package.mk
 
-define Package/luci-app-owm
+define Package/luci-app-owm/default
   SECTION:=luci
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
+  URL:=https://github.com/freifunk/packages-pberg/
+endef
+
+define Package/luci-app-owm
+  $(call Package/luci-app-owm/default)
+  MENU:=1
   TITLE:=Luci JSON Export for Open Wireless Map
-  DEPENDS:=+luci-lib-web +luci-lib-httpclient +luci-lib-json +luci-mod-freifunk +olsrd-mod-jsoninfo
 endef
 
 define Package/luci-app-owm/description
   Luci JSON Export for Open Wireless Map
+endef
+
+define Package/luci-app-owm-cmd
+  $(call Package/luci-app-owm/default)
+  DEPENDS:=+luci-app-owm-lib luci-lib-httpclient
+  TITLE:=luci-app-owm-cmd - Commandline update tool
+endef
+
+define Package/luci-app-owm-gui
+  $(call Package/luci-app-owm/default)
+  DEPENDS:=+luci-app-owm-lib luci-lib-web
+  TITLE:=luci-app-owm-gui - GUI Open Wireless Map
+endef
+
+define Package/luci-app-owm-lib
+  $(call Package/luci-app-owm/default)
+  DEPENDS:=luci-app-owm luci-lib-json luci-mod-freifunk olsrd-mod-jsoninfo
+  TITLE:=luci-app-owm-lib - Library Open Wireless Map
 endef
 
 define Build/Prepare
@@ -31,7 +64,7 @@ define Build/Compile
 	$(MAKE) -C $(PKG_BUILD_DIR)/luasrc
 endef
 
-define Package/luci-app-owm/postinst
+define Package/luci-app-owm-gui/postinst
 #!/bin/sh
 [ -n "${IPKG_INSTROOT}" ] || {
 	( . /etc/uci-defaults/owm ) && rm -f /etc/uci-defaults/owm
@@ -40,15 +73,26 @@ define Package/luci-app-owm/postinst
 }
 endef
 
-define Package/luci-app-owm/install
+define Package/luci-app-owm-cmd/install
+	$(INSTALL_DIR) $(1)/usr/sbin/
+	$(CP) files/owm.lua $(1)/usr/sbin/
+endef
+
+define Package/luci-app-owm-gui/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
 	$(CP) $(PKG_BUILD_DIR)/luasrc/controller/* $(1)/usr/lib/lua/luci/controller
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
 	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view
-	$(INSTALL_DIR) $(1)/usr/sbin/
-	$(CP) files/owm.lua $(1)/usr/sbin/
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) files/owm-defaults $(1)/etc/uci-defaults/owm
 endef
 
+define Package/luci-app-owm-lib/install
+	$(INSTALL_DIR) $(1)/usr/lib/lua
+	$(CP) $(PKG_BUILD_DIR)/luasrc/owm.lua $(1)/usr/lib/lua/luci
+endef
+
 $(eval $(call BuildPackage,luci-app-owm))
+$(eval $(call BuildPackage,luci-app-owm-cmd))
+$(eval $(call BuildPackage,luci-app-owm-gui))
+$(eval $(call BuildPackage,luci-app-owm-lib))
