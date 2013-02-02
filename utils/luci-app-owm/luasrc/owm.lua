@@ -13,11 +13,7 @@ $Id$
 
 ]]--
 
---require("luci.util")
---require("luci.model.uci")
---require("luci.fs")
---require("luci.httpclient")
-local string    = require "string"
+local string = require "string"
 local sys = require "luci.sys"
 local uci = require "luci.model.uci"
 local util = require "luci.util"
@@ -26,10 +22,8 @@ local webadmin = require "luci.tools.webadmin"
 local status = require "luci.tools.status"
 local json = require "luci.json"
 local netm = require "luci.model.network"
---local iwinfo = require "iwinfo"
 local table = require "table"
 local nixio = require "nixio"
-
 
 local ipairs, os, pairs, next, type, tostring, tonumber, error =
 	ipairs, os, pairs, next, type, tostring, tonumber, error
@@ -176,7 +170,7 @@ function showmac(mac)
     return mac
 end
 
-function getjson()
+function get()
 	local root = {}
 	local cursor = uci.cursor_state()
 	local ntm = netm.init()
@@ -191,7 +185,6 @@ function getjson()
 			assoclist[#assoclist]['list'] = net.iwinfo.assoclist
 		end
 	end
-
 	root.type = 'node' --owm
 	root.lastupdate = os.date("!%Y-%m-%dT%H:%M:%SZ") --owm
 	root.updateInterval = 60 --owm
@@ -409,7 +402,6 @@ function getjson()
 
 	root.olsr = fetch_olsrd()
 
-	--return json.encode(root)
-	return json.encode(root)
+	return root
 end
 

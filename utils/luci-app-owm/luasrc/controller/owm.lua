@@ -33,6 +33,6 @@ function getjsonowm()
 	local json = require "luci.json"
 	local owm = require "luci.owm"
 	http.prepare_content("application/json")
-	ltn12.pump.all(json.Encoder(owm.getjson()):source(), http.write)
+	ltn12.pump.all(json.Encoder(owm.get()):source(), http.write)
 end
 
