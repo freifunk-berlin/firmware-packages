@@ -171,6 +171,18 @@ function jsonowm()
 	local json = require "luci.json"
 	local ntm = require "luci.model.network".init()
 	local cursor = uci.cursor_state()
+	local devices  = ntm:get_wifidevs()
+	local assoclist = {}
+	local has_iwinfo = pcall(require, "iwinfo")
+	for _, dev in ipairs(devices) do
+		for _, net in ipairs(dev:get_wifinets()) do
+			assoclist[#assoclist+1] = {} 
+			assoclist[#assoclist]['ifname'] = net.iwdata.ifname
+			assoclist[#assoclist]['network'] = net.iwdata.network
+			assoclist[#assoclist]['device'] = net.iwdata.device
+			assoclist[#assoclist]['list'] = net.iwinfo.assoclist
+		end
+	end
 
 	root.type = 'node' --owm
 	root.lastupdate = os.date("!%Y-%m-%dT%H:%M:%SZ") --owm
@@ -256,6 +268,16 @@ function jsonowm()
 				interfaces[#interfaces][f] = iwinfo[f]
 			end
 		end
+		assoclist_if = {}
+		for _, v in ipairs(assoclist) do
+			if v.network == interfaces[#interfaces]['network'] then
+				for assocmac, assot in pairs(v.list) do
+					assoclist_if[#assoclist_if+1] = assot
+					assoclist_if[#assoclist_if].mac = showmac(assocmac)
+				end
+			end
+		end
+		interfaces[#interfaces]['assoclist'] = assoclist_if
 	end)
 
 	root.interfaces = {} --owm
@@ -288,7 +310,8 @@ function jsonowm()
 		if vif.macaddr then
 			root.interfaces[#root.interfaces]['macaddr'] = showmac(vif.macaddr)
 		end
-
+		
+		wireless_add = {}
 		for i,v in ipairs(interfaces) do
 			if v['network'] == name then
 				root.interfaces[#root.interfaces].type = 'wifi' --owm
@@ -305,10 +328,10 @@ function jsonowm()
 				root.interfaces[#root.interfaces].txpower = v.wirelessdevice.txpower
 				root.interfaces[#root.interfaces].bssid = v.bssid
 				root.interfaces[#root.interfaces].ssid = v.ssid
-				root.interfaces[#root.interfaces].wireless = v --owm
+				wireless_add[#wireless_add+1] = v --owm
 			end
 		end
-
+		root.interfaces[#root.interfaces].wireless = wireless_add
 	end)
 
 	local dr4 = sys.net.defaultroute()
@@ -345,14 +368,6 @@ function jsonowm()
 	root.ipv6defaultGateway = def6
 	local neighbors = fetch_olsrd_neighbors(root.interfaces)
 	local arptable = sys.net.arptable()
-	local devices  = ntm:get_wifidevs()
-	local assoclist = {}
-	local has_iwinfo = pcall(require, "iwinfo")
-	for _, dev in ipairs(devices) do
-		for _, net in ipairs(dev:get_wifinets()) do
-			assoclist[#assoclist+1] = net.iwinfo.assoclist
-		end
-	end
 	
 	--TODO read neighbors discovery cache for mac,ipv6 table
 	for _, arpt in ipairs(arptable) do
