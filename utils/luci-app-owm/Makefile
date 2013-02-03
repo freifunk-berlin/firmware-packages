@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-owm
-PKG_RELEASE:=0.2.0
+PKG_RELEASE:=0.2.1
 
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
@@ -27,6 +27,7 @@ endef
 define Package/luci-app-owm
   $(call Package/luci-app-owm/default)
   MENU:=1
+  DEPENDS:=luci-lib-json luci-mod-freifunk olsrd-mod-jsoninfo
   TITLE:=Luci JSON Export for Open Wireless Map
 endef
 
@@ -44,12 +45,6 @@ define Package/luci-app-owm-gui
   $(call Package/luci-app-owm/default)
   DEPENDS:=+luci-app-owm-lib luci-lib-web
   TITLE:=luci-app-owm-gui - GUI Open Wireless Map
-endef
-
-define Package/luci-app-owm-lib
-  $(call Package/luci-app-owm/default)
-  DEPENDS:=luci-app-owm luci-lib-json luci-mod-freifunk olsrd-mod-jsoninfo
-  TITLE:=luci-app-owm-lib - Library Open Wireless Map
 endef
 
 define Build/Prepare
@@ -87,7 +82,7 @@ define Package/luci-app-owm-gui/install
 	$(CP) files/owm-defaults $(1)/etc/uci-defaults/owm
 endef
 
-define Package/luci-app-owm-lib/install
+define Package/luci-app-owm/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
 	$(CP) $(PKG_BUILD_DIR)/luasrc/owm.lua $(1)/usr/lib/lua/luci
 endef
@@ -95,4 +90,3 @@ endef
 $(eval $(call BuildPackage,luci-app-owm))
 $(eval $(call BuildPackage,luci-app-owm-cmd))
 $(eval $(call BuildPackage,luci-app-owm-gui))
-$(eval $(call BuildPackage,luci-app-owm-lib))

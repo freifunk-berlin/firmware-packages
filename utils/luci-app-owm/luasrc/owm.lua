@@ -386,8 +386,8 @@ function get()
 			end
 		end
 	end
-	for _, val in ipairs(assoclist) do
-		for assocmac, assot in pairs(val) do
+	for _, v in ipairs(assoclist) do
+		for assocmac, assot in pairs(v.list) do
 			for i, neigh in ipairs(neighbors) do
 				local mac = assocmac:lower()
 				if neigh['mac'] == showmac(mac) then
