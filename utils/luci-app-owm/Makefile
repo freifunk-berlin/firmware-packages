@@ -88,7 +88,7 @@ define Package/luci-app-owm-gui/install
 endef
 
 define Package/luci-app-owm-lib/install
-	$(INSTALL_DIR) $(1)/usr/lib/lua
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
 	$(CP) $(PKG_BUILD_DIR)/luasrc/owm.lua $(1)/usr/lib/lua/luci
 endef
 
