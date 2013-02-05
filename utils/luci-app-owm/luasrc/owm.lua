@@ -382,7 +382,7 @@ function get()
 			local t = neightbl.get(iface['ifname']) or {}
 			local neigh_mac = {}
 			for ip,mac in pairs(t) do
-				if not string.find(mac, "33:33:") then
+				if mac and not string.find(mac, "33:33:") then
 					mac = showmac(mac)
 					if not neigh_mac[mac] then
 						neigh_mac[mac] = {}
