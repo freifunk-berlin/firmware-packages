@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-owm
-PKG_RELEASE:=0.3.0
+PKG_RELEASE:=0.3.1
 
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
@@ -37,13 +37,13 @@ endef
 
 define Package/luci-app-owm-cmd
   $(call Package/luci-app-owm/default)
-  DEPENDS:=+luci-app-owm-lib luci-lib-httpclient
+  DEPENDS:=+luci-app-owm luci-lib-httpclient
   TITLE:=luci-app-owm-cmd - Commandline update tool
 endef
 
 define Package/luci-app-owm-gui
   $(call Package/luci-app-owm/default)
-  DEPENDS:=+luci-app-owm-lib luci-lib-web
+  DEPENDS:=+luci-app-owm luci-lib-web
   TITLE:=luci-app-owm-gui - GUI Open Wireless Map
 endef
 
