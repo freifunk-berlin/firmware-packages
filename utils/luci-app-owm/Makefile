@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-owm
-PKG_RELEASE:=0.2.1
+PKG_RELEASE:=0.3.0
 
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
@@ -27,7 +27,7 @@ endef
 define Package/luci-app-owm
   $(call Package/luci-app-owm/default)
   MENU:=1
-  DEPENDS:=luci-lib-json luci-mod-freifunk olsrd-mod-jsoninfo
+  DEPENDS:=luci-lib-json luci-mod-freifunk olsrd-mod-jsoninfo neightbl-lua
   TITLE:=Luci JSON Export for Open Wireless Map
 endef
 

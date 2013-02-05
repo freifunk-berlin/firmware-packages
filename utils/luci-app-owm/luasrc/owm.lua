@@ -24,6 +24,8 @@ local json = require "luci.json"
 local netm = require "luci.model.network"
 local table = require "table"
 local nixio = require "nixio"
+local neightbl = require "neightbl"
+
 
 local ipairs, os, pairs, next, type, tostring, tonumber, error =
 	ipairs, os, pairs, next, type, tostring, tonumber, error
@@ -332,7 +334,7 @@ function get()
 				wireless_add[#wireless_add+1] = v --owm
 			end
 		end
-		root.interfaces[#root.interfaces].wireless = wireless_add
+		root.interfaces[#root.interfaces].wifi = wireless_add
 	end)
 
 	local dr4 = sys.net.defaultroute()
@@ -369,35 +371,88 @@ function get()
 	root.ipv6defaultGateway = def6
 	local neighbors = fetch_olsrd_neighbors(root.interfaces)
 	local arptable = sys.net.arptable()
-	
-	--TODO read neighbors discovery cache for mac,ipv6 table
-	for _, arpt in ipairs(arptable) do
-		local mac = arpt['HW address']:lower()
-		local ip = arpt['IP address']
-		for i, neigh in ipairs(neighbors) do
-			if neigh['destAddr4'] == ip then
-				neighbors[i]['arp'] = arpt
-				neighbors[i]['arp']['HW address'] = showmac(mac)
-				neighbors[i]['mac'] = showmac(mac)
-				neighbors[i]['dev'] = arpt['Device']
-				neighbors[i]['mask'] = arpt['Mask']
-				neighbors[i]['flags'] = arpt['Flags']
-				neighbors[i]['hwtype'] = arpt['HW type']
-			end
-		end
-	end
-	for _, v in ipairs(assoclist) do
-		for assocmac, assot in pairs(v.list) do
-			for i, neigh in ipairs(neighbors) do
-				local mac = assocmac:lower()
-				if neigh['mac'] == showmac(mac) then
-					neighbors[i]['wifi'] = assot
-					neighbors[i]['signal'] = assot.signal
-					neighbors[i]['noise'] = assot.noise
+	if #root.interfaces ~= 0 then
+		for idx,iface in ipairs(root.interfaces) do
+			local t = neightbl.get(iface['ifname']) or {}
+			for ip,mac in pairs(t) do
+				if not mac then
+					os.execute("ping6 -q -c1 -w1 -I"..iface['ifname'].." "..ip.." 2&>1 >/dev/null")
 				end
 			end
+			local t = neightbl.get(iface['ifname']) or {}
+			local neigh_mac = {}
+			for ip,mac in pairs(t) do
+				if not string.find(mac, "33:33:") then
+					mac = showmac(mac)
+					if not neigh_mac[mac] then
+						neigh_mac[mac] = {}
+						neigh_mac[mac]['ip6'] = {}
+					elseif not neigh_mac[mac]['ip6'] then
+						neigh_mac[mac]['ip6'] = {}
+					end
+					neigh_mac[mac]['ip6'][#neigh_mac[mac]['ip6']+1] = ip
+					for i, neigh in ipairs(neighbors) do
+						if neigh['destAddr6'] == ip then
+							neighbors[i]['mac'] = mac
+							neighbors[i]['ifname'] = iface['ifname']
+						end
+					end
+				end
+			end
+			for _, arpt in ipairs(arptable) do
+				local mac = showmac(arpt['HW address']:lower())
+				local ip = arpt['IP address']
+				if iface['ifname'] == arpt['Device'] then
+					if not neigh_mac[mac] then
+						neigh_mac[mac] = {}
+						neigh_mac[mac]['ip4'] = {}
+					elseif not neigh_mac[mac]['ip4'] then
+						neigh_mac[mac]['ip4'] = {}
+					end
+					neigh_mac[mac]['ip4'][#neigh_mac[mac]['ip4']+1] = ip
+					for i, neigh in ipairs(neighbors) do
+						if neigh['destAddr4'] == ip then
+							neighbors[i]['mac'] = mac
+							neighbors[i]['ifname'] = iface['ifname']
+						end
+					end
+				end
+			end
+			for _, v in ipairs(assoclist) do
+				if v.ifname == iface['ifname'] then
+					for assocmac, assot in pairs(v.list) do
+						local mac = showmac(assocmac:lower())
+						if not neigh_mac[mac] then
+							neigh_mac[mac] = {}
+						end
+						neigh_mac[mac]['wifi'] = assot
+						for i, neigh in ipairs(neighbors) do
+							for j, ip in ipairs(neigh_mac[mac]['ip4']) do
+								if neigh['destAddr4'] == ip then
+									neighbors[i]['mac'] = mac
+									neighbors[i]['ifname'] = iface['ifname']
+									neighbors[i]['wifi'] = assot
+									neighbors[i]['signal'] = assot.signal
+									neighbors[i]['noise'] = assot.noise
+								end
+							end
+							for j, ip in ipairs(neigh_mac[mac]['ip6']) do
+								if neigh['destAddr6'] == ip then
+									neighbors[i]['mac'] = mac
+									neighbors[i]['ifname'] = iface['ifname']
+									neighbors[i]['wifi'] = assot
+									neighbors[i]['signal'] = assot.signal
+									neighbors[i]['noise'] = assot.noise
+								end
+							end
+						end
+					end
+				end
+			end
+			root.interfaces[idx].neighbors = neigh_mac
 		end
 	end
+
 	root.neighbors = neighbors
 
 	root.olsr = fetch_olsrd()
