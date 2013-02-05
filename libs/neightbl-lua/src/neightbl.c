@@ -29,6 +29,14 @@ limitations under the License.
 #include <arpa/inet.h>
 #include <netinet/ether.h>
 
+char *ether_ntoa_l (const struct ether_addr *addr, char *buf)
+{
+  sprintf (buf, "%02x:%02x:%02x:%02x:%02x:%02x",
+           addr->ether_addr_octet[0], addr->ether_addr_octet[1],
+           addr->ether_addr_octet[2], addr->ether_addr_octet[3],
+           addr->ether_addr_octet[4], addr->ether_addr_octet[5]);
+  return buf;
+}
 
 static int neightbl_get(lua_State *L) {
 	int sock = socket(AF_NETLINK, SOCK_RAW | SOCK_CLOEXEC, NETLINK_ROUTE);
@@ -71,14 +79,13 @@ static int neightbl_get(lua_State *L) {
 				continue;
 
 			ssize_t alen = NLMSG_PAYLOAD(nh, sizeof(*ndm));
-			char buf[INET6_ADDRSTRLEN] = {0}, *mac = NULL;
+			char buf[INET6_ADDRSTRLEN] = {0}, *mac = NULL, str_buf[ETH_ALEN];
 			for (struct rtattr *rta = (struct rtattr*)&ndm[1]; RTA_OK(rta, alen);
 					rta = RTA_NEXT(rta, alen)) {
 				if (rta->rta_type == NDA_DST && RTA_PAYLOAD(rta) >= sizeof(struct in6_addr))
 					inet_ntop(AF_INET6, RTA_DATA(rta), buf, sizeof(buf));
 				else if (rta->rta_type == NDA_LLADDR && RTA_PAYLOAD(rta) >= 6)
-					mac = ether_ntoa(RTA_DATA(rta));
-
+					mac = ether_ntoa_l(RTA_DATA(rta),str_buf);
 			}
 
 			if (mac)
