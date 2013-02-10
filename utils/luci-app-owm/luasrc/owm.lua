@@ -27,8 +27,8 @@ local nixio = require "nixio"
 local neightbl = require "neightbl"
 
 
-local ipairs, os, pairs, next, type, tostring, tonumber, error =
-	ipairs, os, pairs, next, type, tostring, tonumber, error
+local ipairs, os, pairs, next, type, tostring, tonumber, error, print =
+	ipairs, os, pairs, next, type, tostring, tonumber, error, print
 
 --- LuCI OWM-Library
 -- @cstyle	instance
@@ -243,6 +243,15 @@ function get()
 			devices[#devices]['macaddr'] = showmac(s.macaddr)
 		end
 	end)
+	local antennas = {}
+	cursor:foreach("antennas", "wifi-device",function(s)
+		antennas[#antennas+1] = s
+		antennas[#antennas]['name'] = s['.name']
+		antennas[#antennas]['.name'] = nil
+		antennas[#antennas]['.anonymous'] = nil
+		antennas[#antennas]['.type'] = nil
+		antennas[#antennas]['.index'] = nil
+	end)
 
 	local interfaces = {}
 	cursor:foreach("wireless", "wifi-iface",function(s)
@@ -281,6 +290,16 @@ function get()
 			end
 		end
 		interfaces[#interfaces]['assoclist'] = assoclist_if
+		for ii,vv in ipairs(devices) do
+			if s['device'] == vv.name then
+				interfaces[#interfaces]['wirelessdevice'] = vv
+			end
+		end
+		for ii,vv in ipairs(antennas) do
+			if s['device'] == vv.name then
+				interfaces[#interfaces]['wirelessdevice']['antenna'] = vv --owm
+			end
+		end
 	end)
 
 	root.interfaces = {} --owm
@@ -294,7 +313,7 @@ function get()
 		root.interfaces[#root.interfaces].ifname = vif.ifname --owm
 		root.interfaces[#root.interfaces].ipv4Addresses = {vif.ipaddr} --owm
 		root.interfaces[#root.interfaces].ipv6Addresses = {vif.ip6addr} --owm
-		root.interfaces[#root.interfaces].type = 'ethernet' --owm
+		root.interfaces[#root.interfaces].physicalType = 'ethernet' --owm
 		root.interfaces[#root.interfaces]['.name'] = nil
 		root.interfaces[#root.interfaces]['.anonymous'] = nil
 		root.interfaces[#root.interfaces]['.type'] = nil
@@ -317,12 +336,7 @@ function get()
 		wireless_add = {}
 		for i,v in ipairs(interfaces) do
 			if v['network'] == name then
-				root.interfaces[#root.interfaces].type = 'wifi' --owm
-				for ii,vv in ipairs(devices) do
-					if v['device'] == vv.name then
-						v.wirelessdevice = vv
-					end
-				end
+				root.interfaces[#root.interfaces].physicalType = 'wifi' --owm
 				root.interfaces[#root.interfaces].mode = v.mode
 				root.interfaces[#root.interfaces].encryption = v.encryption
 				root.interfaces[#root.interfaces].access = 'free'
@@ -331,6 +345,7 @@ function get()
 				root.interfaces[#root.interfaces].txpower = v.wirelessdevice.txpower
 				root.interfaces[#root.interfaces].bssid = v.bssid
 				root.interfaces[#root.interfaces].ssid = v.ssid
+				root.interfaces[#root.interfaces].antenna = v.wirelessdevice.antenna
 				wireless_add[#wireless_add+1] = v --owm
 			end
 		end
