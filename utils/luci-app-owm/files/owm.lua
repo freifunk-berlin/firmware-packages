@@ -87,7 +87,7 @@ end)
 
 local mapserver = uci:get("freifunk", "community", "mapserver") or "http://openwifimap.net/openwifimap/"
 local cname = uci:get("freifunk", "community", "name") or "freifunk"
-local suffix = uci:get("freifunk", "community", "suffix") or "olsr"
+local suffix = uci:get("freifunk", "community", "suffix") or uci:get("profile_" .. cname, "profile", "suffix") or "olsr"
 local body = json.encode(owm.get())
 
 if type(mapserver)=="table" then
