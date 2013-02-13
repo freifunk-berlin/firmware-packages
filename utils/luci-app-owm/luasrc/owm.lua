@@ -440,6 +440,12 @@ function get()
 						if not neigh_mac[mac] then
 							neigh_mac[mac] = {}
 						end
+						if not neigh_mac[mac]['ip4'] then
+							neigh_mac[mac]['ip4'] = {}
+						end
+						if not neigh_mac[mac]['ip6'] then
+							neigh_mac[mac]['ip6'] = {}
+						end
 						neigh_mac[mac]['wifi'] = assot
 						for i, neigh in ipairs(neighbors) do
 							for j, ip in ipairs(neigh_mac[mac]['ip4']) do
