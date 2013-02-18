@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-owm
-PKG_RELEASE:=0.3.2
+PKG_RELEASE:=0.4.0
 
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
@@ -46,6 +46,11 @@ define Package/luci-app-owm-gui
   DEPENDS:=+luci-app-owm luci-lib-web
   TITLE:=luci-app-owm-gui - GUI Open Wireless Map
 endef
+define Package/luci-app-owm-ant
+  $(call Package/luci-app-owm/default)
+  DEPENDS:=+luci-app-owm luci-lib-web
+  TITLE:=luci-app-owm-ant - GUI Antenna settings
+endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
@@ -68,6 +73,16 @@ define Package/luci-app-owm-gui/postinst
 }
 endef
 
+define Package/luci-app-owm-ant/postinst
+#!/bin/sh
+[ -n "${IPKG_INSTROOT}" ] || {
+	( . /etc/uci-defaults/owm ) && rm -f /etc/uci-defaults/owm
+	rm -f /tmp/luci-indexcache
+	exit 0
+}
+
+endef
+
 define Package/luci-app-owm-cmd/install
 	$(INSTALL_DIR) $(1)/usr/sbin/
 	$(CP) files/owm.lua $(1)/usr/sbin/
@@ -75,11 +90,18 @@ endef
 
 define Package/luci-app-owm-gui/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
-	$(CP) $(PKG_BUILD_DIR)/luasrc/controller/* $(1)/usr/lib/lua/luci/controller
+	$(CP) $(PKG_BUILD_DIR)/luasrc/controller/owm.lua $(1)/usr/lib/lua/luci/controller
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
-	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view
+	$(CP) $(PKG_BUILD_DIR)/luasrc/view/owm.htm $(1)/usr/lib/lua/luci/view
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) files/owm-defaults $(1)/etc/uci-defaults/owm
+endef
+
+define Package/luci-app-owm-ant/install
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
+	$(CP) $(PKG_BUILD_DIR)/luasrc/controller/antennas.lua $(1)/usr/lib/lua/luci/controller
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi
+	$(CP) $(PKG_BUILD_DIR)/luasrc/model/cbi/antennas.lua $(1)/usr/lib/lua/luci/view
 endef
 
 define Package/luci-app-owm/install
@@ -90,3 +112,4 @@ endef
 $(eval $(call BuildPackage,luci-app-owm))
 $(eval $(call BuildPackage,luci-app-owm-cmd))
 $(eval $(call BuildPackage,luci-app-owm-gui))
+$(eval $(call BuildPackage,luci-app-owm-ant))
