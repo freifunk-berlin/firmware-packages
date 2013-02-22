@@ -1247,6 +1247,7 @@ function main.write(self, section, value)
 		local channel = luci.http.formvalue("cbid.ffwizward.1.chan_" .. device)
 		local hwtype = sec.type
 		local hwmode
+		local has_n
 		if hwtype == "mac80211" then
 			hwmode = sec.hwmode
 			if string.find(hwmode, "n") then
@@ -1308,20 +1309,18 @@ function main.write(self, section, value)
 			devconfig.outdoor = outdoor
 		end
 		if has_n then
-			if chan > 0 and chan < 5 and devconfig.htmode == 'HT40-' then
+			if chan >= 1 and chan <= 9 then
 				devconfig.htmode = 'HT40+'
-			elseif chan > 9 and chan < 14 and devconfig.htmode == 'HT40+' then
+			elseif chan >= 10 and chan <= 14 then
 				devconfig.htmode = 'HT40-'
-			elseif chan == 36 and devconfig.htmode == 'HT40-' then
+			elseif chan >= 36 and chan <= 60 then
 				devconfig.htmode = 'HT40+'
-			elseif chan == 64 and devconfig.htmode == 'HT40+' then
+			elseif chan == 64 then
 				devconfig.htmode = 'HT40-'
-			elseif chan == 100 and devconfig.htmode == 'HT40-' then
+			elseif chan >= 100 and chan <= 136 then
 				devconfig.htmode = 'HT40+'
-			elseif chan == 136 and devconfig.htmode == 'HT40+' then
-				devconfig.htmode = 'HT40-'
 			elseif chan == 140 then
-				devconfig.htmode = 'HT20'
+				devconfig.htmode = 'HT40-'
 			end
 		end
 		local advanced = luci.http.formvalue("cbid.ffwizward.1.advanced_" .. device)
