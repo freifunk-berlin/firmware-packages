@@ -85,28 +85,28 @@ endef
 
 define Package/luci-app-owm-cmd/install
 	$(INSTALL_DIR) $(1)/usr/sbin/
-	$(CP) files/owm.lua $(1)/usr/sbin/
+	$(CP) files/owm.lua $(1)/usr/sbin/owm.lua
 endef
 
 define Package/luci-app-owm-gui/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
-	$(CP) $(PKG_BUILD_DIR)/luasrc/controller/owm.lua $(1)/usr/lib/lua/luci/controller
+	$(CP) $(PKG_BUILD_DIR)/luasrc/controller/owm.lua $(1)/usr/lib/lua/luci/controller/owm.lua
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
-	$(CP) $(PKG_BUILD_DIR)/luasrc/view/owm.htm $(1)/usr/lib/lua/luci/view
+	$(CP) $(PKG_BUILD_DIR)/luasrc/view/owm.htm $(1)/usr/lib/lua/luci/view/owm.htm
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) files/owm-defaults $(1)/etc/uci-defaults/owm
 endef
 
 define Package/luci-app-owm-ant/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
-	$(CP) $(PKG_BUILD_DIR)/luasrc/controller/antennas.lua $(1)/usr/lib/lua/luci/controller
+	$(CP) $(PKG_BUILD_DIR)/luasrc/controller/antennas.lua $(1)/usr/lib/lua/luci/controller/antennas.lua
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi
-	$(CP) $(PKG_BUILD_DIR)/luasrc/model/cbi/antennas.lua $(1)/usr/lib/lua/luci/view
+	$(CP) $(PKG_BUILD_DIR)/luasrc/model/cbi/antennas.lua $(1)/usr/lib/lua/luci/model/cbi/antennas.lua
 endef
 
 define Package/luci-app-owm/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
-	$(CP) $(PKG_BUILD_DIR)/luasrc/owm.lua $(1)/usr/lib/lua/luci
+	$(CP) $(PKG_BUILD_DIR)/luasrc/owm.lua $(1)/usr/lib/lua/luci/owm.lua
 endef
 
 $(eval $(call BuildPackage,luci-app-owm))
