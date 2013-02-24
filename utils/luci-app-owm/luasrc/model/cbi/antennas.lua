@@ -46,20 +46,18 @@ function(sec)
 	
 	svc = s:option(Flag, "builtin", "Built in")
 	
-	svc = s:option(ListValue, "manufacturer", translate("Manufacturer"))
-	svc:depends("builtin","1")
+	svc = s:option(Value, "manufacturer", translate("Manufacturer"))
+	svc:depends("builtin","")
 	svc.optional = true
 	svc:value("Huber & Suhner")
 	svc:value("Mars")
 	svc:value("Wimo")
 	svc:value("Rappl")
-	svc:value("")
 	
 	
 	svc = s:option(Value, "model", translate("Model"))
-	svc:depends("builtin", "1")
+	svc:depends("builtin", "")
 	svc.optional = true
-	svc:value("")
 	
 	svc = s:option(ListValue, "polarization", translate("Polarization"))
 	svc.optional = true
@@ -81,28 +79,24 @@ function(sec)
 	svc = s:option(Value, "horizontalDirection", translate("Horizontal Direction"), "0º - 360º")
 	svc:depends("type", "directed")
 	svc.optional = true
-	--svc.datatype = "uinteger"
 	svc.datatype = "range(0,360)"
 	
 	-- horizontalBeamwidth 0-360
 	svc = s:option(Value, "horizontalBeamwidth", translate("Horizontal Beamwidth"), "0º - 360º")
 	svc:depends("type", "directed")
 	svc.optional = true
-	--svc.datatype = "uinteger"
 	svc.datatype = "range(0,360)"
 	
 	-- verticalDirection -90,90
 	svc = s:option(Value, "verticalDirection", translate("Vertical Direction"), "-90º - 90º")
 	svc:depends("type", "directed")
 	svc.optional = true
-	--svc.datatype = "integer"
 	svc.datatype = "range(-90,90)"
 	
 	-- verticalBeamwidth -90,90
 	svc = s:option(Value, "verticalBeamwidth", translate("Vertical Beamwidth"), "-90º - 90º")
 	svc:depends("type", "directed")
 	svc.optional = true
-	--svc.datatype = "integer"
 	svc.datatype = "range(-90,90)"
 end)
 
