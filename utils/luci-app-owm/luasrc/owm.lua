@@ -98,8 +98,8 @@ function fetch_olsrd_neighbors(interfaces)
 		local links = jsondata4['data'][1]['links']
 		for _,v in ipairs(links) do
 			local hostname = nixio.getnameinfo(v['remoteIP'], "inet")
-			hostname = string.gsub(hostname, "mid..", "")
 			if hostname then
+				hostname = string.gsub(hostname, "mid..", "")
 				local index = #data+1
 				data[index] = {}
 				data[index]['id'] = hostname --owm
@@ -122,8 +122,8 @@ function fetch_olsrd_neighbors(interfaces)
 		local links = jsondata6['data'][1]['links']
 		for _,v in ipairs(links) do
 			local hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
-			hostname = string.gsub(hostname, "mid..", "")
 			if hostname then
+				hostname = string.gsub(hostname, "mid..", "")
 				local index = 0
 				for i, v in ipairs(data) do
 					if v.id == hostname then
