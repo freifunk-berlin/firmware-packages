@@ -31,6 +31,8 @@
 #include "libubus.h"
 #include "libwebsockets.h"
 
+int force_exit = 0;
+
 static int close_testing;
 char ubus_event[128] = "";
 const char * ubusevent = NULL;
@@ -67,6 +69,27 @@ enum demo_protocols {
 #define LOCAL_RESOURCE_PATH DATADIR
 #define LOCAL_CONFIG_PATH CONFIGDIR
 
+/*
+ * We take a strict whitelist approach to stop ../ attacks
+ */
+
+struct serveable {
+	const char *urlpath;
+	const char *mimetype;
+}; 
+
+static const struct serveable whitelist[] = {
+	{ "/favicon.ico", "image/x-icon" },
+	{ "/libwebsockets.org-logo.png", "image/png" },
+
+	/* last one is the default served if no match */
+	{ "/ws-server.html", "text/html" },
+};
+
+struct per_session_data__http {
+	int fd;
+};
+
 /* this protocol server (always the first one) just knows how to do HTTP */
 
 static int callback_http(struct libwebsocket_context * context,
@@ -74,27 +97,36 @@ static int callback_http(struct libwebsocket_context * context,
 		enum libwebsocket_callback_reasons reason, void *user,
 							   void *in, size_t len)
 {
+#if 0
 	char client_name[128];
 	char client_ip[128];
+#endif
+    char buf[256];
+	int n;
+#ifdef EXTERNAL_POLL
+	int fd = (int)(long)in;
+#endif
 
 	switch (reason) {
 	case LWS_CALLBACK_HTTP:
 		fprintf(stderr, "serving HTTP URI %s\n", (char *)in);
 
-		if (in && strcmp(in, "/favicon.ico") == 0) {
-			if (libwebsockets_serve_http_file(wsi,
-			     LOCAL_RESOURCE_PATH"/favicon.ico", "image/x-icon"))
-				fprintf(stderr, "Failed to send favicon\n");
-			break;
-		}
+		for (n = 0; n < (sizeof(whitelist) / sizeof(whitelist[0]) - 1); n++)
+			if (in && strcmp((const char *)in, whitelist[n].urlpath) == 0)
+				break;
 
-		/* send the script... when it runs it'll start websockets */
+		sprintf(buf, LOCAL_RESOURCE_PATH"%s", whitelist[n].urlpath);
 
-		if (libwebsockets_serve_http_file(wsi,
-				  LOCAL_RESOURCE_PATH"/ws-server.html", "text/html"))
-			fprintf(stderr, "Failed to send HTTP file\n");
+		if (libwebsockets_serve_http_file(context, wsi, buf, whitelist[n].mimetype))
+			return -1; /* through completion or error, close the socket */
+
+		/*
+		 * notice that the sending of the file completes asynchronously,
+		 * we'll get a LWS_CALLBACK_HTTP_FILE_COMPLETION callback when
+		 * it's done
+		 */
+
 		break;
-
 	/*
 	 * callback for confirming to continue with client IP appear in
 	 * protocol 0 callback since no websocket protocol has been agreed
@@ -104,13 +136,13 @@ static int callback_http(struct libwebsocket_context * context,
 	 */
 
 	case LWS_CALLBACK_FILTER_NETWORK_CONNECTION:
-
+#if 0
 		libwebsockets_get_peer_addresses((int)(long)user, client_name,
 			     sizeof(client_name), client_ip, sizeof(client_ip));
 
 		fprintf(stderr, "Received network connect from %s (%s)\n",
 							client_name, client_ip);
-
+#endif
 		/* if we returned non-zero from here, we kill the connection */
 		break;
 
@@ -129,7 +161,7 @@ static int callback_http(struct libwebsocket_context * context,
  */
 
 static void
-dump_handshake_info(struct lws_tokens *lwst)
+dump_handshake_info(struct libwebsocket *wsi)
 {
 	int n;
 	static const char *token_names[WSI_TOKEN_COUNT] = {
@@ -158,15 +190,17 @@ dump_handshake_info(struct lws_tokens *lwst)
 		/*[WSI_TOKEN_HTTP]		=*/ "Http",
 		/*[WSI_TOKEN_MUXURL]	=*/ "MuxURL",
 	};
-	
+	char buf[256];
+
 	for (n = 0; n < WSI_TOKEN_COUNT; n++) {
-		if (lwst[n].token == NULL)
+		if (!lws_hdr_total_length(wsi, n))
 			continue;
 
-		fprintf(stderr, "    %s = %s\n", token_names[n], lwst[n].token);
+		lws_hdr_copy(wsi, buf, sizeof buf, n);
+
+		fprintf(stderr, "    %s = %s\n", token_names[n], buf);
 	}
 }
-
 
 
 /* lws-mirror_protocol */
@@ -186,7 +220,6 @@ struct a_message {
 static struct a_message ringbuffer[MAX_MESSAGE_QUEUE];
 static int ringbuffer_head;
 
-
 static int
 callback_lws_mirror(struct libwebsocket_context * context,
 			struct libwebsocket *wsi,
@@ -194,19 +227,33 @@ callback_lws_mirror(struct libwebsocket_context * context,
 					       void *user, void *in, size_t len)
 {
 	int n;
-	struct per_session_data__lws_mirror *pss = user;
+	//struct per_session_data__lws_mirror *pss = user;
+	
+	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 +
+						  LWS_SEND_BUFFER_POST_PADDING];
+	//unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+	struct per_session_data__lws_mirror *pss = (struct per_session_data__lws_mirror *)user;
 
 	switch (reason) {
 
 	case LWS_CALLBACK_ESTABLISHED:
+	    lwsl_info("callback_lws_mirror: LWS_CALLBACK_ESTABLISHED\n");
 		pss->ringbuffer_tail = ringbuffer_head;
 		pss->wsi = wsi;
+		//libwebsocket_callback_on_writable(context, wsi);
+		break;
+
+	case LWS_CALLBACK_PROTOCOL_DESTROY:
+	    lwsl_notice("mirror protocol cleaning up\n");
+        for (n = 0; n < sizeof ringbuffer / sizeof ringbuffer[0]; n++)
+			if (ringbuffer[n].payload)
+				free(ringbuffer[n].payload);
 		break;
 
 	case LWS_CALLBACK_SERVER_WRITEABLE:
 		if (close_testing)
 			break;
-		if (pss->ringbuffer_tail != ringbuffer_head) {
+		while (pss->ringbuffer_tail != ringbuffer_head) {
 
 			n = libwebsocket_write(wsi, (unsigned char *)
 				   ringbuffer[pss->ringbuffer_tail].payload +
@@ -214,31 +261,44 @@ callback_lws_mirror(struct libwebsocket_context * context,
 				   ringbuffer[pss->ringbuffer_tail].len,
 								LWS_WRITE_TEXT);
 			if (n < 0) {
-				fprintf(stderr, "ERROR writing to socket");
-				exit(1);
+				lwsl_err("ERROR %d writing to mirror socket\n", n);
+				return -1;
 			}
-			
+			if (n < ringbuffer[pss->ringbuffer_tail].len)
+				lwsl_err("mirror partial write %d vs %d\n",
+				       n, ringbuffer[pss->ringbuffer_tail].len);
+
 			if (pss->ringbuffer_tail == (MAX_MESSAGE_QUEUE - 1))
 				pss->ringbuffer_tail = 0;
 			else
 				pss->ringbuffer_tail++;
 
-			if (((ringbuffer_head - pss->ringbuffer_tail) %
-				  MAX_MESSAGE_QUEUE) < (MAX_MESSAGE_QUEUE - 15))
-				libwebsocket_rx_flow_control(wsi, 1);
+			if (((ringbuffer_head - pss->ringbuffer_tail) &
+				  (MAX_MESSAGE_QUEUE - 1)) == (MAX_MESSAGE_QUEUE - 15))
+				libwebsocket_rx_flow_allow_all_protocol(
+					       libwebsockets_get_protocol(wsi));
 
-			libwebsocket_callback_on_writable(context, wsi);
+			// lwsl_debug("tx fifo %d\n", (ringbuffer_head - pss->ringbuffer_tail) & (MAX_MESSAGE_QUEUE - 1));
 
+			if (lws_send_pipe_choked(wsi)) {
+				libwebsocket_callback_on_writable(context, wsi);
+				break;
+			}
+			/*
+			 * for tests with chrome on same machine as client and
+			 * server, this is needed to stop chrome choking
+			 */
+			usleep(1);
 		}
 		break;
 
-	case LWS_CALLBACK_BROADCAST:
-		n = libwebsocket_write(wsi, in, len, LWS_WRITE_TEXT);
-		if (n < 0)
-			fprintf(stderr, "mirror write failed\n");
-		break;
-
 	case LWS_CALLBACK_RECEIVE:
+
+		if (((ringbuffer_head - pss->ringbuffer_tail) &
+				  (MAX_MESSAGE_QUEUE - 1)) == (MAX_MESSAGE_QUEUE - 1)) {
+			lwsl_err("dropping!\n");
+			goto choke;
+		}
 
 		if (ringbuffer[ringbuffer_head].payload)
 			free(ringbuffer[ringbuffer_head].payload);
@@ -254,10 +314,16 @@ callback_lws_mirror(struct libwebsocket_context * context,
 		else
 			ringbuffer_head++;
 
-		if (((ringbuffer_head - pss->ringbuffer_tail) %
-				  MAX_MESSAGE_QUEUE) > (MAX_MESSAGE_QUEUE - 10))
-			libwebsocket_rx_flow_control(wsi, 0);
+		if (((ringbuffer_head - pss->ringbuffer_tail) &
+				  (MAX_MESSAGE_QUEUE - 1)) != (MAX_MESSAGE_QUEUE - 2))
+			goto done;
 
+choke:
+		lwsl_debug("LWS_CALLBACK_RECEIVE: throttling %p\n", wsi);
+		libwebsocket_rx_flow_control(wsi, 0);
+
+//		lwsl_debug("rx fifo %d\n", (ringbuffer_head - pss->ringbuffer_tail) & (MAX_MESSAGE_QUEUE - 1));
+done:
 		libwebsocket_callback_on_writable_all_protocol(
 					       libwebsockets_get_protocol(wsi));
 
@@ -282,7 +348,7 @@ callback_lws_mirror(struct libwebsocket_context * context,
 	 */
 
 	case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
-		dump_handshake_info((struct lws_tokens *)(long)user);
+		dump_handshake_info(wsi);
 		/* you could return non-zero here and kill the connection */
 		break;
 
@@ -307,10 +373,11 @@ static struct libwebsocket_protocols protocols[] = {
 	{
 		"lws-mirror-protocol",
 		callback_lws_mirror,
-		sizeof(struct per_session_data__lws_mirror)
+		sizeof(struct per_session_data__lws_mirror),
+		128,
 	},
 	{
-		NULL, NULL, 0		/* End of list */
+		NULL, NULL, 0		/* terminator */
 	}
 };
 
@@ -327,8 +394,9 @@ static void receive_event(struct ubus_context *ctx, struct ubus_event_handler *e
 	wlen = strlen(message);
 	memcpy(&tbuf[LWS_SEND_BUFFER_PRE_PADDING], message, wlen);
 	
-	libwebsockets_broadcast(&protocols[PROTOCOL_LWS_MIRROR],
-					&tbuf[LWS_SEND_BUFFER_PRE_PADDING], wlen);
+//	libwebsockets_broadcast_foreign(&protocols[PROTOCOL_LWS_MIRROR],
+//					&tbuf[LWS_SEND_BUFFER_PRE_PADDING], wlen);
+	libwebsocket_callback_on_writable_all_protocol(&protocols[PROTOCOL_LWS_MIRROR]);
 
 	free(str);
 }
@@ -356,12 +424,15 @@ static int ubus_cli_listen(struct ubus_context *ctx, struct libwebsocket_context
 	return 0;
 }
 
+void sighandler(int sig)
+{
+	force_exit = 1;
+}
 
 static struct option options[] = {
 	{ "help",	no_argument,		NULL, 'h' },
 	{ "port",	required_argument,	NULL, 'p' },
 	{ "ssl",	no_argument,		NULL, 's' },
-	{ "killmask",	no_argument,		NULL, 'k' },
 	{ "interface",  required_argument, 	NULL, 'i' },
 	{ "closetest",  no_argument,		NULL, 'c' },
 	{ "ubusevent",  required_argument,		NULL, 'r' },
@@ -372,19 +443,21 @@ static struct option options[] = {
 int main(int argc, char **argv)
 {
 	int n = 0;
-	const char *cert_path =
-			LOCAL_CONFIG_PATH"/ws-server.pem";
-	const char *key_path =
-			LOCAL_CONFIG_PATH"/ws-server.key.pem";
-	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 4096 +
-			LWS_SEND_BUFFER_POST_PADDING];
-	int port = 7681;
 	int use_ssl = 0;
+	unsigned int oldus = 0;
 	struct libwebsocket_context *context;
 	int opts = 0;
 	char interface_name[128] = "";
-	const char * interface = NULL;
-	const char *ubus_socket = NULL;
+	const char *iface = NULL;
+	struct lws_context_creation_info info;
+	int debug_level = 7;
+	
+	memset(&info, 0, sizeof info);
+	info.port = 7681;
+
+	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 4096 +
+	    LWS_SEND_BUFFER_POST_PADDING];
+    const char *ubus_socket = NULL;
 	struct ubus_context *ctx;
 	
 	while (n >= 0) {
@@ -392,19 +465,19 @@ int main(int argc, char **argv)
 		if (n < 0)
 			continue;
 		switch (n) {
+		case 'd':
+			debug_level = atoi(optarg);
+			break;
 		case 's':
 			use_ssl = 1;
 			break;
-		case 'k':
-			opts = LWS_SERVER_OPTION_DEFEAT_CLIENT_MASK;
-			break;
 		case 'p':
-			port = atoi(optarg);
+			info.port = atoi(optarg);
 			break;
 		case 'i':
 			strncpy(interface_name, optarg, sizeof interface_name);
 			interface_name[(sizeof interface_name) - 1] = '\0';
-			interface = interface_name;
+			iface = interface_name;
 			break;
 		case 'c':
 			close_testing = 1;
@@ -430,41 +503,66 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 	}
+	
+	signal(SIGINT, sighandler);
+	//lws_set_log_level(debug_level, lwsl_emit_syslog);
+	info.iface = iface;
+	info.protocols = protocols;
 
-	if (!use_ssl)
-		cert_path = key_path = NULL;
+	if (!use_ssl) {
+		info.ssl_cert_filepath = NULL;
+		info.ssl_private_key_filepath = NULL;
+	} else {
+		info.ssl_cert_filepath = LOCAL_CONFIG_PATH"/ws-server.pem";
+		info.ssl_private_key_filepath = LOCAL_CONFIG_PATH"/ws-server.key.pem";
+	}	
+	info.gid = -1;
+	info.uid = -1;
+	info.options = opts;
 
 	ctx = ubus_connect(ubus_socket);
 	if (!ctx) {
-		fprintf(stderr, "Failed to connect to ubus\n");
+		lwsl_err("Failed to connect to ubus\n");
 		return -1;
+	} else {
+		lwsl_err("Connect to ubus\n");
 	}
 
-	context = libwebsocket_create_context(port, interface, protocols,
-				libwebsocket_internal_extensions,
-				cert_path, key_path, -1, -1, opts);
+	context = libwebsocket_create_context(&info);
 	if (context == NULL) {
-		fprintf(stderr, "libwebsocket init failed\n");
+		lwsl_err("libwebsocket init failed\n");
 		return -1;
 	}
 
 	buf[LWS_SEND_BUFFER_PRE_PADDING] = 'x';
-
-	n = libwebsockets_fork_service_loop(context);
-	if (n < 0) {
-		fprintf(stderr, "Unable to fork service loop %d\n", n);
-		return 1;
+	n = 0;
+	while (n >= 0 && !force_exit) {
+		struct timeval tv;
+		gettimeofday(&tv, NULL);
+		//if (((unsigned int)tv.tv_usec - oldus) > 50000) {
+		//	libwebsocket_callback_on_writable_all_protocol(&protocols[PROTOCOL_LWS_MIRROR]);
+		//	oldus = tv.tv_usec;
+		//}
+		n = libwebsocket_service(context, 50);
+		if (n < 0) {
+		    lwsl_err("Unable to fork service loop %d\n", n);
+		    return -1;
+//		} else {
+//		    lwsl_err("fork service loop %d\n", n);
+		}
 	}
+//	libwebsockets_broadcast(&protocols[PROTOCOL_LWS_MIRROR],
+//				&buf[LWS_SEND_BUFFER_PRE_PADDING], 1);
+//	libwebsocket_callback_on_writable_all_protocol(&protocols[PROTOCOL_LWS_MIRROR]);
+//	libwebsocket_callback_on_writable(context, wsi);
+//	libwebsocket_callback_on_writable(context, &protocols[PROTOCOL_LWS_MIRROR]);
 
-	libwebsockets_broadcast(&protocols[PROTOCOL_LWS_MIRROR],
-				&buf[LWS_SEND_BUFFER_PRE_PADDING], 1);
+	//int ret = -1;
+	//ret = ubus_cli_listen(ctx,context,ubusevent);
+	//if (ret > 0)
+	//	lwsl_err("Command failed: %s\n", ubus_strerror(ret));
 
-	int ret = -2;
-	ret = ubus_cli_listen(ctx,context,ubusevent);
-	if (ret > 0)
-		fprintf(stderr, "Command failed: %s\n", ubus_strerror(ret));
-
-	ubus_free(ctx);
+	//ubus_free(ctx);
 	libwebsocket_context_destroy(context);
 
 	return 0;

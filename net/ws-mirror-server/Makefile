@@ -1,10 +1,15 @@
-# $Id$
+#
+# Copyright (C) 2012-2013 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ws-mirror-server
-PKG_VERSION:=0.6
-PKG_RELEASE:=13
+PKG_VERSION:=0.7
+PKG_RELEASE:=4
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -43,6 +48,15 @@ define Build/Prepare
 	$(CP) ./src/* $(PKG_BUILD_DIR)/
 endef
 
+define Package/ws-mirror-server/postinst
+#!/bin/sh
+[ -n "${IPKG_INSTROOT}" ] || {
+	/etc/init.d/ws-mirror-server enable
+	/etc/init.d/ws-mirror-server start
+	exit 0
+}
+endef
+
 define Package/ws-mirror-server/install
 	$(CP) -a ./ipkg/* $(1)/CONTROL/ 2>/dev/null || true
 	$(INSTALL_DIR) $(1)/etc/init.d
@@ -51,6 +65,7 @@ define Package/ws-mirror-server/install
 	$(INSTALL_DATA) ./files/ws-server.pem $(1)/etc/ws-server.pem
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ws-mirror-server $(1)/usr/sbin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ws-mirror-server-ubus $(1)/usr/sbin/
 	$(INSTALL_DIR) $(1)/www
 	$(INSTALL_DATA) ./files/ws-server.html $(1)/www
 endef
