@@ -8,7 +8,7 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=neightbl-lua
+PKG_NAME:=luaneightbl
 PKG_VERSION:=0.2
 PKG_RELEASE:=1
 
@@ -16,14 +16,15 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/neightbl-lua
-  SECTION:=libs
-  CATEGORY:=Libraries
+define Package/luaneightbl
+  SUBMENU:=Lua
+  SECTION:=lang
+  CATEGORY:=Languages
   TITLE:=neightbl - Lua lib for IPv6 neighbors
   DEPENDS:=+liblua +lua
 endef
-                            
-define Package/neightbl-lua/description
+
+define Package/luaneightbl/description
  neightbl is a lua lib for reading mac,ip6 table from kernel
 endef
 
@@ -47,11 +48,10 @@ define Build/InstallDev
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/neightbl.so $(1)/usr/lib/lua/neightbl.so
 endef
 
-define Package/neightbl-lua/install
+define Package/luaneightbl/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/neightbl.so $(1)/usr/lib/lua
 endef
 
 
-$(eval $(call BuildPackage,neightbl-lua))
-
+$(eval $(call BuildPackage,luaneightbl))
