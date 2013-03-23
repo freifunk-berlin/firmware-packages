@@ -5,19 +5,34 @@ START=55
 SERVER="ws-mirror-server"
 SERVER_BIN="/usr/sbin/ws-mirror-server"
 SERVER_ARGS="-r chat -x ws -p 7682" #--ssl !chromium 
+SERVER_PID="ws-mirror-server"
+SERVER_UBUS="ws-mirror-server-ubus"
+SERVER_UBUS_BIN="/usr/sbin/ws-mirror-server-ubus"
+SERVER_UBUS_ARGS="127.0.0.1 -r chat --port 7682" #--ssl !chromium
+SERVER_UBUS_PID="ws-mirror-server-ubus"
 
 
 start() {
 	start-stop-daemon -S -x $SERVER_BIN \
-		-p /var/run/${SERVER}.pid \
+		-p /var/run/${SERVER_PID}.pid \
 		-m -b -- ${SERVER_ARGS}
+	start-stop-daemon -S -x $SERVER_UBUS_BIN \
+		-p /var/run/${SERVER_UBUS_PID}.pid \
+		-m -b -- ${SERVER_UBUS_ARGS}
 }
-                           
-stop() {
-	[ -f /var/run/${SERVER}.pid ] && {
-		start-stop-daemon -K -q -n ${SERVER_BIN##*/} \
-			-p /var/run/${SERVER}.pid -s TERM
 
-		rm -f /var/run/${SERVER}.pid
+stop() {
+	[ -f /var/run/${SERVER_PID}.pid ] && {
+		start-stop-daemon -K -q -n ${SERVER_BIN##*/} \
+			-p /var/run/${SERVER_PID}.pid -s TERM
+
+		rm -f /var/run/${SERVER_PID}.pid
+	}
+
+	[ -f /var/run/${SERVER_UBUS_PID}.pid ] && {
+		start-stop-daemon -K -q -n ${SERVER_UBUS_BIN##*/} \
+			-p /var/run/${SERVER_UBUS_PID}.pid -s TERM
+
+		rm -f /var/run/${SERVER_UBUS_PID}.pid
 	}
 }
