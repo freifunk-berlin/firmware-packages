@@ -1313,14 +1313,44 @@ function main.write(self, section, value)
 				devconfig.htmode = 'HT40+'
 			elseif chan >= 10 and chan <= 14 then
 				devconfig.htmode = 'HT40-'
-			elseif chan >= 36 and chan <= 60 then
+			elseif chan == 36 then
+				devconfig.htmode = 'HT40+'
+			elseif chan == 40 then
+				devconfig.htmode = 'HT40-'
+			elseif chan == 44 then
+				devconfig.htmode = 'HT40+'
+			elseif chan == 48 then
+				devconfig.htmode = 'HT40-'
+			elseif chan == 52 then
+				devconfig.htmode = 'HT40+'
+			elseif chan == 56 then
+				devconfig.htmode = 'HT40-'
+			elseif chan == 60 then
 				devconfig.htmode = 'HT40+'
 			elseif chan == 64 then
 				devconfig.htmode = 'HT40-'
-			elseif chan >= 100 and chan <= 136 then
+			elseif chan ==  100 then
 				devconfig.htmode = 'HT40+'
-			elseif chan == 140 then
+			elseif chan ==  104 then
 				devconfig.htmode = 'HT40-'
+			elseif chan ==  108 then
+				devconfig.htmode = 'HT40+'
+			elseif chan ==  112 then
+				devconfig.htmode = 'HT40-'
+			elseif chan ==  116 then
+				devconfig.htmode = 'HT40+'
+			elseif chan ==  120 then
+				devconfig.htmode = 'HT40-'
+			elseif chan ==  124 then
+				devconfig.htmode = 'HT40+'
+			elseif chan ==  128 then
+				devconfig.htmode = 'HT40-'
+			elseif chan ==  132 then
+				devconfig.htmode = 'HT40+'
+			elseif chan ==  136 then
+				devconfig.htmode = 'HT40-'
+			elseif chan == 140 then
+				devconfig.htmode = 'HT20'
 			end
 		end
 		local advanced = luci.http.formvalue("cbid.ffwizward.1.advanced_" .. device)
