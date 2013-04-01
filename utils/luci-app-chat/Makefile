@@ -32,6 +32,14 @@ define Build/Compile
 	$(MAKE) -C $(PKG_BUILD_DIR)/luasrc
 endef
 
+define Package/luci-app-chat/postinst
+#!/bin/sh
+[ -n "${IPKG_INSTROOT}" ] || {
+	rm -f /tmp/luci-indexcache
+	exit 0
+}
+endef
+
 define Package/luci-app-chat/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
