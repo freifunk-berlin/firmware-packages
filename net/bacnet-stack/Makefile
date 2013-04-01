@@ -1,39 +1,72 @@
-# $Id: Makefile 1146 2005-06-05 13:32:28Z nbd $
-
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bacnet-stack
-PKG_VERSION:=0.7.1
-PKG_RELEASE:=1
-PKG_MD5SUM:=2332ac9e71754d1cddd331f30c724b72
+PKG_VERSION:=2013-03-31
+#PKG_SOURCE_VERSION:=01349ec9e8a736d116eaaf331fb096513d207ca5
+PKG_SOURCE_VERSION:=da013debf0a6dad7e479643416808e25317d415a
+PKG_RELEASE:=$(PKG_SOURCE_VERSION)
 
-PKG_SOURCE_URL:=@SF/bacnet/bacnet-stack
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tgz
-PKG_CAT:=zcat
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=git://github.com/stargieg/bacnet-stack.git
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.gz
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+
 include $(INCLUDE_DIR)/package.mk
+
 
 define Package/bacnet-stack
   SECTION:=net
   CATEGORY:=Network
-  TITLE:=BACnet Protocol Stack
+  TITLE:=BACnet Protocol Stack UCI Fork
   URL:=http://bacnet-stack.sourceforge.net/
-  DEPENDS:=+libpthread +librt
+  DEPENDS:=+libpthread +librt +libuci
 endef
 
 define Package/bacnet-stack/description
   Data Communication Protocol for Building Automation and Control Networks
 endef
 
+TARGET_CFLAGS += -I$(STAGING_DIR)/usr/include
+BUILD=debug
+
+define Package/bacnet-stack/postinst
+#!/bin/sh
+[ -n "${IPKG_INSTROOT}" ] || {
+	/etc/init.d/bacserv enable
+	/etc/init.d/bacserv start
+	exit 0
+}
+[ -f "${IPKG_INSTROOT}/etc/config/ucitrack" ] && \
+[ "$(uci get ucitrack.@bacnet_dev[0] 2>/dev/null)" != "bacnet_dev" ] && \
+uci batch <<-EOF >/dev/null 2>/dev/null
+        add ucitrack bacnet_dev
+        set ucitrack.@bacnet_dev[-1].init="bacserv"
+        add ucitrack bacnet_av
+        set ucitrack.@bacnet_av[-1].init="bacserv"
+        add ucitrack bacnet_mv
+        set ucitrack.@bacnet_mv[-1].init="bacserv"
+        add ucitrack bacnet_nc
+        set ucitrack.@bacnet_nc[-1].init="bacserv"
+        commit ucitrack
+EOF
+endef
+
 define Package/bacnet-stack/install
-	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/sbin $(1)/etc/init.d $(1)/etc/config
+	$(INSTALL_BIN) ./files/bacserv.init $(1)/etc/init.d/bacserv
+	$(INSTALL_DATA) ./files/bacnet_dev.config $(1)/etc/config/bacnet_dev
+	$(INSTALL_DATA) ./files/bacnet_av.config $(1)/etc/config/bacnet_av
+	$(INSTALL_DATA) ./files/bacnet_mv.config $(1)/etc/config/bacnet_mv
+	$(INSTALL_DATA) ./files/bacnet_nc.config $(1)/etc/config/bacnet_nc
+	$(INSTALL_DATA) ./files/bacnet_group.config $(1)/etc/config/bacnet_group
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/bacarf $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/bacarf $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/bacdcc $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/baciamr $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/bacrd $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/bacrpm $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/bacserv $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/bacserv $(1)/usr/sbin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/bacucov $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/bacwh $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/bacwir $(1)/usr/bin/
