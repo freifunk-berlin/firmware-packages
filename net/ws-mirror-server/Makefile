@@ -20,7 +20,10 @@ define Package/ws-mirror-server/default
   CATEGORY:=Network
   SUBMENU:=Web Servers/Proxies
   TITLE:=ws-mirror-server - Websocket Mirror Server for js chat
-  DEPENDS:=+libwebsockets +zlib +libubox +libubus +ubusd +libblobmsg-json
+  DEPENDS:=+libwebsockets +zlib \
+    +libubox +libubus +ubusd +libblobmsg-json
+#    +PACKAGE_libwebsockets_openssl:libopenssl \
+#    +PACKAGE_libwebsockets_cyassl:cyassl
 endef
 
 define Package/ws-mirror-server
@@ -30,16 +33,6 @@ endef
                             
 define Package/ws-mirror-server/description
  ws-mirror-server Websocket Mirror Server for js chat
- use libwebsockets http://git.warmcat.com/cgi-bin/cgit/libwebsockets
-endef
-
-define Package/ws-mirror-server-cmd
-  $(Package/ws-mirror-server/default)
-  TITLE:=ws-mirror-server-cmd - Commandline tool for Websocket Mirror Server
-endef
-
-define Package/ws-mirror-server-cmd/description
- ws-mirror-server-cmd Commandline tool for Websocket Mirror Server
  use libwebsockets http://git.warmcat.com/cgi-bin/cgit/libwebsockets
 endef
 
@@ -58,7 +51,6 @@ define Package/ws-mirror-server/postinst
 endef
 
 define Package/ws-mirror-server/install
-	$(CP) -a ./ipkg/* $(1)/CONTROL/ 2>/dev/null || true
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/ws-mirror-server.init $(1)/etc/init.d/ws-mirror-server
 	$(INSTALL_DATA) ./files/ws-server.key.pem $(1)/etc/ws-server.key.pem
@@ -70,10 +62,4 @@ define Package/ws-mirror-server/install
 	$(INSTALL_DATA) ./files/ws-server.html $(1)/www
 endef
 
-define Package/ws-mirror-server-cmd/install
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ws-mirror-server-cmd $(1)/usr/bin/
-endef
-
 $(eval $(call BuildPackage,ws-mirror-server))
-$(eval $(call BuildPackage,ws-mirror-server-cmd))
