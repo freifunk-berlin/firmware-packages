@@ -43,11 +43,19 @@ function fetch_olsrd_config()
 	local data = {}
 	if #jsonreq4 ~= 0 then
 		jsondata4 = json.decode(jsonreq4)
-		data['ipv4Config'] = jsondata4['data'][1]['config']
+		if jsondata4['config'] then
+			data['ipv4Config'] = jsondata4['config']
+		elseif jsondata4['data'] and jsondata4['data'][1] and jsondata4['data'][1]['config'] then -- used by olsrd prior 0.6.5
+			data['ipv4Config'] = jsondata4['data'][1]['config']
+		end
 	end
 	if #jsonreq6 ~= 0 then
 		jsondata6 = json.decode(jsonreq6)
-		data['ipv6Config'] = jsondata6['data'][1]['config']
+		if jsondata6['config'] then
+			data['ipv6Config'] = jsondata6['config']
+		elseif jsondata6['data'] and jsondata6['data'][1] and jsondata6['data'][1]['config'] then
+			data['ipv6Config'] = jsondata6['data'][1]['config']
+		end
 	end
 	return data
 end
@@ -60,7 +68,12 @@ function fetch_olsrd_links()
 	local data = {}
 	if #jsonreq4 ~= 0 then
 		jsondata4 = json.decode(jsonreq4)
-		local links = jsondata4['data'][1]['links']
+		local links
+		if jsondata4['links'] then
+			links = jsondata4['links']
+		elseif jsondata4['data'] and jsondata4['data'][1] and jsondata4['data'][1]['links'] then
+			links = jsondata4['data'][1]['links']
+		end
 		for i,v in ipairs(links) do
 			links[i]['sourceAddr'] = v['localIP'] --owm sourceAddr
 			links[i]['destAddr'] = v['remoteIP'] --owm destAddr
@@ -73,7 +86,12 @@ function fetch_olsrd_links()
 	end
 	if #jsonreq6 ~= 0 then
 		jsondata6 = json.decode(jsonreq6)
-		local links = jsondata6['data'][1]['links']
+		local links
+		if jsondata6['links'] then
+			links = jsondata6['links']
+		elseif jsondata6['data'] and jsondata6['data'][1] and jsondata6['data'][1]['links'] then
+			links = jsondata6['data'][1]['links']
+		end
 		for i,v in ipairs(links) do
 			links[i]['sourceAddr'] = v['localIP']
 			links[i]['destAddr'] = v['remoteIP']
@@ -95,7 +113,12 @@ function fetch_olsrd_neighbors(interfaces)
 	local data = {}
 	if #jsonreq4 ~= 0 then
 		jsondata4 = json.decode(jsonreq4)
-		local links = jsondata4['data'][1]['links']
+		local links
+		if jsondata4['links'] then
+			links = jsondata4['links']
+		elseif jsondata4['data'] and jsondata4['data'][1] and jsondata4['data'][1]['links'] then
+			links = jsondata4['data'][1]['links']
+		end
 		for _,v in ipairs(links) do
 			local hostname = nixio.getnameinfo(v['remoteIP'], "inet")
 			if hostname then
@@ -119,7 +142,12 @@ function fetch_olsrd_neighbors(interfaces)
 	end
 	if #jsonreq6 ~= 0 then
 		jsondata6 = json.decode(jsonreq6)
-		local links = jsondata6['data'][1]['links']
+		local links
+		if jsondata6['links'] then
+			links = jsondata6['links']
+		elseif jsondata6['data'] and jsondata6['data'][1] and jsondata6['data'][1]['links'] then
+			links = jsondata6['data'][1]['links']
+		end
 		for _,v in ipairs(links) do
 			local hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
 			if hostname then
