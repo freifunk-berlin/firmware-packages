@@ -15,33 +15,42 @@ CMAKE_INSTALL:=0
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
 
-define Package/libwebsockets
+define Package/libwebsockets/default
   SECTION:=libs
   CATEGORY:=Libraries
+  URL:=http://libwebsockets.org/trac/wiki
+endef
+
+define Package/libwebsockets
+$(Package/libwebsockets/default)
+  DEPENDS:=+zlib +PACKAGE_libwebsockets-cyassl:libcyassl +PACKAGE_libwebsockets-openssl:libopenssl
   TITLE:=libwebsockets
-  DEPENDS:= +zlib \
-    +PACKAGE_libwebsockets_openssl:libopenssl \
-    +PACKAGE_libwebsockets_cyassl:libcyassl
+endef
+
+define Package/libwebsockets/description
+ HTTP libwebsockets.
 endef
 
 define Package/libwebsockets/config
-config PACKAGE_libwebsockets_openssl
-    bool "Enable ssl option"
-    depends on PACKAGE_libwebsockets
-    default n
-config PACKAGE_libwebsockets_cyassl
-    bool "Enable cyassl option"
-    depends on PACKAGE_libwebsockets
-    default n
+	config PACKAGE_libwebsockets-cyassl
+		depends on PACKAGE_libwebsockets
+		bool "Build with CyaSSL"
+		default n
+	config PACKAGE_libwebsockets-openssl
+		depends on PACKAGE_libwebsockets
+		bool "Build with OpenSSL"
+		default n
 endef
+
+
 
 TARGET_CFLAGS += -I$(STAGING_DIR)/usr/include
 
-ifndef CONFIG_PACKAGE_libwebsockets_openssl
+ifndef CONFIG_PACKAGE_libwebsockets-openssl
 CMAKE_OPTIONS += \
         -DWITH_SSL=OFF
 endif
-ifdef CONFIG_PACKAGE_libwebsockets_cyassl
+ifdef CONFIG_PACKAGE_libwebsockets-cyassl
 CMAKE_OPTIONS += \
         -DWITH_CYASSL=1
 endif
