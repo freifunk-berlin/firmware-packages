@@ -13,12 +13,16 @@ local json = require "luci.json"
 local lockfile = "/var/run/owm.lock"
 local hostname
 
-function db_put(uri,body)
+--function db_put(uri,body)
+function db_put(mapserver,hostname,suffix,body)
 	local httpc = luci.httpclient
 	local etag = ""
 	local options = {
 		method = "HEAD",
 	}
+	local uri = mapserver.."/"..hostname.."."..suffix
+	local uri_update = mapserver.."/_design/owm-api/_update/node/"..hostname.."."..suffix
+	
 	
 	local code,response, msg, csock = httpc.request_raw(uri, options)
 	
@@ -47,8 +51,14 @@ function db_put(uri,body)
 	
 	if etag == "" then
 		local response, code, msg = httpc.request_to_buffer(uri, options)
+		if code == 403 then
+			local response, code, msg = httpc.request_to_buffer(uri_update, options)
+		end
 	else
 		local response, code, msg = httpc.request_to_buffer(uri.."?rev="..etag, options)
+		if code == 403 then
+			local response, code, msg = httpc.request_to_buffer(uri_update.."?rev="..etag, options)
+		end
 	end
 	
 	if not response or not code then
@@ -92,12 +102,11 @@ local body = json.encode(owm.get())
 
 if type(mapserver)=="table" then
 	for i,v in ipairs(mapserver) do 
-		local uri = v.."/"..hostname.."."..suffix
-		db_put(uri,body)
+		local mapserver = v
+		db_put(mapserver,hostname,suffix,body)
 	end
 else
-	local uri = mapserver.."/"..hostname.."."..suffix
-	db_put(uri,body)
+	db_put(mapserver,hostname,suffix,body)
 end
 
 unlock()

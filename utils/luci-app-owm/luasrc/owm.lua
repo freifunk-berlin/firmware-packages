@@ -13,6 +13,7 @@ $Id$
 
 ]]--
 
+local bus = require "ubus"
 local string = require "string"
 local sys = require "luci.sys"
 local uci = require "luci.model.uci"
@@ -206,6 +207,13 @@ function get()
 	local ntm = netm.init()
 	local devices  = ntm:get_wifidevs()
 	local assoclist = {}
+	local _ubus = bus.connect()
+	local _ubusclicache = { }
+--	local _, object
+--	for _, object in ipairs(_ubus:objects()) do
+--		local _ubusclicache = object:match("^clicache%.(.+)")
+--		print(_ubusclicache)
+--	end
 	for _, dev in ipairs(devices) do
 		for _, net in ipairs(dev:get_wifinets()) do
 			assoclist[#assoclist+1] = {} 
@@ -502,7 +510,7 @@ function get()
 		end
 	end
 
-	root.neighbors = neighbors
+	root.links = neighbors
 
 	root.olsr = fetch_olsrd()
 
