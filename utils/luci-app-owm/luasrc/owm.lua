@@ -424,13 +424,18 @@ function get()
 	local arptable = sys.net.arptable()
 	if #root.interfaces ~= 0 then
 		for idx,iface in ipairs(root.interfaces) do
-			local t = neightbl.get(iface['ifname']) or {}
+			local t
+			if iface['ifname'] then
+				t = neightbl.get(iface['ifname'])
+			else
+				t = {}
+			end
+	
 			for ip,mac in pairs(t) do
 				if not mac then
 					os.execute("ping6 -q -c1 -w1 -I"..iface['ifname'].." "..ip.." 2&>1 >/dev/null")
 				end
 			end
-			local t = neightbl.get(iface['ifname']) or {}
 			local neigh_mac = {}
 			for ip,mac in pairs(t) do
 				if mac and not string.find(mac, "33:33:") then
