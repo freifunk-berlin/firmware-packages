@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #Migrate auto-ipv6 to auto-ipv6-node
-[ "$(uci get autoipv6.olsr_node.enable)" == 1 ] && uci set autoipv6node.olsr_node.enable=1
+[ "$(uci get autoipv6node.olsr_node.enable)" == 1 ] && uci set autoipv6node.olsr_node.enable=1
 
 #add cron entry
 grep -q 'auto-ipv6' /etc/crontabs/root || echo '*/4 * * * * /usr/bin/auto-ipv6' >> /etc/crontabs/root
@@ -17,4 +17,41 @@ grep -qe '^net.ipv6.conf.default.autoconf' /etc/sysctl.conf || echo "net.ipv6.co
 grep -qe '^net.ipv6.conf.default.accept_ra' /etc/sysctl.conf || echo "net.ipv6.conf.default.accept_ra=0" >> /etc/sysctl.conf
 grep -qe '^net.ipv6.conf.default.accept_ra_defrtr' /etc/sysctl.conf || echo "net.ipv6.conf.default.accept_ra_defrtr=0" >> /etc/sysctl.conf
 grep -qe '^net.ipv6.conf.default.accept_ra_pinfo' /etc/sysctl.conf || echo "net.ipv6.conf.default.accept_ra_pinfo=0" >> /etc/sysctl.conf
+
+
+net_find_iface() {
+	local cfg="$1"
+	case $cfg in
+		loopback) return 0 ;;
+		gvpn) return 0 ;;
+	esac
+	[ "$(uci -q get network.$cfg.ip6assign)" ] || return 0
+
+	interfaces="$interfaces ""$cfg"
+	return 0
+}
+
+if [ ! "$(uci -q get network.globals.ula_prefix)" ] ; then
+	r1=$(dd if=/dev/urandom bs=1 count=1 |hexdump -e '1/1 "%02x"')
+	r2=$(dd if=/dev/urandom bs=2 count=1 |hexdump -e '2/1 "%02x"')
+	r3=$(dd if=/dev/urandom bs=2 count=1 |hexdump -e '2/1 "%02x"')
+	config_load network
+	local interfaces=""
+	config_foreach net_find_iface interface
+	for i in $(echo $interfaces) ; do
+		uci set network.$i.ip6assign=64
+	done
+	uci commit network
+
+uci -q batch <<-EOF >/dev/null
+	set network.globals=globals
+	set network.globals.ula_prefix=fd$r1:$r2:$r3::/48
+	commit network
+	add olsrd Hna6
+	set "olsrd.@Hna6[-1].prefix=48"
+	set "olsrd.@Hna6[-1].netaddr=fd$r1:$r2:$r3::"
+	commit olsrd
+EOF
+
+fi
 

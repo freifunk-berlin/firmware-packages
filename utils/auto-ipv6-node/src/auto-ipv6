@@ -38,13 +38,13 @@ olsrd_search_hna6() {
 }
 
 net_find_iface() {
-        local cfg="$1"
-        case $cfg in
-        	loopback) return 0 ;;
-        	gvpn) return 0 ;;
-        esac
-        interfaces="$interfaces ""$cfg"
-        return 0
+	local cfg="$1"
+	case $cfg in
+		loopback) return 0 ;;
+		gvpn) return 0 ;;
+	esac
+	interfaces="$interfaces ""$cfg"
+	return 0
 }
 
 local IPV6_GATEWAYS="$(wget -q -O - http://[::1]:2006/hna | grep '::/0' | cut -d "$(printf "\t")" -f 2)"
@@ -54,15 +54,15 @@ local IPV6_GATEWAYS="$(wget -q -O - http://[::1]:2006/hna | grep '::/0' | cut -d
 local DEFAULT_ETX="1000000"
 #we need to check all gateways in hna table and see which one is the default gw by looking at the etx for each gw
 for g in $IPV6_GATEWAYS; do
-        local GW_ETX="$(wget -q -O - http://[::1]:2006/routes | grep ^${g} | awk '{ print $4 }'| sed 's/\.//')"
-        #[ -z "$GW_ETX" ] && continue
-        #FIXME is never false
-        [ -z "$GW_ETX" ] || \
-        if [ $GW_ETX -lt $DEFAULT_ETX ]; then
-                DEFAULT_ETX="$GW_ETX"
-        fi
-        DEFAULT_GW="$g"
-        #FIXME
+	local GW_ETX="$(wget -q -O - http://[::1]:2006/routes | grep ^${g} | awk '{ print $4 }'| sed 's/\.//')"
+	#[ -z "$GW_ETX" ] && continue
+	#FIXME is never false
+	[ -z "$GW_ETX" ] || \
+	if [ $GW_ETX -lt $DEFAULT_ETX ]; then
+			DEFAULT_ETX="$GW_ETX"
+	fi
+	DEFAULT_GW="$g"
+	#FIXME
 done
 [ -z "$DEFAULT_GW" ] && logger -t auto-ipv6-node "No ipv6 gateway with ETX: $DEFAULT_ETX found. Either there is no IPv6 Gateway reachable or i could not connect to the txtinfo plugin. Exiting." && exit 1
 
@@ -101,6 +101,8 @@ echo "enable-ra" >> $dnsmasq_conf
 echo "dhcp-option=option6:dns-server,[::]" >> $dnsmasq_conf
 echo "dhcp-option=option6:domain-search,olsr" >> $dnsmasq_conf
 restart_dnsmasq=1
+ula_prefix=$(uci get network.globals.ula_prefix | cut -d : -f -3)
+iface_count=""
 
 for i in $(echo $interfaces) ; do
 	[ "$(uci get network.$i.proto)" == "static" ] || continue
@@ -114,9 +116,6 @@ for i in $(echo $interfaces) ; do
 		continue
 	}
 	IP6_UCI=$(uci get network.$i.ip6addr)
-	if [ $(echo $IP6_UCI | grep -i fdca) ] ; then
-		uci set network.$i.ip6addr_fdca="$IP6_UCI"
-	fi
 	IP6_OLDSUFFIX="$(echo $IP6_UCI | cut -d ':' -f -3)"
 	IP6_OLDUNIQ="$(echo $IP6_UCI | cut -d ':' -f 4)"
 	if [ "$IP6_SUFFIX" == "$IP6_OLDSUFFIX" ] ; then
@@ -165,6 +164,16 @@ for i in $(echo $interfaces) ; do
 	echo "dhcp-range=$DEV,$IP6_SUFFIX:$IP6_UNIQ::100,$IP6_SUFFIX:$IP6_UNIQ::200,64,240s" >> $dnsmasq_conf
 	echo "dhcp-range=$DEV,$IP6_SUFFIX:$IP6_UNIQ::,ra-only,64,240s" >> $dnsmasq_conf
 	restart_dnsmasq=1
+	
+	if [ $iface_count == "" ] ; then
+		echo "dhcp-range=$ula_prefix::100,$ula_prefix::200,64,240s" >> $dnsmasq_conf
+		echo "dhcp-range=$ula_prefix::,ra-only,64,240s" >> $dnsmasq_conf
+		iface_count=1
+	else
+		echo "dhcp-range=$ula_prefix:$iface_count::100,$ula_prefix:$iface_count::200,64,240s" >> $dnsmasq_conf
+		echo "dhcp-range=$ula_prefix:$iface_count::,ra-only,64,240s" >> $dnsmasq_conf
+		iface_count=$((iface_count+1))
+	fi
 
 done
 
@@ -191,6 +200,12 @@ if [ "6and4" == "$(uci get olsrd.@olsrd[0].IpVersion)" ] ; then
 		uci commit olsrd
 		restart_olsrd=1
 	done
+
+	uci add olsrd Hna6
+	uci set "olsrd.@Hna6[-1].prefix=48"
+	uci set "olsrd.@Hna6[-1].netaddr=$ula_prefix::"
+	commit olsrd
+
 fi
 
 # clear all config variables here. else they will leak into the olsrd init script

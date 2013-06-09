@@ -31,9 +31,21 @@ endef
 define Build/Compile
 endef
 
+define Package/auto-ipv6-node/postinst
+#!/bin/sh
+[ -n "${IPKG_INSTROOT}" ] || {
+	/etc/uci-defaults/auto-ipv6-node &&
+	rm /etc/uci-defaults/auto-ipv6-node
+	exit 0
+}
+endef
+
+
 define Package/auto-ipv6-node/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./src/auto-ipv6 $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./src/auto-ipv6-node.init $(1)/etc/init.d/auto-ipv6-node
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_DATA) ./src/auto-ipv6-node.defaults $(1)/etc/uci-defaults/auto-ipv6-node
 	$(INSTALL_DIR) $(1)/etc/config
