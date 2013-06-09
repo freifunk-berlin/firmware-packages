@@ -30,7 +30,7 @@ define Package/ws-mirror-server
   $(Package/ws-mirror-server/default)
   MENU:=1
 endef
-                            
+
 define Package/ws-mirror-server/description
  ws-mirror-server Websocket Mirror Server for js chat
  use libwebsockets http://git.warmcat.com/cgi-bin/cgit/libwebsockets
