@@ -1,31 +1,21 @@
 #!/bin/sh
 
-#Migrate auto-ipv6 to auto-ipv6-node
-[ "$(uci get autoipv6node.olsr_node.enable)" == 1 ] && uci set autoipv6node.olsr_node.enable=1
+. /lib/functions.sh
+
+#Migrate auto_ipv6 to auto_ipv6_node
+[ "$(uci -q get autoipv6node.olsr_node.enable)" == 1 ] && uci set auto_ipv6_node.olsr_node.enable=1
 
 #add cron entry
-grep -q 'auto-ipv6' /etc/crontabs/root || echo '*/4 * * * * /usr/bin/auto-ipv6' >> /etc/crontabs/root
-
-grep -qe '^net.ipv6.conf.all.forwarding' /etc/sysctl.conf || echo "net.ipv6.conf.all.forwarding=1" >> /etc/sysctl.conf
-grep -qe '^net.ipv6.conf.all.autoconf' /etc/sysctl.conf || echo "net.ipv6.conf.all.autoconf=0" >> /etc/sysctl.conf
-grep -qe '^net.ipv6.conf.all.accept_ra' /etc/sysctl.conf || echo "net.ipv6.conf.all.accept_ra=0" >> /etc/sysctl.conf
-grep -qe '^net.ipv6.conf.all.accept_ra_defrtr' /etc/sysctl.conf || echo "net.ipv6.conf.all.accept_ra_defrtr=0" >> /etc/sysctl.conf
-grep -qe '^net.ipv6.conf.all.accept_ra_pinfo' /etc/sysctl.conf || echo "net.ipv6.conf.all.accept_ra_pinfo=0" >> /etc/sysctl.conf
-
-grep -qe '^net.ipv6.conf.default.forwarding' /etc/sysctl.conf || echo "net.ipv6.conf.default.forwarding=1" >> /etc/sysctl.conf
-grep -qe '^net.ipv6.conf.default.autoconf' /etc/sysctl.conf || echo "net.ipv6.conf.default.autoconf=0" >> /etc/sysctl.conf
-grep -qe '^net.ipv6.conf.default.accept_ra' /etc/sysctl.conf || echo "net.ipv6.conf.default.accept_ra=0" >> /etc/sysctl.conf
-grep -qe '^net.ipv6.conf.default.accept_ra_defrtr' /etc/sysctl.conf || echo "net.ipv6.conf.default.accept_ra_defrtr=0" >> /etc/sysctl.conf
-grep -qe '^net.ipv6.conf.default.accept_ra_pinfo' /etc/sysctl.conf || echo "net.ipv6.conf.default.accept_ra_pinfo=0" >> /etc/sysctl.conf
-
+grep -q 'auto_ipv6_node' /etc/crontabs/root || echo '*/4 * * * * /usr/bin/auto_ipv6_node' >> /etc/crontabs/root
 
 net_find_iface() {
 	local cfg="$1"
 	case $cfg in
 		loopback) return 0 ;;
 		gvpn) return 0 ;;
+		wan) return 0 ;;
 	esac
-	[ "$(uci -q get network.$cfg.ip6assign)" ] || return 0
+	[ "$(uci -q get network.$cfg.ip6assign)" ] && return 0
 
 	interfaces="$interfaces ""$cfg"
 	return 0
@@ -38,6 +28,7 @@ if [ ! "$(uci -q get network.globals.ula_prefix)" ] ; then
 	config_load network
 	local interfaces=""
 	config_foreach net_find_iface interface
+	echo $interfaces
 	for i in $(echo $interfaces) ; do
 		uci set network.$i.ip6assign=64
 	done
@@ -54,4 +45,6 @@ uci -q batch <<-EOF >/dev/null
 EOF
 
 fi
+
+/etc/init.d/auto_ipv6_node enable
 

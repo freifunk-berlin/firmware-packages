@@ -15,13 +15,14 @@ net_find_iface() {
 }
 
 start() {
-	[ "$(uci get autoipv6node.olsr_node.enable)" == 1 ] || return 0
-	local ula_prefix="$(uci -q get network.globals.ula_prefix | cut -d : -f -3)"
+	[ "$(uci get auto_ipv6_node.olsr_node.enable)" == 1 ] || return 0
+	local ula_prefix="$(uci -q get network.globals.ula_prefix | cut -d ':' -f -3)"
 	[ -z $ula_prefix ] && return 0
 	config_load network
 	local interfaces=""
 	config_foreach net_find_iface interface
 	local dnsmasq_conf="/tmp/etc/dnsmasq-ra.conf"
+	local iface_count=""
 	
 	[ -h /etc/dnsmasq.conf ] || ( rm -rf /etc/dnsmasq.conf ; ln -s $dnsmasq_conf /etc/dnsmasq.conf )
 	> $dnsmasq_conf
@@ -32,20 +33,21 @@ start() {
 	grep -q "domain-search,olsr" /etc/dnsmasq.conf || \
 	echo "dhcp-option=option6:domain-search,olsr" >> $dnsmasq_conf
 	for i in $(echo $interfaces) ; do
-		if [ $iface_count == "" ] ; then
-			grep -q "$ula_prefix::100," $dnsmasq_conf && \
+		if [ "$iface_count" == "" ] ; then
+			echo "count $iface_count"
+			grep -q "$ula_prefix::100," $dnsmasq_conf || \
 			echo "dhcp-range=$ula_prefix::100,$ula_prefix::200,64,240s" >> $dnsmasq_conf
-			grep -q "$ula_prefix::," $dnsmasq_conf && \
+			grep -q "$ula_prefix::," $dnsmasq_conf || \
 			echo "dhcp-range=$ula_prefix::,ra-only,64,240s" >> $dnsmasq_conf
 			iface_count=1
 		else
-			grep -q "$ula_prefix:$iface_count::100," $dnsmasq_conf && \
+			echo "count $iface_count"
+			grep -q "$ula_prefix:$iface_count::100," $dnsmasq_conf || \
 			echo "dhcp-range=$ula_prefix:$iface_count::100,$ula_prefix:$iface_count::200,64,240s" >> $dnsmasq_conf
-			grep -q "$ula_prefix:$iface_count::," $dnsmasq_conf && \
+			grep -q "$ula_prefix:$iface_count::," $dnsmasq_conf || \
 			echo "dhcp-range=$ula_prefix:$iface_count::,ra-only,64,240s" >> $dnsmasq_conf
 			iface_count=$((iface_count+1))
 		fi
 	done
-	}
 }
 
