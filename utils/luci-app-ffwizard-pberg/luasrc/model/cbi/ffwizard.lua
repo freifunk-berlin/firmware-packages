@@ -30,8 +30,8 @@ local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
 local has_l2gvpn  = fs.access("/usr/sbin/node")
 local has_firewall = fs.access("/etc/config/firewall")
 local has_rom = fs.access("/rom/etc")
-local has_autoipv6node = fs.access("/etc/config/autoipv6node")
-local has_autoipv6gw = fs.access("/etc/config/autoipv6gw")
+local has_auto_ipv6_node = fs.access("/etc/config/auto_ipv6_node")
+local has_auto_ipv6_gw = fs.access("/etc/config/auto_ipv6_gw")
 local has_qos = fs.access("/etc/init.d/qos")
 local has_ipv6 = fs.access("/proc/sys/net/ipv6")
 local has_hb = fs.access("/sbin/heartbeat")
@@ -942,11 +942,11 @@ function f.handle(self, state, data)
 			uci:commit("uhttpd")
 			uci:commit("olsrd")
 			uci:commit("manager")
-			if has_autoipv6gw then
-				uci:commit("autoipv6gw")
+			if has_auto_ipv6_gw then
+				uci:commit("auto_ipv6_gw")
 			end
-			if has_autoipv6node then
-				uci:commit("autoipv6node")
+			if has_auto_ipv6_node then
+				uci:commit("auto_ipv6_node")
 			end
 			if has_qos then
 				uci:commit("qos")
@@ -1958,11 +1958,11 @@ function main.write(self, section, value)
 	if share_value == "1" then
 		uci:set("freifunk", "wizard", "shareconfig", "1")
 		uci:save("freifunk")
-		if has_autoipv6gw then
+		if has_auto_ipv6_gw then
 			-- Set autoipv6 tunnel mode
-			uci:set("autoipv6gw", "olsr_node", "enable", "0")
-			uci:set("autoipv6gw", "tunnel", "enable", "1")
-			uci:save("autoipv6gw")
+			uci:set("auto_ipv6_gw", "olsr_node", "enable", "0")
+			uci:set("auto_ipv6_gw", "tunnel", "enable", "1")
+			uci:save("auto_ipv6_gw")
 			-- Create tun6to4 interface
 			local tun6to4 = {}
 			tun6to4.ifname = "tun6to4"
@@ -2020,7 +2020,7 @@ function main.write(self, section, value)
 			uci:section("firewall", "forwarding", nil, {src="wan", dest="freifunk"})
 			uci:delete_all("firewall","forwarding", {src="lan", dest="wan"})
 			uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
-			if has_autoipv6gw then
+			if has_auto_ipv6_gw then
 				tools.firewall_zone_add_interface("wan", "6to4")
 				uci:save("firewall")
 			end
@@ -2053,15 +2053,15 @@ function main.write(self, section, value)
 		end
 		uci:set("freifunk", "wizard", "shareconfig", "0")
 		uci:save("freifunk")
-		if has_autoipv6node then
-			-- Set autoipv6node olsrd mode
-			uci:set("autoipv6node", "olsr_node", "enable", "1")
+		if has_auto_ipv6_node then
+			-- Set auto_ipv6_node olsrd mode
+			uci:set("auto_ipv6_node", "olsr_node", "enable", "1")
 			uci:save("autoipv6")
 		end
-		if has_autoipv6gw then
-			-- Disable autoipv6gw
-			uci:set("autoipv6gw", "tunnel", "enable", "0")
-			uci:save("autoipv6gw")
+		if has_auto_ipv6_gw then
+			-- Disable auto_ipv6_gw
+			uci:set("auto_ipv6_gw", "tunnel", "enable", "0")
+			uci:save("auto_ipv6_gw")
 		end
 		-- Delete gateway plugins
 		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
