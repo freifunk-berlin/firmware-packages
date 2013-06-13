@@ -1881,7 +1881,7 @@ function main.write(self, section, value)
 	})
 
 	if has_ipv6 then
-		local ula_prefix = uci:get(network.globals.ula_prefix)
+		local ula_prefix = uci:get("network","globals","ula_prefix") or ""
 		local prefix = string.gsub(ula_prefix,".*/", "")
 		local netaddr = string.gsub(ula_prefix,"/.*", "")
 		if prefix and netaddr then
