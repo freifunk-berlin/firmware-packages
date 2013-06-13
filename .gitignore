@@ -1,14 +1,6 @@
-*.o
-*.a
+*.[ao]
 *.so
 *.dylib
-.DS_Store
-.AppleDouble
-.LSOverride
-# Thumbnails
-._*
-.Spotlight-V100
-.Trashes
-*.swp
-*.lock
+\.*
+\#*
 *~
