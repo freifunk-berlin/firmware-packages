@@ -2,7 +2,7 @@
 CFLAGS += -Wall -std=gnu99 -pedantic -DDATADIR=\"/www\" -DCONFIGDIR=\"/etc\"
 OBJ = ws-mirror-server.o
 OBJ_UBUS = ws-mirror-server-ubus.o
-LIB = -lwebsockets -lz -lubus -lubox -lblobmsg_json -ljson
+LIB = -lwebsockets -lz -lubus -lubox -lblobmsg_json
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
