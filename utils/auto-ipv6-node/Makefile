@@ -33,10 +33,10 @@ endef
 
 define Package/auto-ipv6-node/postinst
 #!/bin/sh
-[ -z "$${IPKG_INSTROOT}" ] && {
+if [ -z $${IPKG_INSTROOT} ] ; then
 	( . /etc/uci-defaults/auto_ipv6_node ) && rm /etc/uci-defaults/auto_ipv6_node
 	/etc/init.d/auto_ipv6_node start
-}
+fi
 endef
 
 
