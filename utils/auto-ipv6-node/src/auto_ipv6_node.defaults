@@ -40,6 +40,8 @@ uci -q batch <<-EOF >/dev/null
 	commit olsrd
 EOF
 
+/etc/init.d/network restart
+
 fi
 
 /etc/init.d/auto_ipv6_node enable

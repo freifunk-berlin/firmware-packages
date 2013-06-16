@@ -34,7 +34,7 @@ endef
 define Package/auto-ipv6-node/postinst
 #!/bin/sh
 if [ -z $${IPKG_INSTROOT} ] ; then
-	( . /etc/uci-defaults/auto_ipv6_node ) && rm /etc/uci-defaults/auto_ipv6_node
+	( . /etc/uci-defaults/zz-auto_ipv6_node ) && rm /etc/uci-defaults/zz-auto_ipv6_node
 	/etc/init.d/auto_ipv6_node start
 fi
 endef
@@ -46,7 +46,7 @@ define Package/auto-ipv6-node/install
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./src/auto_ipv6_node.init $(1)/etc/init.d/auto_ipv6_node
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_DATA) ./src/auto_ipv6_node.defaults $(1)/etc/uci-defaults/auto_ipv6_node
+	$(INSTALL_DATA) ./src/auto_ipv6_node.defaults $(1)/etc/uci-defaults/zz-auto_ipv6_node
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) ./src/auto_ipv6_node.config $(1)/etc/config/auto_ipv6_node
 endef
