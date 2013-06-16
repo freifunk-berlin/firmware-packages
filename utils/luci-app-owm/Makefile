@@ -72,8 +72,6 @@ if [ -z $${IPKG_INSTROOT} ] ; then
 fi
 endef
 
-endef
-
 define Package/luci-app-owm-cmd/install
 	$(INSTALL_DIR) $(1)/usr/sbin/
 	$(CP) files/owm.lua $(1)/usr/sbin/owm.lua
