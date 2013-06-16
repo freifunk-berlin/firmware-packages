@@ -43,10 +43,9 @@ endef
 
 define Package/ws-mirror-server/postinst
 #!/bin/sh
-[ -n "${IPKG_INSTROOT}" ] || {
+[ -z "$${IPKG_INSTROOT}" ] && {
 	/etc/init.d/ws-mirror-server enable
 	/etc/init.d/ws-mirror-server start
-	exit 0
 }
 endef
 

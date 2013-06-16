@@ -66,20 +66,11 @@ endef
 
 define Package/luci-app-owm-gui/postinst
 #!/bin/sh
-[ -n "${IPKG_INSTROOT}" ] || {
+[ -z "$${IPKG_INSTROOT}" ] && {
 	( . /etc/uci-defaults/owm ) && rm -f /etc/uci-defaults/owm
 	rm -f /tmp/luci-indexcache
-	exit 0
 }
 endef
-
-define Package/luci-app-owm-ant/postinst
-#!/bin/sh
-[ -n "${IPKG_INSTROOT}" ] || {
-	( . /etc/uci-defaults/owm ) && rm -f /etc/uci-defaults/owm
-	rm -f /tmp/luci-indexcache
-	exit 0
-}
 
 endef
 
