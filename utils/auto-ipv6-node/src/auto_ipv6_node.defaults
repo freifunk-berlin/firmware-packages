@@ -1,7 +1,5 @@
 #!/bin/sh
 
-. /lib/functions.sh
-
 #Migrate auto_ipv6 to auto_ipv6_node
 [ "$(uci -q get autoipv6node.olsr_node.enable)" == 1 ] && uci set auto_ipv6_node.olsr_node.enable=1
 
@@ -12,7 +10,6 @@ net_find_iface() {
 	local cfg="$1"
 	case $cfg in
 		loopback) return 0 ;;
-		gvpn) return 0 ;;
 		wan) return 0 ;;
 	esac
 	[ "$(uci -q get network.$cfg.ip6assign)" ] && return 0
@@ -28,7 +25,6 @@ if [ ! "$(uci -q get network.globals.ula_prefix)" ] ; then
 	config_load network
 	local interfaces=""
 	config_foreach net_find_iface interface
-	echo $interfaces
 	for i in $(echo $interfaces) ; do
 		uci set network.$i.ip6assign=64
 	done
