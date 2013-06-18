@@ -318,7 +318,7 @@ function get()
 		end
 		assoclist_if = {}
 		for _, v in ipairs(assoclist) do
-			if v.network == interfaces[#interfaces]['network'] then
+			if v.network == interfaces[#interfaces]['network'] and v.list then
 				for assocmac, assot in pairs(v.list) do
 					assoclist_if[#assoclist_if+1] = assot
 					assoclist_if[#assoclist_if].mac = showmac(assocmac)
@@ -475,7 +475,7 @@ function get()
 				end
 			end
 			for _, v in ipairs(assoclist) do
-				if v.ifname == iface['ifname'] then
+				if v.ifname == iface['ifname'] and v.list then
 					for assocmac, assot in pairs(v.list) do
 						local mac = showmac(assocmac:lower())
 						if not neigh_mac[mac] then
