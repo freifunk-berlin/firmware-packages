@@ -16,30 +16,7 @@ local hostname
 --function db_put(uri,body)
 function db_put(mapserver,hostname,suffix,body)
 	local httpc = luci.httpclient
-	local etag = ""
-	local options = {
-		method = "HEAD",
-	}
-	local uri = mapserver.."/"..hostname.."."..suffix
-	local uri_update = mapserver.."/_design/owm-api/_update/node/"..hostname.."."..suffix
-	
-	
-	local code,response, msg, csock = httpc.request_raw(uri, options)
-	
-	if not response or not code then
-		print("get ETag fail "..uri)
-	else
-		if code == 404 then
-			print("new    ETag Statuscode: "..code.." "..uri)
-			etag = ""
-		elseif code == 200 then
-			etag = response.headers['ETag'] or ""
-			etag = string.gsub(etag, '\"', '')
-			print("get    ETag Statuscode: "..code.." "..uri.." "..etag)
-		elseif code then
-			print("fail   ETag Statuscode: "..code.." "..uri)
-		end
-	end
+	local uri_update = mapserver.."/update_node/"..hostname.."."..suffix
 	
 	local options = {
 		method = "PUT",
@@ -49,28 +26,12 @@ function db_put(mapserver,hostname,suffix,body)
 		},
 	}
 	
-	if etag == "" then
-		local response, code, msg = httpc.request_to_buffer(uri, options)
-		if code == 403 then
-			local response, code, msg = httpc.request_to_buffer(uri_update, options)
-		end
-	else
-		local response, code, msg = httpc.request_to_buffer(uri.."?rev="..etag, options)
-		if code == 403 then
-			local response, code, msg = httpc.request_to_buffer(uri_update.."?rev="..etag, options)
-		end
-	end
-	
-	if not response or not code then
-		print("fail "..uri)
-	else
-		if code == 404 then
-			print("new    Doc  Statuscode: "..code.." "..uri)
-		elseif code == 200 then
-			print("update Doc  Statuscode: "..code.." "..uri)
-		elseif code then
-			print("fail   Doc  Statuscode: "..code.." "..uri)
-		end
+	local response, code, msg = httpc.request_to_buffer(uri_update, options)
+
+	if code == 201 then
+		print("update Doc  Statuscode: "..code.." "..uri_update.." ("..msg..")")
+	elseif code then
+		print("fail   Doc  Statuscode: "..code.." "..uri_update.." ("..msg..")")
 	end
 end
 
@@ -95,7 +56,7 @@ uci:foreach("system", "system", function(s) --owm
 	hostname = s.hostname
 end)
 
-local mapserver = uci:get("freifunk", "community", "mapserver") or "http://openwifimap.net/openwifimap/"
+local mapserver = uci:get("freifunk", "community", "mapserver") or "http://api.openwifimap.net/"
 local cname = uci:get("freifunk", "community", "name") or "freifunk"
 local suffix = uci:get("freifunk", "community", "suffix") or uci:get("profile_" .. cname, "profile", "suffix") or "olsr"
 local body = json.encode(owm.get())
