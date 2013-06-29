@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-owm
-PKG_RELEASE:=0.4.2
+PKG_RELEASE:=0.4.3
 
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
