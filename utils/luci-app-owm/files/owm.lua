@@ -14,9 +14,9 @@ local lockfile = "/var/run/owm.lock"
 local hostname
 
 --function db_put(uri,body)
-function db_put(mapserver,hostname,suffix,body)
+function db_put(owm_api,hostname,suffix,body)
 	local httpc = luci.httpclient
-	local uri_update = mapserver.."/update_node/"..hostname.."."..suffix
+	local uri_update = owm_api.."/update_node/"..hostname.."."..suffix
 	
 	local options = {
 		method = "PUT",
@@ -56,18 +56,18 @@ uci:foreach("system", "system", function(s) --owm
 	hostname = s.hostname
 end)
 
-local mapserver = uci:get("freifunk", "community", "mapserver") or "http://api.openwifimap.net/"
+local owm_api = uci:get("freifunk", "community", "owm_api") or "http://api.openwifimap.net/"
 local cname = uci:get("freifunk", "community", "name") or "freifunk"
 local suffix = uci:get("freifunk", "community", "suffix") or uci:get("profile_" .. cname, "profile", "suffix") or "olsr"
 local body = json.encode(owm.get())
 
-if type(mapserver)=="table" then
-	for i,v in ipairs(mapserver) do 
-		local mapserver = v
-		db_put(mapserver,hostname,suffix,body)
+if type(owm_api)=="table" then
+	for i,v in ipairs(owm_api) do 
+		local owm_api = v
+		db_put(owm_api,hostname,suffix,body)
 	end
 else
-	db_put(mapserver,hostname,suffix,body)
+	db_put(owm_api,hostname,suffix,body)
 end
 
 unlock()
