@@ -224,8 +224,7 @@ function get()
 		end
 	end
 	root.type = 'node' --owm
-	root.lastupdate = os.date("!%Y-%m-%dT%H:%M:%SZ") --owm
-	root.updateInterval = 60 --owm
+	root.updateInterval = 3600 --owm one hour
 
 	root.system = {
 		uptime = {sys.uptime()},
