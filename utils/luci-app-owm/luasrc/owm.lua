@@ -519,6 +519,8 @@ function get()
 
 	root.olsr = fetch_olsrd()
 
+	root.script = 'luci-app-owm'
+
 	return root
 end
 
