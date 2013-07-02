@@ -42,6 +42,19 @@ local has_pr = fs.access("/etc/config/freifunk-policyrouting")
 local has_splash = fs.access("/etc/config/luci_splash")
 local has_splash_enable
 local profiles = "/etc/config/profile_"
+local device_il = {
+	"loopback",
+	"6to4",
+	"tun",
+	"gvpn",
+	"wifi",
+	"wl",
+	"wlan",
+	"wireless",
+	"radio",
+	"eth",
+	"dhcp"
+}
 
 function get_mac(ix)
 	if string.find(ix, "radio") then
@@ -404,10 +417,6 @@ uci:foreach("wireless", "wifi-device",
 			function vapssid.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "vapssid_" .. device)
 			end
-			--function vapssid.write(self, sec, value)
-			--	uci:set("freifunk", "wizard", "vapssid_" .. device, value)
-			--	uci:save("freifunk")
-			--end
 		end
 	end)
 
@@ -415,37 +424,12 @@ uci:foreach("network", "interface",
 	function(section)
 		local device = section[".name"]
 		local ifname = uci_state:get("network",device,"ifname")
-		if string.find(device, "loopback") then
-			return
+		for i, v in ipairs(device_il) do
+			if string.find(device, v) then
+				device_i = true
+			end
 		end
-		if string.find(device, "6to4") then
-			return
-		end
-		if string.find(device, "tun") then
-			return
-		end
-		if string.find(device, "gvpn") then
-			return
-		end
-		if string.find(device, "wifi") then
-			return
-		end
-		if string.find(device, "wl") then
-			return
-		end
-		if string.find(device, "wlan") then
-			return
-		end
-		if string.find(device, "wireless") then
-			return
-		end
-		if string.find(device, "radio") then
-			return
-		end
-		if string.find(device, "eth") then
-			return
-		end
-		if string.find(device, "dhcp") then
+		if device_i then
 			return
 		end
 		local dev = f:field(Flag, "device_" .. device , "<b>Drahtgebundenes Freifunk Netzwerk \"" .. device:upper() .. "\"</b>", "Konfigurieren Sie Ihre drahtgebunde Schnittstelle: " .. device:upper() .. ".")
@@ -1115,14 +1099,16 @@ function main.write(self, section, value)
 		end
 		-- rename the wireless interface s/wifi/wireless/
 		local nif
-		if string.find(device, "wifi") then
-			nif = string.gsub(device,"wifi", netname)
-		elseif string.find(device, "wl") then
-			nif = string.gsub(device,"wl", netname)
-		elseif string.find(device, "wlan") then
-			nif = string.gsub(device,"wlan", netname)
-		elseif string.find(device, "radio") then
-			nif = string.gsub(device,"radio", netname)
+		local device_l = {
+			"wifi",
+			"wl",
+			"wlan",
+			"radio"
+		}
+		for i, v in ipairs(device_l) do
+			if string.find(device, v) then
+				nif = string.gsub(device, v, netname)
+			end
 		end
 		-- Cleanup
 		tools.wifi_delete_ifaces(device)
@@ -1224,48 +1210,33 @@ function main.write(self, section, value)
 			devconfig.outdoor = outdoor
 		end
 		if has_n then
-			if chan >= 1 and chan <= 9 then
-				devconfig.htmode = 'HT40+'
-			elseif chan >= 10 and chan <= 14 then
-				devconfig.htmode = 'HT40-'
-			elseif chan == 36 then
-				devconfig.htmode = 'HT40+'
-			elseif chan == 40 then
-				devconfig.htmode = 'HT40-'
-			elseif chan == 44 then
-				devconfig.htmode = 'HT40+'
-			elseif chan == 48 then
-				devconfig.htmode = 'HT40-'
-			elseif chan == 52 then
-				devconfig.htmode = 'HT40+'
-			elseif chan == 56 then
-				devconfig.htmode = 'HT40-'
-			elseif chan == 60 then
-				devconfig.htmode = 'HT40+'
-			elseif chan == 64 then
-				devconfig.htmode = 'HT40-'
-			elseif chan ==  100 then
-				devconfig.htmode = 'HT40+'
-			elseif chan ==  104 then
-				devconfig.htmode = 'HT40-'
-			elseif chan ==  108 then
-				devconfig.htmode = 'HT40+'
-			elseif chan ==  112 then
-				devconfig.htmode = 'HT40-'
-			elseif chan ==  116 then
-				devconfig.htmode = 'HT40+'
-			elseif chan ==  120 then
-				devconfig.htmode = 'HT40-'
-			elseif chan ==  124 then
-				devconfig.htmode = 'HT40+'
-			elseif chan ==  128 then
-				devconfig.htmode = 'HT40-'
-			elseif chan ==  132 then
-				devconfig.htmode = 'HT40+'
-			elseif chan ==  136 then
-				devconfig.htmode = 'HT40-'
-			elseif chan == 140 then
-				devconfig.htmode = 'HT20'
+			local ht40plus = {
+				1,2,3,4,5,6,7,
+				36,44,52,60,100,108,116,124,132
+			}
+			for i, v in ipairs(ht40plus) do
+				if v == chan then
+					devconfig.htmode = 'HT40+'
+					devconfig.noscan = '1'
+				end
+			end
+			local ht40minus = {
+				8,9,10,11,12,13,14,
+				40,48,56,64,104,112,120,128,136
+			}
+			for i, v in ipairs(ht40minus) do
+				if v == chan then
+					devconfig.htmode = 'HT40-'
+					devconfig.noscan = '1'
+				end
+			end
+			local ht20 = {
+				140
+			}
+			for i, v in ipairs(ht20) do
+				if v == chan then
+					devconfig.htmode = 'HT20'
+				end
 			end
 		end
 		local advanced = luci.http.formvalue("cbid.ffwizward.1.advanced_" .. device)
@@ -1509,37 +1480,12 @@ function main.write(self, section, value)
 		if not luci.http.formvalue("cbid.ffwizward.1.device_" .. device) then
 			return
 		end
-				if string.find(device, "loopback") then
-			return
+		for i, v in ipairs(device_il) do
+			if string.find(device, v) then
+				device_i = true
+			end
 		end
-		if string.find(device, "6to4") then
-			return
-		end
-		if string.find(device, "tun") then
-			return
-		end
-		if string.find(device, "gvpn") then
-			return
-		end
-		if string.find(device, "wifi") then
-			return
-		end
-		if string.find(device, "wl") then
-			return
-		end
-		if string.find(device, "wlan") then
-			return
-		end
-		if string.find(device, "wireless") then
-			return
-		end
-		if string.find(device, "radio") then
-			return
-		end
-		if string.find(device, "eth") then
-			return
-		end
-		if string.find(device, "dhcp") then
+		if device_i then
 			return
 		end
 		local node_ip
