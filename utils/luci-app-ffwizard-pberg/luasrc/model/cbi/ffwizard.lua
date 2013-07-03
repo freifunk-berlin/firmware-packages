@@ -1833,7 +1833,7 @@ function main.write(self, section, value)
 		if prefix and netaddr then
 			uci:section("olsrd", "Hna6", nil, {
 				prefix = prefix,
-				netaddr = ula
+				netaddr = netaddr
 			})
 		end
 	end
