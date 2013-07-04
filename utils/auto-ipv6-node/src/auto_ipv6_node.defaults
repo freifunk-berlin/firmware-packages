@@ -1,5 +1,7 @@
 #!/bin/sh
 
+. /lib/functions.sh
+
 #Migrate auto_ipv6 to auto_ipv6_node
 [ "$(uci -q get autoipv6node.olsr_node.enable)" == 1 ] && uci set auto_ipv6_node.olsr_node.enable=1
 
