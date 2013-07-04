@@ -42,9 +42,9 @@ uci -q batch <<-EOF >/dev/null
 	commit olsrd
 EOF
 
-/etc/init.d/network restart
+	( /etc/init.d/network restart ) 2>&1 &
 
 fi
 
-/etc/init.d/auto_ipv6_node enable
+( /etc/init.d/auto_ipv6_node enable ) 2>&1 &
 
