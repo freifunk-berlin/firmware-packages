@@ -390,24 +390,26 @@ function get()
 				metr = metr
 			}
 		end
-        end
-        
+	end
+
 	root.ipv4defaultGateway = def4
 	root.ipv6defaultGateway = def6
 	local neighbors = fetch_olsrd_neighbors(root.interfaces)
 	local arptable = sys.net.arptable()
 	if #root.interfaces ~= 0 then
 		for idx,iface in ipairs(root.interfaces) do
-			local t
+			local t = {}
 			if iface['ifname'] then
-				t = neightbl.get(iface['ifname'])
-			else
-				t = {}
-			end
-	
-			for ip,mac in pairs(t) do
-				if not mac then
-					os.execute("ping6 -q -c1 -w1 -I"..iface['ifname'].." "..ip.." 2&>1 >/dev/null")
+				t = neightbl.get(iface['ifname']) or {}
+				local neightbl_get
+				for ip,mac in pairs(t) do
+					if not mac then
+						os.execute("ping6 -q -c1 -w1 -I"..iface['ifname'].." "..ip.." 2&>1 >/dev/null")
+						neightbl_get = true
+					end
+				end
+				if neightbl_get then
+					t = neightbl.get(iface['ifname']) or {}
 				end
 			end
 			local neigh_mac = {}
