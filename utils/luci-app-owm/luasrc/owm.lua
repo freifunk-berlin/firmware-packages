@@ -37,153 +37,128 @@ module "luci.owm"
 
 
 function fetch_olsrd_config()
-	local jsonreq4 = util.exec("echo /config | nc 127.0.0.1 9090")
-	local jsonreq6 = util.exec("echo /config | nc ::1 9090")
-	local jsondata4 = {}
-	local jsondata6 = {}
+	local jsonreq4 = util.exec("echo /config | nc 127.0.0.1 9090 2>/dev/null") or {}
+	local jsonreq6 = util.exec("echo /config | nc ::1 9090 2>/dev/null") or {}
 	local data = {}
-	if #jsonreq4 ~= 0 then
-		jsondata4 = json.decode(jsonreq4)
-		if jsondata4['config'] then
-			data['ipv4Config'] = jsondata4['config']
-		elseif jsondata4['data'] and jsondata4['data'][1] and jsondata4['data'][1]['config'] then -- used by olsrd prior 0.6.5
-			data['ipv4Config'] = jsondata4['data'][1]['config']
-		end
+	local jsondata4 = json.decode(jsonreq4) or {}
+	--print("fetch_olsrd_config v4 "..(jsondata4['config'] and "1" or "err"))
+	if jsondata4['config'] then
+		data['ipv4Config'] = jsondata4['config']
 	end
-	if #jsonreq6 ~= 0 then
-		jsondata6 = json.decode(jsonreq6)
-		if jsondata6['config'] then
-			data['ipv6Config'] = jsondata6['config']
-		elseif jsondata6['data'] and jsondata6['data'][1] and jsondata6['data'][1]['config'] then
-			data['ipv6Config'] = jsondata6['data'][1]['config']
-		end
+	local jsondata6 = json.decode(jsonreq6) or {}
+	--print("fetch_olsrd_config v6 "..(jsondata6['config'] and "1" or "err"))
+	if jsondata6['config'] then
+		data['ipv6Config'] = jsondata6['config']
 	end
 	return data
 end
 
 function fetch_olsrd_links()
-	local jsonreq4 = util.exec("echo /links | nc 127.0.0.1 9090")
-	local jsonreq6 = util.exec("echo /links | nc ::1 9090")
-	local jsondata4 = {}
-	local jsondata6 = {}
+	local jsonreq4 = util.exec("echo /links | nc 127.0.0.1 9090 2>/dev/null") or {}
+	local jsonreq6 = util.exec("echo /links | nc ::1 9090 2>/dev/null") or {}
 	local data = {}
-	if #jsonreq4 ~= 0 then
-		jsondata4 = json.decode(jsonreq4)
-		local links
-		if jsondata4['links'] then
-			links = jsondata4['links']
-		elseif jsondata4['data'] and jsondata4['data'][1] and jsondata4['data'][1]['links'] then
-			links = jsondata4['data'][1]['links']
-		end
-		for i,v in ipairs(links) do
-			links[i]['sourceAddr'] = v['localIP'] --owm sourceAddr
-			links[i]['destAddr'] = v['remoteIP'] --owm destAddr
-			hostname = nixio.getnameinfo(v['remoteIP'], "inet")
-			if hostname then
-				links[i]['destNodeId'] = string.gsub(hostname, "mid..", "") --owm destNodeId
-			end 
-		end
-		data = links
+	local jsondata4 = json.decode(jsonreq4) or {}
+	--print("fetch_olsrd_links v4 "..(jsondata4['links'] and #jsondata4['links'] or "err"))
+	local links = {}
+	if jsondata4['links'] then
+		links = jsondata4['links']
 	end
-	if #jsonreq6 ~= 0 then
-		jsondata6 = json.decode(jsonreq6)
-		local links
-		if jsondata6['links'] then
-			links = jsondata6['links']
-		elseif jsondata6['data'] and jsondata6['data'][1] and jsondata6['data'][1]['links'] then
-			links = jsondata6['data'][1]['links']
+	for i,v in ipairs(links) do
+		links[i]['sourceAddr'] = v['localIP'] --owm sourceAddr
+		links[i]['destAddr'] = v['remoteIP'] --owm destAddr
+		hostname = nixio.getnameinfo(v['remoteIP'], "inet")
+		if hostname then
+			links[i]['destNodeId'] = string.gsub(hostname, "mid..", "") --owm destNodeId
+		end 
+	end
+	data = links
+	local jsondata6 = json.decode(jsonreq6) or {}
+	--print("fetch_olsrd_links v6 "..(jsondata6['links'] and #jsondata6['links'] or "err"))
+	local links = {}
+	if jsondata6['links'] then
+		links = jsondata6['links']
+	end
+	for i,v in ipairs(links) do
+		links[i]['sourceAddr'] = v['localIP']
+		links[i]['destAddr'] = v['remoteIP']
+		hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
+		if hostname then
+			links[i]['destNodeId'] = string.gsub(hostname, "mid..", "") --owm destNodeId
 		end
-		for i,v in ipairs(links) do
-			links[i]['sourceAddr'] = v['localIP']
-			links[i]['destAddr'] = v['remoteIP']
-			hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
-			if hostname then
-				links[i]['destNodeId'] = string.gsub(hostname, "mid..", "") --owm destNodeId
-			end
-			data[#data+1] = links[i]
-		end
+		data[#data+1] = links[i]
 	end
 	return data
 end
 
 function fetch_olsrd_neighbors(interfaces)
-	local jsonreq4 = util.exec("echo /links | nc 127.0.0.1 9090")
-	local jsonreq6 = util.exec("echo /links | nc ::1 9090")
-	local jsondata4 = {}
-	local jsondata6 = {}
+	local jsonreq4 = util.exec("echo /links | nc 127.0.0.1 9090 2>/dev/null") or {}
+	local jsonreq6 = util.exec("echo /links | nc ::1 9090 2>/dev/null") or {}
 	local data = {}
-	if #jsonreq4 ~= 0 then
-		jsondata4 = json.decode(jsonreq4)
-		local links
-		if jsondata4['links'] then
-			links = jsondata4['links']
-		elseif jsondata4['data'] and jsondata4['data'][1] and jsondata4['data'][1]['links'] then
-			links = jsondata4['data'][1]['links']
-		end
-		for _,v in ipairs(links) do
-			local hostname = nixio.getnameinfo(v['remoteIP'], "inet")
-			if hostname then
-				hostname = string.gsub(hostname, "mid..", "")
-				local index = #data+1
-				data[index] = {}
-				data[index]['id'] = hostname --owm
-				data[index]['quality'] = v['linkQuality'] --owm
-				data[index]['sourceAddr4'] = v['localIP'] --owm
-				data[index]['destAddr4'] = v['remoteIP'] --owm
-				if #interfaces ~= 0 then
-					for _,iface in ipairs(interfaces) do
-						if iface['ipaddr'] == v['localIP'] then
-							data[index]['interface'] = iface['name'] --owm
-						end
+	local jsondata4 = json.decode(jsonreq4) or {}
+	--print("fetch_olsrd_neighbors v4 "..(jsondata4['links'] and #jsondata4['links'] or "err"))
+	local links = {}
+	if jsondata4['links'] then
+		links = jsondata4['links']
+	end
+	for _,v in ipairs(links) do
+		local hostname = nixio.getnameinfo(v['remoteIP'], "inet")
+		if hostname then
+			hostname = string.gsub(hostname, "mid..", "")
+			local index = #data+1
+			data[index] = {}
+			data[index]['id'] = hostname --owm
+			data[index]['quality'] = v['linkQuality'] --owm
+			data[index]['sourceAddr4'] = v['localIP'] --owm
+			data[index]['destAddr4'] = v['remoteIP'] --owm
+			if #interfaces ~= 0 then
+				for _,iface in ipairs(interfaces) do
+					if iface['ipaddr'] == v['localIP'] then
+						data[index]['interface'] = iface['name'] --owm
 					end
 				end
-				data[index]['olsr_ipv4'] = v
 			end
+			data[index]['olsr_ipv4'] = v
 		end
 	end
-	if #jsonreq6 ~= 0 then
-		jsondata6 = json.decode(jsonreq6)
-		local links
-		if jsondata6['links'] then
-			links = jsondata6['links']
-		elseif jsondata6['data'] and jsondata6['data'][1] and jsondata6['data'][1]['links'] then
-			links = jsondata6['data'][1]['links']
-		end
-		for _,v in ipairs(links) do
-			local hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
-			if hostname then
-				hostname = string.gsub(hostname, "mid..", "")
-				local index = 0
-				for i, v in ipairs(data) do
-					if v.id == hostname then
-						index = i
-					end
+	local jsondata6 = json.decode(jsonreq6) or {}
+	--print("fetch_olsrd_neighbors v6 "..(jsondata6['links'] and #jsondata6['links'] or "err"))
+	local links = {}
+	if jsondata6['links'] then
+		links = jsondata6['links']
+	end
+	for _,v in ipairs(links) do
+		local hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
+		if hostname then
+			hostname = string.gsub(hostname, "mid..", "")
+			local index = 0
+			for i, v in ipairs(data) do
+				if v.id == hostname then
+					index = i
 				end
-				if index == 0 then
-					index = #data+1
-					data[index] = {}
-					data[index]['id'] = string.gsub(hostname, "mid..", "") --owm
-					data[index]['quality'] = v['linkQuality'] --owm
-					if #interfaces ~= 0 then
-						for _,iface in ipairs(interfaces) do
-							if iface['ip6addr'] then
-								if string.gsub(iface['ip6addr'], "/64", "") == v['localIP'] then
-									data[index]['interface'] = iface['name'] --owm
-								end
+			end
+			if index == 0 then
+				index = #data+1
+				data[index] = {}
+				data[index]['id'] = string.gsub(hostname, "mid..", "") --owm
+				data[index]['quality'] = v['linkQuality'] --owm
+				if #interfaces ~= 0 then
+					for _,iface in ipairs(interfaces) do
+						if iface['ip6addr'] then
+							if string.gsub(iface['ip6addr'], "/64", "") == v['localIP'] then
+								data[index]['interface'] = iface['name'] --owm
 							end
 						end
 					end
 				end
-				data[index]['sourceAddr6'] = v['localIP'] --owm
-				data[index]['destAddr6'] = v['remoteIP'] --owm
-				data[index]['olsr_ipv6'] = v
 			end
+			data[index]['sourceAddr6'] = v['localIP'] --owm
+			data[index]['destAddr6'] = v['remoteIP'] --owm
+			data[index]['olsr_ipv6'] = v
 		end
 	end
 	return data
 end
 
-	
 function fetch_olsrd()
 	local data = {}
 	data['links'] = fetch_olsrd_links()
@@ -195,10 +170,10 @@ function fetch_olsrd()
 end
 
 function showmac(mac)
-    if not is_admin then
-        mac = mac:gsub("(%S%S:%S%S):%S%S:%S%S:(%S%S:%S%S)", "%1:XX:XX:%2")
-    end
-    return mac
+	if not is_admin then
+		mac = mac:gsub("(%S%S:%S%S):%S%S:%S%S:(%S%S:%S%S)", "%1:XX:XX:%2")
+	end
+	return mac
 end
 
 function get()
