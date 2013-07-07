@@ -1,0 +1,7 @@
+
+uci -P /var/state set luci_olsr.general.resolve=0
+uci -q get luci.general >/dev/null || uci set luci.general=internal
+uci -q get luci.general.resolve >/dev/null || uci set luci.general.resolve=0
+uci -q changes luci | grep -q luci && uci commit luci
+uci -P /var/state set luci.general.resolve=0
+

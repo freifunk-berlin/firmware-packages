@@ -6,26 +6,6 @@ set_default_config()
 	config_get type "$cfg" "type"
 	config_get hwmode "$cfg" "hwmode"
 	case $type in
-		atheros)
-			uci set freifunk.wifi_device.channel=1
-			uci set freifunk.wifi_device.diversity=0
-			uci set freifunk.wifi_device.txantenna=1
-			uci set freifunk.wifi_device.rxantenna=1
-			uci set freifunk.wifi_device.disabled=0
-			uci set freifunk.wifi_device.txpower="15"
-			uci set freifunk.wifi_device.country=276
-			uci set freifunk.wifi_device.regdomain="0x37"
-			uci set freifunk.wifi_device.outdoor="1"
-			uci set freifunk.wifi_device.hwmode=11g
-			uci set freifunk.wifi_device.distance=1000
-			uci set freifunk.wifi_iface=defaults
-			uci set freifunk.wifi_iface.mode=adhoc
-			uci set freifunk.wifi_iface.bssid="02:CA:FF:EE:BA:BE"
-			uci set freifunk.wifi_iface.sw_merge=1
-			uci set freifunk.wifi_iface.mcast_rate=5500
-			uci set freifunk.wifi_iface.probereq=1
-			uci commit freifunk
-		;;
 		mac80211)
 			uci set freifunk.wifi_device.hwmode=$hwmode
 			uci set freifunk.wifi_device.channel=1
@@ -38,47 +18,12 @@ set_default_config()
 			uci set freifunk.wifi_iface.mode=adhoc
 			uci set freifunk.wifi_iface.bssid="02:CA:FF:EE:BA:BE"
 			uci set freifunk.wifi_iface.sw_merge=""
-			uci commit freifunk
-		;;
-		broadcom)
-			uci set freifunk.wifi_device.channel=1
-			uci set freifunk.wifi_device.diversity=""
-			uci set freifunk.wifi_device.disabled=0
-			uci set freifunk.wifi_device.txpower="15"
-			uci set freifunk.wifi_device.country=DE
-			uci set freifunk.wifi_device.txantenna=0
-			uci set freifunk.wifi_device.rxantenna=0
-			uci set freifunk.wifi_device.hwmode=11g
-			uci set freifunk.wifi_device.distance=1000
-			uci set freifunk.wifi_iface=defaults
-			uci set freifunk.wifi_iface.encryption=none
-			uci set freifunk.wifi_iface.mode=adhoc
-			uci set freifunk.wifi_iface.bssid="02:CA:FF:EE:BA:BE"
-			uci set freifunk.wifi_iface.sw_merge=""
+			uci set freifunk.wifi_iface.noscan=1
 			uci commit freifunk
 		;;
 	esac
 }
 
-cp_config() {
-	local cfg="$1"
-	if [ "$(uci -q -c /rom/etc/config get "$cfg")" = "defaults" ] ; then
-		if [ "$(uci -q get "$cfg")" != "defaults" ] ; then
-			local iface
-			iface=$(uci -c /rom/etc/config show "$cfg")
-			for i in $iface ; do
-				uci set "$i"
-			done
-			uci commit
-		fi
-	fi
-}
-cp_config "freifunk.radvd_interface"
-cp_config "freifunk.radvd_prefix"
-cp_config "freifunk.radvd_rdnss"
-cp_config "freifunk.radvd_dnssl"
-cp_config "freifunk.olsr_gvpninterface"
-cp_config "freifunk.gvpn_node"
 [ "$(uci -q get freifunk.wizard)" == "settings" ] || uci set freifunk.wizard=settings
 uci set freifunk.interface.dns="2002:d596:2a92:1:71:53:: 2002:5968:c28e::53 88.198.178.18 141.54.1.1 212.204.49.83 8.8.8.8 8.8.4.4"
 uci commit freifunk
@@ -91,15 +36,6 @@ uci set luci.general.resolve=0
 uci commit luci
 
 grep -q 'ff_luci_resolve' /etc/crontabs/root || echo '*/5 * * * *     /usr/sbin/ff_luci_resolve' >> /etc/crontabs/root
-sed -i '/exit 0/d' /etc/rc.local
-cat <<EOF >> /etc/rc.local
-uci -P /var/state set luci_olsr.general.resolve=0
-uci -q get luci.general >/dev/null || uci set luci.general=internal
-uci -q get luci.general.resolve >/dev/null || uci set luci.general.resolve=0
-uci -q changes luci | grep -q luci && uci commit luci
-uci -P /var/state set luci.general.resolve=0
-EOF
-echo 'exit 0' >> /etc/rc.local
 
 (
 while true ; do
