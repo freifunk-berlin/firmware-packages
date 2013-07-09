@@ -836,6 +836,20 @@ if has_lan then
 		uci:delete("network", "lan", "gateway")
 		uci:save("network")
 	end
+	local ip6assign = f:field(Value, "langip6assign", translate("IPv6-Assign"))
+	ip6assign:depends("lanproto", "static")
+	ip6assign.rmempty = true
+	function ip6assign.cfgvalue(self, section)
+		return uci:get("network", "lan", "ip6assign") or 64
+	end
+	function ip6assign.write(self, section, value)
+		uci:set("network", "lan", "ip6assign", value)
+		uci:save("network")
+	end
+	function ip6assign.remove(self, section)
+		uci:delete("network", "lan", "ip6assign")
+		uci:save("network")
+	end
 	local landns = f:field(Value, "landns", translate("DNS-Server"))
 	landns:depends("lanproto", "static")
 	function landns.cfgvalue(self, section)
@@ -1409,6 +1423,7 @@ function main.write(self, section, value)
 				dhcpbase.interface = nif .. "dhcp"
 				dhcpbase.force = 1
 				dhcpbase.ignore = 0
+				dhcpbase.ip6assign=64
 				uci:section("dhcp", "dhcp", nif .. "dhcp", dhcpbase)
 				uci:set_list("dhcp", nif .. "dhcp", "dhcp_option", "119,olsr")
 				if has_firewall then
