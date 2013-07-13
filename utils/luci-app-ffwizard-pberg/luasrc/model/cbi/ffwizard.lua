@@ -353,7 +353,7 @@ uci:foreach("wireless", "wifi-device",
 			end
 			function meship.validate(self, value)
 				local x = ip.IPv4(value)
-				return ( x and x:prefix() == 32 ) and x:string() or ""
+				return ( x and x:is4()) and x:string() or ""
 			end
 			function meship.write(self, sec, value)
 				uci:set("freifunk", "wizard", "meship_" .. device, value)
@@ -450,7 +450,7 @@ uci:foreach("network", "interface",
 			end
 			function meship.validate(self, value)
 				local x = ip.IPv4(value)
-				return ( x and x:prefix() == 32 ) and x:string() or ""
+				return ( x and x:is4()) and x:string() or ""
 			end
 			function meship.write(self, sec, value)
 				uci:set("freifunk", "wizard", "meship_" .. device, value)
@@ -1289,7 +1289,10 @@ function main.write(self, section, value)
 		local prenetconfig = uci:get_all("freifunk", "interface") or {}
 		util.update(prenetconfig, uci:get_all(external, "interface") or {})
 		prenetconfig.proto = "static"
-		prenetconfig.ipaddr = node_ip:string()
+		prenetconfig.ipaddr = node_ip:host():string()
+		if node_ip:prefix() < 32 then
+			prenetconfig.netmask = node_ip:mask():string()
+		end
 		prenetconfig.ip6assign=64
 		uci:section("network", "interface", nif, prenetconfig)
 		local new_hostname = node_ip:string():gsub("%.", "-")
@@ -1512,7 +1515,10 @@ function main.write(self, section, value)
 		local prenetconfig = uci:get_all("freifunk", "interface") or {}
 		util.update(prenetconfig, uci:get_all(external, "interface") or {})
 		prenetconfig.proto = "static"
-		prenetconfig.ipaddr = node_ip:string()
+		prenetconfig.ipaddr = node_ip:host():string()
+		if node_ip:prefix() < 32 then
+			prenetconfig.netmask = node_ip:mask():string()
+		end
 		prenetconfig.ip6assign=64
 		prenetconfig.gateway = ''
 		prenetconfig.username = ''
