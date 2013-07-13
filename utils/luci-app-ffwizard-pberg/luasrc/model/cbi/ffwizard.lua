@@ -45,6 +45,7 @@ local profiles = "/etc/config/profile_"
 local device_il = {
 	"loopback",
 	"6to4",
+	"henet",
 	"tun",
 	"gvpn",
 	"wifi",
@@ -422,6 +423,7 @@ uci:foreach("wireless", "wifi-device",
 
 uci:foreach("network", "interface",
 	function(section)
+		local device_i
 		local device = section[".name"]
 		local ifname = uci_state:get("network",device,"ifname")
 		for i, v in ipairs(device_il) do
@@ -1921,7 +1923,6 @@ function main.write(self, section, value)
 		uci:save("freifunk")
 		if has_auto_ipv6_gw then
 			-- Set autoipv6 tunnel mode
-			uci:set("auto_ipv6_gw", "olsr_node", "enable", "0")
 			uci:set("auto_ipv6_gw", "tunnel", "enable", "1")
 			uci:save("auto_ipv6_gw")
 			-- Create tun6to4 interface
@@ -1930,6 +1931,11 @@ function main.write(self, section, value)
 			tun6to4.proto = "none"
 			uci:section("network", "interface", "6to4", tun6to4)
 			uci:save("network")
+		end
+		if has_auto_ipv6_node then
+			-- Set auto_ipv6_node olsrd mode
+			uci:set("auto_ipv6_node", "olsr_node", "enable", "0")
+			uci:save("autoipv6")
 		end
 
 		-- Delete/Disable gateway plugin
