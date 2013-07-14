@@ -97,11 +97,16 @@ iface_count=0
 
 for i in $(echo $interfaces) ; do
 	[ "$(uci get network.$i.proto)" == "static" ] || continue
-	DEV="$(uci -q -p/var/state get network.$i.ifname)"
-	[ -z "$DEV" ]  && {
+	local UCI_DEV="$(uci -q get network.$i.ifname)"
+	local DEV="$(uci -q -p/var/state get network.$i.ifname)"
+	[ -z "$DEV" ] && {
 		logger -t auto_ipv6_node "uci Device Not Found IP6_SUFFIX $IP6_SUFFIX interfaces $i DEV $DEV check your uci config"
 		continue
 	}
+	echo $UCI_DEV | grep -q "@" && {
+		logger -t auto_ipv6_node "Alias Device IP6_SUFFIX $IP6_SUFFIX interfaces $i DEV $DEV"
+		continue
+	}	
 	grep -q "$DEV" /proc/net/dev || {
 		logger -t auto_ipv6_node "proc Device Not Found IP6_SUFFIX $IP6_SUFFIX interfaces $i DEV $DEV check your uci config"
 		continue
@@ -159,11 +164,12 @@ if [ "6and4" == "$(uci get olsrd.@olsrd[0].IpVersion)" ] ; then
 				uci commit olsrd
 			fi
 		done
-	
+		hna6s="$ula_prefix::"" $hna6s"
 		local neta=""
 		local count=0
 		config_foreach olsrd_search_hna6 Hna6
 		for i in $neta ; do
+			echo "uci delete olsrd.@Hna6[$i]"
 			uci delete "olsrd.@Hna6["$i"]"
 			uci commit olsrd
 			restart_olsrd=1
@@ -173,6 +179,7 @@ if [ "6and4" == "$(uci get olsrd.@olsrd[0].IpVersion)" ] ; then
 		local count=0
 		config_foreach olsrd_find_hna6 Hna6 "$ula_prefix::"
 		if [ "$neta" == "" ] ; then
+			echo "uci add olsrd.@Hna6[-1] $ula_prefix::"
 			uci add olsrd Hna6
 			uci set "olsrd.@Hna6[-1].prefix=48"
 			uci set "olsrd.@Hna6[-1].netaddr=$ula_prefix::"
