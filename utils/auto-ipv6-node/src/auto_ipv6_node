@@ -187,9 +187,9 @@ fi
 config_clear
 
 
-if [ $ifconfig_add -eq 1 ] ; then
-	logger -t auto_ipv6_node "Restarting network..."
-	/etc/init.d/network restart
+if [ $restart_network -eq 1 ] ; then
+	logger -t auto_ipv6_node "Reload network..."
+	/etc/init.d/network reload
 fi
 
 if [ $restart_dnsmasq -eq 1 ] ; then
