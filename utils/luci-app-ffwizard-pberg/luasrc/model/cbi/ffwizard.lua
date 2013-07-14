@@ -665,6 +665,7 @@ if has_wan then
 
 	local wanusr = f:field(Value, "wanusername", translate("Username"))
 	wanusr:depends("wanproto", "pppoe")
+	wanusr:depends("wanproto", "3g")
 	wanusr.rmempty = true
 	function wanusr.cfgvalue(self, section)
 		return uci:get("network", "wan", "username")
@@ -677,6 +678,7 @@ if has_wan then
 	local wanpwd = f:field(Value, "wanpassword", translate("Password"))
 	wanpwd.password = true
 	wanpwd:depends("wanproto", "pppoe")
+	wanpwd:depends("wanproto", "3g")
 	wanpwd.rmempty = true
 	function wanpwd.cfgvalue(self, section)
 		return uci:get("network", "wan", "password")
