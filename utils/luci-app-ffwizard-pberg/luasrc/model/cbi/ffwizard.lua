@@ -847,10 +847,6 @@ if has_lan then
 		uci:set("network", "lan", "ip6assign", value)
 		uci:save("network")
 	end
-	function ip6assign.remove(self, section)
-		uci:delete("network", "lan", "ip6assign")
-		uci:save("network")
-	end
 	local landns = f:field(Value, "landns", translate("DNS-Server"))
 	landns:depends("lanproto", "static")
 	function landns.cfgvalue(self, section)
