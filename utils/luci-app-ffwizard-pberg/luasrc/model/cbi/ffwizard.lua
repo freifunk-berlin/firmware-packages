@@ -1519,6 +1519,7 @@ function main.write(self, section, value)
 		if node_ip:prefix() < 32 then
 			prenetconfig.netmask = node_ip:mask():string()
 		end
+		prenetconfig.ip6addr = ''
 		prenetconfig.ip6assign=64
 		prenetconfig.gateway = ''
 		prenetconfig.username = ''
