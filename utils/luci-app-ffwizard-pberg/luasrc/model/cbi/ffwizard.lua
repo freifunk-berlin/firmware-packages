@@ -1375,6 +1375,7 @@ function main.write(self, section, value)
 						vap_ssid = "AP"..channel..ssidshort
 					end
 					uci:set("freifunk", "wizard", "vapssid_" .. device, vap_ssid)
+					aliasbase.ip6assign=64
 					uci:section("network", "interface", nif .. "dhcp", aliasbase)
 					uci:section("wireless", "wifi-iface", nil, {
 						device=device,
@@ -1407,7 +1408,6 @@ function main.write(self, section, value)
 				dhcpbase.interface = nif .. "dhcp"
 				dhcpbase.force = 1
 				dhcpbase.ignore = 0
-				dhcpbase.ip6assign=64
 				uci:section("dhcp", "dhcp", nif .. "dhcp", dhcpbase)
 				uci:set_list("dhcp", nif .. "dhcp", "dhcp_option", "119,olsr")
 				if has_firewall then
