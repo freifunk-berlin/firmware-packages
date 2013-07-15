@@ -953,6 +953,123 @@ if has_lan then
 	end
 end
 
+if has_ovpn then
+	local ffvpn = f:field(Flag, "ffvpn", "Freifunk Internet Tunnel", "Verbinden Sie ihren Router ueber das Internet mit anderen Freifunknetzen.")
+	ovpn.rmempty = false
+	function ovpn.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "enable")
+	end
+	function ffvpn.write(self, section, value)
+		uci:set("openvpn", "ffvpn", "enable", value)
+		uci:save("openvpn")
+	end
+	local ffvpnclient = f:field(Flag, "ffvpnpclient", translate("Client"))
+	ffvpnptun:depends("ffvpn", "1")
+	function ffvpnclient.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "client") or 1
+	end
+	function ffvpnclient.write(self, section, value)
+		uci:set("openvpn", "ffvpn", "client", value)
+		uci:save("openvpn")
+	end
+	local ffvpnport = f:field(Value, "ffvpnport", translate("IPv4-Port"))
+	ffvpnport:depends("ffvpn", "1")
+	function ffvpnport.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "port") or 1194
+	end
+	function ffvpnport.write(self, section, value)
+		uci:set("openvpn", "ffvpn", "port", value)
+		uci:save("openvpn")
+	end
+	local ffvpnproto = f:field(Value, "ffvpnproto", translate("IPv4-Proto"))
+	ffvpnproto:depends("ffvpn", "1")
+	function ffvpnproto.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "proto") or "udp"
+	end
+	function ffvpnproto.write(self, section, value)
+		uci:set("openvpn", "ffvpn", "proto", value)
+		uci:save("openvpn")
+	end
+	local ffvpndev = f:field(Value, "ffvpndev", translate("Device"))
+	ffvpndev:depends("ffvpn", "1")
+	function ffvpndev.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "dev") or "tun"
+	end
+	function ffvpndev.write(self, section, value)
+		uci:set("openvpn", "ffvpn", "dev", value)
+		uci:save("openvpn")
+	end
+	local ffvpnptun = f:field(Flag, "ffvpnptun", translate("Device"))
+	ffvpnptun:depends("ffvpn", "1")
+	function ffvpnptun.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "persist_tun") or 1
+	end
+	function ffvpnptun.write(self, section, value)
+		uci:set("openvpn", "ffvpn", "persist_tun", value)
+		uci:save("openvpn")
+	end
+	local ffvpnpkey = f:field(Flag, "ffvpnpkey", translate("Device"))
+	ffvpnpkey:depends("ffvpn", "1")
+	function ffvpnpkey.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "persist_key") or 1
+	end
+	function ffvpnpkey.write(self, section, value)
+		uci:set("openvpn", "ffvpn", "persist_key", value)
+		uci:save("openvpn")
+	end
+	local ffvpnnobind = f:field(Flag, "ffvpnnobind", translate("Device"))
+	ffvpnnobind:depends("ffvpn", "1")
+	function ffvpnnobind.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "nobind") or 1
+	end
+	function ffvpnnobind.write(self, section, value)
+		uci:set("openvpn", "ffvpn", "nobind", value)
+		uci:save("openvpn")
+	end
+	local ffvpnctype = f:field(Value, "ffvpnctype", translate("Device"))
+	ffvpnctype:depends("ffvpn", "1")
+	function ffvpnctype.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "ns_cert_type") or "server"
+	end
+	function ffvpnctype.write(self, section, value)
+		uci:set("openvpn", "ffvpn", "ns_cert_type", value)
+		uci:save("openvpn")
+	end
+	local ffvpncomp = f:field(Value, "ffvpncomp", translate("Device"))
+	ffvpncomp:depends("ffvpn", "1")
+	function ffvpncomp.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "comp_lzo") or "no"
+	end
+	function ffvpncomp.write(self, section, value)
+		uci:set("openvpn", "ffvpn", "comp_lzo", value)
+		uci:save("openvpn")
+	end
+	local ffvpnremote = f:field(Value, "ffvpnremote", translate("Remote"))
+	ffvpnremote:depends("ffvpn", "1")
+	function ffvpnremote.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "remote") or "vpn03.berlin.freifunk.net 1194 udp"
+	end
+	function ffvpnremote.write(self, section, value)
+		uci:set("openvpn", "ffvpn", "remote", value)
+		uci:save("openvpn")
+	end
+	local ffvpnca = f:field(FileUpload, "ffvpnca", translate("Certificate authority"))
+	ffvpnca:depends("ffvpn", "1")
+	function ffvpnca.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "ca") or "/etc/openvpn/freifunk-ca.crt"
+	end
+	local ffvpncert = f:field(FileUpload, "ffvpncert", translate("Local certificate"))
+	ffvpncert:depends("ffvpn", "1")
+	function ffvpncert.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "cert") or "/etc/openvpn/freifunk_client.crt"
+	end
+	local ffvpnkey = f:field(FileUpload, "ffvpnkey", translate("Local certificate"))
+	ffvpnkey:depends("ffvpn", "1")
+	function ffvpnkey.cfgvalue(self, section)
+		return uci:get("openvpn", "ffvpn", "key") or "/etc/openvpn/freifunk_client-key.key"
+	end
+end
+
 if has_l2gvpn then
 	local gvpn = f:field(Flag, "gvpn", "Freifunk Internet Tunnel", "Verbinden Sie ihren Router ueber das Internet mit anderen Freifunknetzen.")
 	gvpn.rmempty = false
