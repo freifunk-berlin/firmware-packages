@@ -25,11 +25,13 @@ local ip = require "luci.ip"
 local fs  = require "nixio.fs"
 local fs_luci = require "luci.fs"
 
-local has_3g = fs.access("/usr/bin/gcom")
+local has_3g = fs.access("/lib/netifd/proto/3g.sh")
 local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
 local has_l2gvpn  = fs.access("/usr/sbin/node")
 local has_firewall = fs.access("/etc/config/firewall")
 local has_rom = fs.access("/rom/etc")
+local has_6to4 = fs.access("/lib/netifd/proto/6to4.sh")
+local has_6in4 = fs.access("/lib/netifd/proto/6in4.sh")
 local has_auto_ipv6_node = fs.access("/etc/config/auto_ipv6_node")
 local has_auto_ipv6_gw = fs.access("/etc/config/auto_ipv6_gw")
 local has_qos = fs.access("/etc/init.d/qos")
@@ -393,7 +395,7 @@ uci:foreach("wireless", "wifi-device",
 				dhcpsplash:depends("client_" .. device, "1")
 				dhcpsplash.rmempty = true
 				function dhcpsplash.cfgvalue(self, section)
-					return uci:get("freifunk", "wizard", "dhcpsplash_" .. device) or "1"
+					return uci:get("freifunk", "wizard", "dhcpsplash_" .. device)
 				end
 				function dhcpsplash.write(self, sec, value)
 					uci:set("freifunk", "wizard", "dhcpsplash_" .. device, value)
@@ -485,7 +487,7 @@ uci:foreach("network", "interface",
 				dhcpsplash:depends("client_" .. device, "1")
 				dhcpsplash.rmempty = true
 				function dhcpsplash.cfgvalue(self, section)
-					return uci:get("freifunk", "wizard", "dhcpsplash_" .. device) or "1"
+					return uci:get("freifunk", "wizard", "dhcpsplash_" .. device)
 				end
 				function dhcpsplash.write(self, sec, value)
 					uci:set("freifunk", "wizard", "dhcpsplash_" .. device, value)
@@ -791,6 +793,97 @@ if has_wan then
 		function wanqosup.remove(self, section)
 			uci:delete("qos", "wan", "upload")
 			uci:save("qos")
+		end
+	end
+	if has_6in4 then
+		local henet = f:field(Flag, "henet", "Henet Tunnel", "Geben Sie Ihre Henet Tunnel daten ein.")
+		henet.rmempty = false
+		henet.optional = false
+		henet:depends("device_wan", "")
+		function henet.cfgvalue(self, section)
+			return uci:get("freifunk", "wizard", "henet")
+		end
+		function henet.write(self, section, value)
+			uci:set("freifunk", "wizard", "henet", value)
+			uci:save("freifunk")
+		end
+		local henetproto = f:field(Value, "henetproto", translate("Protokoll set 6in4"))
+		henetproto:depends("henet", "1")
+		henetproto.value = "6in4"
+		function henetproto.write(self, section, value)
+			uci:set("network", "henet", "proto", value)
+			uci:save("network")
+		end
+		local henetid = f:field(Value, "tunnelid", translate("Tunnel Id"))
+		henetid:depends("henetproto", "6in4")
+		henetid.rmempty = true
+		function henetid.cfgvalue(self, section)
+			return uci:get("network", "henet", "tunnelid")
+		end
+		function henetid.write(self, section, value)
+			uci:set("network", "henet", "tunnelid", value)
+			uci:save("network")
+		end
+		local henetusr = f:field(Value, "henetusername", translate("Username"))
+		henetusr:depends("henetproto", "6in4")
+		henetusr.rmempty = true
+		function henetusr.cfgvalue(self, section)
+			return uci:get("network", "henet", "username")
+		end
+		function henetusr.write(self, section, value)
+			uci:set("network", "henet", "username", value)
+			uci:save("network")
+		end
+		local henetpwd = f:field(Value, "henetpassword", translate("Password"))
+		henetpwd.password = true
+		henetpwd:depends("henetproto", "6in4")
+		henetpwd.rmempty = true
+		function henetpwd.cfgvalue(self, section)
+			return uci:get("network", "henet", "password")
+		end
+		function henetpwd.write(self, section, value)
+			uci:set("network", "henet", "password", value)
+			uci:save("network")
+		end
+		local henetgw6 = f:field(Value, "henetgw6", translate("IPv6-Gateway-Address"))
+		henetgw6:depends("henet", "1")
+		henetgw6.datatype = "ip6addr"
+		function henetgw6.cfgvalue(self, section)
+			return uci:get("network", "henet", "ip6gw")
+		end
+		function henetgw6.write(self, section, value)
+			uci:set("network", "henet", "ip6gw", value)
+			uci:save("network")
+		end
+		local henetip6 = f:field(Value, "henetip6addr", translate("IPv6-Address"))
+		henetip6:depends("henet", "1")
+		henetip6.datatype = "ip6addr"
+		function henetip6.cfgvalue(self, section)
+			return uci:get("network", "henet", "ip6addr")
+		end
+		function henetip6.write(self, section, value)
+			uci:set("network", "henet", "ip6addr", value)
+			uci:save("network")
+		end
+		local henetpeer = f:field(Value, "henetpeer", translate("Peer-Address"))
+		henetpeer:depends("henet", "1")
+		henetpeer.datatype = "ip4addr"
+		function henetpeer.cfgvalue(self, section)
+			return uci:get("network", "henet", "peeraddr")
+		end
+		function henetpeer.write(self, section, value)
+			uci:set("network", "henet", "peeraddr", value)
+			uci:save("network")
+		end
+		local henetprefix = f:field(Value, "henetprefix", translate("IPv6 delegated Prefix"))
+		henetprefix:depends("henet", "1")
+		henetprefix.datatype = "ip6addr"
+		function henetprefix.cfgvalue(self, section)
+			return uci:get("network", "henet", "ip6prefix")
+		end
+		function henetprefix.write(self, section, value)
+			uci:set("network", "henet", "ip6prefix", value)
+			uci:save("network")
 		end
 	end
 end
@@ -1811,6 +1904,18 @@ function main.write(self, section, value)
 			})
 		end
 	end
+	if has_6in4 then
+		local henet_prefix = luci.http.formvalue("cbid.ffwizward.1.henetprefix")
+		--local henet_prefix = uci:get("network","henet","ipv6prefix") or ""
+		local prefix = string.gsub(henet_prefix,".*/", "")
+		local netaddr = string.gsub(henet_prefix,"/.*", "")
+		if prefix and netaddr then
+			uci:section("olsrd", "Hna6", nil, {
+				prefix = prefix,
+				netaddr = netaddr
+			})
+		end
+	end
 
 	-- Import hosts and set domain
 	uci:foreach("dhcp", "dnsmasq", function(s)
@@ -1894,7 +1999,6 @@ function main.write(self, section, value)
 			uci:set("auto_ipv6_node", "olsr_node", "enable", "0")
 			uci:save("autoipv6")
 		end
-
 		-- Delete/Disable gateway plugin
 		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
@@ -1945,7 +2049,11 @@ function main.write(self, section, value)
 			uci:delete_all("firewall","forwarding", {src="lan", dest="wan"})
 			uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
 			if has_auto_ipv6_gw then
-				tools.firewall_zone_add_interface("wan", "6to4")
+				tools.firewall_zone_add_interface("freifunk", "6to4")
+				uci:save("firewall")
+			end
+			if has_6in4 then
+				tools.firewall_zone_add_interface("freifunk", "henet")
 				uci:save("firewall")
 			end
 
