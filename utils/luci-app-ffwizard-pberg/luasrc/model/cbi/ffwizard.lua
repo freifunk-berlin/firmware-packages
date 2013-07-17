@@ -27,7 +27,8 @@ local fs_luci = require "luci.fs"
 
 local has_3g = fs.access("/lib/netifd/proto/3g.sh")
 local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
-local has_l2gvpn  = fs.access("/usr/sbin/node")
+local has_l2gvpn = fs.access("/usr/sbin/node")
+local has_ovpn = fs.access("/usr/sbin/openvpn")
 local has_firewall = fs.access("/etc/config/firewall")
 local has_rom = fs.access("/rom/etc")
 local has_6to4 = fs.access("/lib/netifd/proto/6to4.sh")
@@ -955,8 +956,8 @@ end
 
 if has_ovpn then
 	local ffvpn = f:field(Flag, "ffvpn", "Freifunk Internet Tunnel", "Verbinden Sie ihren Router ueber das Internet mit anderen Freifunknetzen.")
-	ovpn.rmempty = false
-	function ovpn.cfgvalue(self, section)
+	ffvpn.rmempty = false
+	function ffvpn.cfgvalue(self, section)
 		return uci:get("openvpn", "ffvpn", "enable")
 	end
 	function ffvpn.write(self, section, value)
@@ -964,9 +965,9 @@ if has_ovpn then
 		uci:save("openvpn")
 	end
 	local ffvpnclient = f:field(Flag, "ffvpnpclient", translate("Client"))
-	ffvpnptun:depends("ffvpn", "1")
+	ffvpnclient:depends("ffvpn", "1")
 	function ffvpnclient.cfgvalue(self, section)
-		return uci:get("openvpn", "ffvpn", "client") or 1
+		return uci:get("openvpn", "ffvpn", "client") or "1"
 	end
 	function ffvpnclient.write(self, section, value)
 		uci:set("openvpn", "ffvpn", "client", value)
@@ -999,34 +1000,34 @@ if has_ovpn then
 		uci:set("openvpn", "ffvpn", "dev", value)
 		uci:save("openvpn")
 	end
-	local ffvpnptun = f:field(Flag, "ffvpnptun", translate("Device"))
+	local ffvpnptun = f:field(Flag, "ffvpnptun", translate("Persist tun"))
 	ffvpnptun:depends("ffvpn", "1")
 	function ffvpnptun.cfgvalue(self, section)
-		return uci:get("openvpn", "ffvpn", "persist_tun") or 1
+		return uci:get("openvpn", "ffvpn", "persist_tun") or "1"
 	end
 	function ffvpnptun.write(self, section, value)
 		uci:set("openvpn", "ffvpn", "persist_tun", value)
 		uci:save("openvpn")
 	end
-	local ffvpnpkey = f:field(Flag, "ffvpnpkey", translate("Device"))
+	local ffvpnpkey = f:field(Flag, "ffvpnpkey", translate("Persist key"))
 	ffvpnpkey:depends("ffvpn", "1")
 	function ffvpnpkey.cfgvalue(self, section)
-		return uci:get("openvpn", "ffvpn", "persist_key") or 1
+		return uci:get("openvpn", "ffvpn", "persist_key") or "1"
 	end
 	function ffvpnpkey.write(self, section, value)
 		uci:set("openvpn", "ffvpn", "persist_key", value)
 		uci:save("openvpn")
 	end
-	local ffvpnnobind = f:field(Flag, "ffvpnnobind", translate("Device"))
+	local ffvpnnobind = f:field(Flag, "ffvpnnobind", translate("No bind"))
 	ffvpnnobind:depends("ffvpn", "1")
 	function ffvpnnobind.cfgvalue(self, section)
-		return uci:get("openvpn", "ffvpn", "nobind") or 1
+		return uci:get("openvpn", "ffvpn", "nobind") or "1"
 	end
 	function ffvpnnobind.write(self, section, value)
 		uci:set("openvpn", "ffvpn", "nobind", value)
 		uci:save("openvpn")
 	end
-	local ffvpnctype = f:field(Value, "ffvpnctype", translate("Device"))
+	local ffvpnctype = f:field(Value, "ffvpnctype", translate("NS Cert type"))
 	ffvpnctype:depends("ffvpn", "1")
 	function ffvpnctype.cfgvalue(self, section)
 		return uci:get("openvpn", "ffvpn", "ns_cert_type") or "server"
@@ -1035,7 +1036,7 @@ if has_ovpn then
 		uci:set("openvpn", "ffvpn", "ns_cert_type", value)
 		uci:save("openvpn")
 	end
-	local ffvpncomp = f:field(Value, "ffvpncomp", translate("Device"))
+	local ffvpncomp = f:field(Value, "ffvpncomp", translate("Compresion lzo"))
 	ffvpncomp:depends("ffvpn", "1")
 	function ffvpncomp.cfgvalue(self, section)
 		return uci:get("openvpn", "ffvpn", "comp_lzo") or "no"
@@ -1053,17 +1054,17 @@ if has_ovpn then
 		uci:set("openvpn", "ffvpn", "remote", value)
 		uci:save("openvpn")
 	end
-	local ffvpnca = f:field(FileUpload, "ffvpnca", translate("Certificate authority"))
+	local ffvpnca = f:field(FileUpload, "ffvpnca", translate("Certificate authority"), "freifunk-ca.crt")
 	ffvpnca:depends("ffvpn", "1")
 	function ffvpnca.cfgvalue(self, section)
 		return uci:get("openvpn", "ffvpn", "ca") or "/etc/openvpn/freifunk-ca.crt"
 	end
-	local ffvpncert = f:field(FileUpload, "ffvpncert", translate("Local certificate"))
+	local ffvpncert = f:field(FileUpload, "ffvpncert", translate("Local certificate"), "freifunk_client.crt")
 	ffvpncert:depends("ffvpn", "1")
 	function ffvpncert.cfgvalue(self, section)
 		return uci:get("openvpn", "ffvpn", "cert") or "/etc/openvpn/freifunk_client.crt"
 	end
-	local ffvpnkey = f:field(FileUpload, "ffvpnkey", translate("Local certificate"))
+	local ffvpnkey = f:field(FileUpload, "ffvpnkey", translate("Local certificate"),"freifunk_client-key.key")
 	ffvpnkey:depends("ffvpn", "1")
 	function ffvpnkey.cfgvalue(self, section)
 		return uci:get("openvpn", "ffvpn", "key") or "/etc/openvpn/freifunk_client-key.key"
@@ -1146,6 +1147,9 @@ function f.handle(self, state, data)
 			end
 			if has_l2gvpn then
 				uci:commit("l2gvpn")
+			end
+			if has_ovpn then
+				uci:commit("openvpn")
 			end
 			if has_pr then
 				uci:commit("freifunk-policyrouting")
