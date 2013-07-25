@@ -26,6 +26,7 @@ local netm = require "luci.model.network"
 local table = require "table"
 local nixio = require "nixio"
 local neightbl = require "neightbl"
+local ip = require "luci.ip"
 
 
 local ipairs, os, pairs, next, type, tostring, tonumber, error, print =
@@ -127,9 +128,6 @@ function fetch_olsrd_neighbors(interfaces)
 	if jsondata6['links'] then
 		links = jsondata6['links']
 	end
-	--local uprefix = "fd41:dafb:1896::/48"
-	local uprefix = cursor:get("network", "globals", "ula_prefix") or ""
-	uprefix = string.gsub(uprefix, "::/.*", "")
 	for _,v in ipairs(links) do
 		local hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
 		if hostname then
@@ -146,22 +144,14 @@ function fetch_olsrd_neighbors(interfaces)
 				data[index]['id'] = string.gsub(hostname, "mid..", "") --owm
 				data[index]['quality'] = v['linkQuality'] --owm
 				if #interfaces ~= 0 then
-					ip6assign_c = 0
 					for _,iface in ipairs(interfaces) do
-						local ip6assign = iface.ip6assign or 0
-						if ip6assign ~= 0 then
-							if ip6assign_c == 0 then
-								ip6assign_addr = uprefix.."::1"
-							else
-								ip6assign_addr = uprefix..":"..ip6assign_c.."::1"
-							end
-							ip6assign_c = ip6assign_c + 1
-						end
-						if ip6assign_addr == v.localIP then
-							data[index]['interface'] = iface['name']
-						elseif iface['ip6addr'] then
-							if string.gsub(iface['ip6addr'], "/64", "") == v['localIP'] then
-								data[index]['interface'] = iface['name'] --owm
+						local name = iface['.name']
+						local net = netm:get_network(name)
+						local device = net and net:get_interface()
+						local_ip = ip.IPv6(v.localIP)
+						for _, a in ipairs(device:ip6addrs()) do
+							if a:host() == local_ip:host() then
+								data[index]['interface'] = name
 							end
 						end
 					end
@@ -328,33 +318,23 @@ function get()
 		end
 	end)
 
-	local uprefix = cursor:get("network", "globals", "ula_prefix") or ""
-	
-	uprefix = string.gsub(uprefix, "::/.*", "")
-	ip6assign_c = 0
 	root.interfaces = {} --owm
 	cursor:foreach("network", "interface",function(vif)
 		if 'lo' == vif.ifname then
 			return
 		end
 		local name = vif['.name']
+		local net = netm:get_network(name)
+		local device = net and net:get_interface()
 		root.interfaces[#root.interfaces+1] =  vif
 		root.interfaces[#root.interfaces].name = name --owm
 		root.interfaces[#root.interfaces].ifname = vif.ifname --owm
 		root.interfaces[#root.interfaces].ipv4Addresses = {vif.ipaddr} --owm
-		local ip6assign = vif.ip6assign or 0
-		if ip6assign ~= 0 then
-			if ip6assign_c == 0 then
-				ip6assign_addr = uprefix.."::1/"..ip6assign
-				root.interfaces[#root.interfaces].ipv6Addresses = {vif.ip6addr,ip6assign_addr} --owm
-			else
-				ip6assign_addr = uprefix..":"..ip6assign_c.."::1/"..ip6assign
-				root.interfaces[#root.interfaces].ipv6Addresses = {vif.ip6addr,ip6assign_addr} --owm
-			end
-			ip6assign_c = ip6assign_c + 1
-		else
-			root.interfaces[#root.interfaces].ipv6Addresses = {vif.ip6addr} --owm
+		local ipv6Addresses = {}
+		for _, a in ipairs(device:ip6addrs()) do
+			table.insert(ipv6Addresses, a:string())
 		end
+		root.interfaces[#root.interfaces].ipv6Addresses = ipv6Addresses --owm
 		root.interfaces[#root.interfaces].physicalType = 'ethernet' --owm
 		root.interfaces[#root.interfaces]['.name'] = nil
 		root.interfaces[#root.interfaces]['.anonymous'] = nil
