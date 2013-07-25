@@ -37,6 +37,7 @@ local has_auto_ipv6_node = fs.access("/etc/config/auto_ipv6_node")
 local has_auto_ipv6_gw = fs.access("/etc/config/auto_ipv6_gw")
 local has_qos = fs.access("/etc/init.d/qos")
 local has_ipv6 = fs.access("/proc/sys/net/ipv6")
+local has_6relayd = fs.access("/usr/sbin/6relayd")
 local has_hostapd = fs.access("/usr/sbin/hostapd")
 local has_wan = uci:get("network", "wan", "proto")
 local has_lan = uci:get("network", "lan", "proto")
@@ -1154,6 +1155,10 @@ function f.handle(self, state, data)
 			if has_pr then
 				uci:commit("freifunk-policyrouting")
 			end
+			if has_6relayd then
+				uci:commit("6relayd")
+			end
+
 -- the following line didn't work without admin-mini, for now i just replaced it with sys.exec... soma
 			luci.http.redirect(luci.dispatcher.build_url("mini", "system", "reboot") .. "?reboot=1")
 --			sys.exec("reboot")
@@ -1296,6 +1301,10 @@ function main.write(self, section, value)
 	uci:delete_all("olsrd", "Interface")
 	uci:delete_all("olsrd", "Hna4")
 	uci:delete_all("olsrd", "Hna6")
+	
+	if has_6relayd then
+		uci:delete("6relayd","default","interfaces")
+	end
 
 	-- Create wireless ip4/ip6 and firewall config
 	uci:foreach("wireless", "wifi-device",
@@ -1507,6 +1516,12 @@ function main.write(self, section, value)
 		end
 		prenetconfig.ip6assign=64
 		uci:section("network", "interface", nif, prenetconfig)
+		if has_6relayd then
+			local rifn = uci:get_list("6relayd","default","interfaces") or {}
+			table.insert(rifn,nif)
+			uci:set_list("6relayd","default","interfaces",rifn)
+			uci:save("6relayd")
+		end
 		local new_hostname = node_ip:string():gsub("%.", "-")
 		uci:set("freifunk", "wizard", "hostname", new_hostname)
 		uci:save("freifunk")
@@ -1588,6 +1603,12 @@ function main.write(self, section, value)
 					end
 					uci:set("freifunk", "wizard", "vapssid_" .. device, vap_ssid)
 					aliasbase.ip6assign=64
+					if has_6relayd then
+						local rifn = uci:get_list("6relayd","default","interfaces") or {}
+						table.insert(rifn,nif.."dhcp")
+						uci:set_list("6relayd","default","interfaces",rifn)
+						uci:save("6relayd")
+					end
 					uci:section("network", "interface", nif .. "dhcp", aliasbase)
 					uci:section("wireless", "wifi-iface", nil, {
 						device=device,
@@ -1738,6 +1759,12 @@ function main.write(self, section, value)
 		prenetconfig.password = ''
 		uci:section("network", "interface", device, prenetconfig)
 		uci:save("network")
+		if has_6relayd then
+			local rifn = uci:get_list("6relayd","default","interfaces") or {}
+			table.insert(rifn,device)
+			uci:set_list("6relayd","default","interfaces",rifn)
+			uci:save("6relayd")
+		end
 		if has_wan and device == "wan" then
 			has_wan=nil
 			share_value=0
@@ -2024,12 +2051,23 @@ function main.write(self, section, value)
 				netaddr = netaddr
 			})
 		end
+		local lanprefix = uci:get_list("network","lan","ipv6prefix") or {}
+		for _,p in ipairs(lanprefix) do
+			local prefix = string.gsub(p,".*/", "")
+			local netaddr = string.gsub(p,"/.*", "")
+			if prefix and netaddr then
+				uci:section("olsrd", "Hna6", nil, {
+					prefix = prefix,
+					netaddr = netaddr
+				})
+			end
+		end
 	end
 	if has_6in4 then
-		local henet_prefix = luci.http.formvalue("cbid.ffwizward.1.henetprefix")
+		local henet_prefix = luci.http.formvalue("cbid.ffwizward.1.henetprefix") or ""
 		--local henet_prefix = uci:get("network","henet","ipv6prefix") or ""
-		local prefix = string.gsub(henet_prefix,".*/", "")
-		local netaddr = string.gsub(henet_prefix,"/.*", "")
+		local prefix = string.gsub(henet_prefix,".*/", "") or nil
+		local netaddr = string.gsub(henet_prefix,"/.*", "") or nil
 		if prefix and netaddr then
 			uci:section("olsrd", "Hna6", nil, {
 				prefix = prefix,
@@ -2098,6 +2136,12 @@ function main.write(self, section, value)
 			uci:section("dhcp", "dhcp", "lan", dhcpbase)
 			uci:set_list("dhcp", "lan", "dhcp_option", {"119,lan","119,olsr"})
 			uci:save("dhcp")
+			if has_6relayd then
+				local rifn = uci:get_list("6relayd","default","interfaces") or {}
+				table.insert(rifn,"lan")
+				uci:set_list("6relayd","default","interfaces",rifn)
+				uci:save("6relayd")
+			end
 		end
 	end
 

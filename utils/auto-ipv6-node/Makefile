@@ -3,8 +3,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=auto-ipv6-node
-PKG_VERSION:=0.0.2
-PKG_RELEASE:=4
+PKG_VERSION:=0.0.3
+PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -35,7 +35,6 @@ define Package/auto-ipv6-node/postinst
 #!/bin/sh
 if [ -z $${IPKG_INSTROOT} ] ; then
 	( . /etc/uci-defaults/zz-auto_ipv6_node ) && rm /etc/uci-defaults/zz-auto_ipv6_node
-	/etc/init.d/auto_ipv6_node start
 fi
 endef
 
@@ -43,8 +42,6 @@ endef
 define Package/auto-ipv6-node/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./src/auto_ipv6_node $(1)/usr/bin
-	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./src/auto_ipv6_node.init $(1)/etc/init.d/auto_ipv6_node
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_DATA) ./src/auto_ipv6_node.defaults $(1)/etc/uci-defaults/zz-auto_ipv6_node
 	$(INSTALL_DIR) $(1)/etc/config

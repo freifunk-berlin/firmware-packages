@@ -14,9 +14,7 @@ net_find_iface() {
 		loopback) return 0 ;;
 		wan) return 0 ;;
 	esac
-	[ "$(uci -q get network.$cfg.ip6assign)" ] && return 0
-
-	interfaces="$interfaces ""$cfg"
+	interfaces="$cfg $interfaces"
 	return 0
 }
 
@@ -40,11 +38,20 @@ uci -q batch <<-EOF >/dev/null
 	set "olsrd.@Hna6[-1].prefix=48"
 	set "olsrd.@Hna6[-1].netaddr=fd$r1:$r2:$r3::"
 	commit olsrd
+
+	delete 6relayd.default
+	set 6relayd.default=server
+	set 6relayd.default.rd=server
+	set 6relayd.default.dhcpv6=server
+	set 6relayd.default.management_level=1
+	set 6relayd.default.compat_ula=1
 EOF
+	for i in $(echo $interfaces) ; do
+		uci add_list 6relayd.default.network="$i"
+	done
+	uci commit 6relayd
 
 	( /etc/init.d/network restart ) >/dev/null 2>&1 &
 
 fi
-
-( /etc/init.d/auto_ipv6_node enable ) >/dev/null 2>&1 &
 
