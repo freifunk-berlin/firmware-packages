@@ -1303,7 +1303,7 @@ function main.write(self, section, value)
 	uci:delete_all("olsrd", "Hna6")
 	
 	if has_6relayd then
-		uci:delete("6relayd","default","interfaces")
+		uci:delete("6relayd","default","network")
 	end
 
 	-- Create wireless ip4/ip6 and firewall config
@@ -1517,9 +1517,9 @@ function main.write(self, section, value)
 		prenetconfig.ip6assign=64
 		uci:section("network", "interface", nif, prenetconfig)
 		if has_6relayd then
-			local rifn = uci:get_list("6relayd","default","interfaces") or {}
+			local rifn = uci:get_list("6relayd","default","network") or {}
 			table.insert(rifn,nif)
-			uci:set_list("6relayd","default","interfaces",rifn)
+			uci:set_list("6relayd","default","network",rifn)
 			uci:save("6relayd")
 		end
 		local new_hostname = node_ip:string():gsub("%.", "-")
@@ -1604,9 +1604,9 @@ function main.write(self, section, value)
 					uci:set("freifunk", "wizard", "vapssid_" .. device, vap_ssid)
 					aliasbase.ip6assign=64
 					if has_6relayd then
-						local rifn = uci:get_list("6relayd","default","interfaces") or {}
+						local rifn = uci:get_list("6relayd","default","network") or {}
 						table.insert(rifn,nif.."dhcp")
-						uci:set_list("6relayd","default","interfaces",rifn)
+						uci:set_list("6relayd","default","network",rifn)
 						uci:save("6relayd")
 					end
 					uci:section("network", "interface", nif .. "dhcp", aliasbase)
@@ -1760,9 +1760,9 @@ function main.write(self, section, value)
 		uci:section("network", "interface", device, prenetconfig)
 		uci:save("network")
 		if has_6relayd then
-			local rifn = uci:get_list("6relayd","default","interfaces") or {}
+			local rifn = uci:get_list("6relayd","default","network") or {}
 			table.insert(rifn,device)
-			uci:set_list("6relayd","default","interfaces",rifn)
+			uci:set_list("6relayd","default","network",rifn)
 			uci:save("6relayd")
 		end
 		if has_wan and device == "wan" then
@@ -2137,9 +2137,9 @@ function main.write(self, section, value)
 			uci:set_list("dhcp", "lan", "dhcp_option", {"119,lan","119,olsr"})
 			uci:save("dhcp")
 			if has_6relayd then
-				local rifn = uci:get_list("6relayd","default","interfaces") or {}
+				local rifn = uci:get_list("6relayd","default","network") or {}
 				table.insert(rifn,"lan")
-				uci:set_list("6relayd","default","interfaces",rifn)
+				uci:set_list("6relayd","default","network",rifn)
 				uci:save("6relayd")
 			end
 		end
