@@ -10,6 +10,8 @@ local IPV6_GATEWAYS="$(wget -q -O - http://[::1]:2006/hna | grep '::/0' | cut -d
 
 # Use 1000 * 1000 here, because later we remove the decimal point in the etx from routes info
 local DEFAULT_ETX="1000000"
+local IP6_PREFIX=""
+local IP6_GATEWAY=""
 for g in $IPV6_GATEWAYS ; do
 	IPV6_GATEWAY_HNAS="$(wget -q -O - http://[::1]:2006/hna | grep $g | cut -d "$(printf "\t")" -f 1)"
 	for h in $IPV6_GATEWAY_HNAS ; do
@@ -19,47 +21,45 @@ for g in $IPV6_GATEWAYS ; do
 		*/48)
 			#we need to check all gateways in hna table and see which one is the default gw by looking at the etx for each gw
 			local GW_ETX="$(wget -q -O - http://[::1]:2006/routes | grep ^${g} | awk '{ print $4 }'| sed 's/\.//')"
-			#[ -z "$GW_ETX" ] && continue
-			#FIXME is never false
 			[ -z "$GW_ETX" ] || \
 			if [ $GW_ETX -lt $DEFAULT_ETX ]; then
 				DEFAULT_ETX="$GW_ETX"
-				IP6_SUFFIX=$(echo $h | cut -d ':' -f 1-3)
+				IP6_PREFIX=$(echo $h | cut -d ':' -f 1-3)
+				IP6_GATEWAY="$h"
 			fi
-			IP6_SUFFIX=$(echo $h | cut -d ':' -f 1-3)
-			#FIXME
 		;;
 		esac
 	done
 done
 
-[ -z "$IP6_SUFFIX" ] && logger -t auto_ipv6_node "No ipv6 gateway found. Either there is no IPv6 Gateway reachable or i could not connect to the txtinfo plugin. Exiting." && exit 1
+[ -z "$IP6_PREFIX" ] && logger -t auto_ipv6_node "No ipv6 gateway found. Either there is no IPv6 Gateway reachable or i could not connect to the txtinfo plugin. Exiting." && exit 1
+logger -t auto_ipv6_node "ETX: $DEFAULT_ETX GW: $IP6_GATEWAY SUFFIX: $IP6_PREFIX"
 
 local restart_network=0
 local restart_6relayd=0
 local restart_olsrd=0
 
 ula_prefix=$(uci get network.globals.ula_prefix | cut -d : -f -3)
-
-IP6_UCI=$(uci get network.$i.ip6prefix)
-IP6_NOUPDATE=0
-for j in $IP6_UCI do
+local i="lan"
+local IP6_UCI=$(uci get network.$i.ip6prefix)
+local IP6_NOUPDATE=0
+for j in $IP6_UCI ; do
 	IP6_OLDPREFIX="$(echo $j | cut -d ':' -f -3)"
-	if [ "$j" == "$IP6_PREFIX" ] ; then
+	if [ "$IP6_OLDPREFIX" == "$IP6_PREFIX" ] ; then
 		IP6_NOUPDATE=1
 	fi
 done
-if [ $IP6_NOUPDATE == 1 ] then
+if [ $IP6_NOUPDATE == 1 ] ; then
 	logger -t auto_ipv6_node "Found IP6_PREFIX $IP6_PREFIX on interfaces $i no update"
 else
-	logger -t auto_ipv6_node "New IP6_SUFFIX $IP6_PREFIX for interface $i"
+	logger -t auto_ipv6_node "New IP6_PREFIX $IP6_PREFIX for interface $i"
 	restart_network=1
 	restart_olsrd=1
 	restart_6relayd=1
 
 	#Uniq 4Byte from urandom
 	IP6_UNIQ="$(head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4)"
-	case $IP6_UNIQ in 
+	case $IP6_UNIQ in
 		000*) IP6_UNIQ=$(echo $IP6_UNIQ | cut -b 4) ;; 
 		00*) IP6_UNIQ=$(echo $IP6_UNIQ | cut -b 3-4) ;; 
 		0*) IP6_UNIQ=$(echo $IP6_UNIQ | cut -b 2-4) ;;
@@ -77,21 +77,21 @@ fi
 # clear all config variables here. else they will leak into the olsrd init script
 config_clear
 
-
 if [ $restart_network -eq 1 ] ; then
 	logger -t auto_ipv6_node "Reload network..."
 	/etc/init.d/network reload
 fi
 
-if [ $restart_6relayd -eq 1 ] ; then
-	logger -t auto_ipv6_node "Reload 6relayd..."
-	/etc/init.d/6relayd reload
-fi
-
 if [ $restart_olsrd -eq 1 ] ; then
 	if ! [ -z "$(pidof olsrd)" ] ; then
+		#TODO use telnet olsrd interface
 		logger -t auto_ipv6_node "Restarting olsrd..."
 		/etc/init.d/olsrd restart
 	fi
+fi
+
+if [ $restart_6relayd -eq 1 ] ; then
+	logger -t auto_ipv6_node "Reload 6relayd..."
+	/etc/init.d/6relayd reload
 fi
 
