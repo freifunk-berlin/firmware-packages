@@ -2051,8 +2051,8 @@ function main.write(self, section, value)
 				netaddr = netaddr
 			})
 		end
-		local lanprefix = uci:get_list("network","lan","ipv6prefix") or {}
-		for _,p in ipairs(lanprefix) do
+		local lanprefixs = uci:get_list("network","lan","ip6prefix") or {}
+		for i, p in ipairs(lanprefixs) do
 			local prefix = string.gsub(p,".*/", "")
 			local netaddr = string.gsub(p,"/.*", "")
 			if prefix and netaddr then
@@ -2063,12 +2063,12 @@ function main.write(self, section, value)
 			end
 		end
 	end
-	if has_6in4 then
+	if has_wan and has_6in4 then
 		local henet_prefix = luci.http.formvalue("cbid.ffwizward.1.henetprefix") or ""
-		--local henet_prefix = uci:get("network","henet","ipv6prefix") or ""
-		local prefix = string.gsub(henet_prefix,".*/", "") or nil
-		local netaddr = string.gsub(henet_prefix,"/.*", "") or nil
-		if prefix and netaddr then
+		--local henet_prefix = uci:get("network","henet","ip6prefix") or ""
+		local prefix = string.gsub(henet_prefix,".*/", "")
+		local netaddr = string.gsub(henet_prefix,"/.*", "")
+		if #prefix > 0 and #netaddr > 0 then
 			uci:section("olsrd", "Hna6", nil, {
 				prefix = prefix,
 				netaddr = netaddr
