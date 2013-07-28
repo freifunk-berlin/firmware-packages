@@ -1,97 +1,154 @@
-#!/bin/sh
+#!/usr/bin/env lua
 
-#Enable/Disable auto_ipv6_node
-[ "$(uci get auto_ipv6_node.olsr_node.enable)" == 1 ] || exit 0
+local uci = require "luci.model.uci".cursor()
+local ip = require "luci.ip"
+local util = require "luci.util"
+local json = require "luci.json"
+local string = require "string"
+local sys = require "luci.sys"
+local netm = require "luci.model.network".init()
+local net = netm:get_network("lan")
+local device = net and net:get_interface()
 
-. /lib/functions.sh
+local enable = uci:get("auto_ipv6_node", "olsr_node", "enable")
+if not enable == 1 then return end
 
-local IPV6_GATEWAYS="$(wget -q -O - http://[::1]:2006/hna | grep '::/0' | cut -d "$(printf "\t")" -f 2)"
-[ -z "$IPV6_GATEWAYS" ] && logger -t auto_ipv6_node "No ipv6 gateway in HNA6 table found. Either there is no IPv6 Gateway reachable or i could not connect to the txtinfo plugin. Exiting." && exit 1
+local jsonreq = util.exec("echo /hna | nc ::1 9090 2>/dev/null") or {}
+local hna6 = json.decode(jsonreq) or {}
+if #hna6 == 0 then return end
+local jsonreq = util.exec("echo /routes | nc ::1 9090 2>/dev/null") or {}
+local routes6 = json.decode(jsonreq) or {}
+local default_etx = 1000000
+local prefix = {}
+local ula = ip.IPv6("fd00::/8")
+local uciprefix = {}
+for _, p in ipairs(uci:get_list("network","lan","ip6prefix")) do
+	uciprefix[#uciprefix+1] = {net=p}
+end
+local ula_prefix = uci:get("network","globals","ula_prefix")
+if ula_prefix then
+	ula_prefix = ip.IPv6(ula_prefix)
+end
+for _, p in ipairs(hna6.hna) do
+	prefix[#prefix+1] = {}
+	prefix[#prefix].gateway = p.gateway
+	prefix[#prefix].net = p.destination.."/"..p.genmask
+	prefix[#prefix].destination = p.destination
+	prefix[#prefix].genmask = p.genmask
+end
 
-# Use 1000 * 1000 here, because later we remove the decimal point in the etx from routes info
-local DEFAULT_ETX="1000000"
-local IP6_PREFIX=""
-local IP6_GATEWAY=""
-for g in $IPV6_GATEWAYS ; do
-	IPV6_GATEWAY_HNAS="$(wget -q -O - http://[::1]:2006/hna | grep $g | cut -d "$(printf "\t")" -f 1)"
-	for h in $IPV6_GATEWAY_HNAS ; do
-		case $h in
-		::*) ;;
-		fd*) ;;
-		*/48)
-			#we need to check all gateways in hna table and see which one is the default gw by looking at the etx for each gw
-			local GW_ETX="$(wget -q -O - http://[::1]:2006/routes | grep ^${g} | awk '{ print $4 }'| sed 's/\.//')"
-			[ -z "$GW_ETX" ] || \
-			if [ $GW_ETX -lt $DEFAULT_ETX ]; then
-				DEFAULT_ETX="$GW_ETX"
-				IP6_PREFIX=$(echo $h | cut -d ':' -f 1-3)
-				IP6_GATEWAY="$h"
-			fi
-		;;
-		esac
-	done
-done
+for _, r in ipairs(routes6.routes) do
+	for _, p in ipairs(prefix) do
+		if r.destination == p.gateway then
+			p.metric = r.metric
+			p.rtpMetricCost = r.rtpMetricCost
+		end
+	end
+end
 
-[ -z "$IP6_PREFIX" ] && logger -t auto_ipv6_node "No ipv6 gateway found. Either there is no IPv6 Gateway reachable or i could not connect to the txtinfo plugin. Exiting." && exit 1
-logger -t auto_ipv6_node "ETX: $DEFAULT_ETX GW: $IP6_GATEWAY SUFFIX: $IP6_PREFIX"
+for _, p in ipairs(prefix) do
+	if p.genmask > 0 and p.genmask < 49 then
+		local ipnet = ip.IPv6(p.net)
+		if not ula:contains(ipnet) then
+			local con = 0
+			print("Find:",p.net,p.gateway,p.metric,p.rtpMetricCost)
+			for i, u in ipairs(uciprefix) do
+				ipp = ip.IPv6(u.net)
+				if ipnet:contains(ipp) then
+					if con == 0 then
+						print("Configured:",u.net)
+						uciprefix[i].con = 1
+						uciprefix[i].gateway=p.gateway
+						con=1
+					else
+						print("Configured DUP!:",u.net)
+						uciprefix[i].del = 1
+					end
+				end
+			end
+			if con == 0 then
+				print("Not Configured:",p.net)
+				local rand = sys.exec("head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4")
+				local net = string.gsub(p.destination,"::",":"..rand.."::/61")
+				net = ip.IPv6(net)
+				if net:is6() then
+					print("New Configuration:",net:string())
+					uciprefix[#uciprefix+1] = { net=net:string(),gateway=p.gateway,con=0 }
+				end
+			end
+		end
+	end
+end
 
-local restart_network=0
-local restart_6relayd=0
-local restart_olsrd=0
+for _, p in ipairs(prefix) do
+	if p.genmask ~= 0 then
+		local ipnet = ip.IPv6(p.net)
+		for i, u in ipairs(uciprefix) do
+			ipp = ip.IPv6(u.net)
+			if ipnet:contains(ipp) or ipnet == ipp then
+				if u.del ~= 1 and ip.IPv6(u.gateway) ~= ip.IPv6(p.gateway) then
+					uciprefix[i].del = 1
+					print("Olsr DUP!:",p.net)
+				end
+			end
+		end
+	end
+end
 
-ula_prefix=$(uci get network.globals.ula_prefix | cut -d : -f -3)
-local i="lan"
-local IP6_UCI=$(uci get network.$i.ip6prefix)
-local IP6_NOUPDATE=0
-for j in $IP6_UCI ; do
-	IP6_OLDPREFIX="$(echo $j | cut -d ':' -f -3)"
-	if [ "$IP6_OLDPREFIX" == "$IP6_PREFIX" ] ; then
-		IP6_NOUPDATE=1
-	fi
-done
-if [ $IP6_NOUPDATE == 1 ] ; then
-	logger -t auto_ipv6_node "Found IP6_PREFIX $IP6_PREFIX on interfaces $i no update"
-else
-	logger -t auto_ipv6_node "New IP6_PREFIX $IP6_PREFIX for interface $i"
-	restart_network=1
-	restart_olsrd=1
-	restart_6relayd=1
-
-	#Uniq 4Byte from urandom
-	IP6_UNIQ="$(head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4)"
-	case $IP6_UNIQ in
-		000*) IP6_UNIQ=$(echo $IP6_UNIQ | cut -b 4) ;; 
-		00*) IP6_UNIQ=$(echo $IP6_UNIQ | cut -b 3-4) ;; 
-		0*) IP6_UNIQ=$(echo $IP6_UNIQ | cut -b 2-4) ;;
-	esac
-	IP6_ADDRESS="${IP6_PREFIX}:${IP6_UNIQ}::"
-	logger -t auto_ipv6_node "New IPV6 Prefix $IP6_ADDRESS for interface $i"
-	uci add_list network.lan.ip6prefix="$IP6_ADDRESS/61"
-	uci commit network
-	uci add olsrd Hna6
-	uci set "olsrd.@Hna6[-1].prefix=61"
-	uci set "olsrd.@Hna6[-1].netaddr=$IP6_ADDRESS"
-	uci commit olsrd
-fi
-
-# clear all config variables here. else they will leak into the olsrd init script
-config_clear
-
-if [ $restart_network -eq 1 ] ; then
-	logger -t auto_ipv6_node "Reload network..."
-	/etc/init.d/network reload
-fi
-
-if [ $restart_olsrd -eq 1 ] ; then
-	if ! [ -z "$(pidof olsrd)" ] ; then
-		#TODO use telnet olsrd interface
-		logger -t auto_ipv6_node "Restarting olsrd..."
-		/etc/init.d/olsrd restart
-	fi
-fi
-
-if [ $restart_6relayd -eq 1 ] ; then
-	logger -t auto_ipv6_node "Reload 6relayd..."
-	/etc/init.d/6relayd reload
-fi
+local uci_rewrite = 0
+local uciprefix_n = {}
+local ucihna6 = {}
+for _, p in ipairs(uciprefix) do
+	if not p.con then
+		uci_rewrite = 1
+		print("Del uciprefix no Hna6:",p.net)
+	elseif p.con == 0 then
+		uci_rewrite = 1
+		print("New uciprefix:",p.net)
+		table.insert(uciprefix_n,p.net)
+		ucihna6[#ucihna6+1] = {
+			netmask = ipp:prefix(),
+			netaddr = ipp:network():string()
+		}
+	elseif p.del == 1 then
+		print("Del uciprefix DUP!:",p.net)
+		uci_rewrite = 1
+	else
+		table.insert(uciprefix_n,p.net)
+		local ipp = ip.IPv6(p.net)
+		ucihna6[#ucihna6+1] = {
+			prefix = ipp:prefix(),
+			netaddr = ipp:network():string()
+		}
+	end
+end
+if uci_rewrite == 1 then
+	if #uciprefix_n > 0 then
+		uci:set_list("network","lan","ip6prefix",uciprefix_n)
+	else
+		uci:delete("network","lan","ip6prefix")
+	end
+	uci:save("network")
+	uci:commit("olsrd")
+	
+	uci:delete_all("olsrd", "Hna6")
+	if ula_prefix:is6() then
+		ucihna6[#ucihna6+1] = {
+			prefix = ula_prefix:prefix(),
+			netaddr = ula_prefix:network():string()
+		}
+	end
+	for _, p in ipairs(ucihna6) do
+		print("Olsr Hna6:",p.netaddr)
+		uci:section("olsrd", "Hna6", nil, {
+				prefix = p.prefix,
+				netaddr = p.netaddr
+		})
+	end
+	uci:save("olsrd")
+	uci:commit("olsrd")
+	util.exec("/etc/init.d/network reload")
+	util.exec("/etc/init.d/olsrd restart")
+	util.exec("/etc/init.d/6relayd reload")
+end
 
