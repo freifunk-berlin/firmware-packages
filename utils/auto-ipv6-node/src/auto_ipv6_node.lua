@@ -14,10 +14,11 @@ local enable = uci:get("auto_ipv6_node", "olsr_node", "enable")
 if not enable == 1 then return end
 
 local jsonreq = util.exec("echo /hna | nc ::1 9090 2>/dev/null") or {}
-local hna6 = json.decode(jsonreq) or {}
-if #hna6 == 0 then return end
+local hna6 = json.decode(jsonreq)
+if not hna6 or #hna6.hna == 0 then return end
 local jsonreq = util.exec("echo /routes | nc ::1 9090 2>/dev/null") or {}
-local routes6 = json.decode(jsonreq) or {}
+local routes6 = json.decode(jsonreq)
+if not routes6 or #routes6.routes == 0 then return end
 local default_etx = 1000000
 local prefix = {}
 local ula = ip.IPv6("fd00::/8")
@@ -107,7 +108,7 @@ for _, p in ipairs(uciprefix) do
 		print("New uciprefix:",p.net)
 		table.insert(uciprefix_n,p.net)
 		ucihna6[#ucihna6+1] = {
-			netmask = ipp:prefix(),
+			prefix = ipp:prefix(),
 			netaddr = ipp:network():string()
 		}
 	elseif p.del == 1 then
