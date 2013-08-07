@@ -114,6 +114,7 @@ for _,dev in ipairs(devices) do
 		net:set("mode",wificonfig.mode or "adhoc")
 		net:set("network","wireless0")
 		ntm:save("wireless")
+		ntm:commit("wireless")
 
 		uci:section("network","interface","wireless0", {
 			proto = "static",
@@ -128,6 +129,12 @@ for _,dev in ipairs(devices) do
 		table.insert(rifn,"lan")
 		uci:set_list("6relayd","default","network",rifn)
 		uci:save("6relayd")
+		uci:commit("6relayd")
+
+		uci:set("uhttpd", "main", "listen_http", 80)
+		uci:set("uhttpd", "main", "listen_https", 443)
+		uci:save("uhttpd")
+		uci:commit("uhttpd")
 
 		local community = uci:get_all(external, "profile")
 		uci:tset("freifunk", "community", community)
@@ -188,5 +195,6 @@ if ready then
 	luci.sys.call("(/etc/init.d/network restart) >/dev/null 2>/dev/null")
 	luci.sys.call("(/etc/init.d/olsrd restart) >/dev/null 2>/dev/null")
 	luci.sys.call("(/etc/init.d/6relayd restart) >/dev/null 2>/dev/null")
+	luci.sys.call("(/etc/init.d/uhttpd restart) >/dev/null 2>/dev/null")
 end
 
