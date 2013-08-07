@@ -120,6 +120,7 @@ for _,dev in ipairs(devices) do
 			proto = "static",
 			ip6assign = 64
 		})
+		uci:set_list("network","wireless0","dns", { "2002:d596:2a92:1:71:53::", "2002:5968:c28e::53" })
 		uci:save("network")
 		uci:commit("network")
 
