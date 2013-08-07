@@ -184,7 +184,9 @@ for _,dev in ipairs(devices) do
 	end
 end
 
-luci.sys.call("(/etc/init.d/network restart) >/dev/null 2>/dev/null")
-luci.sys.call("(/etc/init.d/olsrd restart) >/dev/null 2>/dev/null")
-luci.sys.call("(/etc/init.d/6relayd restart) >/dev/null 2>/dev/null")
+if ready then
+	luci.sys.call("(/etc/init.d/network restart) >/dev/null 2>/dev/null")
+	luci.sys.call("(/etc/init.d/olsrd restart) >/dev/null 2>/dev/null")
+	luci.sys.call("(/etc/init.d/6relayd restart) >/dev/null 2>/dev/null")
+end
 
