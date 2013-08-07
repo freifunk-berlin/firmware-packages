@@ -28,6 +28,8 @@ set_default_config()
 uci set freifunk.interface.dns="2002:d596:2a92:1:71:53:: 2002:5968:c28e::53 88.198.178.18 141.54.1.1 212.204.49.83 8.8.8.8 8.8.4.4"
 uci commit freifunk
 uci set uhttpd.main.rfc1918_filter=0
+uci set uhttpd.main.listen_http="80"
+uci set uhttpd.main.listen_https="443"
 uci commit uhttpd
 uci set luci_olsr.general.resolve=1
 uci commit luci_olsr

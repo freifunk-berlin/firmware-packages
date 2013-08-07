@@ -100,6 +100,7 @@ ntm.init(uci)
 local devices = ntm:get_wifidevs()
 local dev
 local profile_name
+local profile_suffix
 local external
 
 --Add LAN to 6relayd
@@ -125,11 +126,44 @@ for i,dev in ipairs(devices) do
 			end)
 			local wificonfig = get_wconf(scan,profiles)
 			profile_name = wificonfig.profile
+			profile_suffix = wificonfig.suffix or "olsr"
 			print(wificonfig.profile,wificonfig.ssid,wificonfig.bssid,wificonfig.channel)
 			external = "profile_"..profile_name
 			dev:set("channel", wificonfig.channel)
 			dev:set("noscan",true)
 			dev:set("distance",1000)
+			local hwmode = dev:get("hwmode")
+			if string.find(hwmode, "n") then
+				has_n = "n"
+			end
+			if has_n then
+				local ht40plus = {
+					1,2,3,4,5,6,7,
+					36,44,52,60,100,108,116,124,132
+				}
+				for i, v in ipairs(ht40plus) do
+					if v == chan then
+						dev:set("htmode","HT40+")
+					end
+				end
+				local ht40minus = {
+					8,9,10,11,12,13,14,
+					40,48,56,64,104,112,120,128,136
+				}
+				for i, v in ipairs(ht40minus) do
+					if v == chan then
+						dev:set("htmode","HT40-")
+					end
+				end
+				local ht20 = {
+					140
+				}
+				for i, v in ipairs(ht20) do
+					if v == chan then
+						dev:set("htmode","HT20'")
+					end
+				end
+			end
 			net:set("ssid",wificonfig.ssid)
 			net:set("bssid",wificonfig.bssid)
 			net:set("mode",wificonfig.mode or "adhoc")
@@ -190,6 +224,16 @@ if ready then
 	olsrbase.NatThreshold = nil
 	uci:section("olsrd", "olsrd", nil, olsrbase)
 
+	--set olsrd nameservice defaults
+	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
+	uci:section("olsrd", "LoadPlugin", nil, {
+		library = "olsrd_nameservice.so.0.3",
+		suffix = "." .. profile_suffix,
+		hosts_file = "/var/etc/hosts.olsr",
+		latlon_file = "/var/run/latlon.js",
+		services_file = "/var/etc/services.olsr"
+	})
+
 	--set olsrd interface defaults
 	local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
 	utl.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
@@ -213,6 +257,17 @@ if ready then
 	--save olsrd
 	uci:save("olsrd")
 	uci:commit("olsrd")
+
+	-- Import hosts and set domain
+	uci:foreach("dhcp", "dnsmasq", function(s)
+		uci:set_list("dhcp", s[".name"], "addnhosts", "/var/etc/hosts.olsr")
+		uci:set("dhcp", s[".name"], "local", "/" .. profile_suffix .. "/")
+		uci:set("dhcp", s[".name"], "domain", profile_suffix)
+	end)
+
+	--save system
+	uci:save("dhcp")
+	uci:commit("dhcp")
 
 	local rand = sys.exec("head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4")
 	local new_hostname = "OpenWrt-"..rand
