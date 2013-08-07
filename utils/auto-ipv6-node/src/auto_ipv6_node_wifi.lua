@@ -110,6 +110,7 @@ uci:save("6relayd")
 
 --Delete all olsrd Interfaces
 uci:delete_all("olsrd", "Interface")
+uci:save("olsrd")
 
 for i,dev in ipairs(devices) do
 	seq = i - 1
