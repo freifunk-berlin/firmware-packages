@@ -46,8 +46,6 @@ define Package/luci-app-ffwizard-pberg/install
 	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
-	$(INSTALL_DIR) $(1)/etc/rc.local.d
-	$(CP) ./rc.local.d/* $(1)/etc/rc.local.d
 endef
 
 $(eval $(call BuildPackage,luci-app-ffwizard-pberg))
