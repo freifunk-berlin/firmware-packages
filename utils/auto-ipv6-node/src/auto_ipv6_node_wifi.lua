@@ -311,6 +311,7 @@ if ready then
 	local olsrifbase = {}
 	olsrifbase.interface = "lan"
 	olsrifbase.ignore = "0"
+	olsrifbase.Mode = 'ether'
 	uci:section("olsrd", "Interface", nil, olsrifbase)
 	
 	--set olsrd p2p listen on ipv6
