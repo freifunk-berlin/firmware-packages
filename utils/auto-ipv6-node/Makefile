@@ -46,7 +46,7 @@ define Package/auto-ipv6-node/install
 	$(INSTALL_BIN) ./src/auto_ipv6_node.lua $(1)/usr/bin
 	$(LN) auto_ipv6_node.lua $(1)/usr/bin/auto_ipv6_node
 	$(INSTALL_BIN) ./src/auto_ipv6_node_wifi.lua $(1)/usr/bin
-	$(LN) auto_ipv6_node_wifi.lua $(1)/usr/bin/auto_ipv6_wifi
+	$(LN) auto_ipv6_node_wifi.lua $(1)/usr/bin/auto_ipv6_node_wifi
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_DATA) ./src/auto_ipv6_node.defaults $(1)/etc/uci-defaults/zz-auto_ipv6_node
 	$(INSTALL_DIR) $(1)/etc/config
