@@ -288,7 +288,7 @@ if ready then
 	uci:section("olsrd", "LoadPlugin", nil, {
 		library = "olsrd_nameservice.so.0.3",
 		suffix = "." .. profile_suffix,
-		hosts_file = "/var/etc/hosts.olsr",
+		hosts_file = "/tmp/hosts/olsr",
 		latlon_file = "/var/run/latlon.js",
 		services_file = "/var/etc/services.olsr"
 	})
@@ -328,7 +328,6 @@ if ready then
 
 	-- Import hosts and set domain
 	uci:foreach("dhcp", "dnsmasq", function(s)
-		uci:set_list("dhcp", s[".name"], "addnhosts", "/var/etc/hosts.olsr")
 		uci:set("dhcp", s[".name"], "local", "/" .. profile_suffix .. "/")
 		uci:set("dhcp", s[".name"], "domain", profile_suffix)
 	end)
@@ -363,6 +362,7 @@ if ready then
 	luci.sys.call("(/etc/init.d/olsrd restart) >/dev/null 2>/dev/null")
 	luci.sys.call("(/etc/init.d/6relayd restart) >/dev/null 2>/dev/null")
 	luci.sys.call("(/etc/init.d/uhttpd restart) >/dev/null 2>/dev/null")
+	luci.sys.call("(/etc/init.d/dnsmasq restart) >/dev/null 2>/dev/null")
 
 else
 
@@ -372,6 +372,7 @@ else
 	uci:revert("uhttpd")
 	uci:revert("freifunk")
 	uci:revert("olsrd")
+	uci:revert("dhcp")
 	uci:revert("system")
 	uci:revert("6relayd")
 

@@ -2054,7 +2054,7 @@ function main.write(self, section, value)
 	uci:section("olsrd", "LoadPlugin", nil, {
 		library     = "olsrd_nameservice.so.0.3",
 		suffix      = "." .. suffix ,
-		hosts_file  = "/var/etc/hosts.olsr",
+		hosts_file  = "/tmp/hosts/olsr",
 		latlon_file = "/var/run/latlon.js",
 		lat         = latval and string.format("%.15f", latval) or "",
 		lon         = lonval and string.format("%.15f", lonval) or "",
@@ -2096,28 +2096,16 @@ function main.write(self, section, value)
 		end
 	end
 
-	-- Import hosts and set domain
-	uci:foreach("dhcp", "dnsmasq", function(s)
-		uci:set_list("dhcp", s[".name"], "addnhosts", "/var/etc/hosts.olsr")
-		uci:set("dhcp", s[".name"], "local", "/" .. suffix .. "/")
-		uci:set("dhcp", s[".name"], "domain", suffix)
-	end)
-
 	-- Make sure that OLSR is enabled
 	sys.init.enable("olsrd")
 
 	uci:save("olsrd")
-	uci:save("dhcp")
+
 	-- Import hosts and set domain
-	if has_ipv6 then
-		uci:foreach("dhcp", "dnsmasq", function(s)
-			uci:set_list("dhcp", s[".name"], "addnhosts", {"/var/etc/hosts.olsr","/var/etc/hosts.olsr.ipv6"})
-		end)
-	else
-		uci:foreach("dhcp", "dnsmasq", function(s)
-			uci:set_list("dhcp", s[".name"], "addnhosts", "/var/etc/hosts.olsr")
-		end)
-	end
+	uci:foreach("dhcp", "dnsmasq", function(s)
+		uci:set("dhcp", s[".name"], "local", "/" .. suffix .. "/")
+		uci:set("dhcp", s[".name"], "domain", suffix)
+	end)
 
 	uci:save("dhcp")
 
