@@ -26,7 +26,16 @@ function iwscanlist(ifname,times)
 		end
 	end
 
-	return l
+	return iw,l
+end
+
+function valid_channel(iw,channel)
+	for _, f in ipairs(iw and iw.freqlist or { }) do 
+		if f.channel == channel then 
+			return true
+		end
+	end
+	return false
 end
 
 function get_profiles()
@@ -46,7 +55,7 @@ function get_profiles()
 	return pft
 end
 
-function get_wconf(tbl,pft)
+function get_wconf(iw,tbl,pft)
 	local wconf = {}
 
 	for i, net in ipairs(tbl) do
@@ -89,7 +98,25 @@ function get_wconf(tbl,pft)
 			return  wconf
 		end
 	end
-
+	wconf.profile = "berlin"
+	wconf.mode = "adhoc"
+	local ssid = "olsr.freifunk.net"
+	local channel = 10
+	local bssid = "02:CA:FF:EE:BA:BE"
+	if not valid_channel(iw,channel) then
+		if valid_channel(iw,36) then
+			channel = 36
+			bssid = "02:36:CA:FF:EE:EE "
+			ssid = "ch36.freifunk.net"
+		elseif valid_channel(iw,100) then
+			channel = 100
+			bssid = "12:00:CA:FF:EE:EE "
+			ssid = "ch100.freifunk.net"
+		end
+	end
+	wconf.ssid = ssid
+	wconf.bssid = bssid
+	wconf.channel = channel
 	return wconf
 end
 
@@ -102,6 +129,11 @@ local dev
 local profile_name
 local profile_suffix
 local external
+local rand = sys.exec("echo -n $(head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4)")
+
+--Add LAN to olsrd p2p
+local p2p_if = {}
+table.insert(p2p_if,"lan")
 
 --Add LAN to 6relayd
 local rifn = {}
@@ -118,18 +150,22 @@ for i,dev in ipairs(devices) do
 	print(dev:get("disabled"))
 	if dev:get("disabled") == "1" then
 		dev:set("disabled", "0")
+		dev:set("country", "DE")
 		for _, net in ipairs(dev:get_wifinets()) do
 			local ifc = net:get_interface()
-			local scan = iwscanlist(ifc.ifname,3)
+			local iw, scan = iwscanlist(ifc.ifname,3)
 			table.sort(scan, function(a, b) 
 				return tonumber(a["quality"]) > tonumber(b["quality"])
 			end)
-			local wificonfig = get_wconf(scan,profiles)
-			profile_name = wificonfig.profile
+			local wificonfig = get_wconf(iw,scan,profiles)
+			profile_name = wificonfig.profile or "berlin"
 			profile_suffix = wificonfig.suffix or "olsr"
 			print(wificonfig.profile,wificonfig.ssid,wificonfig.bssid,wificonfig.channel)
+			local ssid = wificonfig.ssid
+			local bssid = wificonfig.bssid
+			local channel = wificonfig.channel
 			external = "profile_"..profile_name
-			dev:set("channel", wificonfig.channel)
+			dev:set("channel", channel)
 			dev:set("noscan",true)
 			dev:set("distance",1000)
 			local hwmode = dev:get("hwmode")
@@ -142,7 +178,7 @@ for i,dev in ipairs(devices) do
 					36,44,52,60,100,108,116,124,132
 				}
 				for i, v in ipairs(ht40plus) do
-					if v == chan then
+					if v == channel then
 						dev:set("htmode","HT40+")
 					end
 				end
@@ -151,7 +187,7 @@ for i,dev in ipairs(devices) do
 					40,48,56,64,104,112,120,128,136
 				}
 				for i, v in ipairs(ht40minus) do
-					if v == chan then
+					if v == channel then
 						dev:set("htmode","HT40-")
 					end
 				end
@@ -159,15 +195,32 @@ for i,dev in ipairs(devices) do
 					140
 				}
 				for i, v in ipairs(ht20) do
-					if v == chan then
+					if v == channel then
 						dev:set("htmode","HT20'")
 					end
 				end
 			end
-			net:set("ssid",wificonfig.ssid)
-			net:set("bssid",wificonfig.bssid)
-			net:set("mode",wificonfig.mode or "adhoc")
+			net:set("ssid",ssid)
+			net:set("bssid",bssid)
+			net:set("mode",wificonfig.mode)
 			net:set("network","wireless"..seq)
+			local ssiddot = string.find(ssid,'%..*')
+			local ssidshort = ""
+			local vap_ssid = ""
+			if ssiddot then
+				vap_ssid = "AP-"..rand.."-"..channel..string.sub(ssid,ssiddot)
+			else
+				vap_ssid = "AP-"..rand.."-"..channel.."."..ssid
+			end
+			uci:section("wireless", "wifi-iface", nil, {
+				device="radio"..seq,
+				mode="ap",
+				encryption ="none",
+				network="wireless"..seq.."dhcp",
+				ssid=vap_ssid
+			})
+			table.insert(p2p_if,"wireless"..seq.."dhcp")
+
 			ntm:save("wireless")
 	
 			uci:section("network","interface","wireless"..seq, {
@@ -175,10 +228,16 @@ for i,dev in ipairs(devices) do
 				ip6assign = 64
 			})
 			uci:set_list("network","wireless"..seq,"dns", { "2002:d596:2a92:1:71:53::", "2002:5968:c28e::53" })
+			uci:section("network","interface","wireless"..seq.."dhcp", {
+				proto = "static",
+				ip6assign = 64
+			})
+
 			uci:save("network")
 	
 			local rifn = uci:get_list("6relayd","default","network") or {}
 			table.insert(rifn,"wireless"..seq)
+			table.insert(rifn,"wireless"..seq.."dhcp")
 			uci:set_list("6relayd","default","network",rifn)
 			uci:save("6relayd")
 
@@ -253,6 +312,15 @@ if ready then
 	olsrifbase.interface = "lan"
 	olsrifbase.ignore = "0"
 	uci:section("olsrd", "Interface", nil, olsrifbase)
+	
+	--set olsrd p2p listen on ipv6
+	uci:section("olsrd", "LoadPlugin", nil, {
+		library = "olsrd_p2pd.so.0.1.0",
+		ignore = 0,
+		P2pdTtl = 10,
+		UdpDestPort = "ff02::fb 5353",
+		NonOlsrIf = p2p_if
+	})
 
 	--save olsrd
 	uci:save("olsrd")
@@ -269,7 +337,6 @@ if ready then
 	uci:save("dhcp")
 	uci:commit("dhcp")
 
-	local rand = sys.exec("head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4")
 	local new_hostname = "OpenWrt-"..rand
 	uci:foreach("system", "system",
 		function(s)

@@ -1243,8 +1243,28 @@ function main.write(self, section, value)
 	util.update(olsrbase, uci:get_all(external, "olsrd") or {})
 	if has_ipv6 then
 		olsrbase.IpVersion='6and4'
+		uci:foreach("olsrd", "LoadPlugin",
+		function(s)
+			if s.library == "olsrd_jsoninfo.so.0.0" then
+				uci:set("olsrd", s['.name'], "accept", "0.0.0.0")
+			end
+		end)
+	elseif has_ipv6_only then
+		olsrbase.IpVersion='6'
+		uci:foreach("olsrd", "LoadPlugin",
+		function(s)
+			if s.library == "olsrd_jsoninfo.so.0.0" then
+				uci:set("olsrd", s['.name'], "accept", "::")
+			end
+		end)
 	else
 		olsrbase.IpVersion='4'
+		uci:foreach("olsrd", "LoadPlugin",
+		function(s)
+			if s.library == "olsrd_jsoninfo.so.0.0" then
+				uci:set("olsrd", s['.name'], "accept", "0.0.0.0")
+			end
+		end)
 	end
 
 	-- Internet sharing
