@@ -73,6 +73,7 @@ for _, p in ipairs(prefix) do
 				local net = string.gsub(p.destination,"::",":"..rand.."::/61")
 				net = ip.IPv6(net)
 				if net:is6() then
+					net = net:network()
 					print("New Configuration:",net:string())
 					uciprefix[#uciprefix+1] = { net=net:string(),gateway=p.gateway,con=0 }
 				end
