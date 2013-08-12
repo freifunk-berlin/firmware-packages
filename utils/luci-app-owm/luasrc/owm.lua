@@ -16,7 +16,7 @@ $Id$
 local bus = require "ubus"
 local string = require "string"
 local sys = require "luci.sys"
-local uci = require "luci.model.uci"
+local uci = require "luci.model.uci".cursor_state()
 local util = require "luci.util"
 local version = require "luci.version"
 local webadmin = require "luci.tools.webadmin"
@@ -38,128 +38,148 @@ module "luci.owm"
 
 
 function fetch_olsrd_config()
-	local jsonreq4 = util.exec("echo /config | nc 127.0.0.1 9090 2>/dev/null") or {}
-	local jsonreq6 = util.exec("echo /config | nc ::1 9090 2>/dev/null") or {}
+	local jsonreq4 = ""
+	local jsonreq6 = ""
 	local data = {}
-	local jsondata4 = json.decode(jsonreq4) or {}
-	--print("fetch_olsrd_config v4 "..(jsondata4['config'] and "1" or "err"))
-	if jsondata4['config'] then
-		data['ipv4Config'] = jsondata4['config']
+	local IpVersion = uci:get_first("olsrd", "olsrd","IpVersion")
+	if IpVersion == "4" or IpVersion == "6and4" then
+		local jsonreq4 = util.exec("echo /config | nc 127.0.0.1 9090 2>/dev/null") or {}
+		local jsondata4 = json.decode(jsonreq4) or {}
+		--print("fetch_olsrd_config v4 "..(jsondata4['config'] and "1" or "err"))
+		if jsondata4['config'] then
+			data['ipv4Config'] = jsondata4['config']
+		end
 	end
-	local jsondata6 = json.decode(jsonreq6) or {}
-	--print("fetch_olsrd_config v6 "..(jsondata6['config'] and "1" or "err"))
-	if jsondata6['config'] then
-		data['ipv6Config'] = jsondata6['config']
+	if IpVersion == "6" or IpVersion == "6and4" then
+		local jsonreq6 = util.exec("echo /config | nc ::1 9090 2>/dev/null") or {}
+		local jsondata6 = json.decode(jsonreq6) or {}
+		--print("fetch_olsrd_config v6 "..(jsondata6['config'] and "1" or "err"))
+		if jsondata6['config'] then
+			data['ipv6Config'] = jsondata6['config']
+		end
 	end
 	return data
 end
 
 function fetch_olsrd_links()
-	local jsonreq4 = util.exec("echo /links | nc 127.0.0.1 9090 2>/dev/null") or {}
-	local jsonreq6 = util.exec("echo /links | nc ::1 9090 2>/dev/null") or {}
+	local jsonreq4 = ""
+	local jsonreq6 = ""
 	local data = {}
-	local jsondata4 = json.decode(jsonreq4) or {}
-	--print("fetch_olsrd_links v4 "..(jsondata4['links'] and #jsondata4['links'] or "err"))
-	local links = {}
-	if jsondata4['links'] then
-		links = jsondata4['links']
-	end
-	for i,v in ipairs(links) do
-		links[i]['sourceAddr'] = v['localIP'] --owm sourceAddr
-		links[i]['destAddr'] = v['remoteIP'] --owm destAddr
-		hostname = nixio.getnameinfo(v['remoteIP'], "inet")
-		if hostname then
-			links[i]['destNodeId'] = string.gsub(hostname, "mid..", "") --owm destNodeId
-		end 
-	end
-	data = links
-	local jsondata6 = json.decode(jsonreq6) or {}
-	--print("fetch_olsrd_links v6 "..(jsondata6['links'] and #jsondata6['links'] or "err"))
-	local links = {}
-	if jsondata6['links'] then
-		links = jsondata6['links']
-	end
-	for i,v in ipairs(links) do
-		links[i]['sourceAddr'] = v['localIP']
-		links[i]['destAddr'] = v['remoteIP']
-		hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
-		if hostname then
-			links[i]['destNodeId'] = string.gsub(hostname, "mid..", "") --owm destNodeId
+	local IpVersion = uci:get_first("olsrd", "olsrd","IpVersion")
+	if IpVersion == "4" or IpVersion == "6and4" then
+		local jsonreq4 = util.exec("echo /links | nc 127.0.0.1 9090 2>/dev/null") or {}
+		local jsondata4 = json.decode(jsonreq4) or {}
+		--print("fetch_olsrd_links v4 "..(jsondata4['links'] and #jsondata4['links'] or "err"))
+		local links = {}
+		if jsondata4['links'] then
+			links = jsondata4['links']
 		end
-		data[#data+1] = links[i]
+		for i,v in ipairs(links) do
+			links[i]['sourceAddr'] = v['localIP'] --owm sourceAddr
+			links[i]['destAddr'] = v['remoteIP'] --owm destAddr
+			hostname = nixio.getnameinfo(v['remoteIP'], "inet")
+			if hostname then
+				links[i]['destNodeId'] = string.gsub(hostname, "mid..", "") --owm destNodeId
+			end 
+		end
+		data = links
+	end
+	if IpVersion == "6" or IpVersion == "6and4" then
+		local jsonreq6 = util.exec("echo /links | nc ::1 9090 2>/dev/null") or {}
+		local jsondata6 = json.decode(jsonreq6) or {}
+		--print("fetch_olsrd_links v6 "..(jsondata6['links'] and #jsondata6['links'] or "err"))
+		local links = {}
+		if jsondata6['links'] then
+			links = jsondata6['links']
+		end
+		for i,v in ipairs(links) do
+			links[i]['sourceAddr'] = v['localIP']
+			links[i]['destAddr'] = v['remoteIP']
+			hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
+			if hostname then
+				links[i]['destNodeId'] = string.gsub(hostname, "mid..", "") --owm destNodeId
+			end
+			data[#data+1] = links[i]
+		end
 	end
 	return data
 end
 
 function fetch_olsrd_neighbors(interfaces)
-	local jsonreq4 = util.exec("echo /links | nc 127.0.0.1 9090 2>/dev/null") or {}
-	local jsonreq6 = util.exec("echo /links | nc ::1 9090 2>/dev/null") or {}
-	local cursor = uci.cursor_state()
+	local jsonreq4 = ""
+	local jsonreq6 = ""
 	local data = {}
-	local jsondata4 = json.decode(jsonreq4) or {}
-	--print("fetch_olsrd_neighbors v4 "..(jsondata4['links'] and #jsondata4['links'] or "err"))
-	local links = {}
-	if jsondata4['links'] then
-		links = jsondata4['links']
-	end
-	for _,v in ipairs(links) do
-		local hostname = nixio.getnameinfo(v['remoteIP'], "inet")
-		if hostname then
-			hostname = string.gsub(hostname, "mid..", "")
-			local index = #data+1
-			data[index] = {}
-			data[index]['id'] = hostname --owm
-			data[index]['quality'] = v['linkQuality'] --owm
-			data[index]['sourceAddr4'] = v['localIP'] --owm
-			data[index]['destAddr4'] = v['remoteIP'] --owm
-			if #interfaces ~= 0 then
-				for _,iface in ipairs(interfaces) do
-					if iface['ipaddr'] == v['localIP'] then
-						data[index]['interface'] = iface['name'] --owm
-					end
-				end
-			end
-			data[index]['olsr_ipv4'] = v
+	local IpVersion = uci:get_first("olsrd", "olsrd","IpVersion")
+	if IpVersion == "4" or IpVersion == "6and4" then
+		local jsonreq4 = util.exec("echo /links | nc 127.0.0.1 9090 2>/dev/null") or {}
+		local jsondata4 = json.decode(jsonreq4) or {}
+		--print("fetch_olsrd_neighbors v4 "..(jsondata4['links'] and #jsondata4['links'] or "err"))
+		local links = {}
+		if jsondata4['links'] then
+			links = jsondata4['links']
 		end
-	end
-	local jsondata6 = json.decode(jsonreq6) or {}
-	--print("fetch_olsrd_neighbors v6 "..(jsondata6['links'] and #jsondata6['links'] or "err"))
-	local links = {}
-	if jsondata6['links'] then
-		links = jsondata6['links']
-	end
-	for _,v in ipairs(links) do
-		local hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
-		if hostname then
-			hostname = string.gsub(hostname, "mid..", "")
-			local index = 0
-			for i, v in ipairs(data) do
-				if v.id == hostname then
-					index = i
-				end
-			end
-			if index == 0 then
-				index = #data+1
+		for _,v in ipairs(links) do
+			local hostname = nixio.getnameinfo(v['remoteIP'], "inet")
+			if hostname then
+				hostname = string.gsub(hostname, "mid..", "")
+				local index = #data+1
 				data[index] = {}
-				data[index]['id'] = string.gsub(hostname, "mid..", "") --owm
+				data[index]['id'] = hostname --owm
 				data[index]['quality'] = v['linkQuality'] --owm
+				data[index]['sourceAddr4'] = v['localIP'] --owm
+				data[index]['destAddr4'] = v['remoteIP'] --owm
 				if #interfaces ~= 0 then
 					for _,iface in ipairs(interfaces) do
-						local name = iface['.name']
-						local net = netm:get_network(name)
-						local device = net and net:get_interface()
-						local_ip = ip.IPv6(v.localIP)
-						for _, a in ipairs(device:ip6addrs()) do
-							if a:host() == local_ip:host() then
-								data[index]['interface'] = name
+						if iface['ipaddr'] == v['localIP'] then
+							data[index]['interface'] = iface['name'] --owm
+						end
+					end
+				end
+				data[index]['olsr_ipv4'] = v
+			end
+		end
+	end
+	if IpVersion == "6" or IpVersion == "6and4" then
+		local jsonreq6 = util.exec("echo /links | nc ::1 9090 2>/dev/null") or {}
+		local jsondata6 = json.decode(jsonreq6) or {}
+		--print("fetch_olsrd_neighbors v6 "..(jsondata6['links'] and #jsondata6['links'] or "err"))
+		local links = {}
+		if jsondata6['links'] then
+			links = jsondata6['links']
+		end
+		for _,v in ipairs(links) do
+			local hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
+			if hostname then
+				hostname = string.gsub(hostname, "mid..", "")
+				local index = 0
+				for i, v in ipairs(data) do
+					if v.id == hostname then
+						index = i
+					end
+				end
+				if index == 0 then
+					index = #data+1
+					data[index] = {}
+					data[index]['id'] = string.gsub(hostname, "mid..", "") --owm
+					data[index]['quality'] = v['linkQuality'] --owm
+					if #interfaces ~= 0 then
+						for _,iface in ipairs(interfaces) do
+							local name = iface['.name']
+							local net = netm:get_network(name)
+							local device = net and net:get_interface()
+							local_ip = ip.IPv6(v.localIP)
+							for _, a in ipairs(device:ip6addrs()) do
+								if a:host() == local_ip:host() then
+									data[index]['interface'] = name
+								end
 							end
 						end
 					end
 				end
+				data[index]['sourceAddr6'] = v['localIP'] --owm
+				data[index]['destAddr6'] = v['remoteIP'] --owm
+				data[index]['olsr_ipv6'] = v
 			end
-			data[index]['sourceAddr6'] = v['localIP'] --owm
-			data[index]['destAddr6'] = v['remoteIP'] --owm
-			data[index]['olsr_ipv6'] = v
 		end
 	end
 	return data
@@ -184,7 +204,6 @@ end
 
 function get()
 	local root = {}
-	local cursor = uci.cursor_state()
 	local ntm = netm.init()
 	local devices  = ntm:get_wifidevs()
 	local assoclist = {}
@@ -230,7 +249,7 @@ function get()
 	}
 
 	root.freifunk = {}
-	cursor:foreach("freifunk", "public", function(s)
+	uci:foreach("freifunk", "public", function(s)
 		local pname = s[".name"]
 		s['.name'] = nil
 		s['.anonymous'] = nil
@@ -242,13 +261,13 @@ function get()
 		root.freifunk[pname] = s
 	end)
 
-	cursor:foreach("system", "system", function(s) --owm
+	uci:foreach("system", "system", function(s) --owm
 		root.latitude = tonumber(s.latitude) --owm
 		root.longitude = tonumber(s.longitude) --owm
 	end)
 
 	local devices = {}
-	cursor:foreach("wireless", "wifi-device",function(s)
+	uci:foreach("wireless", "wifi-device",function(s)
 		devices[#devices+1] = s
 		devices[#devices]['name'] = s['.name']
 		devices[#devices]['.name'] = nil
@@ -260,7 +279,7 @@ function get()
 		end
 	end)
 	local antennas = {}
-	cursor:foreach("antennas", "wifi-device",function(s)
+	uci:foreach("antennas", "wifi-device",function(s)
 		antennas[#antennas+1] = s
 		antennas[#antennas]['name'] = s['.name']
 		antennas[#antennas]['.name'] = nil
@@ -270,7 +289,7 @@ function get()
 	end)
 
 	local interfaces = {}
-	cursor:foreach("wireless", "wifi-iface",function(s)
+	uci:foreach("wireless", "wifi-iface",function(s)
 		interfaces[#interfaces+1] = s
 		interfaces[#interfaces]['.name'] = nil
 		interfaces[#interfaces]['.anonymous'] = nil
@@ -319,7 +338,7 @@ function get()
 	end)
 
 	root.interfaces = {} --owm
-	cursor:foreach("network", "interface",function(vif)
+	uci:foreach("network", "interface",function(vif)
 		if 'lo' == vif.ifname then
 			return
 		end
@@ -330,9 +349,11 @@ function get()
 		root.interfaces[#root.interfaces].name = name --owm
 		root.interfaces[#root.interfaces].ifname = vif.ifname --owm
 		root.interfaces[#root.interfaces].ipv4Addresses = {vif.ipaddr} --owm
-		local ipv6Addresses = {}
-		for _, a in ipairs(device:ip6addrs()) do
-			table.insert(ipv6Addresses, a:string())
+		if device and device:ip6addrs() then
+			local ipv6Addresses = {}
+			for _, a in ipairs(device:ip6addrs()) do
+				table.insert(ipv6Addresses, a:string())
+			end
 		end
 		root.interfaces[#root.interfaces].ipv6Addresses = ipv6Addresses --owm
 		root.interfaces[#root.interfaces].physicalType = 'ethernet' --owm
