@@ -112,6 +112,7 @@ end
 net = f:field(ListValue, "net", "Freifunk Community", "Nutzen Sie die Einstellungen der Freifunk Gemeinschaft in ihrer Nachbarschaft.")
 net.rmempty = false
 net.optional = false
+net.datatype = "string"
 
 local list = {}
 local list = fs_luci.glob(profiles .. "*")
@@ -125,8 +126,10 @@ function net.write(self, section, value)
 end
 net_lat = f:field(ListValue, "net_lat", "", "")
 net_lat:depends("net", "0")
+net_lat.datatype = "float"
 net_lon = f:field(ListValue, "net_lon", "", "")
 net_lon:depends("net", "0")
+net_lon.datatype = "float"
 
 for k,v in ipairs(list) do
 	local n = string.gsub(v, profiles, "")
@@ -142,6 +145,7 @@ end
 hostname = f:field(Value, "hostname", "Knoten Name", "Geben Sie Ihrem Freifunk Router einen Namen. Wenn Sie dieses Feld leer lassen, wird der Name automatisch aus der Mesh IP generiert.")
 hostname.rmempty = true
 hostname.optional = false
+hostname.datatype = "hostname"
 function hostname.cfgvalue(self, section)
 	return sys.hostname()
 end
@@ -149,36 +153,13 @@ function hostname.write(self, section, value)
 	uci:set("freifunk", "wizard", "hostname", value)
 	uci:save("freifunk")
 end
-function hostname.validate(self, value)
-	if (#value > 16) then
-		return
-	elseif (string.find(value, "[^%w%_%-]")) then
-		return
-	else
-		return value
-	end
-end
--- nodeid
-local nid
-uci:foreach("system", "system", function(s)
-		if s.nodeid then
-			nid = s.nodeid
-		end
-end)
-if nid then
-	nodeid = f:field(Value, "nodeid", "Knoten ID", "Geben Sie Ihrem Freifunk Knoten (Router) eine ID. In diesem Feld steht die Node ID fuer den Heartbeat Daemon")
-	nodeid.rmempty = true
-	nodeid.optional = false
-	function nodeid.cfgvalue(self, section)
-		return nid
-	end
-end
 
 -- location
 local loc=uci:get_first("system", "system", "location") or uci:get("freifunk", "contact", "location")
 location = f:field(Value, "location", "Standort", "Geben Sie den Standort ihres Gerätes an")
 location.rmempty = false
 location.optional = false
+location.datatype = "string"
 function location.cfgvalue(self, section)
 	return loc
 end
@@ -187,6 +168,7 @@ end
 mail = f:field(Value, "mail", "E-Mail", "Bitte hinterlegen Sie eine Kontaktadresse.")
 mail.rmempty = false
 mail.optional = false
+mail.datatype = "string"
 function mail.cfgvalue(self, section)
 	return uci:get("freifunk", "contact", "mail")
 end
@@ -288,6 +270,7 @@ uci:foreach("wireless", "wifi-device",
 		local txpower = f:field(Value, "txpower_" .. device, device:upper() .. "  Sendeleistung", "dBm")
 			txpower:depends("advanced_" .. device, "1")
 			txpower.rmempty = true
+			txpower.datatype = "range(0,30)"
 			function txpower.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "txpower_" .. device)
 			end
@@ -298,6 +281,7 @@ uci:foreach("wireless", "wifi-device",
 		local distance = f:field(Value, "distance_" .. device, device:upper().."  "..translate("Distance Optimization"), translate("Distance to farthest network member in meters."))
 			distance:depends("advanced_" .. device, "1")
 			distance.rmempty = true
+			distance.datatype = "range(0,10000)"
 			function distance.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "distance_" .. device)
 			end
@@ -352,6 +336,7 @@ uci:foreach("wireless", "wifi-device",
 		local meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Ihre Mesh IP Adresse erhalten Sie von der Freifunk Gemeinschaft in Ihrer Nachbarschaft. Es ist eine netzweit eindeutige Identifikation, z.B. 104.1.1.1.")
 			meship:depends("device_" .. device, "1")
 			meship.rmempty = true
+			meship.datatype = "ip4addr"
 			function meship.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "meship_" .. device)
 			end
@@ -381,6 +366,7 @@ uci:foreach("wireless", "wifi-device",
 		local dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten", "Bestimmen Sie den Adressbereich aus dem Ihre Nutzer IP Adressen erhalten. Es wird empfohlen einen Adressbereich aus Ihrer lokalen Freifunk Gemeinschaft zu nutzen. Der Adressbereich ist ein netzweit eindeutiger Netzbereich. z.B. 104.1.2.1/28 Wenn das Feld leer bleibt wird ein Netzwerk automatisch nach den vorgaben aus dem Feld Freifunk Comunity erstellt")
 			dhcpmesh:depends("client_" .. device, "1")
 			dhcpmesh.rmempty = true
+			dhcpmesh.datatype = "ip4addr"
 			function dhcpmesh.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "dhcpmesh_" .. device)
 			end
@@ -449,6 +435,7 @@ uci:foreach("network", "interface",
 		local meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Ihre Mesh IP Adresse erhalten Sie von der Freifunk Gemeinschaft in Ihrer Nachbarschaft. Es ist eine netzweit eindeutige Identifikation, z.B. 104.1.1.1.")
 			meship:depends("device_" .. device, "1")
 			meship.rmempty = true
+			meship.datatype = "ip4addr"
 			function meship.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "meship_" .. device)
 			end
@@ -473,6 +460,7 @@ uci:foreach("network", "interface",
 		local dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten ", "Bestimmen Sie den Adressbereich aus dem Ihre Nutzer IP Adressen erhalten. Es wird empfohlen einen Adressbereich aus Ihrer lokalen Freifunk Gemeinschaft zu nutzen. Der Adressbereich ist ein netzweit eindeutiger Netzbereich. z.B. 104.1.2.1/28")
 			dhcpmesh:depends("client_" .. device, "1")
 			dhcpmesh.rmempty = true
+			dhcpmesh.datatype = "ip4addr"
 			function dhcpmesh.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "dhcpmesh_" .. device)
 			end
@@ -521,6 +509,7 @@ uci:foreach("olsrd", "LoadPlugin", function(s)
 end)
 
 local lat = f:field(Value, "lat", "geographischer Breitengrad", "Setzen Sie den Breitengrad (Latitude) Ihres Geräts.")
+lat.datatype = "float"
 function lat.cfgvalue(self, section)
 	return syslat
 end
@@ -530,6 +519,7 @@ function lat.write(self, section, value)
 end
 
 local lon = f:field(Value, "lon", "geograpischer Längengrad", "Setzen Sie den Längengrad (Longitude) Ihres Geräts.")
+lon.datatype = "float"
 function lon.cfgvalue(self, section)
 	return syslon
 end
@@ -1265,6 +1255,18 @@ function main.write(self, section, value)
 				uci:set("olsrd", s['.name'], "accept", "0.0.0.0")
 			end
 		end)
+	end
+
+	if has_6relayd then
+		uci:delete("6relayd", "default")
+		uci:section("6relayd","server","default", {
+			rd = "server",
+			dhcpv6 = "server",
+			management_level = "1",
+			compat_ula = "1",
+			always_assume_default = "1"
+		})
+		uci:save("6relayd")
 	end
 
 	-- Internet sharing

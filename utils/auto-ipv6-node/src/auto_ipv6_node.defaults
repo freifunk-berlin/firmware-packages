@@ -45,6 +45,7 @@ uci -q batch <<-EOF >/dev/null
 	set 6relayd.default.dhcpv6=server
 	set 6relayd.default.management_level=1
 	set 6relayd.default.compat_ula=1
+	set 6relayd.default.always_assume_default=1
 EOF
 	for i in $(echo $interfaces) ; do
 		uci add_list 6relayd.default.network="$i"
