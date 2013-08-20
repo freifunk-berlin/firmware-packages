@@ -77,15 +77,6 @@ function status.cfgvalue(self, section)
 	end
 end
 
-local dh = s:taboption("adv", FileUpload, "dh", translate("dh pem"), "freifunk-dh2048.pem")
-dh.default="/etc/openvpn/freifunk-dh2048.pem"
-dh.optional = false
-dh:depends("client","")
-
-local ca = s:taboption("adv", FileUpload, "ca", translate("Certificate authority"), "freifunk-ca.crt")
-ca.default="/etc/openvpn/freifunk-ca.crt"
-ca.optional = false
-
 local key = s:taboption("main", FileUpload, "key", translate("Local Key"),"freifunk_client.key")
 key.default="/etc/openvpn/freifunk_client.key"
 key.optional = false
@@ -106,6 +97,15 @@ client:depends("server","")
 client.default=1
 client.rmempty = true
 client.optional = true
+
+local dh = s:taboption("adv", FileUpload, "dh", translate("dh pem"), "freifunk-dh2048.pem")
+dh.default="/etc/openvpn/freifunk-dh2048.pem"
+dh.optional = false
+dh:depends("client","")
+
+local ca = s:taboption("adv", FileUpload, "ca", translate("Certificate authority"), "freifunk-ca.crt")
+ca.default="/etc/openvpn/freifunk-ca.crt"
+ca.optional = false
 
 local port = s:taboption("adv", Value, "port", translate("IPv4-Port"))
 port:depends("client","")
