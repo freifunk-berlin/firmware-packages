@@ -74,8 +74,8 @@ for _, p in ipairs(prefix) do
 				net = ip.IPv6(net)
 				if net:is6() then
 					net = net:network()
-					print("New Configuration:",net:string())
-					uciprefix[#uciprefix+1] = { net=net:string(),gateway=p.gateway,con=0 }
+					print("New Configuration:",net:string().."/61")
+					uciprefix[#uciprefix+1] = { net=net:string().."/61",gateway=p.gateway,con=0 }
 				end
 			end
 		end
@@ -131,8 +131,27 @@ if uci_rewrite == 1 then
 		uci:delete("network","lan","ip6prefix")
 	end
 	uci:save("network")
-	uci:commit("olsrd")
-	
+	uci:commit("network")
+
+
+	uci:foreach("olsrd", "LoadPlugin",
+	function(s)
+		if s.library == "olsrd_nameservice.so.0.3" then
+			--todo
+			--bug: in olsrd.init:39 do not match ip6 addr
+			--fix: str%%[! 	0-9A-Za-z./|:_-[]]*
+			--bug: in nameservice.c:378 do not match ip6 addr
+			--fix: ?
+			--uci:add_list("olsrd", s['.name'], "service", "http://["..p.netaddr.."1]:80|tcp|"..sys.hostname().." on "p.netaddr)
+			local hosts = {}
+			for i, p in ipairs(ucihna6) do
+				local net = ip.IPv6(p.netaddr.."/"..p.prefix)
+				hosts[#hosts+1] = net:minhost():string().." pre"..i.."."..sys.hostname()
+			end
+			uci:set_list("olsrd", s['.name'], "hosts", hosts)
+		end
+	end)
+
 	uci:delete_all("olsrd", "Hna6")
 	if ula_prefix:is6() then
 		ucihna6[#ucihna6+1] = {
