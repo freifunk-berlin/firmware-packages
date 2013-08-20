@@ -106,11 +106,11 @@ function get_wconf(iw,tbl,pft)
 	if not valid_channel(iw,channel) then
 		if valid_channel(iw,36) then
 			channel = 36
-			bssid = "02:36:CA:FF:EE:EE "
+			bssid = "02:36:CA:FF:EE:EE"
 			ssid = "ch36.freifunk.net"
 		elseif valid_channel(iw,100) then
 			channel = 100
-			bssid = "12:00:CA:FF:EE:EE "
+			bssid = "12:00:CA:FF:EE:EE"
 			ssid = "ch100.freifunk.net"
 		end
 	end
