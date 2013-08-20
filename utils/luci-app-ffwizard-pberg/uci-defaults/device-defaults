@@ -1,29 +1,5 @@
 #!/bin/sh
 
-set_default_config()
-{
-	local cfg="$1"
-	config_get type "$cfg" "type"
-	config_get hwmode "$cfg" "hwmode"
-	case $type in
-		mac80211)
-			uci set freifunk.wifi_device.hwmode=$hwmode
-			uci set freifunk.wifi_device.channel=1
-			uci set freifunk.wifi_device.diversity=""
-			uci set freifunk.wifi_device.disabled=0
-			uci set freifunk.wifi_device.txpower="15"
-			uci set freifunk.wifi_device.country=DE
-			uci set freifunk.wifi_device.distance=1000
-			uci set freifunk.wifi_iface=defaults
-			uci set freifunk.wifi_iface.mode=adhoc
-			uci set freifunk.wifi_iface.bssid="02:CA:FF:EE:BA:BE"
-			uci set freifunk.wifi_iface.sw_merge=""
-			uci set freifunk.wifi_iface.noscan=1
-			uci commit freifunk
-		;;
-	esac
-}
-
 [ "$(uci -q get freifunk.wizard)" == "settings" ] || uci set freifunk.wizard=settings
 uci set freifunk.interface.dns="2002:d596:2a92:1:71:53:: 2002:5968:c28e::53 88.198.178.18 141.54.1.1 212.204.49.83 8.8.8.8 8.8.4.4"
 uci commit freifunk
@@ -38,14 +14,66 @@ uci set luci.general.resolve=1
 uci commit luci
 
 (
-while true ; do
-	sleep 30
-	wifie=0
-	config_load wireless && wifie=1
-	if [ $wifie -eq 1 ] ; then
-		config_foreach set_default_config wifi-device
-		exit 0
-	fi
-done
-) >/dev/null &
+sleep 10
+if [ -f /etc/config/openvpn ] ; then
+	uci delete openvpn.custom_config
+	uci delete openvpn.sample_server
+	uci delete openvpn.sample_client
+	uci set openvpn.ffvpn=openvpn
+	uci set openvpn.ffvpn.enabled=0
+	uci set openvpn.ffvpn.client=1
+	#uci set openvpn.ffvpn.lport=1192
+	uci set openvpn.ffvpn.nobind=1
+	uci set openvpn.ffvpn.proto=udp
+	uci set openvpn.ffvpn.dev=tun
+	uci set openvpn.ffvpn.persist_tun=1
+	uci set openvpn.ffvpn.persist_key=1
+	uci set openvpn.ffvpn.ns_cert_type=server
+	uci set openvpn.ffvpn.comp_lzo="no"
+	uci set openvpn.ffvpn.script_security=2
+	uci set openvpn.ffvpn.cipher="none"
+	uci set openvpn.ffvpn.remote="77.87.48.10 1194 udp"
+	uci set openvpn.ffvpn.ca="/etc/openvpn/freifunk-ca.crt"
+	uci set openvpn.ffvpn.cert="/etc/openvpn/freifunk_client.crt"
+	uci set openvpn.ffvpn.key="/etc/openvpn/freifunk_client.key"
+	uci set openvpn.ffvpn.status=/var/log/openvpn-status-ffvpn.log
+	uci set openvpn.ffvpn.up=/etc/openvpn/up-down-ffvpn.sh
+	uci commit openvpn
+	uci set network.ffvpn=interface
+	uci set network.ffvpn.ifname=tun0
+	uci set network.ffvpn.proto=none
+	uci commit network
+	# vpn03 server route
+	uci set network.ffvpn_server=route
+	uci set network.ffvpn_server.interface='wan'
+	uci set network.ffvpn_server.target='77.87.48.10'
+	uci commit network
+	# dus.net
+	uci set network.dus_net=route
+	uci set network.dus_net.interface='wan'
+	uci set network.dus_net.target='83.125.8.0/22'
+	uci commit network
+	# pbx-network.de
+	uci set network.pbx_net=route
+	uci set network.pbx_net.interface='wan'
+	uci set network.pbx_net.target='46.182.250.0/25'
+	uci commit network
+	# pbx-network.de
+	uci set network.pbx_net_1=route
+	uci set network.pbx_net_1.interface='wan'
+	uci set network.pbx_net_1.target='178.238.128.0/20'
+	uci commit network
+	# freevoipdeal
+	uci set network.freevoipdeal=route
+	uci set network.freevoipdeal.interface='wan'
+	uci set network.freevoipdeal.target='77.72.174.0/24'
+	uci commit network
+	# sipgate
+	uci set network.sipgate=route
+	uci set network.sipgate.interface='wan'
+	uci set network.sipgate.target='217.10.64.0/20'
+	uci commit network
+fi
+) >/dev/null 2>&1 &
+exit 0
 

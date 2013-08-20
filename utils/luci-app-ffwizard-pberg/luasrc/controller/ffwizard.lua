@@ -19,4 +19,7 @@ module "luci.controller.ffwizard"
 function index()
 	entry({"admin", "freifunk", "ffwizard"}, form("ffwizard"), "Freifunkassistent", 1)
 	assign({"mini", "freifunk", "ffwizard"}, {"admin", "freifunk", "ffwizard"}, "Freifunkassistent", 1)
+	local page = entry({"admin", "freifunk", "ffvpn"}, cbi("ffvpn"), "Freifunk VPN", 1)
+	page.dependent = true
+	assign({"mini", "freifunk", "ffvpn"}, {"admin", "freifunk", "ffvpn"}, "Freifunk VPN", 1)
 end
