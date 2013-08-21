@@ -2221,7 +2221,7 @@ function main.write(self, section, value)
 						proto="udp",
 						dest_ip="77.87.48.10",
 						dest_port="1194",
-						target 'REJECT'
+						target="REJECT"
 					})
 					uci:save("firewall")
 					uci:set("openvpn","ffvpn", "enabled", "1")
