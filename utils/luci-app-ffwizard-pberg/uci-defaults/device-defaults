@@ -44,35 +44,35 @@ if [ -f /etc/config/openvpn ] ; then
 	uci set network.ffvpn.proto=none
 	uci commit network
 	# vpn03 server route
-	uci set network.ffvpn_server=route
-	uci set network.ffvpn_server.interface='wan'
-	uci set network.ffvpn_server.target='77.87.48.10'
-	uci commit network
+	# uci set network.ffvpn_server=route
+	# uci set network.ffvpn_server.interface='wan'
+	# uci set network.ffvpn_server.target='77.87.48.10'
+	# uci commit network
 	# dus.net
-	uci set network.dus_net=route
-	uci set network.dus_net.interface='wan'
-	uci set network.dus_net.target='83.125.8.0/22'
-	uci commit network
+	# uci set network.dus_net=route
+	# uci set network.dus_net.interface='wan'
+	# uci set network.dus_net.target='83.125.8.0/22'
+	# uci commit network
 	# pbx-network.de
-	uci set network.pbx_net=route
-	uci set network.pbx_net.interface='wan'
-	uci set network.pbx_net.target='46.182.250.0/25'
-	uci commit network
+	# uci set network.pbx_net=route
+	# uci set network.pbx_net.interface='wan'
+	# uci set network.pbx_net.target='46.182.250.0/25'
+	# uci commit network
 	# pbx-network.de
-	uci set network.pbx_net_1=route
-	uci set network.pbx_net_1.interface='wan'
-	uci set network.pbx_net_1.target='178.238.128.0/20'
-	uci commit network
+	# uci set network.pbx_net_1=route
+	# uci set network.pbx_net_1.interface='wan'
+	# uci set network.pbx_net_1.target='178.238.128.0/20'
+	# uci commit network
 	# freevoipdeal
-	uci set network.freevoipdeal=route
-	uci set network.freevoipdeal.interface='wan'
-	uci set network.freevoipdeal.target='77.72.174.0/24'
-	uci commit network
+	# uci set network.freevoipdeal=route
+	# uci set network.freevoipdeal.interface='wan'
+	# uci set network.freevoipdeal.target='77.72.174.0/24'
+	# uci commit network
 	# sipgate
-	uci set network.sipgate=route
-	uci set network.sipgate.interface='wan'
-	uci set network.sipgate.target='217.10.64.0/20'
-	uci commit network
+	# uci set network.sipgate=route
+	# uci set network.sipgate.interface='wan'
+	# uci set network.sipgate.target='217.10.64.0/20'
+	# uci commit network
 fi
 ) >/dev/null 2>&1 &
 exit 0
