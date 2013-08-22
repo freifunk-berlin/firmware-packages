@@ -20,7 +20,7 @@ remote=$5
 		ip route add $net dev $dev src $src table $table
 		ip route del $net dev $dev
 	fi
-) >/tmp/up-down-ffvpn.log 2>&1 &
+) >/tmp/ffvpn-up.log 2>&1 &
 
 exit 0
 
