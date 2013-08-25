@@ -2144,7 +2144,7 @@ function main.write(self, section, value)
 				})
 			end
 			uci:set("freifunk-policyrouting","pr","enable","1")
-			uci:set("freifunk-policyrouting","pr","strict","1")
+			uci:set("freifunk-policyrouting","pr","strict","0")
 			uci:save("freifunk-policyrouting")
 		else
 			uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})

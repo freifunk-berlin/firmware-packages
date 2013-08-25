@@ -37,7 +37,7 @@ if [ -f /etc/config/openvpn ] ; then
 	uci set openvpn.ffvpn.cert="/etc/openvpn/freifunk_client.crt"
 	uci set openvpn.ffvpn.key="/etc/openvpn/freifunk_client.key"
 	uci set openvpn.ffvpn.status=/var/log/openvpn-status-ffvpn.log
-	uci set openvpn.ffvpn.up=/etc/openvpn/up-down-ffvpn.sh
+	uci set openvpn.ffvpn.up=/etc/openvpn/ffvpn-up.sh
 	uci commit openvpn
 	uci set network.ffvpn=interface
 	uci set network.ffvpn.ifname=tun0
