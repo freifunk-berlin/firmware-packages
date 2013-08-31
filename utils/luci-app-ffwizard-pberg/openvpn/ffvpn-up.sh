@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ -z $route_net_gateway ] ; then
+	logger -t up-down-ffvpn "no gateway ip in main routing table!"
+	exit 1
+fi
+
 table=$(uci -q get olsrd.@olsrd[0].RtTableDefault)
 dev="$1"
 remote="$5"
@@ -16,8 +21,8 @@ remote="$5"
 		net="$NETWORK/$PREFIX"
 		logger -t up-down-ffvpn "ugw: $ugw dev: $dev remote: $remote gw: $gw src: $src mask: $mask table: $table"
 		ip route add $net dev $dev src $src table $table
-		ip route add $remote_1 via $ugw table main
-		ip route add default via $ugw table default
+		#ip route add $remote_1 via $ugw table main
+		#ip route add default via $ugw table default
 		ip route del 0.0.0.0/1 via $gw dev $dev
 		ip route del 128.0.0.0/1 via $gw dev $dev
 		ip route add default via $gw dev $dev table $table metric 10

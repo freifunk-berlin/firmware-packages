@@ -2146,6 +2146,7 @@ function main.write(self, section, value)
 			end
 			uci:set("freifunk-policyrouting","pr","enable","1")
 			uci:set("freifunk-policyrouting","pr","strict","1")
+			uci:set("freifunk-policyrouting","pr","fallback","1")
 			uci:save("freifunk-policyrouting")
 		end
 		if has_firewall then
@@ -2213,6 +2214,15 @@ function main.write(self, section, value)
 			if has_ovpn then
 				if luci.http.formvalue("cbid.ffwizward.1.ffvpn") == "1" then
 					tools.firewall_zone_add_interface("freifunk", "ffvpn")
+					uci:section("firewall", "rule", nil, {
+						name="Reject-VPN-over-ff",
+						dest="freifunk",
+						family="ipv4",
+						proto="udp",
+						dest_ip="77.87.48.10",
+						dest_port="1194",
+						target="REJECT"
+					})
 					uci:save("firewall")
 					uci:set("openvpn","ffvpn", "enabled", "1")
 					uci:save("openvpn")
