@@ -77,13 +77,13 @@ function status.cfgvalue(self, section)
 	end
 end
 
-local key = s:taboption("main", FileUpload, "key", translate("Local Key"),"freifunk_client.key")
-key.default="/etc/openvpn/freifunk_client.key"
-key.optional = false
-
 local cert = s:taboption("main", FileUpload, "cert", translate("Local Certificate"),"freifunk_client.crt")
 cert.default="/etc/openvpn/freifunk_client.crt"
 cert.optional = false
+
+local key = s:taboption("main", FileUpload, "key", translate("Local Key"),"freifunk_client.key")
+key.default="/etc/openvpn/freifunk_client.key"
+key.optional = false
 
 s:tab("adv","adv")
 
@@ -125,6 +125,11 @@ proto.default="udp"
 proto.optional = false
 
 local dev = s:taboption("adv", Value, "dev", translate("Device"))
+dev.rmempty = true
+dev.default="tun"
+dev.optional = false
+
+local dev = s:taboption("adv", Value, "dev_type", translate("Device Type"))
 dev.rmempty = true
 dev.default="tun"
 dev.optional = false
