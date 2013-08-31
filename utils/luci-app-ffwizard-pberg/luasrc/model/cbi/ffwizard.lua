@@ -61,6 +61,12 @@ local device_il = {
 	"ffvpn"
 }
 
+if has_6in4 then
+	if not uci:get("network", "henet") then
+		uci:section("network", "interface", "henet", { proto="6in4"})
+		uci:save("network")
+	end
+end
 function get_mac(ix)
 	if string.find(ix, "radio") then
 		mac = uci:get('wireless',ix,'macaddr')
@@ -2109,6 +2115,9 @@ function main.write(self, section, value)
 		end
 	end
 
+	-- Delete/Disable gateway plugin
+	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
+	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 	if share_value == "1" then
 		uci:set("freifunk", "wizard", "shareconfig", "1")
 		uci:save("freifunk")
@@ -2128,26 +2137,16 @@ function main.write(self, section, value)
 			uci:set("auto_ipv6_node", "olsr_node", "enable", "0")
 			uci:save("autoipv6")
 		end
-		-- Delete/Disable gateway plugin
-		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
-		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 		-- Enable gateway_plain plugin
+		uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
 		if has_pr then
 			local ffvpn_enable="0"
 			if has_ovpn then
 				ffvpn_enable = luci.http.formvalue("cbid.ffwizward.1.ffvpn")
 			end
-			if ffvpn_enable == "0" then
-				uci:section("olsrd", "LoadPlugin", nil, {
-					library     = "olsrd_dyn_gw_plain.so.0.4",
-					ignore      = 1,
-				})
-			end
 			uci:set("freifunk-policyrouting","pr","enable","1")
-			uci:set("freifunk-policyrouting","pr","strict","0")
+			uci:set("freifunk-policyrouting","pr","strict","1")
 			uci:save("freifunk-policyrouting")
-		else
-			uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
 		end
 		if has_firewall then
 			sys.exec("chmod +x /etc/init.d/freifunk-p2pblock")
@@ -2214,15 +2213,6 @@ function main.write(self, section, value)
 			if has_ovpn then
 				if luci.http.formvalue("cbid.ffwizward.1.ffvpn") == "1" then
 					tools.firewall_zone_add_interface("freifunk", "ffvpn")
-					uci:section("firewall", "rule", nil, {
-						name="Reject-VPN-over-ff",
-						dest="freifunk",
-						family="ipv4",
-						proto="udp",
-						dest_ip="77.87.48.10",
-						dest_port="1194",
-						target="REJECT"
-					})
 					uci:save("firewall")
 					uci:set("openvpn","ffvpn", "enabled", "1")
 					uci:save("openvpn")
