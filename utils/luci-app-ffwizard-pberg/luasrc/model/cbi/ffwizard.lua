@@ -2149,6 +2149,12 @@ function main.write(self, section, value)
 			uci:set("freifunk-policyrouting","pr","fallback","1")
 			uci:save("freifunk-policyrouting")
 		end
+		uci:section("freifunk-watchdog", "process", nil, {
+				process="openvpn",
+				initscript="/etc/init.d/openvpn"
+			})
+		uci:save("freifunk-watchdog")
+
 		if has_firewall then
 			sys.exec("chmod +x /etc/init.d/freifunk-p2pblock")
 			sys.init.enable("freifunk-p2pblock")
