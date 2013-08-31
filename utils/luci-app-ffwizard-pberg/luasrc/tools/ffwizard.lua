@@ -71,7 +71,7 @@ end
 function firewall_create_zone(zone, input, output, forward, masq)
 	local cursor = uci.cursor()
 	if not firewall_find_zone(zone) then
-		local stat = cursor:section("firewall", "zone", nil, {
+		local stat = cursor:section("firewall", "zone", "zone_"..zone, {
 			input = input,
 			output = output,
 			forward = forward,

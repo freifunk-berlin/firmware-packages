@@ -2147,6 +2147,7 @@ function main.write(self, section, value)
 			uci:set("freifunk-policyrouting","pr","enable","1")
 			uci:set("freifunk-policyrouting","pr","strict","1")
 			uci:set("freifunk-policyrouting","pr","fallback","1")
+			uci:set("freifunk-policyrouting","pr","zones", "freifunk")
 			uci:save("freifunk-policyrouting")
 		end
 		uci:section("freifunk-watchdog", "process", nil, {
