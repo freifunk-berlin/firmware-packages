@@ -161,7 +161,7 @@ local list = {}
 local list = fs_luci.glob(profiles .. "*")
 
 function net.cfgvalue(self, section)
-	return uci:get("freifunk", "wizard", "net")
+	return uci:get("freifunk", "wizard", "net") or "berlin"
 end
 function net.write(self, section, value)
 	uci:set("freifunk", "wizard", "net", value)
@@ -442,7 +442,7 @@ uci:foreach("wireless", "wifi-device",
 			vap:depends("client_" .. device, "1")
 			vap.rmempty = false
 			function vap.cfgvalue(self, section)
-				return uci:get("freifunk", "wizard", "vap_" .. device)
+				return uci:get("freifunk", "wizard", "vap_" .. device) or "1"
 			end
 			function vap.write(self, sec, value)
 				uci:set("freifunk", "wizard", "vap_" .. device, value)
