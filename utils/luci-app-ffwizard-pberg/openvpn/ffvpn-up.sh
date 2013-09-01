@@ -28,6 +28,17 @@ remote="$5"
 		ip route add default via $gw dev $dev table $table metric 10
 		ip rule add pref 20000 iif $dev lookup $table
 		ip rule add pref 20001 iif $dev unreachable
+		#route SIP not over vpn
+		# dus.net
+		ip rule add pref 5000 to 83.125.8.0/22 lookup main
+		# pbx-network.de
+		ip rule add pref 5000 to 46.182.250.0/25 lookup main 
+		# pbx-network.de
+		ip rule add pref 5000 to 178.238.128.0/20 lookup main
+		# freevoipdeal
+		ip rule add pref 5000 to 77.72.174.0/24 lookup main
+		# sipgate
+		ip rule add pref 5000 to 217.10.64.0/20 lookup main
 	fi
 ) >/tmp/ffvpn-up.log 2>&1 &
 
