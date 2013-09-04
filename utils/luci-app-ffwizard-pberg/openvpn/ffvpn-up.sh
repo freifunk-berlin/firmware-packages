@@ -1,15 +1,18 @@
 #!/bin/sh
 
+. /lib/functions.sh
 if [ -z $route_net_gateway ] ; then
 	logger -t up-down-ffvpn "no gateway ip in main routing table!"
 	exit 1
 fi
 
-if [ $(uci get freifunk-policyrouting.pr.enable) = 0 ] ; then
+config_get enable pr enable
+if [ $enable != 1 ] ; then
 	logger -t up-down-ffvpn "no policy routing freifunk-policyrouting.pr.enable=0"
 	exit 0
 fi
 
+config_get strict pr strict
 table="olsr-default"
 dev="$1"
 remote="$5"
@@ -33,8 +36,10 @@ remote="$5"
 		ip route add default via "$gw" dev "$dev" table "$table" metric 10
 		ip rule list | grep -q "iif $dev lookup $table" || \
 		ip rule add pref 20000 iif "$dev" lookup "$table"
-		ip rule list | grep -q "iif $dev unreachable" || \
-		ip rule add pref 20001 iif "$dev" unreachable
+		if [ "$strict" != 0 ]; then
+			ip rule list | grep -q "iif $dev unreachable" || \
+			ip rule add pref 20001 iif "$dev" unreachable
+		fi
 	fi
 ) >/tmp/ffvpn-up.log 2>&1 &
 
