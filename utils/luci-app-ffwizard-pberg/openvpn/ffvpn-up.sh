@@ -35,22 +35,6 @@ remote="$5"
 		ip rule add pref 20000 iif "$dev" lookup "$table"
 		ip rule list | grep -q "iif $dev unreachable" || \
 		ip rule add pref 20001 iif "$dev" unreachable
-		#route SIP not over vpn
-		# dus.net
-		ip rule list | grep -q '83.125.8.0/22' || \
-		ip rule add pref 5000 to 83.125.8.0/22 lookup main
-		# pbx-network.de
-		ip rule list | grep -q '46.182.250.0/25' || \
-		ip rule add pref 5000 to 46.182.250.0/25 lookup main 
-		# pbx-network.de
-		ip rule list | grep -q '178.238.128.0/20' || \
-		ip rule add pref 5000 to 178.238.128.0/20 lookup main
-		# freevoipdeal
-		ip rule list | grep -q '77.72.174.0/24' || \
-		ip rule add pref 5000 to 77.72.174.0/24 lookup main
-		# sipgate
-		ip rule list | grep -q '217.10.64.0/20' || \
-		ip rule add pref 5000 to 217.10.64.0/20 lookup main
 	fi
 ) >/tmp/ffvpn-up.log 2>&1 &
 
