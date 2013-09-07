@@ -1084,6 +1084,7 @@ function f.handle(self, state, data)
 			end
 			if has_ovpn then
 				uci:commit("openvpn")
+				uci:commit("freifunk-watchdog")
 			end
 			if has_pr then
 				uci:commit("freifunk-policyrouting")
