@@ -13,6 +13,12 @@ uci set luci.general=internal
 uci set luci.general.resolve=1
 uci commit luci
 
+tables="/etc/iproute2/rt_tables"
+test -d /etc/iproute2/ || mkdir -p /etc/iproute2/
+grep -q "olsr" $tables || echo "111 olsr-default" >> $tables
+grep -q "olsr-default" $tables || echo "112 olsr-default" >> $tables
+grep -q "olsr-tunnel" $tables || echo "113 olsr-tunnel" >> $tables
+
 (
 sleep 10
 if [ -f /etc/config/openvpn ] ; then

@@ -1226,11 +1226,14 @@ function main.write(self, section, value)
 			qosu=luci.http.formvalue("cbid.ffwizward.1.wanqosup") or ""
 			if (qosd and qosd ~= "") and (qosu and qosd ~= "")  then
 				olsrbase.SmartGatewaySpeed=qosu.." "..qosd
+				olsrbase.RtTableDefault="112"
+				olsrbase.RtTableTunnel="113"
 			end
 		end
 		if has_pr then
 			olsrbase.RtTable="111"
 			olsrbase.RtTableDefault="112"
+			olsrbase.RtTableTunnel="113"
 		end
 		uci:section("network", "interface", "tunl0", {
 			proto  = "none",
