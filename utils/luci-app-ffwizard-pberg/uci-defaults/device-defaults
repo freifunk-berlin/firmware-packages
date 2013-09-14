@@ -43,7 +43,8 @@ if [ -f /etc/config/openvpn ] ; then
 		uci set openvpn.ffvpn.comp_lzo="no"
 		uci set openvpn.ffvpn.script_security=2
 		uci set openvpn.ffvpn.cipher="none"
-		uci set openvpn.ffvpn.remote="77.87.48.10 1194 udp"
+		uci add_list openvpn.ffvpn.remote="77.87.48.10 1194 udp"
+		uci add_list openvpn.ffvpn.remote="78.41.116.65 1194 udp"
 		uci set openvpn.ffvpn.ca="/etc/openvpn/freifunk-ca.crt"
 		uci set openvpn.ffvpn.cert="/etc/openvpn/freifunk_client.crt"
 		uci set openvpn.ffvpn.key="/etc/openvpn/freifunk_client.key"
@@ -55,11 +56,29 @@ if [ -f /etc/config/openvpn ] ; then
 		uci set network.ffvpn.proto=none
 		uci commit network
 	fi
+	# henet server route
+	uci set network.henet_relay=rule
+	uci set network.henet_relay.priority=100
+	uci set network.henet_relay.dest='216.66.86.114/32'
+	uci set network.henet_relay.goto=32766
+	uci commit network
+	# 6to4-Relay server route
+	uci set network.6to4_relay=rule
+	uci set network.6to4_relay.priority=100
+	uci set network.6to4_relay.dest='192.88.99.1/32'
+	uci set network.6to4_relay.goto=32766
+	uci commit network
 	# vpn03 server route
 	uci set network.ffvpn_server=rule
 	uci set network.ffvpn_server.priority=100
 	uci set network.ffvpn_server.dest='77.87.48.10/32'
 	uci set network.ffvpn_server.goto=32766
+	uci commit network
+	# vpn03 backup server route
+	uci set network.ffvpn_backup_server=rule
+	uci set network.ffvpn_backup_server.priority=100
+	uci set network.ffvpn_backup_server.dest='78.41.116.65/32'
+	uci set network.ffvpn_backup_server.goto=32766
 	uci commit network
 	# dus.net
 	uci set network.dus_net=rule
