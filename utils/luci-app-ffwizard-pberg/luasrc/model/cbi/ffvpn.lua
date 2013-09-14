@@ -165,7 +165,7 @@ cipher.rmempty = true
 cipher.default="none"
 cipher.optional = false
 
-local remote = s:taboption("adv", Value, "remote", translate("Remote"))
+local remote = s:taboption("adv", DynamicList, "remote", translate("Remote"))
 remote:depends("client","1")
 remote.rmempty = true
 remote.default="vpn03.berlin.freifunk.net 1194 udp"
