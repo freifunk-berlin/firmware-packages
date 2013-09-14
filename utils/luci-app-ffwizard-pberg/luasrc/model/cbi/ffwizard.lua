@@ -2008,30 +2008,29 @@ function main.write(self, section, value)
 
 	if has_ipv6 then
 		local ula_prefix = uci:get("network","globals","ula_prefix") or ""
-		local prefix = string.gsub(ula_prefix,".*/", "")
-		local netaddr = string.gsub(ula_prefix,"/.*", "")
-		if prefix and netaddr then
+		ula_prefix = ip.IPv6(ula_prefix)
+		if ula_prefix:is6() then
 			uci:section("olsrd", "Hna6", nil, {
-				prefix = prefix,
-				netaddr = netaddr
+				prefix = ula_prefix:prefix(),
+				netaddr = ula_prefix:network():string()
 			})
 		end
 		local lanprefixs = uci:get_list("network","lan","ip6prefix") or {}
 		for i, p in ipairs(lanprefixs) do
-			local prefix = string.gsub(p,".*/", "")
-			local netaddr = string.gsub(p,"/.*", "")
-			if prefix and netaddr then
+			p = ip.IPv6(p)
+			if p:is6() then
 				uci:section("olsrd", "Hna6", nil, {
-					prefix = prefix,
-					netaddr = netaddr
+					prefix = p:prefix(),
+					netaddr = p:network():string()
 				})
 				uci:foreach("olsrd", "LoadPlugin",
 				function(s)
 					if s.library == "olsrd_nameservice.so.0.3" then
-						--uci:add_list("olsrd", s['.name'], "service", "http://["..p.netaddr.."1]:80|tcp|"..sys.hostname().." on "p.netaddr)
+						local service = uci:get_list("olsrd", s['.name'], "service") or {}
+						service[#service+1] = "http://pre"..i.."."..sys.hostname()..".suffix:80|tcp|pre"..i.."."..sys.hostname().." on "p:minhost():string())
+						uci:set_list("olsrd", s['.name'], "service", service)
 						local hosts = uci:get_list("olsrd", s['.name'], "hosts") or {}
-						local net = ip.IPv6(p)
-						hosts[#hosts+1] = net:minhost():string().." pre"..i.."."..sys.hostname()
+						hosts[#hosts+1] = p:minhost():string().." pre"..i.."."..sys.hostname()
 						uci:set_list("olsrd", s['.name'], "hosts", hosts)
 					end
 				end)
@@ -2052,7 +2051,9 @@ function main.write(self, section, value)
 				uci:foreach("olsrd", "LoadPlugin",
 				function(s)
 					if s.library == "olsrd_nameservice.so.0.3" then
-						--uci:add_list("olsrd", s['.name'], "service", "http://["..p.netaddr.."1]:80|tcp|"..sys.hostname().." on "p.netaddr)
+						local service = uci:get_list("olsrd", s['.name'], "service") or {}
+						service[#service+1] = "http://henet."..sys.hostname()..".suffix:80|tcp|henet."..sys.hostname().." on "henet_prefix:minhost():string())
+						uci:set_list("olsrd", s['.name'], "service", service)
 						local hosts = uci:get_list("olsrd", s['.name'], "hosts") or {}
 						hosts[#hosts+1] = henet_prefix:minhost():string().." henet."..sys.hostname()
 						uci:set_list("olsrd", s['.name'], "hosts", hosts)
