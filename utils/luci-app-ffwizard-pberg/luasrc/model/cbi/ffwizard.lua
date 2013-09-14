@@ -884,16 +884,6 @@ if has_wan then
 			uci:set("network", "henet", "password", value)
 			uci:save("network")
 		end
-		local henetgw6 = f:field(Value, "henetgw6", translate("IPv6-Gateway-Address"))
-		henetgw6:depends("henet", "1")
-		henetgw6.datatype = "ip6addr"
-		function henetgw6.cfgvalue(self, section)
-			return uci:get("network", "henet", "ip6gw")
-		end
-		function henetgw6.write(self, section, value)
-			uci:set("network", "henet", "ip6gw", value)
-			uci:save("network")
-		end
 		local henetip6 = f:field(Value, "henetip6addr", translate("IPv6-Address"))
 		henetip6:depends("henet", "1")
 		henetip6.datatype = "ip6addr"
@@ -2045,20 +2035,53 @@ function main.write(self, section, value)
 						uci:set_list("olsrd", s['.name'], "hosts", hosts)
 					end
 				end)
-
 			end
 		end
 	end
 	if has_wan and has_6in4 then
 		local henet_prefix = luci.http.formvalue("cbid.ffwizward.1.henetprefix") or ""
-		--local henet_prefix = uci:get("network","henet","ip6prefix") or ""
-		local prefix = string.gsub(henet_prefix,".*/", "")
-		local netaddr = string.gsub(henet_prefix,"/.*", "")
-		if #prefix > 0 and #netaddr > 0 then
-			uci:section("olsrd", "Hna6", nil, {
-				prefix = prefix,
-				netaddr = netaddr
-			})
+		local henet_ip6addr = luci.http.formvalue("cbid.ffwizward.1.henetip6addr") or ""
+		if henet_prefix and henet_ip6addr then
+			henet_prefix = ip.IPv6(henet_prefix)
+			henet_ip6addr = ip.IPv6(henet_ip6addr)
+			if henet_prefix:is6() and henet_ip6addr:is6() then
+				uci:section("olsrd", "Hna6", nil, {
+					prefix = henet_prefix:prefix(),
+					netaddr = henet_prefix:network():string()
+				})
+				uci:foreach("olsrd", "LoadPlugin",
+				function(s)
+					if s.library == "olsrd_nameservice.so.0.3" then
+						--uci:add_list("olsrd", s['.name'], "service", "http://["..p.netaddr.."1]:80|tcp|"..sys.hostname().." on "p.netaddr)
+						local hosts = uci:get_list("olsrd", s['.name'], "hosts") or {}
+						hosts[#hosts+1] = henet_prefix:minhost():string().." henet."..sys.hostname()
+						uci:set_list("olsrd", s['.name'], "hosts", hosts)
+					end
+				end)
+				--Compat for old auto-ipv6-node
+				uci:foreach("olsrd", "olsrd",
+				function(s)
+					uci:set("olsrd", s['.name'], "MainIp", henet_prefix:minhost():string())
+				end)
+				uci:save("olsr")
+
+				local route6_new = 1
+				uci:foreach("network", "route6",
+				function(s)
+					if s.interface == "henet" and s.target == "::/0" then
+						uci:set("network", s['.name'], "gateway", henet_ip6addr:minhost():string())
+						route6_new = 0
+					end
+				end)
+				if route6_new == 1 then
+					uci:section("network", "route6", nil, {
+						interface = "henet",
+						target = "::/0",
+						gateway = henet_ip6addr:minhost():string()
+					})
+				end
+				uci:save("network")
+			end
 		end
 	end
 
