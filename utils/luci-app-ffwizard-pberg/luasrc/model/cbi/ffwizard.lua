@@ -2027,10 +2027,12 @@ function main.write(self, section, value)
 				function(s)
 					if s.library == "olsrd_nameservice.so.0.3" then
 						local service = uci:get_list("olsrd", s['.name'], "service") or {}
-						service[#service+1] = "http://pre"..i.."."..sys.hostname()..".suffix:80|tcp|pre"..i.."."..sys.hostname().." on "p:minhost():string()
+						local hn = "pre"..i.."."..sys.hostname()
+						local fqhn = hn.."."..suffix
+						service[#service+1] = "http://"..fqhn..":80|tcp|"..fqhn.." on "..p:minhost():string()
 						uci:set_list("olsrd", s['.name'], "service", service)
 						local hosts = uci:get_list("olsrd", s['.name'], "hosts") or {}
-						hosts[#hosts+1] = p:minhost():string().." pre"..i.."."..sys.hostname()
+						hosts[#hosts+1] = p:minhost():string().." "..hn
 						uci:set_list("olsrd", s['.name'], "hosts", hosts)
 					end
 				end)
@@ -2052,10 +2054,12 @@ function main.write(self, section, value)
 				function(s)
 					if s.library == "olsrd_nameservice.so.0.3" then
 						local service = uci:get_list("olsrd", s['.name'], "service") or {}
-						service[#service+1] = "http://henet."..sys.hostname()..".suffix:80|tcp|henet."..sys.hostname().." on "henet_prefix:minhost():string()
+						local hn = "henet."..sys.hostname()
+						local fqhn = hn.."."..suffix
+						service[#service+1] = "http://"..fqhn..":80|tcp|"..fqhn.." on "henet_prefix:minhost():string()
 						uci:set_list("olsrd", s['.name'], "service", service)
 						local hosts = uci:get_list("olsrd", s['.name'], "hosts") or {}
-						hosts[#hosts+1] = henet_prefix:minhost():string().." henet."..sys.hostname()
+						hosts[#hosts+1] = henet_prefix:minhost():string().." "..hn
 						uci:set_list("olsrd", s['.name'], "hosts", hosts)
 					end
 				end)
