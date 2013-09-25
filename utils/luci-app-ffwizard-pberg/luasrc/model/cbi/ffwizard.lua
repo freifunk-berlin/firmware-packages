@@ -2040,8 +2040,8 @@ function main.write(self, section, value)
 		end
 	end
 	if has_wan and has_6in4 then
-		local henet_prefix = luci.http.formvalue("cbid.ffwizward.1.henetprefix") or ""
-		local henet_ip6addr = luci.http.formvalue("cbid.ffwizward.1.henetip6addr") or ""
+		local henet_prefix = luci.http.formvalue("cbid.ffwizward.1.henetprefix")
+		local henet_ip6addr = luci.http.formvalue("cbid.ffwizward.1.henetip6addr")
 		if henet_prefix and henet_ip6addr then
 			henet_prefix = ip.IPv6(henet_prefix)
 			henet_ip6addr = ip.IPv6(henet_ip6addr)
