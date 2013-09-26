@@ -2007,13 +2007,15 @@ function main.write(self, section, value)
 	})
 
 	if has_ipv6 then
-		local ula_prefix = uci:get("network","globals","ula_prefix") or ""
-		ula_prefix = ip.IPv6(ula_prefix)
-		if ula_prefix:is6() then
-			uci:section("olsrd", "Hna6", nil, {
-				prefix = ula_prefix:prefix(),
-				netaddr = ula_prefix:network():string()
-			})
+		local ula_prefix = uci:get("network","globals","ula_prefix")
+		if ula_prefix then
+			ula_prefix = ip.IPv6(ula_prefix)
+			if ula_prefix:is6() then
+				uci:section("olsrd", "Hna6", nil, {
+					prefix = ula_prefix:prefix(),
+					netaddr = ula_prefix:network():string()
+				})
+			end
 		end
 		local lanprefixs = uci:get_list("network","lan","ip6prefix") or {}
 		for i, p in ipairs(lanprefixs) do
