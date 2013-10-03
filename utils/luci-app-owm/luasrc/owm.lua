@@ -167,10 +167,12 @@ function fetch_olsrd_neighbors(interfaces)
 							local name = iface['.name']
 							local net = netm:get_network(name)
 							local device = net and net:get_interface()
-							local_ip = ip.IPv6(v.localIP)
-							for _, a in ipairs(device:ip6addrs()) do
-								if a:host() == local_ip:host() then
-									data[index]['interface'] = name
+							if device and device:ip6addrs() then
+								local_ip = ip.IPv6(v.localIP)
+								for _, a in ipairs(device:ip6addrs()) do
+									if a:host() == local_ip:host() then
+										data[index]['interface'] = name
+									end
 								end
 							end
 						end
