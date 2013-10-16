@@ -2,11 +2,15 @@
 
 . /lib/functions.sh
 if [ -z $route_net_gateway ] ; then
-	logger -p debug -t up-down-ffvpn "no gateway ip in main routing table!"
-	route_net_gateway=$(ip route show table default | grep default | cut -d ' ' -f 3)
+	logger -p debug -t up-down-ffvpn "no route_net_gateway env var from openvpn!"
+	route_net_gateway=$(ip route show table main | grep default | cut -d ' ' -f 3)
 	if [ -z "$route_net_gateway" ] ; then
-		logger -p err -t up-down-ffvpn "no gateway ip in main or default routing table!"
-		exit 1
+		logger -p debug -t up-down-ffvpn "no gateway ip in main routing table!"
+		route_net_gateway=$(ip route show table default | grep default | cut -d ' ' -f 3)
+		if [ -z "$route_net_gateway" ] ; then
+			logger -p err -t up-down-ffvpn "no gateway ip in main or default routing table!"
+			exit 1
+		fi
 	fi
 fi
 
