@@ -1,0 +1,73 @@
+#!/bin/sh /etc/rc.common
+
+START=95
+
+LIST_SEP="
+"
+KADNODE_BIN=/usr/bin/kadnode
+
+count() {
+	echo $#
+}
+
+append_opts() {
+	local p; local v; local s="$1"; shift
+	for p in $*; do
+		config_get v "$s" "$p"
+		[ -n "$v" ] && OPTS="$OPTS --${p//_/-} '${v//'/\\'}'"
+	done
+}
+
+append_opts_boolean() {
+  local p; local v; local s="$1"; shift
+  for p in $*; do
+        config_get_bool v "$s" "$p"  0
+        [ $v -gt 0  ] && OPTS="$OPTS --${p//_/-}"
+  done
+}
+
+section_enabled() {
+	config_get_bool enabled "$1" 'enabled' 0
+	[ $enabled -gt 0 ]
+}
+
+start_instance() {
+	local s="$1"
+
+	section_enabled "$s" || return
+
+	SERVICE_PID_FILE="/var/run/kadnode.$s.pid"
+	OPTS=""
+
+	append_opts "$s" node_id user port ifce cmd_port web_port\
+		mcast_addr mode dns_port verbosity peerfile config
+
+	append_opts_boolean "$s" disable_multicast disable_forwarding
+
+	add_value_id() {
+		OPTS="$OPTS --value-id '$1'"
+	}
+
+	config_list_foreach "$s" "value_id" add_value_id
+
+	eval service_start "'$KADNODE_BIN'" --daemon --pidfile "'$SERVICE_PID_FILE'" $OPTS
+}
+
+stop_instance() {
+	local s="$1"
+
+	SERVICE_PID_FILE="/var/run/kadnode.$s.pid"
+	service_stop "$KADNODE_BIN"
+
+	rm -f "$SERVICE_PID_FILE"
+}
+
+start() {
+	config_load 'kadnode'
+	config_foreach start_instance 'kadnode'
+}
+
+stop() {
+	config_load 'kadnode'
+	config_foreach stop_instance 'kadnode'
+}
