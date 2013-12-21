@@ -317,7 +317,7 @@ if ready then
 	--set olsrd p2p listen on ipv6
 	uci:section("olsrd", "LoadPlugin", nil, {
 		library = "olsrd_p2pd.so.0.1.0",
-		ignore = 0,
+		ignore = 1,
 		P2pdTtl = 10,
 		UdpDestPort = "ff02::fb 5353",
 		NonOlsrIf = p2p_if
@@ -360,6 +360,7 @@ if ready then
 
 	--restart deamons
 	luci.sys.call("(/etc/init.d/network restart) >/dev/null 2>/dev/null")
+	luci.sys.call("/bin/sleep 3")
 	luci.sys.call("(/etc/init.d/olsrd restart) >/dev/null 2>/dev/null")
 	luci.sys.call("(/etc/init.d/6relayd restart) >/dev/null 2>/dev/null")
 	luci.sys.call("(/etc/init.d/uhttpd restart) >/dev/null 2>/dev/null")

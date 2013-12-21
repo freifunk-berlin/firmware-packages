@@ -169,6 +169,7 @@ if uci_rewrite == 1 then
 	uci:save("olsrd")
 	uci:commit("olsrd")
 	util.exec("/etc/init.d/network reload")
+	util.exec("/bin/sleep 3")
 	util.exec("/etc/init.d/olsrd restart")
 	util.exec("/etc/init.d/6relayd reload")
 end
