@@ -58,7 +58,8 @@ local device_il = {
 	"radio",
 	"eth",
 	"dhcp",
-	"ffvpn"
+	"ffvpn",
+	"wan6"
 }
 
 if has_6in4 then
