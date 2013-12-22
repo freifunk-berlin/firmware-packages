@@ -42,7 +42,7 @@ local has_hostapd = fs.access("/usr/sbin/hostapd")
 local has_wan = uci:get("network", "wan", "proto")
 local has_lan = uci:get("network", "lan", "proto")
 local has_pr = fs.access("/etc/config/freifunk-policyrouting")
-local has_splash = fs.access("/etc/config/luci_splash")
+local has_splash = fs.access("/usr/sbin/luci-splash")
 local has_splash_enable
 local profiles = "/etc/config/profile_"
 local device_il = {
@@ -734,7 +734,7 @@ if has_wan then
 		wansec.rmempty = false
 		wansec:depends("sharenet", "1")
 		function wansec.cfgvalue(self, section)
-			return uci:get("freifunk", "wizard", "wan_security")
+			return uci:get("freifunk", "wizard", "wan_security") or "1"
 		end
 		function wansec.write(self, section, value)
 			uci:set("freifunk", "wizard", "wan_security", value)
@@ -745,7 +745,7 @@ if has_wan then
 		wanopenfw.rmempty = false
 		wanopenfw:depends("sharenet", "1")
 		function wanopenfw.cfgvalue(self, section)
-			return uci:get("freifunk", "wizard", "wan_input_accept")
+			return uci:get("freifunk", "wizard", "wan_input_accept") or "1"
 		end
 		function wanopenfw.write(self, section, value)
 			uci:set("freifunk", "wizard", "wan_input_accept", value)
