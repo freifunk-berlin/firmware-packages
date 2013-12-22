@@ -2185,6 +2185,7 @@ function main.write(self, section, value)
 			uci:set("freifunk-policyrouting","pr","zones", "freifunk")
 			uci:save("freifunk-policyrouting")
 		end
+		uci:delete_all("freifunk-watchdog", "process", {process="openvpn"})
 		uci:section("freifunk-watchdog", "process", nil, {
 				process="openvpn",
 				initscript="/etc/init.d/openvpn"
