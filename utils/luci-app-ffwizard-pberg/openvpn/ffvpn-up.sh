@@ -14,9 +14,13 @@ if [ -z $route_net_gateway ] ; then
 	fi
 fi
 
+config_load freifunk-policyrouting
+
 config_get enable pr enable
 if [ $enable != 1 ] ; then
 	logger -t up-down-ffvpn "no policy routing freifunk-policyrouting.pr.enable=0"
+	ip route add 0.0.0.0/1 via $route_net_gateway
+	ip route add 128.0.0.0/1 via $route_net_gateway
 	exit 0
 fi
 
