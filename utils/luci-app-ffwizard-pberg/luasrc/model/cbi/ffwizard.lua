@@ -68,6 +68,11 @@ if has_6in4 then
 		uci:save("network")
 	end
 end
+
+function logger(msg)
+	sys.exec("logger -t ffwizard -p 5 '"..msg.."'")
+end
+
 function get_mac(ix)
 	if string.find(ix, "radio") then
 		mac = uci:get('wireless',ix,'macaddr')
@@ -741,7 +746,7 @@ if has_wan then
 			uci:save("freifunk")
 		end
 		--wanopenfw open wan input fw
-		local wanopenfw = f:field(Flag, "wanopenfw", "Zugriff vom WAN auf auf das Geraet erlauben", "Wenn der WAN Port mit Ihrem lokalen Netzwerk verbunden ist.")
+		local wanopenfw = f:field(Flag, "wanopenfw", "Zugriff vom WAN auf das Geraet erlauben", "Wenn der WAN Port mit Ihrem lokalen Netzwerk verbunden ist.")
 		wanopenfw.rmempty = false
 		wanopenfw:depends("sharenet", "1")
 		function wanopenfw.cfgvalue(self, section)
@@ -1314,6 +1319,8 @@ function main.write(self, section, value)
 		uci:delete("dhcp", device .. "dhcp")
 		uci:delete("dhcp", nif)
 		uci:delete("dhcp", nif .. "dhcp")
+		-- Get device info
+		local iw = luci.sys.wifi.getiwinfo(device)
 		-- New Config
 		-- Tune wifi device
 		local ssid = uci:get_first(external, "community", "ssid")
@@ -1341,58 +1348,109 @@ function main.write(self, section, value)
 		local bssid
 		local mrate = 5500
 		local chan
+		local freqlist = { }
+		if iw then
+			freqlist = iw.freqlist or { }
+		end
+		local channel_c
+		if channel ~= "default" then
+			for _, f in ipairs(freqlist) do
+				if not f.restricted then
+					if f.channel == channel then
+						channel_c = 1
+						break
+					end
+				end
+			end
+			if not channel_c then
+				channel = "default"
+			end
+		end
+		
 		if channel == "default" then
-			channel = devconfig.channel
-			chan = tonumber(channel)
-			if chan > 0 and chan < 10 then
+			local channel_f
+			if (type(devconfig.channel) == "table") then
+				for _, defchan in pairs(devconfig.channel) do
+					defchan = tonumber(defchan)
+					for _, f in ipairs(freqlist) do
+						if not f.restricted then
+							channel = f.channel
+							if f.channel == defchan then
+								channel = defchan
+								channel_f = 1
+								break
+							end
+						end
+					end
+					if channel_f then
+						break
+					end
+				end
+				ssid = "ch" .. channel .. ssidshort
+			else
+				defchan = tonumber(devconfig.channel)
+				defssid = ssid
+				ssid = "ch" .. channel .. ssidshort
+				for _, f in ipairs(freqlist) do
+					if not f.restricted then
+						channel = f.channel
+						if f.channel == defchan then
+							channel = defchan
+							ssid = defssid
+							break
+						end
+					end
+				end
+			end
+			if channel > 0 and channel < 10 then
 				hwmode = hwmode.."g"
 				bssid = channel .. "2:CA:FF:EE:BA:BE"
-			elseif chan == 10 then
+			elseif channel == 10 then
 				hwmode = hwmode.."g"
 				bssid = "02:CA:FF:EE:BA:BE"
-			elseif chan >= 11 and chan <= 14 then
+			elseif channel >= 11 and channel <= 14 then
 				hwmode = hwmode.."g"
 				bssid = string.format("%X",channel) .. "2:CA:FF:EE:BA:BE"
-			elseif chan >= 36 and chan <= 64 then
+			elseif channel >= 36 and channel <= 64 then
 				hwmode = hwmode.."a"
 				mrate = ""
 				outdoor = 0
 				bssid = "02:" .. channel ..":CA:FF:EE:EE"
-			elseif chan >= 100 and chan <= 140 then
+			elseif channel >= 100 and channel <= 140 then
 				hwmode = hwmode.."a"
 				mrate = ""
 				outdoor = 1
 				bssid = "12:" .. string.sub(channel, 2) .. ":CA:FF:EE:EE"
 			end
+			ssid = uci:get(external,"ssidscheme",channel) or ssid
 			bssid = uci:get(external,"bssidscheme",channel) or bssid
 		else
-			devconfig.channel = channel
-			chan = tonumber(channel)
-			if chan > 0 and chan < 10 then
+			channel = tonumber(channel)
+			if channel > 0 and channel < 10 then
 				hwmode = hwmode.."g"
 				bssid = channel .. "2:CA:FF:EE:BA:BE"
-				ssid = "ch" .. channel .. ssidshort
-			elseif chan == 10 then
+			elseif channel == 10 then
 				hwmode = hwmode.."g"
 				bssid = "02:CA:FF:EE:BA:BE"
-				ssid = "ch" .. channel .. ssidshort
-			elseif chan >= 11 and chan <= 14 then
+			elseif channel >= 11 and channel <= 14 then
 				hwmode = hwmode.."g"
 				bssid = string.format("%X",channel) .. "2:CA:FF:EE:BA:BE"
-				ssid = "ch" .. channel .. ssidshort
-			elseif chan >= 36 and chan <= 64 then
+			elseif channel >= 36 and channel <= 64 then
 				hwmode = hwmode.."a"
 				mrate = ""
 				outdoor = 0
 				bssid = "02:" .. channel ..":CA:FF:EE:EE"
-				ssid = "ch" .. channel .. ssidshort
-			elseif chan >= 100 and chan <= 140 then
+			elseif channel >= 100 and channel <= 140 then
 				hwmode = hwmode.."a"
 				mrate = ""
 				outdoor = 1
 				bssid = "12:" .. string.sub(channel, 2) .. ":CA:FF:EE:EE"
-				ssid = "ch" .. channel .. ssidshort
 			end
+			if devconfig.channel ~= channel then
+				ssid = "ch" .. channel .. ssidshort
+				devconfig.channel = channel
+			end
+			ssid = uci:get(external,"ssidscheme",channel) or ssid
 			bssid = uci:get(external,"bssidscheme",channel) or bssid
 		end
 		devconfig.hwmode = hwmode
