@@ -1,7 +1,5 @@
 #!/bin/sh
 
-. /lib/functions.sh
-
 umask 022
 
 #Migrate auto_ipv6 to auto_ipv6_node
@@ -14,7 +12,7 @@ net_find_iface() {
 	local cfg="$1"
 	case $cfg in
 		loopback) return 0 ;;
-                wan6) return 0 ;;
+		wan6) return 0 ;;
 		wan) return 0 ;;
 	esac
 	interfaces="$cfg $interfaces"
@@ -25,27 +23,21 @@ if [ ! "$(uci -q get network.globals.ula_prefix)" ] ; then
 	r1=$(dd if=/dev/urandom bs=1 count=1 |hexdump -e '1/1 "%02x"')
 	r2=$(dd if=/dev/urandom bs=2 count=1 |hexdump -e '2/1 "%02x"')
 	r3=$(dd if=/dev/urandom bs=2 count=1 |hexdump -e '2/1 "%02x"')
-	config_load network
-	local interfaces=""
-	config_foreach net_find_iface interface
-	for i in $(echo $interfaces) ; do
-		uci set network.$i.ip6assign=64
-	done
-	uci commit network
 	uprefix="fd$r1:$r2:$r3"
+uci -q batch <<-EOF >/dev/null
+set network.globals=globals
+set network.globals.ula_prefix="$uprefix::/48"
+commit network
+EOF
 else
 	uprefix="$(uci get network.globals.ula_prefix | cut -d ':' -f -3)"
 fi
 
 uci -q batch <<-EOF >/dev/null
-set network.globals=globals
-set network.globals.ula_prefix="$uprefix::/48"
-commit network
 add olsrd Hna6
 set "olsrd.@Hna6[-1].prefix=48"
 set "olsrd.@Hna6[-1].netaddr=$uprefix::"
 commit olsrd
-
 delete 6relayd.default
 set 6relayd.default=server
 set 6relayd.default.rd=server
@@ -53,13 +45,27 @@ set 6relayd.default.dhcpv6=server
 set 6relayd.default.management_level=1
 set 6relayd.default.compat_ula=1
 set 6relayd.default.always_assume_default=1
+commit 6relayd
 EOF
+
+config_load network
+local interfaces=""
+config_foreach net_find_iface interface
+
+for i in $(echo $interfaces) ; do
+	uci set network.$i.ip6assign=64
+done
+uci commit network
+
 for i in $(echo $interfaces) ; do
 	uci add_list 6relayd.default.network="$i"
 done
 uci commit 6relayd
 
-( /etc/init.d/network restart ) >/dev/null 2>&1
-( /usr/bin/auto_ipv6_node_wifi ) >/dev/null 2>&1
+(
+sleep 20
 chmod 0644 /etc/config/*
 chmod 777 /var/run/ubus.sock
+/usr/bin/auto_ipv6_node_wifi
+) >/dev/null 2>&1 &
+
