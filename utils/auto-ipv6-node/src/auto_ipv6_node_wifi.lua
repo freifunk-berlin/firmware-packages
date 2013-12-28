@@ -100,9 +100,9 @@ function get_wconf(iw,tbl,pft)
 	end
 	wconf.profile = "berlin"
 	wconf.mode = "adhoc"
-	local ssid = "olsr.freifunk.net"
-	local channel = 10
-	local bssid = "02:CA:FF:EE:BA:BE"
+	local ssid = "ch13.freifunk.net"
+	local channel = 13
+	local bssid = "D2:CA:FF:EE:BA:BE"
 	if not valid_channel(iw,channel) then
 		if valid_channel(iw,36) then
 			channel = 36

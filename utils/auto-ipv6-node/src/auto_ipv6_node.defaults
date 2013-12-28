@@ -64,8 +64,8 @@ uci commit 6relayd
 
 (
 sleep 20
+/usr/bin/auto_ipv6_node_wifi
 chmod 0644 /etc/config/*
 chmod 777 /var/run/ubus.sock
-/usr/bin/auto_ipv6_node_wifi
 ) >/dev/null 2>&1 &
 

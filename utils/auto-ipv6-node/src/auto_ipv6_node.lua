@@ -11,7 +11,10 @@ local net = netm:get_network("lan")
 local device = net and net:get_interface()
 
 local enable = uci:get("auto_ipv6_node", "olsr_node", "enable")
-if not enable == 1 then return end
+if not enable == 1 then 
+	print("not enable")
+	return
+end
 
 local jsonreq = util.exec("echo /hna | nc ::1 9090 2>/dev/null") or {}
 local hna6 = json.decode(jsonreq)
@@ -168,9 +171,11 @@ if uci_rewrite == 1 then
 	end
 	uci:save("olsrd")
 	uci:commit("olsrd")
-	util.exec("/etc/init.d/network reload")
+	util.exec("/etc/init.d/network restart")
 	util.exec("/bin/sleep 3")
 	util.exec("/etc/init.d/olsrd restart")
-	util.exec("/etc/init.d/6relayd reload")
+	util.exec("/etc/init.d/6relayd restart")
+	util.exec("chmod 0644 /etc/config/*")
+	util.exec("chmod 777 /var/run/ubus.sock")
 end
 
