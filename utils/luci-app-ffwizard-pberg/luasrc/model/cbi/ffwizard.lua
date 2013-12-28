@@ -1037,7 +1037,7 @@ function f.handle(self, state, data)
 			end
 			data.pw1 = nil
 			data.pw2 = nil
-			luci.http.redirect(luci.dispatcher.build_url("mini", "system"))
+			luci.http.redirect(luci.dispatcher.build_url("admin", "system"))
 		else
 			if data.pw1 then
 				local stat = luci.sys.user.setpasswd("root", data.pw1) == 0
@@ -1090,7 +1090,7 @@ function f.handle(self, state, data)
 			end
 
 -- the following line didn't work without admin-mini, for now i just replaced it with sys.exec... soma
-			luci.http.redirect(luci.dispatcher.build_url("mini", "system", "reboot") .. "?reboot=1")
+			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot") .. "?reboot=1")
 --			sys.exec("reboot")
 		end
 		return false
