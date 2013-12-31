@@ -31,6 +31,7 @@ local has_l2gvpn = fs.access("/usr/sbin/node")
 local has_ovpn = fs.access("/usr/sbin/openvpn")
 local has_firewall = fs.access("/etc/config/firewall")
 local has_rom = fs.access("/rom/etc")
+local has_diff = fs.access("/usr/bin/diff")
 local has_6to4 = fs.access("/lib/netifd/proto/6to4.sh")
 local has_6in4 = fs.access("/lib/netifd/proto/6in4.sh")
 local has_auto_ipv6_node = fs.access("/etc/config/auto_ipv6_node")
@@ -133,7 +134,7 @@ end
 f = SimpleForm("ffwizward", "Freifunkassistent",
  "Dieser Assistent unterstützt Sie bei der Einrichtung des Routers für das Freifunknetz. Eine ausführliche Dokumentation ist auf http://wiki.freifunk.net/Freifunk_Berlin_Pberg:Firmware#FF_Wizard nach zu lesen")
 
-local newpsswd = has_rom and sys.exec("diff /rom/etc/shadow /etc/shadow")
+local newpsswd = not has_rom or not has_diff or sys.exec("diff /rom/etc/shadow /etc/shadow")
 if newpsswd ~= "" then
 	pw = f:field(Flag, "pw", "Router Passwort", "Setzen Sie den Haken, um Ihr Passwort zu ändern.")
 	function pw.cfgvalue(self, section)
@@ -1347,23 +1348,24 @@ function main.write(self, section, value)
 		--local bssid = "02:CA:FF:EE:BA:BE"
 		local bssid
 		local mrate = 5500
-		local chan
-		local freqlist = { }
-		if iw then
-			freqlist = iw.freqlist or { }
-		end
-		local channel_c
-		if channel ~= "default" then
-			for _, f in ipairs(freqlist) do
-				if not f.restricted then
-					if f.channel == channel then
-						channel_c = 1
-						break
+		local freqlist
+		if iw and iw.freqlist then
+			freqlist = iw.freqlist
+			local channel_c
+			if channel ~= "default" then
+				channel = tonumber(channel)
+				for _, f in ipairs(freqlist) do
+					if not f.restricted then
+						if f.channel == channel then
+							channel_c = 1
+							break
+						end
 					end
 				end
-			end
-			if not channel_c then
-				channel = "default"
+				if not channel_c then
+					logger("channel: "..channel.." no support or restricted")
+					channel = "default"
+				end
 			end
 		end
 		
@@ -1372,35 +1374,37 @@ function main.write(self, section, value)
 			if (type(devconfig.channel) == "table") then
 				for _, defchan in pairs(devconfig.channel) do
 					defchan = tonumber(defchan)
-					for _, f in ipairs(freqlist) do
-						if not f.restricted then
-							channel = f.channel
-							if f.channel == defchan then
-								channel = defchan
-								channel_f = 1
-								break
+					channel = defchan
+					if freqlist then
+						for _, f in ipairs(freqlist) do
+							if not f.restricted then
+								channel = tonumber(f.channel)
+								if f.channel == defchan then
+									channel_f = 1
+									break
+								end
 							end
 						end
-					end
-					if channel_f then
-						break
-					end
-				end
-				ssid = "ch" .. channel .. ssidshort
-			else
-				defchan = tonumber(devconfig.channel)
-				defssid = ssid
-				ssid = "ch" .. channel .. ssidshort
-				for _, f in ipairs(freqlist) do
-					if not f.restricted then
-						channel = f.channel
-						if f.channel == defchan then
-							channel = defchan
-							ssid = defssid
+						if channel_f then
 							break
 						end
 					end
 				end
+				ssid = "ch" .. channel .. ssidshort
+			else
+				defchan = tonumber(devconfig.channel or 13)
+				channel = defchan
+				if freqlist then
+					for _, f in ipairs(freqlist) do
+						if not f.restricted then
+							channel = f.channel
+							if f.channel == defchan then
+								break
+							end
+						end
+					end
+				end
+				ssid = "ch" .. channel .. ssidshort
 			end
 			if channel > 0 and channel < 10 then
 				hwmode = hwmode.."g"
@@ -1424,7 +1428,9 @@ function main.write(self, section, value)
 			end
 			ssid = uci:get(external,"ssidscheme",channel) or ssid
 			bssid = uci:get(external,"bssidscheme",channel) or bssid
+			devconfig.channel = channel
 		else
+			logger("channel: "..channel)
 			channel = tonumber(channel)
 			if channel > 0 and channel < 10 then
 				hwmode = hwmode.."g"
@@ -1446,10 +1452,8 @@ function main.write(self, section, value)
 				outdoor = 1
 				bssid = "12:" .. string.sub(channel, 2) .. ":CA:FF:EE:EE"
 			end
-			if devconfig.channel ~= channel then
-				ssid = "ch" .. channel .. ssidshort
-				devconfig.channel = channel
-			end
+			ssid = "ch" .. channel .. ssidshort
+			devconfig.channel = channel
 			ssid = uci:get(external,"ssidscheme",channel) or ssid
 			bssid = uci:get(external,"bssidscheme",channel) or bssid
 		end
@@ -1461,7 +1465,7 @@ function main.write(self, section, value)
 				36,44,52,60,100,108,116,124,132
 			}
 			for i, v in ipairs(ht40plus) do
-				if v == chan then
+				if v == channel then
 					devconfig.htmode = 'HT40+'
 					devconfig.noscan = '1'
 				end
@@ -1471,7 +1475,7 @@ function main.write(self, section, value)
 				40,48,56,64,104,112,120,128,136
 			}
 			for i, v in ipairs(ht40minus) do
-				if v == chan then
+				if v == channel then
 					devconfig.htmode = 'HT40-'
 					devconfig.noscan = '1'
 				end
@@ -1480,7 +1484,7 @@ function main.write(self, section, value)
 				140
 			}
 			for i, v in ipairs(ht20) do
-				if v == chan then
+				if v == channel then
 					devconfig.htmode = 'HT20'
 				end
 			end
