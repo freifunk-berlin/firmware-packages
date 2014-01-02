@@ -235,10 +235,12 @@ function main.parse(self, section)
 		self:write(section, fvalue)
 	end
 end
+local wifi_tbl = {}
 uci:foreach("wireless", "wifi-device",
 	function(section)
 		local device = section[".name"]
 		local hwtype = section.type
+		wifi_tbl[device] = {}
 		local dev = f:field(Flag, "device_" .. device , "<b>Drahtloses Freifunk Netzwerk \"" .. device:upper() .. "\"</b> ", "Konfigurieren Sie Ihre drahtlose Schnittstelle: " .. device:upper() .. ".")
 			dev.rmempty = false
 			dev.forcewrite = true
@@ -251,6 +253,7 @@ uci:foreach("wireless", "wifi-device",
 					uci:save("freifunk")
 				end
 			end
+			wifi_tbl[device]["dev"] = dev
 		local iw = luci.sys.wifi.getiwinfo(device)
 		local tx_power_list = txpower_list(iw)
 		local tx_power_cur  = txpower_current(section.txpower, tx_power_list)
@@ -273,6 +276,7 @@ uci:foreach("wireless", "wifi-device",
 					uci:save("freifunk")
 				end
 			end
+			wifi_tbl[device]["chan"] = chan
 		local advanced = f:field(Flag, "advanced_" .. device, device:upper() .. " Erweiterte WLAN Einstellungen", "advanced")
 			advanced:depends("device_" .. device, "1")
 			advanced:depends("dhcpbr_" .. device, "1")
@@ -284,6 +288,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "advanced_" .. device, value)
 				uci:save("freifunk")
 			end
+			wifi_tbl[device]["advanced"] = advanced
 		local hwmode = f:field(ListValue, "hwmode_" .. device, device:upper() .. "  "..translate("Mode"))
 			hwmode:depends("advanced_" .. device, "1")
 			hwmode.rmempty = true
@@ -303,6 +308,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "hwmode_" .. device, value)
 				uci:save("freifunk")
 			end
+			wifi_tbl[device]["hwmode"] = hwmode
 		local htmode = f:field(ListValue, "htmode_" .. device, device:upper() .. "  "..translate("HT mode"))
 			htmode:depends("hwmode_" .. device, "11na")
 			htmode:depends("hwmode_" .. device, "11ng")
@@ -319,6 +325,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "htmode_" .. device, value)
 				uci:save("freifunk")
 			end
+			wifi_tbl[device]["htmode"] = htmode
 		local txpower = f:field(ListValue, "txpower_" .. device, device:upper().."  "..translate("Transmit Power"), "dBm")
 			txpower:depends("advanced_" .. device, "1")
 			txpower.rmempty = true
@@ -334,6 +341,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "txpower_" .. device, value)
 				uci:save("freifunk")
 			end
+			wifi_tbl[device]["txpower"] = txpower
 		local distance = f:field(Value, "distance_" .. device, device:upper().."  "..translate("Distance Optimization"), translate("Distance to farthest network member in meters."))
 			distance:depends("advanced_" .. device, "1")
 			distance.rmempty = true
@@ -345,6 +353,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "distance_" .. device, value)
 				uci:save("freifunk")
 			end
+			wifi_tbl[device]["distance"] = distance
 		local txantenna = f:field(ListValue, "txantenna_" .. device, device:upper() .."  ".. translate("Transmitter Antenna"))
 			txantenna:depends("advanced_" .. device, "1")
 			txantenna.rmempty = true
@@ -361,6 +370,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "txantenna_" .. device, value)
 				uci:save("freifunk")
 			end
+			wifi_tbl[device]["txantenna"] = txantenna
 		local rxantenna = f:field(ListValue, "rxantenna_" .. device, device:upper().."  "..translate("Receiver Antenna"))
 			rxantenna:depends("advanced_" .. device, "1")
 			rxantenna.rmempty = true
@@ -389,6 +399,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "rxantenna_" .. device, value)
 				uci:save("freifunk")
 			end
+			wifi_tbl[device]["rxantenna"] = rxantenna
 		local meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Ihre Mesh IP Adresse erhalten Sie von der Freifunk Gemeinschaft in Ihrer Nachbarschaft. Es ist eine netzweit eindeutige Identifikation, z.B. 104.1.1.1.")
 			meship:depends("device_" .. device, "1")
 			meship.rmempty = true
@@ -409,6 +420,7 @@ uci:foreach("wireless", "wifi-device",
 					uci:save("freifunk")
 				end
 			end
+			wifi_tbl[device]["meship"] = meship
 		local client = f:field(Flag, "client_" .. device, device:upper() .. "  DHCP anbieten", "DHCP weist verbundenen Benutzern automatisch eine Adresse zu. Diese Option sollten Sie unbedingt aktivieren, wenn Sie Nutzer an der drahtlosen Schnittstelle erwarten.")
 			client:depends("device_" .. device, "1")
 			client.rmempty = false
@@ -419,6 +431,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "client_" .. device, value)
 				uci:save("freifunk")
 			end
+			wifi_tbl[device]["client"] = client
 		local dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten", "Bestimmen Sie den Adressbereich aus dem Ihre Nutzer IP Adressen erhalten. Es wird empfohlen einen Adressbereich aus Ihrer lokalen Freifunk Gemeinschaft zu nutzen. Der Adressbereich ist ein netzweit eindeutiger Netzbereich. z.B. 104.1.2.1/28 Wenn das Feld leer bleibt wird ein Netzwerk automatisch nach den vorgaben aus dem Feld Freifunk Comunity erstellt")
 			dhcpmesh:depends("client_" .. device, "1")
 			dhcpmesh.rmempty = true
@@ -434,6 +447,7 @@ uci:foreach("wireless", "wifi-device",
 				uci:set("freifunk", "wizard", "dhcpmesh_" .. device, value)
 				uci:save("freifunk")
 			end
+			wifi_tbl[device]["dhcpmesh"] = dhcpmesh
 		if has_splash then
 			local dhcpsplash = f:field(Flag, "dhcpsplash_" .. device, device:upper() .. "  DHCP Splash Seite", "Soll eine Splash Seite angezeigt werden?")
 				dhcpsplash:depends("client_" .. device, "1")
@@ -445,6 +459,7 @@ uci:foreach("wireless", "wifi-device",
 					uci:set("freifunk", "wizard", "dhcpsplash_" .. device, value)
 					uci:save("freifunk")
 				end
+				wifi_tbl[device]["dhcpsplash"] = dhcpsplash
 		end
 		if hwtype == "mac80211" and has_hostapd then
 			local vap = f:field(Flag, "vap_" .. device , "Virtueller Drahtloser Zugangspunkt", "Konfigurieren Sie Ihren Virtuellen AP")
@@ -457,6 +472,7 @@ uci:foreach("wireless", "wifi-device",
 					uci:set("freifunk", "wizard", "vap_" .. device, value)
 					uci:save("freifunk")
 				end
+				wifi_tbl[device]["vap"] = vap
 			local vapssid = f:field(Value, "vapssid_" .. device , "SSID des Virtuellen Drahtlosen Zugangspunktes", "Name des Virtuellen AP oder nichts fuer AP+Kanal+SSID der Freifunk Community")
 				vapssid:depends("vap_" .. device, "1")
 				vapssid:depends("dhcpbr_" .. device, "1")
@@ -464,6 +480,7 @@ uci:foreach("wireless", "wifi-device",
 				function vapssid.cfgvalue(self, section)
 					return uci:get("freifunk", "wizard", "vapssid_" .. device)
 				end
+				wifi_tbl[device]["vapssid"] = vapssid
 			local dhcpbr = f:field(Flag, "dhcpbr_" .. device, device:upper() .. "  Mesh DHCP Bruecke", "Soll der Virtuellen AP auf das LAN OLSR dhcp Netz gebrueckt werden")
 				dhcpbr:depends("device_lan", "1")
 				dhcpbr.rmempty = false
@@ -474,9 +491,11 @@ uci:foreach("wireless", "wifi-device",
 					uci:set("freifunk", "wizard", "dhcpbr_" .. device, value)
 					uci:save("freifunk")
 				end
+				wifi_tbl[device]["dhcpbr"] = dhcpbr
 		end
 	end)
 
+local wired_tbl = {}
 uci:foreach("network", "interface",
 	function(section)
 		local device_i
@@ -490,6 +509,7 @@ uci:foreach("network", "interface",
 		if device_i then
 			return
 		end
+		wired_tbl[device] = {}
 		local dev = f:field(Flag, "device_" .. device , "<b>Drahtgebundenes Freifunk Netzwerk \"" .. device:upper() .. "\"</b>", "Konfigurieren Sie Ihre drahtgebunde Schnittstelle: " .. device:upper() .. ".")
 			dev.rmempty = false
 			function dev.cfgvalue(self, section)
@@ -499,6 +519,7 @@ uci:foreach("network", "interface",
 				uci:set("freifunk", "wizard", "device_" .. device, value)
 				uci:save("freifunk")
 			end
+			wired_tbl[device]["dev"] = dev
 		local meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Ihre Mesh IP Adresse erhalten Sie von der Freifunk Gemeinschaft in Ihrer Nachbarschaft. Es ist eine netzweit eindeutige Identifikation, z.B. 104.1.1.1.")
 			meship:depends("device_" .. device, "1")
 			meship.rmempty = true
@@ -513,7 +534,7 @@ uci:foreach("network", "interface",
 			function meship.write(self, sec, value)
 				uci:set("freifunk", "wizard", "meship_" .. device, value)
 			end
-
+			wired_tbl[device]["meship"] = meship
 		local client = f:field(Flag, "client_" .. device, device:upper() .. "  DHCP anbieten","DHCP weist verbundenen Benutzern automatisch eine Adresse zu. Diese Option sollten Sie unbedingt aktivieren, wenn Sie Nutzer an der drahtlosen Schnittstelle erwarten.")
 			client:depends("device_" .. device, "1")
 			client.rmempty = false
@@ -524,6 +545,7 @@ uci:foreach("network", "interface",
 				uci:set("freifunk", "wizard", "client_" .. device, value)
 				uci:save("freifunk")
 			end
+			wired_tbl[device]["client"] = client
 		local dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten ", "Bestimmen Sie den Adressbereich aus dem Ihre Nutzer IP Adressen erhalten. Es wird empfohlen einen Adressbereich aus Ihrer lokalen Freifunk Gemeinschaft zu nutzen. Der Adressbereich ist ein netzweit eindeutiger Netzbereich. z.B. 104.1.2.1/28")
 			dhcpmesh:depends("client_" .. device, "1")
 			dhcpmesh.rmempty = true
@@ -539,6 +561,7 @@ uci:foreach("network", "interface",
 				uci:set("freifunk", "wizard", "dhcpmesh_" .. device, value)
 				uci:save("freifunk")
 			end
+			wired_tbl[device]["dhcpmesh"] = dhcpmesh
 		if has_splash then
 			local dhcpsplash = f:field(Flag, "dhcpsplash_" .. device, device:upper() .. "  DHCP Splash Seite", "Soll eine Splash Seite angezeigt werden?")
 				dhcpsplash:depends("client_" .. device, "1")
@@ -550,6 +573,7 @@ uci:foreach("network", "interface",
 					uci:set("freifunk", "wizard", "dhcpsplash_" .. device, value)
 					uci:save("freifunk")
 				end
+			wired_tbl[device]["has_splash"] = has_splash
 		end
 	end)
 
@@ -642,7 +666,7 @@ osm.hidetext="OpenStreetMap verbergen"
 f:field(DummyValue, "dummynetconfig", "<b>Freifunk Netzwerk einrichten Ende</b>", "====================================================================")
 
 if has_wan then
-	local wanproto = f:field(ListValue, "wanproto", "<b>Internet WAN</b>", "Geben Sie das Protokol an ueber das eine Internet verbindung hergestellt werden kann.")
+	wanproto = f:field(ListValue, "wanproto", "<b>Internet WAN</b>", "Geben Sie das Protokol an ueber das eine Internet verbindung hergestellt werden kann.")
 	wanproto:depends("device_wan", "")
 	wanproto:value("static", translate("manual", "manual"))
 	wanproto:value("dhcp", translate("automatic", "automatic"))
@@ -660,7 +684,7 @@ if has_wan then
 		uci:save("network")
 	end
 
-	local sharenet = f:field(Flag, "sharenet", "Eigenen Internetzugang freigeben", "Geben Sie Ihren Internetzugang im Freifunknetz frei.")
+	sharenet = f:field(Flag, "sharenet", "Eigenen Internetzugang freigeben", "Geben Sie Ihren Internetzugang im Freifunknetz frei.")
 	sharenet.rmempty = false
 	sharenet.optional = false
 	sharenet:depends("device_wan", "")
@@ -672,47 +696,47 @@ if has_wan then
 		uci:save("freifunk")
 	end
 
-	local wanip = f:field(Value, "wanipaddr", translate("IPv4-Address"))
-	wanip:depends("wanproto", "static")
-	wanip.datatype = "ip4addr"
-	function wanip.cfgvalue(self, section)
+	wanipaddr = f:field(Value, "wanipaddr", translate("IPv4-Address"))
+	wanipaddr:depends("wanproto", "static")
+	wanipaddr.datatype = "ip4addr"
+	function wanipaddr.cfgvalue(self, section)
 		return uci:get("network", "wan", "ipaddr")
 	end
-	function wanip.write(self, section, value)
+	function wanipaddr.write(self, section, value)
 		uci:set("network", "wan", "ipaddr", value)
 		uci:save("network")
 	end
 
-	local wannm = f:field(Value, "wannetmask", translate("IPv4-Netmask"))
-	wannm:depends("wanproto", "static")
-	wannm.datatype = "ip4addr"
-	wannm:value("255.255.255.0")
-	wannm:value("255.255.0.0")
-	wannm:value("255.0.0.0")
-	function wannm.cfgvalue(self, section)
+	wannetmask = f:field(Value, "wannetmask", translate("IPv4-Netmask"))
+	wannetmask:depends("wanproto", "static")
+	wannetmask.datatype = "ip4addr"
+	wannetmask:value("255.255.255.0")
+	wannetmask:value("255.255.0.0")
+	wannetmask:value("255.0.0.0")
+	function wannetmask.cfgvalue(self, section)
 		return uci:get("network", "wan", "netmask")
 	end
-	function wannm.write(self, section, value)
+	function wannetmask.write(self, section, value)
 		uci:set("network", "wan", "netmask", value)
 		uci:save("network")
 	end
 
-	local wangw = f:field(Value, "wangateway", translate("IPv4-Gateway"))
-	wangw:depends("wanproto", "static")
-	wangw.datatype = "ip4addr"
-	function wangw.cfgvalue(self, section)
+	wangateway = f:field(Value, "wangateway", translate("IPv4-Gateway"))
+	wangateway:depends("wanproto", "static")
+	wangateway.datatype = "ip4addr"
+	function wangateway.cfgvalue(self, section)
 		return uci:get("network", "wan", "gateway")
 	end
-	function wangw.write(self, section, value)
+	function wangateway.write(self, section, value)
 		uci:set("network", "wan", "gateway", value)
 		uci:save("network")
 	end
-	function wangw.remove(self, section)
+	function wangateway.remove(self, section)
 		uci:delete("network", "wan", "gateway")
 		uci:save("network")
 	end
 
-	local wandns = f:field(Value, "wandns", translate("DNS-Server"), "Bitte *nicht* die IP Adresse des Internetrouters eintragen. Nur Public DNS Server. z.B. 8.8.8.8 google, 141.54.1.1 UNI Weimar, ...")
+	wandns = f:field(Value, "wandns", translate("DNS-Server"), "Bitte *nicht* die IP Adresse des Internetrouters eintragen. Nur Public DNS Server. z.B. 8.8.8.8 google, 141.54.1.1 UNI Weimar, ...")
 	wandns:depends("wanproto", "static")
 	wandns.cast = "string"
 	wandns.datatype = "ipaddr"
@@ -724,32 +748,32 @@ if has_wan then
 		uci:save("network")
 	end
 
-	local wanusr = f:field(Value, "wanusername", translate("Username"))
-	wanusr:depends("wanproto", "pppoe")
-	wanusr:depends("wanproto", "3g")
-	wanusr.rmempty = true
-	function wanusr.cfgvalue(self, section)
+	wanusername = f:field(Value, "wanusername", translate("Username"))
+	wanusername:depends("wanproto", "pppoe")
+	wanusername:depends("wanproto", "3g")
+	wanusername.rmempty = true
+	function wanusername.cfgvalue(self, section)
 		return uci:get("network", "wan", "username")
 	end
-	function wanusr.write(self, section, value)
+	function wanusername.write(self, section, value)
 		uci:set("network", "wan", "username", value)
 		uci:save("network")
 	end
 
-	local wanpwd = f:field(Value, "wanpassword", translate("Password"))
-	wanpwd.password = true
-	wanpwd:depends("wanproto", "pppoe")
-	wanpwd:depends("wanproto", "3g")
-	wanpwd.rmempty = true
-	function wanpwd.cfgvalue(self, section)
+	wanpassword = f:field(Value, "wanpassword", translate("Password"))
+	wanpassword.password = true
+	wanpassword:depends("wanproto", "pppoe")
+	wanpassword:depends("wanproto", "3g")
+	wanpassword.rmempty = true
+	function wanpassword.cfgvalue(self, section)
 		return uci:get("network", "wan", "password")
 	end
-	function wanpwd.write(self, section, value)
+	function wanpassword.write(self, section, value)
 		uci:set("network", "wan", "password", value)
 		uci:save("network")
 	end
 	if has_firewall then
-		local wansec = f:field(Flag, "wansec", "WAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
+		wansec = f:field(Flag, "wansec", "WAN-Zugriff auf Gateway beschränken", "Verbieten Sie Zugriffe auf Ihr lokales Netzwerk aus dem Freifunknetz.")
 		wansec.rmempty = false
 		wansec:depends("sharenet", "1")
 		function wansec.cfgvalue(self, section)
@@ -760,7 +784,7 @@ if has_wan then
 			uci:save("freifunk")
 		end
 		--wanopenfw open wan input fw
-		local wanopenfw = f:field(Flag, "wanopenfw", "Zugriff vom WAN auf das Geraet erlauben", "Wenn der WAN Port mit Ihrem lokalen Netzwerk verbunden ist.")
+		wanopenfw = f:field(Flag, "wanopenfw", "Zugriff vom WAN auf das Geraet erlauben", "Wenn der WAN Port mit Ihrem lokalen Netzwerk verbunden ist.")
 		wanopenfw.rmempty = false
 		wanopenfw:depends("sharenet", "1")
 		function wanopenfw.cfgvalue(self, section)
@@ -772,7 +796,7 @@ if has_wan then
 		end
 	end
 	if has_3g or has_pppoe then
-		local wandevice = f:field(Value, "device",
+		wandevice = f:field(Value, "wandevice",
 		 translate("Modem device"),
 		 translate("The device node of your modem, e.g. /dev/ttyUSB0")
 		)
@@ -788,40 +812,40 @@ if has_wan then
 		end
 	end
 	if has_3g then
-		local service = f:field(ListValue, "service", translate("Service type"))
-		service:value("", translate("-- Please choose --"))
-		service:value("umts", "UMTS/GPRS")
-		service:value("cdma", "CDMA")
-		service:value("evdo", "EV-DO")
-		service:depends("wanproto", "3g")
-		service.rmempty = true
-		function service.cfgvalue(self, section)
+		wanservice = f:field(ListValue, "wanservice", translate("Service type"))
+		wanservice:value("", translate("-- Please choose --"))
+		wanservice:value("umts", "UMTS/GPRS")
+		wanservice:value("cdma", "CDMA")
+		wanservice:value("evdo", "EV-DO")
+		wanservice:depends("wanproto", "3g")
+		wanservice.rmempty = true
+		function wanservice.cfgvalue(self, section)
 			return uci:get("network", "wan", "service")
 		end
-		function service.write(self, section, value)
+		function wanservice.write(self, section, value)
 			uci:set("network", "wan", "service", value)
 			uci:save("network")
 		end
 
-		local apn = f:field(Value, "apn", translate("Access point (APN)"))
-		apn:depends("wanproto", "3g")
-		function apn.cfgvalue(self, section)
+		wanapn = f:field(Value, "wanapn", translate("Access point (APN)"))
+		wanapn:depends("wanproto", "3g")
+		function wanapn.cfgvalue(self, section)
 			return uci:get("network", "wan", "apn")
 		end
-		function apn.write(self, section, value)
+		function wanapn.write(self, section, value)
 			uci:set("network", "wan", "apn", value)
 			uci:save("network")
 		end
 
-		local pincode = f:field(Value, "pincode",
+		wanpincode = f:field(Value, "wanpincode",
 		 translate("PIN code"),
 		 translate("Make sure that you provide the correct pin code here or you might lock your sim card!")
 		)
-		pincode:depends("wanproto", "3g")
+		wanpincode:depends("wanproto", "3g")
 	end
 
 	if has_qos then
-		local wanqosdown = f:field(Value, "wanqosdown", "Download Bandbreite begrenzen", "kb/s")
+		wanqosdown = f:field(Value, "wanqosdown", "Download Bandbreite begrenzen", "kb/s")
 		wanqosdown:depends("sharenet", "1")
 		wanqosdown:value("1000","1 MBit/s")
 		wanqosdown:value("10000","10 MBit/s")
@@ -855,7 +879,7 @@ if has_wan then
 		end
 	end
 	if has_6in4 then
-		local henet = f:field(Flag, "henet", "Henet Tunnel", "Geben Sie Ihre Henet Tunnel daten ein.")
+		henet = f:field(Flag, "henet", "Henet Tunnel", "Geben Sie Ihre Henet Tunnel daten ein.")
 		henet.rmempty = false
 		henet.optional = false
 		henet:depends("device_wan", "")
@@ -866,14 +890,14 @@ if has_wan then
 			uci:set("freifunk", "wizard", "henet", value)
 			uci:save("freifunk")
 		end
-		local henetproto = f:field(Value, "henetproto", translate("Protokoll set 6in4"))
+		henetproto = f:field(Value, "henetproto", translate("Protokoll set 6in4"))
 		henetproto:depends("henet", "1")
 		henetproto.value = "6in4"
 		function henetproto.write(self, section, value)
 			uci:set("network", "henet", "proto", value)
 			uci:save("network")
 		end
-		local henetid = f:field(Value, "tunnelid", translate("Tunnel Id"))
+		henetid = f:field(Value, "tunnelid", translate("Tunnel Id"))
 		henetid:depends("henetproto", "6in4")
 		henetid.rmempty = true
 		function henetid.cfgvalue(self, section)
@@ -883,7 +907,7 @@ if has_wan then
 			uci:set("network", "henet", "tunnelid", value)
 			uci:save("network")
 		end
-		local henetusr = f:field(Value, "henetusername", translate("Username"))
+		henetusr = f:field(Value, "henetusername", translate("Username"))
 		henetusr:depends("henetproto", "6in4")
 		henetusr.rmempty = true
 		function henetusr.cfgvalue(self, section)
@@ -893,7 +917,7 @@ if has_wan then
 			uci:set("network", "henet", "username", value)
 			uci:save("network")
 		end
-		local henetpwd = f:field(Value, "henetpassword", translate("Password"))
+		henetpwd = f:field(Value, "henetpassword", translate("Password"))
 		henetpwd.password = true
 		henetpwd:depends("henetproto", "6in4")
 		henetpwd.rmempty = true
@@ -904,17 +928,17 @@ if has_wan then
 			uci:set("network", "henet", "password", value)
 			uci:save("network")
 		end
-		local henetip6 = f:field(Value, "henetip6addr", translate("IPv6-Address"))
-		henetip6:depends("henet", "1")
-		henetip6.datatype = "ip6addr"
-		function henetip6.cfgvalue(self, section)
+		henetip6addr = f:field(Value, "henetip6addr", translate("IPv6-Address"))
+		henetip6addr:depends("henet", "1")
+		henetip6addr.datatype = "ip6addr"
+		function henetip6addr.cfgvalue(self, section)
 			return uci:get("network", "henet", "ip6addr")
 		end
-		function henetip6.write(self, section, value)
+		function henetip6addr.write(self, section, value)
 			uci:set("network", "henet", "ip6addr", value)
 			uci:save("network")
 		end
-		local henetpeer = f:field(Value, "henetpeer", translate("Peer-Address"))
+		henetpeer = f:field(Value, "henetpeer", translate("Peer-Address"))
 		henetpeer:depends("henet", "1")
 		henetpeer.datatype = "ip4addr"
 		function henetpeer.cfgvalue(self, section)
@@ -924,7 +948,7 @@ if has_wan then
 			uci:set("network", "henet", "peeraddr", value)
 			uci:save("network")
 		end
-		local henetprefix = f:field(Value, "henetprefix", translate("IPv6 delegated Prefix"))
+		henetprefix = f:field(Value, "henetprefix", translate("IPv6 delegated Prefix"))
 		henetprefix:depends("henet", "1")
 		henetprefix.datatype = "ip6addr"
 		function henetprefix.cfgvalue(self, section)
@@ -938,7 +962,7 @@ if has_wan then
 end
 
 if has_lan then
-	local lanproto = f:field(ListValue, "lanproto", "<b>Lokales Netzwerk LAN</b>", "Geben Sie das Protokol der LAN Schnittstelle an.")
+	lanproto = f:field(ListValue, "lanproto", "<b>Lokales Netzwerk LAN</b>", "Geben Sie das Protokol der LAN Schnittstelle an.")
 	lanproto:depends("device_lan", "")
 	lanproto:value("static", translate("manual", "manual"))
 	lanproto:value("dhcp", translate("automatic", "automatic"))
@@ -949,49 +973,49 @@ if has_lan then
 		uci:set("network", "lan", "proto", value)
 		uci:save("network")
 	end
-	local lanip = f:field(Value, "lanipaddr", translate("IPv4-Address"))
-	lanip:depends("lanproto", "static")
-	function lanip.cfgvalue(self, section)
+	lanipaddr = f:field(Value, "lanipaddr", translate("IPv4-Address"))
+	lanipaddr:depends("lanproto", "static")
+	function lanipaddr.cfgvalue(self, section)
 		return uci:get("network", "lan", "ipaddr")
 	end
-	function lanip.write(self, section, value)
+	function lanipaddr.write(self, section, value)
 		uci:set("network", "lan", "ipaddr", value)
 		uci:save("network")
 	end
-	local lannm = f:field(Value, "lannetmask", translate("IPv4-Netmask"))
-	lannm:depends("lanproto", "static")
-	function lannm.cfgvalue(self, section)
+	lannetmask = f:field(Value, "lannetmask", translate("IPv4-Netmask"))
+	lannetmask:depends("lanproto", "static")
+	function lannetmask.cfgvalue(self, section)
 		return uci:get("network", "lan", "netmask")
 	end
-	function lannm.write(self, section, value)
+	function lannetmask.write(self, section, value)
 		uci:set("network", "lan", "netmask", value)
 		uci:save("network")
 	end
-	local langw = f:field(Value, "langateway", translate("IPv4-Gateway"))
-	langw:depends("lanproto", "static")
-	langw.rmempty = true
-	function langw.cfgvalue(self, section)
+	langateway = f:field(Value, "langateway", translate("IPv4-Gateway"))
+	langateway:depends("lanproto", "static")
+	langateway.rmempty = true
+	function langateway.cfgvalue(self, section)
 		return uci:get("network", "lan", "gateway")
 	end
-	function langw.write(self, section, value)
+	function langateway.write(self, section, value)
 		uci:set("network", "lan", "gateway", value)
 		uci:save("network")
 	end
-	function langw.remove(self, section)
+	function langateway.remove(self, section)
 		uci:delete("network", "lan", "gateway")
 		uci:save("network")
 	end
-	local ip6assign = f:field(Value, "langip6assign", translate("IPv6-Assign"))
-	ip6assign:depends("lanproto", "static")
-	ip6assign.rmempty = true
-	function ip6assign.cfgvalue(self, section)
+	langip6assign = f:field(Value, "langip6assign", translate("IPv6-Assign"))
+	langip6assign:depends("lanproto", "static")
+	langip6assign.rmempty = true
+	function langip6assign.cfgvalue(self, section)
 		return uci:get("network", "lan", "ip6assign") or 64
 	end
-	function ip6assign.write(self, section, value)
+	function langip6assign.write(self, section, value)
 		uci:set("network", "lan", "ip6assign", value)
 		uci:save("network")
 	end
-	local landns = f:field(Value, "landns", translate("DNS-Server"))
+	landns = f:field(Value, "landns", translate("DNS-Server"))
 	landns:depends("lanproto", "static")
 	function landns.cfgvalue(self, section)
 		return uci:get("network", "lan", "dns")
@@ -1003,7 +1027,7 @@ if has_lan then
 end
 
 if has_ovpn then
-	local ffvpn = f:field(Flag, "ffvpn", "Freifunk Internet Tunnel", "Verbinden Sie ihren Router mit mit dem Frefunk VPN Sever 03.")
+	ffvpn = f:field(Flag, "ffvpn", "Freifunk Internet Tunnel", "Verbinden Sie ihren Router mit mit dem Frefunk VPN Sever 03.")
 	ffvpn.rmempty = false
 	ffvpn:depends("sharenet", "1")
 	function ffvpn.cfgvalue(self, section)
@@ -1016,7 +1040,7 @@ if has_ovpn then
 end
 
 if has_l2gvpn then
-	local gvpn = f:field(Flag, "gvpn", "Freifunk Internet Tunnel", "Verbinden Sie ihren Router ueber das Internet mit anderen Freifunknetzen.")
+	gvpn = f:field(Flag, "gvpn", "Freifunk Internet Tunnel", "Verbinden Sie ihren Router ueber das Internet mit anderen Freifunknetzen.")
 	gvpn.rmempty = false
 	function gvpn.cfgvalue(self, section)
 		return uci:get("freifunk", "wizard", "gvpn")
@@ -1025,7 +1049,7 @@ if has_l2gvpn then
 		uci:set("freifunk", "wizard", "gvpn", value)
 		uci:save("freifunk")
 	end
-	local gvpnip = f:field(Value, "gvpnip", translate("IPv4-Address"))
+	gvpnip = f:field(Value, "gvpnip", translate("IPv4-Address"))
 	gvpnip:depends("gvpn", "1")
 	function gvpnip.cfgvalue(self, section)
 		return uci:get("l2gvpn", "bbb", "ip") or uci:get("network", "gvpn", "ipaddr")
@@ -1225,15 +1249,15 @@ function main.write(self, section, value)
 	-- Internet sharing
 	local share_value = 0
 	if has_wan then
-		share_value = luci.http.formvalue("cbid.ffwizward.1.sharenet") or 0
+		share_value = sharenet:formvalue(section)
 		uci:set("freifunk", "wizard", "share_value", share_value)
 	end
 	if share_value == "1" then
 		olsrbase.SmartGateway="yes"
 		olsrbase.SmartGatewaySpeed="500 10000"
 		if has_qos then
-			qosd=luci.http.formvalue("cbid.ffwizward.1.wanqosdown") or ""
-			qosu=luci.http.formvalue("cbid.ffwizward.1.wanqosup") or ""
+			qosd = wanqosdown:formvalue(section)
+			qosu = wanqosup:formvalue(section)
 			if (qosd and qosd ~= "") and (qosu and qosd ~= "")  then
 				olsrbase.SmartGatewaySpeed=qosu.." "..qosd
 				olsrbase.RtTableDefault="112"
@@ -1288,15 +1312,21 @@ function main.write(self, section, value)
 	uci:foreach("wireless", "wifi-device",
 	function(sec)
 		local device = sec[".name"]
-		local mesh_device = luci.http.formvalue("cbid.ffwizward.1.device_" .. device)
-		local br_device = luci.http.formvalue("cbid.ffwizward.1.dhcpbr_" .. device)
+		local mesh_device = wifi_tbl[device]["dev"]:formvalue(section)
+		local br_device = wifi_tbl[device]["dhcpbr"]:formvalue(section)
 		if not mesh_device and not br_device then
+			logger("olsr disable: "..device)
 			return
 		end
+		local node_ip
 		if mesh_device then
-			node_ip = luci.http.formvalue("cbid.ffwizward.1.meship_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.meship_" .. device))
+			node_ip = wifi_tbl[device]["meship"]:formvalue(section)
+			logger("node_ip: "..node_ip)
+			if node_ip then
+				node_ip = ip.IPv4(node_ip)
+			end
 			if not node_ip or not network or not network:contains(node_ip) then
-				meship.tag_missing[section] = true
+				wifi_tbl[device]["meship"].tag_missing[section] = true
 				node_ip = nil
 				return
 			end
@@ -1351,7 +1381,8 @@ function main.write(self, section, value)
 		end
 		local devconfig = uci:get_all("freifunk", "wifi_device") or {}
 		util.update(devconfig, uci:get_all(external, "wifi_device") or {})
-		local channel = luci.http.formvalue("cbid.ffwizward.1.chan_" .. device) or "default"
+		local channel = wifi_tbl[device]["chan"]:formvalue(section) or "default"
+		logger("channel: "..channel)
 		local hwtype = sec.type
 		local hwmode
 		local has_n
@@ -1506,29 +1537,29 @@ function main.write(self, section, value)
 				end
 			end
 		end
-		local advanced = luci.http.formvalue("cbid.ffwizward.1.advanced_" .. device)
+		local advanced = wifi_tbl[device]["advanced"]:formvalue(section)
 		if advanced then
-			local hwmode = luci.http.formvalue("cbid.ffwizward.1.hwmode_" .. device)
+			local hwmode = wifi_tbl[device]["hwmode"]:formvalue(section)
 			if hwmode then
 				devconfig.hwmode = hwmode
 			end
-			local htmode = luci.http.formvalue("cbid.ffwizward.1.htmode_" .. device)
+			local htmode = wifi_tbl[device]["htmode"]:formvalue(section)
 			if htmode then
 				devconfig.htmode = htmode
 			end
-			local txpower = luci.http.formvalue("cbid.ffwizward.1.txpower_" .. device)
+			local txpower = wifi_tbl[device]["txpower"]:formvalue(section)
 			if txpower then
 				devconfig.txpower = txpower
 			end
-			local distance = luci.http.formvalue("cbid.ffwizward.1.distance_" .. device)
+			local distance = wifi_tbl[device]["distance"]:formvalue(section)
 			if distance then
 				devconfig.distance = distance
 			end
-			local txantenna = luci.http.formvalue("cbid.ffwizward.1.txantenna_" .. device)
+			local txantenna = wifi_tbl[device]["txantenna"]:formvalue(section)
 			if txantenna then
 				devconfig.txantenna = txantenna
 			end
-			local rxantenna = luci.http.formvalue("cbid.ffwizward.1.rxantenna_" .. device)
+			local rxantenna = wifi_tbl[device]["rxantenna"]:formvalue(section)
 			if rxantenna then
 				devconfig.rxantenna = rxantenna
 			end
@@ -1581,13 +1612,16 @@ function main.write(self, section, value)
 			olsrifbase.ignore    = "0"
 			uci:section("olsrd", "Interface", nil, olsrifbase)
 			-- Collect MESH DHCP IP NET
-			local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
+			local client = wifi_tbl[device]["client"]:formvalue(section)
 			if client then
-				local vap = luci.http.formvalue("cbid.ffwizward.1.vap_" .. device)
-				local dhcpmeshnet = luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device))
+				local vap = wifi_tbl[device]["vap"]:formvalue(section)
+				local dhcpmeshnet = wifi_tbl[device]["dhcpmesh"]:formvalue(section)
+				if dhcpmeshnet then
+					dhcpmeshnet = ip.IPv4(dhcpmeshnet)
+				end
 				if dhcpmeshnet then
 					if not dhcpmeshnet:minhost() or not dhcpmeshnet:mask() then
-						dhcpmesh.tag_missing[section] = true
+						wifi_tbl[device]["dhcpmesh"].tag_missing[section] = true
 						dhcpmeshnet = nil
 						return
 					end
@@ -1642,7 +1676,7 @@ function main.write(self, section, value)
 					aliasbase.netmask = dhcp_mask
 					aliasbase.proto = "static"
 					if vap then
-						local vap_ssid = luci.http.formvalue("cbid.ffwizward.1.vapssid_" .. device)
+						local vap_ssid = wifi_tbl[device]["vapssid"]:formvalue(section)
 						if(string.len(vap_ssid)==0) then
 							vap_ssid = "AP"..channel..ssidshort
 						end
@@ -1726,7 +1760,7 @@ function main.write(self, section, value)
 							target="ACCEPT"
 						})
 						if has_splash then
-							local dhcpsplash = luci.http.formvalue("cbid.ffwizward.1.dhcpsplash_" .. device)
+							local dhcpsplash = wifi_tbl[device]["dhcpsplash"]:formvalue(section)
 							if dhcpsplash  then
 								-- Register splash interface
 								uci:section("luci_splash", "iface", nil, {network=nif.."dhcp", zone="freifunk"})
@@ -1741,7 +1775,7 @@ function main.write(self, section, value)
 			uci:section("wireless", "wifi-iface", nil, ifconfig)
 		end
 		if br_device then
-			local vap_ssid = luci.http.formvalue("cbid.ffwizward.1.vapssid_" .. device)
+			local vap_ssid = wifi_tbl[device]["vapssid"]:formvalue(section)
 			if(string.len(vap_ssid)==0) then
 				vap_ssid = "AP"..channel..ssidshort
 			end
@@ -1769,9 +1803,6 @@ function main.write(self, section, value)
 	uci:foreach("network", "interface",
 		function(sec)
 		local device = sec[".name"]
-		if not luci.http.formvalue("cbid.ffwizward.1.device_" .. device) then
-			return
-		end
 		for i, v in ipairs(device_il) do
 			if string.find(device, v) then
 				device_i = true
@@ -1780,10 +1811,19 @@ function main.write(self, section, value)
 		if device_i then
 			return
 		end
-		local node_ip
-		node_ip = luci.http.formvalue("cbid.ffwizward.1.meship_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.meship_" .. device))
+		local mesh_device = wired_tbl[device]["dev"]:formvalue(section)
+		if not mesh_device then
+			logger("olsr disable: "..device)
+			return
+		end
+		--local node_ip
+		local node_ip = wired_tbl[device]["meship"]:formvalue(section)
+		logger("node_ip: "..node_ip)
+		if node_ip then
+			node_ip = ip.IPv4(node_ip)
+		end
 		if not node_ip or not network or not network:contains(node_ip) then
-			--meship.tag_missing[section] = true
+			wired_tbl[device]["meship"].tag_missing[section] = true
 			node_ip = nil
 			return
 		end
@@ -1846,12 +1886,15 @@ function main.write(self, section, value)
 		olsrifbase.Mode = 'ether'
 		uci:section("olsrd", "Interface", nil, olsrifbase)
 		-- Collect MESH DHCP IP NET
-		local client = luci.http.formvalue("cbid.ffwizward.1.client_" .. device)
+		local client = wired_tbl[device]["client"]:formvalue(section)
 		if client then
-			local dhcpmeshnet = luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device) and ip.IPv4(luci.http.formvalue("cbid.ffwizward.1.dhcpmesh_" .. device))
+			local dhcpmeshnet = wired_tbl[device]["dhcpmesh"]:formvalue(section)
+			if dhcpmeshnet then
+				dhcpmeshnet = ip.IPv4(dhcpmeshnet)
+			end
 			if dhcpmeshnet then
 				if not dhcpmeshnet:minhost() or not dhcpmeshnet:mask() then
-					dhcpmesh.tag_missing[section] = true
+					wired_tbl[device]["dhcpmesh"].tag_missing[section] = true
 					dhcpmeshnet = nil
 					return
 				end
@@ -1953,7 +1996,7 @@ function main.write(self, section, value)
 					})
 					-- Register splash
 					if has_splash then
-						local dhcpsplash = luci.http.formvalue("cbid.ffwizward.1.dhcpsplash_" .. device)
+						local dhcpsplash = wired_tbl[device]["dhcpsplash"]:formvalue(section)
 						if dhcpsplash then
 							-- Register splash interface
 							uci:section("luci_splash", "iface", nil, {network=device.."dhcp", zone="freifunk"})
@@ -2137,8 +2180,8 @@ function main.write(self, section, value)
 		end
 	end
 	if has_wan and has_6in4 then
-		local henet_prefix = luci.http.formvalue("cbid.ffwizward.1.henetprefix")
-		local henet_ip6addr = luci.http.formvalue("cbid.ffwizward.1.henetip6addr")
+		local henet_prefix = henetprefix:formvalue(section)
+		local henet_ip6addr = henetip6addr:formvalue(section)
 		if henet_prefix and henet_ip6addr then
 			henet_prefix = ip.IPv6(henet_prefix)
 			henet_ip6addr = ip.IPv6(henet_ip6addr)
@@ -2202,10 +2245,10 @@ function main.write(self, section, value)
 
 	local wproto
 	if has_wan then
-		wproto = luci.http.formvalue("cbid.ffwizward.1.wanproto") or "dhcp"
+		wproto = wanproto:formvalue(section)
 		if wproto == "static" then
-			local fwanip=luci.http.formvalue("cbid.ffwizward.1.wanipaddr")
-			local fwannm=luci.http.formvalue("cbid.ffwizward.1.wannetmask")
+			local fwanip = wanipaddr:formvalue(section)
+			local fwannm = wannetmask:formvalue(section)
 			local fwanipn=ip.IPv4(fwanip,fwannm)
 			if has_firewall then
 				tools.firewall_zone_add_masq_src("freifunk", fwanipn:string())
@@ -2216,12 +2259,12 @@ function main.write(self, section, value)
 	end
 	local lproto
 	if has_lan then
-		lproto = luci.http.formvalue("cbid.ffwizward.1.lanproto") or "dhcp"
+		lproto = lanproto:formvalue(section)
 		-- Delete old dhcp
 		uci:delete("dhcp", "lan")
 		if lproto == "static" then
-			local flanip=luci.http.formvalue("cbid.ffwizward.1.lanipaddr")
-			local flannm=luci.http.formvalue("cbid.ffwizward.1.lannetmask")
+			local flanip = lanipaddr:formvalue(section)
+			local flannm = lannetmask:formvalue(section)
 			local flanipn=ip.IPv4(flanip,flannm)
 			if has_firewall then
 				tools.firewall_zone_add_masq_src("freifunk", flanipn:string())
@@ -2266,32 +2309,35 @@ function main.write(self, section, value)
 			uci:set("auto_ipv6_node", "olsr_node", "enable", "0")
 			uci:save("autoipv6")
 		end
+		local ffvpn_enable="0"
+		if has_ovpn then
+			ffvpn_enable = ffvpn:formvalue(section)
+		end
 		-- Enable gateway_plain plugin
 		uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
 		if has_pr then
-			local ffvpn_enable="0"
-			if has_ovpn then
-				ffvpn_enable = luci.http.formvalue("cbid.ffwizward.1.ffvpn")
+			if ffvpn_enable == "1" then
+				uci:set("freifunk-policyrouting","pr","strict","1")
+			else
+				uci:set("freifunk-policyrouting","pr","strict","0")
 			end
 			uci:set("freifunk-policyrouting","pr","enable","1")
-			uci:set("freifunk-policyrouting","pr","strict","1")
 			uci:set("freifunk-policyrouting","pr","fallback","1")
 			uci:set("freifunk-policyrouting","pr","zones", "freifunk")
 			uci:save("freifunk-policyrouting")
 		end
 		uci:delete_all("freifunk-watchdog", "process", {process="openvpn"})
-		uci:section("freifunk-watchdog", "process", nil, {
-				process="openvpn",
-				initscript="/etc/init.d/openvpn"
-			})
-		uci:save("freifunk-watchdog")
+		if ffvpn_enable == "1" then
+			uci:section("freifunk-watchdog", "process", nil, {
+					process="openvpn",
+					initscript="/etc/init.d/openvpn"
+				})
+			uci:save("freifunk-watchdog")
+		end
 
 		if has_firewall then
 			sys.exec("chmod +x /etc/init.d/freifunk-p2pblock")
 			sys.init.enable("freifunk-p2pblock")
-		end
-		if has_qos then
-			sys.init.enable("qos")
 		end
 		if has_qos then
 			uci:delete("qos","wan")
@@ -2301,6 +2347,7 @@ function main.write(self, section, value)
 				classgroup  = "Default",
 			})
 			uci:save("qos")
+			sys.init.enable("qos")
 		end
 		if has_firewall then
 			uci:set("freifunk_p2pblock", "p2pblock", "interface", "wan")
@@ -2329,7 +2376,7 @@ function main.write(self, section, value)
 				uci:save("firewall")
 			end
 
-			if luci.http.formvalue("cbid.ffwizward.1.wansec") == "1" then
+			if wansec:formvalue(section) == "1" then
 					uci:foreach("firewall", "zone",
 						function(s)		
 							if s.name == "wan" then
@@ -2339,7 +2386,7 @@ function main.write(self, section, value)
 							end
 						end)
 			end
-			if luci.http.formvalue("cbid.ffwizward.1.wanopenfw") == "1" then
+			if wanopenfw:formvalue(section) == "1" then
 					uci:foreach("firewall", "zone",
 						function(s)		
 							if s.name == "wan" then
@@ -2348,24 +2395,21 @@ function main.write(self, section, value)
 							end
 						end)
 			end
-			if has_ovpn then
-				if luci.http.formvalue("cbid.ffwizward.1.ffvpn") == "1" then
-					tools.firewall_zone_add_interface("freifunk", "ffvpn")
-					uci:section("firewall", "rule", nil, {
-						name="Reject-VPN-over-ff",
-						dest="freifunk",
-						family="ipv4",
-						proto="udp",
-						dest_ip="77.87.48.10",
-						dest_port="1194",
-						target="REJECT"
-					})
-					uci:save("firewall")
-					uci:set("openvpn","ffvpn", "enabled", "1")
-					uci:save("openvpn")
-				end
+			if ffvpn_enable == "1" then
+				tools.firewall_zone_add_interface("freifunk", "ffvpn")
+				uci:section("firewall", "rule", nil, {
+					name="Reject-VPN-over-ff",
+					dest="freifunk",
+					family="ipv4",
+					proto="udp",
+					dest_ip="77.87.48.10",
+					dest_port="1194",
+					target="REJECT"
+				})
+				uci:save("firewall")
+				uci:set("openvpn","ffvpn", "enabled", "1")
+				uci:save("openvpn")
 			end
-
 		end
 		sys.exec('grep wan /etc/crontabs/root >/dev/null || echo "0 6 * * * 	ifup wan" >> /etc/crontabs/root')
 	else
