@@ -795,21 +795,22 @@ if has_wan then
 			uci:save("freifunk")
 		end
 	end
-	if has_3g or has_pppoe then
-		wandevice = f:field(Value, "wandevice",
-		 translate("Modem device"),
-		 translate("The device node of your modem, e.g. /dev/ttyUSB0")
-		)
+	wandevice = f:field(Value, "wandevice",
+		translate("Network or Modem device"),
+		translate("The device node of your modem, e.g. /dev/ttyUSB0 or eth0.2")
+	)
+	if has_3g then
 		wandevice:value("/dev/ttyUSB0")
-		wandevice:depends("wanproto", "ppp")
-		wandevice:depends("wanproto", "3g")
-		function wandevice.cfgvalue(self, section)
-			return uci:get("network", "wan", "device")
-		end
-		function wandevice.write(self, section, value)
-			uci:set("network", "wan", "device", value)
-			uci:save("network")
-		end
+	end
+	wandevice:depends("wanproto", "dhcp")
+	wandevice:depends("wanproto", "static")
+	wandevice:depends("wanproto", "3g")
+	function wandevice.cfgvalue(self, section)
+		return uci:get("network", "wan", "device")
+	end
+	function wandevice.write(self, section, value)
+		uci:set("network", "wan", "device", value)
+		uci:save("network")
 	end
 	if has_3g then
 		wanservice = f:field(ListValue, "wanservice", translate("Service type"))
@@ -838,10 +839,18 @@ if has_wan then
 		end
 
 		wanpincode = f:field(Value, "wanpincode",
-		 translate("PIN code"),
-		 translate("Make sure that you provide the correct pin code here or you might lock your sim card!")
+		translate("PIN code"),
+		translate("Make sure that you provide the correct pin code here or you might lock your sim card!")
 		)
+		wanpincode.password = true
 		wanpincode:depends("wanproto", "3g")
+		function wanpincode.cfgvalue(self, section)
+			return uci:get("network", "wan", "pincode")
+		end
+		function wanpincode.write(self, section, value)
+			uci:set("network", "wan", "pincode", value)
+			uci:save("network")
+		end
 	end
 
 	if has_qos then
@@ -861,7 +870,7 @@ if has_wan then
 			uci:delete("qos", "wan", "download")
 			uci:save("qos")
 		end
-		local wanqosup = f:field(Value, "wanqosup", "Upload Bandbreite begrenzen", "kb/s")
+		wanqosup = f:field(Value, "wanqosup", "Upload Bandbreite begrenzen", "kb/s")
 		wanqosup:depends("sharenet", "1")
 		wanqosup:value("1000","1 MBit/s")
 		wanqosup:value("10000","10 MBit/s")
@@ -1805,17 +1814,16 @@ function main.write(self, section, value)
 		local device = sec[".name"]
 		for i, v in ipairs(device_il) do
 			if string.find(device, v) then
-				device_i = true
+				logger("olsr ignore: "..device)
+				return
 			end
-		end
-		if device_i then
-			return
 		end
 		local mesh_device = wired_tbl[device]["dev"]:formvalue(section)
 		if not mesh_device then
 			logger("olsr disable: "..device)
 			return
 		end
+		logger("olsr enable: "..device)
 		--local node_ip
 		local node_ip = wired_tbl[device]["meship"]:formvalue(section)
 		logger("node_ip: "..node_ip)
@@ -1824,6 +1832,7 @@ function main.write(self, section, value)
 		end
 		if not node_ip or not network or not network:contains(node_ip) then
 			wired_tbl[device]["meship"].tag_missing[section] = true
+			logger("node_ip no network match")
 			node_ip = nil
 			return
 		end
@@ -2007,6 +2016,7 @@ function main.write(self, section, value)
 				end
 			end
 		end
+		uci:save("olsr")
 		uci:save("wireless")
 		uci:save("network")
 		if has_firewall then
