@@ -1917,7 +1917,7 @@ function main.write(self, section, value)
 				uci:foreach("olsrd", "LoadPlugin",
 					function(s)		
 						if s.library == "olsrd_p2pd.so.0.1.0" then
-							uci:set("olsrd", s['.name'], "ignore", "0")
+							uci:set("olsrd", s['.name'], "ignore", "1")
 							local nonolsr = uci:get_list("olsrd", s['.name'], "NonOlsrIf") or {}
 							table.insert(nonolsr,device)
 							uci:set_list("olsrd", s['.name'], "NonOlsrIf", nonolsr)
