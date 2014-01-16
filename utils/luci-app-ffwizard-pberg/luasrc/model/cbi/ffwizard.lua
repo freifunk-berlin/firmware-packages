@@ -1256,9 +1256,9 @@ function main.write(self, section, value)
 	end
 
 	-- Internet sharing
-	local share_value = 0
+	local share_value = "0"
 	if has_wan then
-		share_value = sharenet:formvalue(section)
+		share_value = sharenet:formvalue(section) or "0"
 		uci:set("freifunk", "wizard", "share_value", share_value)
 	end
 	if share_value == "1" then
@@ -2256,38 +2256,42 @@ function main.write(self, section, value)
 	local wproto
 	if has_wan then
 		wproto = wanproto:formvalue(section)
-		if wproto == "static" then
+		if wproto and wproto == "static" then
 			local fwanip = wanipaddr:formvalue(section)
 			local fwannm = wannetmask:formvalue(section)
-			local fwanipn=ip.IPv4(fwanip,fwannm)
-			if has_firewall then
-				tools.firewall_zone_add_masq_src("freifunk", fwanipn:string())
-				tools.firewall_zone_enable_masq("freifunk")
-				uci:save("firewall")
+			if fwanip and fwannm then
+				local fwanipn=ip.IPv4(fwanip,fwannm)
+				if has_firewall and fwanipn then
+					tools.firewall_zone_add_masq_src("freifunk", fwanipn:string())
+					tools.firewall_zone_enable_masq("freifunk")
+					uci:save("firewall")
+				end
 			end
 		end
 	end
 	local lproto
 	if has_lan then
 		lproto = lanproto:formvalue(section)
-		-- Delete old dhcp
-		uci:delete("dhcp", "lan")
-		if lproto == "static" then
+		if lproto and lproto == "static" then
+			-- Delete old dhcp
+			uci:delete("dhcp", "lan")
 			local flanip = lanipaddr:formvalue(section)
 			local flannm = lannetmask:formvalue(section)
-			local flanipn=ip.IPv4(flanip,flannm)
-			if has_firewall then
-				tools.firewall_zone_add_masq_src("freifunk", flanipn:string())
-				tools.firewall_zone_enable_masq("freifunk")
-				uci:save("firewall")
+			if flanip and flannm then
+				local flanipn=ip.IPv4(flanip,flannm)
+				if flanipn and has_firewall then
+					tools.firewall_zone_add_masq_src("freifunk", flanipn:string())
+					tools.firewall_zone_enable_masq("freifunk")
+					uci:save("firewall")
+					-- Create dhcp
+					local dhcpbase = {}
+					dhcpbase.interface = "lan"
+					dhcpbase.ignore = 0
+					uci:section("dhcp", "dhcp", "lan", dhcpbase)
+					uci:set_list("dhcp", "lan", "dhcp_option", {"119,lan","119,olsr"})
+					uci:save("dhcp")
+				end
 			end
-			-- Create dhcp
-			local dhcpbase = {}
-			dhcpbase.interface = "lan"
-			dhcpbase.ignore = 0
-			uci:section("dhcp", "dhcp", "lan", dhcpbase)
-			uci:set_list("dhcp", "lan", "dhcp_option", {"119,lan","119,olsr"})
-			uci:save("dhcp")
 			if has_6relayd then
 				local rifn = uci:get_list("6relayd","default","network") or {}
 				table.insert(rifn,"lan")
