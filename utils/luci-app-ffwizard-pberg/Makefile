@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ffwizard-pberg
 PKG_VERSION:=0.0.2
-PKG_RELEASE:=11
+PKG_RELEASE:=12
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 

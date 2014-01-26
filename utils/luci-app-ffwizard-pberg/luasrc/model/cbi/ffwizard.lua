@@ -1026,8 +1026,9 @@ if has_lan then
 	end
 	landns = f:field(Value, "landns", translate("DNS-Server"))
 	landns:depends("lanproto", "static")
+	landns.rmempty = true
 	function landns.cfgvalue(self, section)
-		return uci:get("network", "lan", "dns")
+		return ""
 	end
 	function landns.write(self, section, value)
 		uci:set("network", "lan", "dns", value)
@@ -2274,6 +2275,8 @@ function main.write(self, section, value)
 		lproto = lanproto:formvalue(section)
 		if lproto and lproto == "static" then
 			-- Delete old dhcp
+			uci:delete("network", "landhcp")
+			uci:delete("dhcp", "landhcp")
 			uci:delete("dhcp", "lan")
 			local flanip = lanipaddr:formvalue(section)
 			local flannm = lannetmask:formvalue(section)
@@ -2331,13 +2334,16 @@ function main.write(self, section, value)
 		uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
 		if has_pr then
 			if ffvpn_enable == "1" then
+				sys.init.enable("freifunk-policyrouting")
+				uci:set("freifunk-policyrouting","pr","enable","1")
 				uci:set("freifunk-policyrouting","pr","strict","1")
+				uci:set("freifunk-policyrouting","pr","fallback","1")
+				uci:set("freifunk-policyrouting","pr","zones", "freifunk")
 			else
-				uci:set("freifunk-policyrouting","pr","strict","0")
+				sys.init.disable("freifunk-policyrouting")
+				uci:set("freifunk-policyrouting","pr","enable","0")
+				uci:delete_all("network","rule")
 			end
-			uci:set("freifunk-policyrouting","pr","enable","1")
-			uci:set("freifunk-policyrouting","pr","fallback","1")
-			uci:set("freifunk-policyrouting","pr","zones", "freifunk")
 			uci:save("freifunk-policyrouting")
 		end
 		uci:delete_all("freifunk-watchdog", "process", {process="openvpn"})
