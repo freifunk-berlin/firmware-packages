@@ -578,45 +578,31 @@ uci:foreach("network", "interface",
 	end)
 
 
-local syslat = uci:get("freifunk", "wizard", "latitude") or 52
-local syslon = uci:get("freifunk", "wizard", "longitude") or 10
+local syslat
+local syslon
 uci:foreach("system", "system", function(s)
-		if s.latitude then
+		if s.latitude and s.longitude then
 			syslat = s.latitude
-		end
-		if s.longitude then
 			syslon = s.longitude
 		end
 end)
-uci:foreach("olsrd", "LoadPlugin", function(s)
-	if s.library == "olsrd_nameservice.so.0.3" then
-		if s.lat then
-			syslat = s.lat
-		end
-		if s.lon then
-			syslon = s.lon
-		end
-	end
-end)
+
+if not syslat or not syslon then
+	f:field(DummyValue, "unset_latlon", "<b>Achtung Längengrad und Breitengrad nicht gesetzt</b>", "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV")
+	syslat = 52
+	syslon = 10
+end
 
 local lat = f:field(Value, "lat", "geographischer Breitengrad", "Setzen Sie den Breitengrad (Latitude) Ihres Geräts.")
 lat.datatype = "float"
 function lat.cfgvalue(self, section)
 	return syslat
 end
-function lat.write(self, section, value)
-	uci:set("freifunk", "wizard", "latitude", value)
-	uci:save("freifunk")
-end
 
 local lon = f:field(Value, "lon", "geograpischer Längengrad", "Setzen Sie den Längengrad (Longitude) Ihres Geräts.")
 lon.datatype = "float"
 function lon.cfgvalue(self, section)
 	return syslon
-end
-function lon.write(self, section, value)
-	uci:set("freifunk", "wizard", "longitude", value)
-	uci:save("freifunk")
 end
 
 --[[
@@ -666,7 +652,24 @@ osm.hidetext="OpenStreetMap verbergen"
 f:field(DummyValue, "dummynetconfig", "<b>Freifunk Netzwerk einrichten Ende</b>", "====================================================================")
 
 if has_wan then
-	wanproto = f:field(ListValue, "wanproto", "<b>Internet WAN</b>", "Geben Sie das Protokol an ueber das eine Internet verbindung hergestellt werden kann.")
+	local fwanipn
+	local fwanip
+	local fwannm
+	local fwangw
+	local fwandns = ""
+	local wanetm = require "luci.model.network".init()
+	local wanet_uci = wanetm:get_network("wan")
+	if wanet_uci then
+		fwanip = wanet_uci:ipaddr()
+		fwannm = wanet_uci:netmask()
+		fwangw = wanet_uci:gwaddr()
+		for _,v in ipairs(wanet_uci:dnsaddrs()) do
+			fwandns = fwandns.." "..v
+		end
+		fwanipn = ip.IPv4(fwanip,fwannm)
+	end
+	wanproto = f:field(ListValue, "wanproto", "<b>Internet WAN </b>", " Geben Sie das Protokol an ueber das eine Internet verbindung hergestellt werden kann.")
+	f:field(DummyValue, "wanprotod", "IP:", fwanipn:string().." Gateway: "..fwangw.." DNS: "..fwandns)
 	wanproto:depends("device_wan", "")
 	wanproto:value("static", translate("manual", "manual"))
 	wanproto:value("dhcp", translate("automatic", "automatic"))
@@ -2118,7 +2121,20 @@ function main.write(self, section, value)
 	-- Read geos
 	local latval = tonumber(lat:formvalue(section))
 	local lonval = tonumber(lon:formvalue(section))
-
+	local latval_com = tonumber(uci:get_first("profile_"..community, "community", "latitude"))
+	local lonval_com = tonumber(uci:get_first("profile_"..community, "community", "longitude"))
+	if latval and latval == 52 then
+		latval = nil
+	end
+	if latval and latval == latval_com then
+		latval = nil
+	end
+	if lonval and lonval == 52 then
+		lonval = nil
+	end
+	if lonval and lonval == lonval_com then
+		lonval = nil
+	end
 	-- Save latlon to system too
 	if latval and lonval then
 		uci:foreach("system", "system", function(s)
@@ -2133,6 +2149,8 @@ function main.write(self, section, value)
 			uci:delete("system", s[".name"], "longitude")
 		end)
 	end
+	uci:save("system")
+
 	-- Delete old watchdog settings
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_watchdog.so.0.1"})
 	-- Write new watchdog settings
@@ -2150,8 +2168,6 @@ function main.write(self, section, value)
 		suffix      = "." .. suffix ,
 		hosts_file  = "/tmp/hosts/olsr",
 		latlon_file = "/var/run/latlon.js",
-		lat         = latval and string.format("%.15f", latval) or "",
-		lon         = lonval and string.format("%.15f", lonval) or "",
 		services_file = "/var/etc/services.olsr"
 	})
 
@@ -2255,23 +2271,43 @@ function main.write(self, section, value)
 	uci:save("dhcp")
 
 	local wproto
-	if has_wan then
+	local fwanipn
+	if has_wan and has_firewall then
+		local newzone = tools.firewall_create_zone("wan", "REJECT", "ACCEPT", "REJECT", 1)
+		if newzone then
+			tools.firewall_zone_add_interface("wan", "wan")
+		end
 		wproto = wanproto:formvalue(section)
 		if wproto and wproto == "static" then
 			local fwanip = wanipaddr:formvalue(section)
 			local fwannm = wannetmask:formvalue(section)
 			if fwanip and fwannm then
-				local fwanipn=ip.IPv4(fwanip,fwannm)
-				if has_firewall and fwanipn then
+				fwanipn=ip.IPv4(fwanip,fwannm)
+				if fwanipn then
 					tools.firewall_zone_add_masq_src("freifunk", fwanipn:string())
 					tools.firewall_zone_enable_masq("freifunk")
-					uci:save("firewall")
 				end
 			end
+		else 
+			local wanetm = require "luci.model.network".init()
+			local wanet_uci = wanetm:get_network("wan")
+			if wanet_uci then
+				fwanip = wanet_uci:ipaddr()
+				fwannm = wanet_uci:netmask()
+				fwanipn = ip.IPv4(fwanip,fwannm)
+			end
 		end
+		uci:save("firewall")
 	end
 	local lproto
 	if has_lan then
+		if has_firewall then
+			local newzone = tools.firewall_create_zone("lan", "ACCEPT", "ACCEPT", "ACCEPT", 0)
+			if newzone then
+				tools.firewall_zone_add_interface("lan", "lan")
+				uci:save("firewall")
+			end
+		end
 		lproto = lanproto:formvalue(section)
 		if lproto and lproto == "static" then
 			-- Delete old dhcp
@@ -2282,6 +2318,16 @@ function main.write(self, section, value)
 			local flannm = lannetmask:formvalue(section)
 			if flanip and flannm then
 				local flanipn=ip.IPv4(flanip,flannm)
+				if flanipn and fwanipn then
+					if flanipn:contains(fwanipn) then
+						lanipaddr.tag_missing[section] = true
+						return
+					end
+					if fwanipn:contains(flanipn) then
+						lannetmask.tag_missing[section] = true
+						return
+					end
+				end
 				if flanipn and has_firewall then
 					tools.firewall_zone_add_masq_src("freifunk", flanipn:string())
 					tools.firewall_zone_enable_masq("freifunk")
@@ -2417,15 +2463,18 @@ function main.write(self, section, value)
 			end
 			if ffvpn_enable == "1" then
 				tools.firewall_zone_add_interface("freifunk", "ffvpn")
-				uci:section("firewall", "rule", nil, {
-					name="Reject-VPN-over-ff",
-					dest="freifunk",
-					family="ipv4",
-					proto="udp",
-					dest_ip="77.87.48.10",
-					dest_port="1194",
-					target="REJECT"
-				})
+				ovpn_server_list = uci:get_list("openvpn","ffvpn","remote")
+				for i,v in ipairs(ovpn_server_list) do
+					uci:section("firewall", "rule", nil, {
+						name="Reject-VPN-over-ff",
+						dest="freifunk",
+						family="ipv4",
+						proto="udp",
+						dest_ip=v,
+						dest_port="1194",
+						target="REJECT"
+					})
+				end
 				uci:save("firewall")
 				uci:set("openvpn","ffvpn", "enabled", "1")
 				uci:save("openvpn")
