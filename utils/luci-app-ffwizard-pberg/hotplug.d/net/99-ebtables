@@ -1,0 +1,23 @@
+#!/bin/sh
+
+ebt="/usr/sbin/ebtables"
+
+if [ -f "$ebt" ] && [ "$ACTION" = "add" ]; then
+	case "$DEVICENAME" in
+		wlan*)
+			if ubus list hostapd.$DEVICENAME >/dev/null 2&>1 ; then
+				if ! "$ebt" -t filter -L OUTPUT | grep -q "$DEVICENAME --ip-proto" ; then
+					"$ebt" -t filter -I OUTPUT -p ipv4 -o $DEVICENAME --ip-proto udp --ip-dport 698 -j DROP
+					"$ebt" -t filter -I FORWARD -p ipv4 -o $DEVICENAME --ip-proto udp --ip-dport 698 -j DROP
+					logger -t ebtables "disable olsrv4 on $DEVICENAME"
+				fi
+				if ! "$ebt" -t filter -L OUTPUT | grep -q "$DEVICENAME --ip6-proto" ; then
+					"$ebt" -t filter -I OUTPUT -p ipv6 -o $DEVICENAME --ip6-proto udp --ip6-dport 698 -j DROP
+					"$ebt" -t filter -I FORWARD -p ipv6 -o $DEVICENAME --ip6-proto udp --ip6-dport 698 -j DROP
+					logger -t ebtables "disable olsr on $DEVICENAME"
+				fi
+			fi
+		;;
+	esac
+fi
+
