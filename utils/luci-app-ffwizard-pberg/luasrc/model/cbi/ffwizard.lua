@@ -669,7 +669,9 @@ if has_wan then
 		fwanipn = ip.IPv4(fwanip,fwannm)
 	end
 	wanproto = f:field(ListValue, "wanproto", "<b>Internet WAN </b>", " Geben Sie das Protokol an ueber das eine Internet verbindung hergestellt werden kann.")
-	f:field(DummyValue, "wanprotod", "IP:", fwanipn:string().." Gateway: "..fwangw.." DNS: "..fwandns)
+	if fwanipn:string() and fwangw and fwandns then
+		f:field(DummyValue, "wanprotod", "IP:", fwanipn:string().." Gateway: "..fwangw.." DNS: "..fwandns)
+	end
 	wanproto:depends("device_wan", "")
 	wanproto:value("static", translate("manual", "manual"))
 	wanproto:value("dhcp", translate("automatic", "automatic"))
