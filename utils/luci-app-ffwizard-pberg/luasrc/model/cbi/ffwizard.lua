@@ -1181,6 +1181,7 @@ function main.write(self, section, value)
 	end
 
 	local netname = "wireless"
+	local ifcfgname = "wlan"
 	local network
 	network = ip.IPv4(uci:get_first(external, "community", "mesh_network") or "104.0.0.0/8")
 
@@ -1355,6 +1356,7 @@ function main.write(self, section, value)
 		end
 		-- rename the wireless interface s/wifi/wireless/
 		local nif
+		local ifcfg
 		local device_l = {
 			"wifi",
 			"wl",
@@ -1364,6 +1366,7 @@ function main.write(self, section, value)
 		for i, v in ipairs(device_l) do
 			if string.find(device, v) then
 				nif = string.gsub(device, v, netname)
+				ifcfg = string.gsub(device, v, ifcfgname)
 			end
 		end
 		-- Cleanup
@@ -1407,6 +1410,7 @@ function main.write(self, section, value)
 		logger("channel: "..channel)
 		local hwtype = sec.type
 		local hwmode
+		local pre
 		local has_n
 		if hwtype == "mac80211" then
 			hwmode = sec.hwmode
@@ -1477,20 +1481,25 @@ function main.write(self, section, value)
 				ssid = "ch" .. channel .. ssidshort
 			end
 			if channel > 0 and channel < 10 then
+				pre = 2
 				hwmode = hwmode.."g"
 				bssid = channel .. "2:CA:FF:EE:BA:BE"
 			elseif channel == 10 then
+				pre = 2
 				hwmode = hwmode.."g"
 				bssid = "02:CA:FF:EE:BA:BE"
 			elseif channel >= 11 and channel <= 14 then
+				pre = 2
 				hwmode = hwmode.."g"
 				bssid = string.format("%X",channel) .. "2:CA:FF:EE:BA:BE"
 			elseif channel >= 36 and channel <= 64 then
+				pre = 5
 				hwmode = hwmode.."a"
 				mrate = ""
 				outdoor = 0
 				bssid = "02:" .. channel ..":CA:FF:EE:EE"
 			elseif channel >= 100 and channel <= 140 then
+				pre = 5
 				hwmode = hwmode.."a"
 				mrate = ""
 				outdoor = 1
@@ -1503,20 +1512,25 @@ function main.write(self, section, value)
 			logger("channel: "..channel)
 			channel = tonumber(channel)
 			if channel > 0 and channel < 10 then
+				pre = 2
 				hwmode = hwmode.."g"
 				bssid = channel .. "2:CA:FF:EE:BA:BE"
 			elseif channel == 10 then
+				pre = 2
 				hwmode = hwmode.."g"
 				bssid = "02:CA:FF:EE:BA:BE"
 			elseif channel >= 11 and channel <= 14 then
+				pre = 2
 				hwmode = hwmode.."g"
 				bssid = string.format("%X",channel) .. "2:CA:FF:EE:BA:BE"
 			elseif channel >= 36 and channel <= 64 then
+				pre = 5
 				hwmode = hwmode.."a"
 				mrate = ""
 				outdoor = 0
 				bssid = "02:" .. channel ..":CA:FF:EE:EE"
 			elseif channel >= 100 and channel <= 140 then
+				pre = 5
 				hwmode = hwmode.."a"
 				mrate = ""
 				outdoor = 1
@@ -1587,13 +1601,15 @@ function main.write(self, section, value)
 			end
 		end
 		uci:tset("wireless", device, devconfig)
+		local ifconfig
 		-- Create wifi iface
 		if mesh_device then
-			local ifconfig = uci:get_all("freifunk", "wifi_iface")
+			ifconfig = uci:get_all("freifunk", "wifi_iface")
 			util.update(ifconfig, uci:get_all(external, "wifi_iface") or {})
 			ifconfig.device = device
 			ifconfig.mcast_rate = mrate
 			ifconfig.network = nif
+			ifconfig.ifname = ifcfg.."-adhoc-"..pre
 			if ssid then
 				-- See Table https://pberg.freifunk.net/moin/channel-bssid-essid 
 				ifconfig.ssid = ssid
@@ -1718,6 +1734,7 @@ function main.write(self, section, value)
 							mode="ap",
 							encryption ="none",
 							network=nif.."dhcp",
+							ifname=ifcfg.."-master-"..pre,
 							ssid=vap_ssid
 						})
 						if has_firewall then
@@ -1795,8 +1812,6 @@ function main.write(self, section, value)
 					end
 				end
 			end
-			--Write Ad-Hoc wifi section after AP wifi section
-			uci:section("wireless", "wifi-iface", nil, ifconfig)
 		end
 		if br_device then
 			local vap_ssid = wifi_tbl[device]["vapssid"]:formvalue(section)
@@ -1809,8 +1824,13 @@ function main.write(self, section, value)
 				mode="ap",
 				encryption ="none",
 				network="lan",
+				ifname=ifcfg.."-master-"..pre,
 				ssid=vap_ssid
 			})
+		end
+		--Write Ad-Hoc wifi section after AP wifi section
+		if mesh_device then
+			uci:section("wireless", "wifi-iface", nil, ifconfig)
 		end
 		uci:save("network")
 		uci:save("wireless")
