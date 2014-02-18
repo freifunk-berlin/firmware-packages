@@ -574,7 +574,7 @@ uci:foreach("network", "interface",
 					uci:set("freifunk", "wizard", "dhcpsplash_" .. device, value)
 					uci:save("freifunk")
 				end
-			wired_tbl[device]["has_splash"] = has_splash
+			wired_tbl[device]["dhcpsplash"] = dhcpsplash
 		end
 	end)
 
