@@ -507,6 +507,7 @@ uci:foreach("network", "interface",
 			end
 		end
 		if device_i then
+			logger("ignore: "..device)
 			return
 		end
 		wired_tbl[device] = {}
@@ -1146,9 +1147,11 @@ function f.handle(self, state, data)
 			luci.http.redirect(luci.dispatcher.build_url("admin", "system", "reboot") .. "?reboot=1")
 --			sys.exec("reboot")
 		end
+		logger("reboot")
 		return false
 	elseif state == FORM_INVALID then
 		self.errmessage = "Ungültige Eingabe: Bitte die Formularfelder auf Fehler prüfen."
+		logger("self.errmessage: "..self.errmessage)
 	end
 	return true
 end
@@ -1171,7 +1174,9 @@ function main.write(self, section, value)
 
 	-- Invalidate fields
 	if not community then
-		net.tag_missing[section] = true
+		--net.tag_missing[section] = true
+		net.error = { [section] = "missing" }
+		logger("missing community: "..section)
 		return
 	end
 
@@ -1341,8 +1346,10 @@ function main.write(self, section, value)
 				node_ip = ip.IPv4(node_ip)
 			end
 			if not node_ip or not network or not network:contains(node_ip) then
-				wifi_tbl[device]["meship"].tag_missing[section] = true
+				--wifi_tbl[device]["meship"].tag_missing[section] = true
+				wifi_tbl[device]["meship"].error = { [section] = "missing" }
 				node_ip = nil
+				logger("missing node_ip or not network:contains(node_ip): "..device.." "..section)
 				return
 			end
 		end
@@ -1636,8 +1643,10 @@ function main.write(self, section, value)
 				end
 				if dhcpmeshnet then
 					if not dhcpmeshnet:minhost() or not dhcpmeshnet:mask() then
-						wifi_tbl[device]["dhcpmesh"].tag_missing[section] = true
+						--wifi_tbl[device]["dhcpmesh"].tag_missing[section] = true
+						wifi_tbl[device]["dhcpmesh"].error = { [section] = "missing" }
 						dhcpmeshnet = nil
+						logger("missing ndhcpmeshnet: "..device.." "..section)
 						return
 					end
 					dhcp_ip = dhcpmeshnet:minhost():string()
@@ -1820,16 +1829,16 @@ function main.write(self, section, value)
 		local device = sec[".name"]
 		for i, v in ipairs(device_il) do
 			if string.find(device, v) then
-				logger("olsr ignore: "..device)
+				logger("olsr ignore: "..device.." "..section)
 				return
 			end
 		end
 		local mesh_device = wired_tbl[device]["dev"]:formvalue(section)
 		if not mesh_device then
-			logger("olsr disable: "..device)
+			logger("olsr disable: "..device.." "..section)
 			return
 		end
-		logger("olsr enable: "..device)
+		logger("olsr enable: "..device.." "..section)
 		--local node_ip
 		local node_ip = wired_tbl[device]["meship"]:formvalue(section)
 		logger("node_ip: "..node_ip)
@@ -1837,8 +1846,9 @@ function main.write(self, section, value)
 			node_ip = ip.IPv4(node_ip)
 		end
 		if not node_ip or not network or not network:contains(node_ip) then
-			wired_tbl[device]["meship"].tag_missing[section] = true
-			logger("node_ip no network match")
+			--wired_tbl[device]["meship"].tag_missing[section] = true
+			wired_tbl[device]["meship"].error = { [section] = "missing" }
+			logger("missing node_ip or not network:contains(node_ip)")
 			node_ip = nil
 			return
 		end
@@ -1909,8 +1919,10 @@ function main.write(self, section, value)
 			end
 			if dhcpmeshnet then
 				if not dhcpmeshnet:minhost() or not dhcpmeshnet:mask() then
-					wired_tbl[device]["dhcpmesh"].tag_missing[section] = true
+					--wired_tbl[device]["dhcpmesh"].tag_missing[section] = true
+					wired_tbl[device]["dhcpmesh"].error = { [section] = "missing" }
 					dhcpmeshnet = nil
+					logger("missing dhcpmeshnet"..device.." "..section)
 					return
 				end
 				dhcp_ip = dhcpmeshnet:minhost():string()
@@ -2294,9 +2306,11 @@ function main.write(self, section, value)
 			local wanetm = require "luci.model.network".init()
 			local wanet_uci = wanetm:get_network("wan")
 			if wanet_uci then
-				fwanip = wanet_uci:ipaddr()
-				fwannm = wanet_uci:netmask()
-				fwanipn = ip.IPv4(fwanip,fwannm)
+				local fwanip = wanet_uci:ipaddr()
+				local fwannm = wanet_uci:netmask()
+				if fwanip and fwannm then
+					fwanipn = ip.IPv4(fwanip,fwannm)
+				end
 			end
 		end
 		uci:save("firewall")
@@ -2322,11 +2336,15 @@ function main.write(self, section, value)
 				local flanipn=ip.IPv4(flanip,flannm)
 				if flanipn and fwanipn then
 					if flanipn:contains(fwanipn) then
-						lanipaddr.tag_missing[section] = true
+						--lanipaddr.tag_missing[section] = true
+						lanipaddr.error = { [section] = "missing" }
+						logger("error flanipn[".. flanipn:string().."]:contains(fwanipn[".. fwanipn:string().."]) "..section)
 						return
 					end
 					if fwanipn:contains(flanipn) then
-						lannetmask.tag_missing[section] = true
+						--lannetmask.tag_missing[section] = true
+						lannetmask.error = { [section] = "missing" }
+						logger("error fwanipn[".. fwanipn:string().."]:contains(flanipn[".. flanipn:string().."]) "..section)
 						return
 					end
 				end
