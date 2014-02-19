@@ -1483,10 +1483,12 @@ function main.write(self, section, value)
 			if channel > 0 and channel < 10 then
 				pre = 2
 				hwmode = hwmode.."g"
+				mrate = ""
 				bssid = channel .. "2:CA:FF:EE:BA:BE"
 			elseif channel == 10 then
 				pre = 2
 				hwmode = hwmode.."g"
+				mrate = ""
 				bssid = "02:CA:FF:EE:BA:BE"
 			elseif channel >= 11 and channel <= 14 then
 				pre = 2
@@ -1514,14 +1516,17 @@ function main.write(self, section, value)
 			if channel > 0 and channel < 10 then
 				pre = 2
 				hwmode = hwmode.."g"
+				mrate = ""
 				bssid = channel .. "2:CA:FF:EE:BA:BE"
 			elseif channel == 10 then
 				pre = 2
 				hwmode = hwmode.."g"
+				mrate = ""
 				bssid = "02:CA:FF:EE:BA:BE"
 			elseif channel >= 11 and channel <= 14 then
 				pre = 2
 				hwmode = hwmode.."g"
+				mrate = ""
 				bssid = string.format("%X",channel) .. "2:CA:FF:EE:BA:BE"
 			elseif channel >= 36 and channel <= 64 then
 				pre = 5
