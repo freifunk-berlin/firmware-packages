@@ -74,26 +74,6 @@ function logger(msg)
 	sys.exec("logger -t ffwizard -p 5 '"..msg.."'")
 end
 
-function get_mac(ix)
-	if string.find(ix, "radio") then
-		mac = uci:get('wireless',ix,'macaddr')
-	else
-		mac = fs.readfile("/sys/class/net/" .. ix .. "/address")
-	end
-	if not mac then
-		mac = luci.util.exec("ifconfig " .. ix)
-		mac = mac and mac:match(" ([A-F0-9:]+)%s*\n")
-	end
-		
-	if mac then
-		mac = mac:sub(1,17)
-	end
-	if mac and #mac > 0 then
-		return mac:lower()
-	end
-	return "?"
-end
-
 local function txpower_list(iw)
 	local list = iw.txpwrlist or { }
 	local off  = tonumber(iw.txpower_offset) or 0
@@ -660,7 +640,7 @@ if has_wan then
 	local fwandns = ""
 	local wanetm = require "luci.model.network".init()
 	local wanet_uci = wanetm:get_network("wan")
-	if wanet_uci then
+	if wanet_uci and #wanet_uci > 0 then
 		fwanip = wanet_uci:ipaddr()
 		fwannm = wanet_uci:netmask()
 		fwangw = wanet_uci:gwaddr()
@@ -670,7 +650,7 @@ if has_wan then
 		fwanipn = ip.IPv4(fwanip,fwannm)
 	end
 	wanproto = f:field(ListValue, "wanproto", "<b>Internet WAN </b>", " Geben Sie das Protokol an ueber das eine Internet verbindung hergestellt werden kann.")
-	if fwanipn:string() and fwangw and fwandns then
+	if fwanipn and fwanipn:string() and fwangw and fwandns then
 		f:field(DummyValue, "wanprotod", "IP:", fwanipn:string().." Gateway: "..fwangw.." DNS: "..fwandns)
 	end
 	wanproto:depends("device_wan", "")
@@ -2330,7 +2310,7 @@ function main.write(self, section, value)
 		else 
 			local wanetm = require "luci.model.network".init()
 			local wanet_uci = wanetm:get_network("wan")
-			if wanet_uci then
+			if wanet_uci  and #wanet_uci > 0 then
 				local fwanip = wanet_uci:ipaddr()
 				local fwannm = wanet_uci:netmask()
 				if fwanip and fwannm then
