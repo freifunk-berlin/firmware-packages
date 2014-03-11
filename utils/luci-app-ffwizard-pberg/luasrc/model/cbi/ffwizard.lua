@@ -248,6 +248,8 @@ uci:foreach("wireless", "wifi-device",
 			for _, f in ipairs(iw and iw.freqlist or { }) do
 				if not f.restricted then
 					chan:value(f.channel, "%i (%.3f GHz)" %{ f.channel, f.mhz / 1000 })
+				else
+					chan:value(f.channel, "%i (%.3f GHz restricted DFS)" %{ f.channel, f.mhz / 1000 })
 				end
 			end
 			function chan.write(self, sec, value)
