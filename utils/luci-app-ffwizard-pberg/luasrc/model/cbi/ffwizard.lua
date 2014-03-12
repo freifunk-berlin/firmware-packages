@@ -1410,18 +1410,18 @@ function main.write(self, section, value)
 			local channel_c
 			if channel ~= "default" then
 				channel = tonumber(channel)
-				for _, f in ipairs(freqlist) do
-					if not f.restricted then
-						if f.channel == channel then
+				--for _, f in ipairs(freqlist) do
+				--	if not f.restricted then
+				--		if f.channel == channel then
 							channel_c = 1
-							break
-						end
-					end
-				end
-				if not channel_c then
-					logger("channel: "..channel.." no support or restricted")
-					channel = "default"
-				end
+				--			break
+				--		end
+				--	end
+				--end
+				--if not channel_c then
+				--	logger("channel: "..channel.." no support or restricted")
+				--	channel = "default"
+				--end
 			end
 		end
 		
