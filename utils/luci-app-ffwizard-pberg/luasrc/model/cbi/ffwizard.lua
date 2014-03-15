@@ -1396,7 +1396,7 @@ function main.write(self, section, value)
 		local has_n
 		if hwtype == "mac80211" then
 			hwmode = sec.hwmode
-			if string.find(hwmode, "n") then
+			if hwmode and string.find(hwmode, "n") then
 				has_n = "n"
 			end
 		end
@@ -1405,23 +1405,25 @@ function main.write(self, section, value)
 		local bssid
 		local mrate = 5500
 		local freqlist
+		local doth
 		if iw and iw.freqlist then
 			freqlist = iw.freqlist
 			local channel_c
 			if channel ~= "default" then
 				channel = tonumber(channel)
-				--for _, f in ipairs(freqlist) do
-				--	if not f.restricted then
-				--		if f.channel == channel then
-							channel_c = 1
-				--			break
-				--		end
-				--	end
-				--end
-				--if not channel_c then
-				--	logger("channel: "..channel.." no support or restricted")
-				--	channel = "default"
-				--end
+				for _, f in ipairs(freqlist) do
+					if f.channel == channel then
+						channel_c = 1
+						if f.restricted then
+							doth = 1
+						end
+						break
+					end
+				end
+				if not channel_c then
+					logger("channel: "..channel.." no support or restricted")
+					channel = "default"
+				end
 			end
 		end
 		
@@ -1433,12 +1435,12 @@ function main.write(self, section, value)
 					channel = defchan
 					if freqlist then
 						for _, f in ipairs(freqlist) do
-							if not f.restricted then
-								channel = tonumber(f.channel)
-								if f.channel == defchan then
-									channel_f = 1
-									break
+							if f.channel == channel then
+								channel_c = 1
+								if f.restricted then
+									doth = 1
 								end
+								break
 							end
 						end
 						if channel_f then
@@ -1530,33 +1532,38 @@ function main.write(self, section, value)
 		end
 		devconfig.hwmode = hwmode
 		devconfig.outdoor = outdoor
+		devconfig.doth = doth
 		if has_n then
-			local ht40plus = {
-				1,2,3,4,5,6,7,
-				36,44,52,60,100,108,116,124,132
-			}
-			for i, v in ipairs(ht40plus) do
-				if v == channel then
-					devconfig.htmode = 'HT40+'
-					devconfig.noscan = '1'
+			if doth then
+				devconfig.htmode = 'HT20'
+			else
+				local ht40plus = {
+					1,2,3,4,5,6,7,
+					36,44,52,60,100,108,116,124,132
+				}
+				for i, v in ipairs(ht40plus) do
+					if v == channel then
+						devconfig.htmode = 'HT40+'
+						devconfig.noscan = '1'
+					end
 				end
-			end
-			local ht40minus = {
-				8,9,10,11,12,13,14,
-				40,48,56,64,104,112,120,128,136
-			}
-			for i, v in ipairs(ht40minus) do
-				if v == channel then
-					devconfig.htmode = 'HT40-'
-					devconfig.noscan = '1'
+				local ht40minus = {
+					8,9,10,11,12,13,14,
+					40,48,56,64,104,112,120,128,136
+				}
+				for i, v in ipairs(ht40minus) do
+					if v == channel then
+						devconfig.htmode = 'HT40-'
+						devconfig.noscan = '1'
+					end
 				end
-			end
-			local ht20 = {
-				140
-			}
-			for i, v in ipairs(ht20) do
-				if v == channel then
-					devconfig.htmode = 'HT20'
+				local ht20 = {
+					140
+				}
+				for i, v in ipairs(ht20) do
+					if v == channel then
+						devconfig.htmode = 'HT20'
+					end
 				end
 			end
 		end
