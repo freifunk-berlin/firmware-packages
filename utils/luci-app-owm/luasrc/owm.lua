@@ -25,7 +25,7 @@ local json = require "luci.json"
 local netm = require "luci.model.network"
 local table = require "table"
 local nixio = require "nixio"
-local neightbl = require "neightbl"
+--local neightbl = require "neightbl"
 local ip = require "luci.ip"
 
 
@@ -430,11 +430,11 @@ function get()
 	root.ipv4defaultGateway = def4
 	root.ipv6defaultGateway = def6
 	local neighbors = fetch_olsrd_neighbors(root.interfaces)
-	local arptable = sys.net.arptable()
+	local arptable = sys.net.arptable() or {}
 	if #root.interfaces ~= 0 then
 		for idx,iface in ipairs(root.interfaces) do
 			local t = {}
-			if iface['ifname'] then
+			if iface['ifname'] and neightbl then
 				t = neightbl.get(iface['ifname']) or {}
 				local neightbl_get
 				for ip,mac in pairs(t) do
