@@ -345,73 +345,9 @@ uci:foreach("wireless", "wifi-device",
 				end
 			end
 			wifi_tbl[device]["chan"] = chan
-		local advanced = f:field(Flag, "advanced_" .. device, device:upper() .. " Erweiterte WLAN Einstellungen", "advanced")
-			advanced:depends("device_" .. device, "1")
-			advanced:depends("dhcpbr_" .. device, "1")
-			advanced.rmempty = false
-			function advanced.cfgvalue(self, section)
-				return uci:get("freifunk", "wizard", "advanced_" .. device)
-			end
-			function advanced.write(self, sec, value)
-				uci:set("freifunk", "wizard", "advanced_" .. device, value)
-				uci:save("freifunk")
-			end
-			wifi_tbl[device]["advanced"] = advanced
-		local hwmode = f:field(ListValue, "hwmode_" .. device, device:upper() .. "  "..translate("Mode"))
-			hwmode:depends("advanced_" .. device, "1")
-			hwmode.rmempty = true
-			hwmode.widget = "radio"
-			hwmode.orientation = "horizontal"
-			local hw_modes = iw.hwmodelist or { }
-			if hw_modes.b then hwmode:value("11b", "802.11b") end
-			if hw_modes.g then hwmode:value("11g", "802.11g") end
-			if hw_modes.a then hwmode:value("11a", "802.11a") end
-			if hw_modes.b and hw_modes.g then hwmode:value("11bg", "802.11b + g") end
-			if hw_modes.g and hw_modes.n then hwmode:value("11ng", "802.11n + g") end
-			if hw_modes.a and hw_modes.n then hwmode:value("11na", "802.11n + a") end
-			function hwmode.cfgvalue(self, section)
-				return uci:get("freifunk", "wizard", "hwmode_" .. device)
-			end
-			function hwmode.write(self, sec, value)
-				uci:set("freifunk", "wizard", "hwmode_" .. device, value)
-				uci:save("freifunk")
-			end
-			wifi_tbl[device]["hwmode"] = hwmode
-		local htmode = f:field(ListValue, "htmode_" .. device, device:upper() .. "  "..translate("HT mode"))
-			htmode:depends("hwmode_" .. device, "11na")
-			htmode:depends("hwmode_" .. device, "11ng")
-			htmode.rmempty = true
-			htmode.widget = "radio"
-			htmode.orientation = "horizontal"
-			htmode:value("HT20", "20MHz")
-			htmode:value("HT40-", translate("40MHz 2nd channel above"))
-			htmode:value("HT40+", translate("40MHz 2nd channel below"))
-			function htmode.cfgvalue(self, section)
-				return uci:get("freifunk", "wizard", "htmode_" .. device)
-			end
-			function htmode.write(self, sec, value)
-				uci:set("freifunk", "wizard", "htmode_" .. device, value)
-				uci:save("freifunk")
-			end
-			wifi_tbl[device]["htmode"] = htmode
-		local txpower = f:field(ListValue, "txpower_" .. device, device:upper().."  "..translate("Transmit Power"), "dBm")
-			txpower:depends("advanced_" .. device, "1")
-			txpower.rmempty = true
-			txpower.default = 15
-			function txpower.cfgvalue(...)
-				return uci:get("freifunk", "wizard", "txpower_" .. device)
-			end
-			for _, p in ipairs(tx_power_list) do
-				txpower:value(p.driver_dbm, "%i dBm (%i mW)"
-					%{ p.display_dbm, p.display_mw })
-			end
-			function txpower.write(self, sec, value)
-				uci:set("freifunk", "wizard", "txpower_" .. device, value)
-				uci:save("freifunk")
-			end
-			wifi_tbl[device]["txpower"] = txpower
 		local distance = f:field(Value, "distance_" .. device, device:upper().."  "..translate("Distance Optimization"), translate("Distance to farthest network member in meters."))
-			distance:depends("advanced_" .. device, "1")
+			distance:depends("device_" .. device, "1")
+			distance:depends("dhcpbr_" .. device, "1")
 			distance.rmempty = true
 			distance.datatype = "range(0,10000)"
 			function distance.cfgvalue(self, section)
@@ -422,52 +358,6 @@ uci:foreach("wireless", "wifi-device",
 				uci:save("freifunk")
 			end
 			wifi_tbl[device]["distance"] = distance
-		local txantenna = f:field(ListValue, "txantenna_" .. device, device:upper() .."  ".. translate("Transmitter Antenna"))
-			txantenna:depends("advanced_" .. device, "1")
-			txantenna.rmempty = true
-			txantenna.widget = "radio"
-			txantenna.orientation = "horizontal"
-			txantenna:value("all", translate("all"))
-			txantenna:value("1", translate("Antenna 1"))
-			txantenna:value("2", translate("Antenna 2"))
-			txantenna:value("4", translate("Antenna 3"))
-			function txantenna.cfgvalue(self, section)
-				return uci:get("freifunk", "wizard", "txantenna_" .. device)
-			end
-			function txantenna.write(self, sec, value)
-				uci:set("freifunk", "wizard", "txantenna_" .. device, value)
-				uci:save("freifunk")
-			end
-			wifi_tbl[device]["txantenna"] = txantenna
-		local rxantenna = f:field(ListValue, "rxantenna_" .. device, device:upper().."  "..translate("Receiver Antenna"))
-			rxantenna:depends("advanced_" .. device, "1")
-			rxantenna.rmempty = true
-			rxantenna.widget = "radio"
-			rxantenna.orientation = "horizontal"
-			if hwtype == "atheros" then
-				rxantenna:value("0", translate("auto"))
-				rxantenna:value("1", translate("Antenna 1"))
-				rxantenna:value("2", translate("Antenna 2"))
-			end
-			if hwtype == "broadcom" then
-				rxantenna:value("3", translate("auto"))
-				rxantenna:value("0", translate("Antenna 1"))
-				rxantenna:value("1", translate("Antenna 2"))
-			end
-			if hwtype == "mac80211" then
-				rxantenna:value("all", translate("all"))
-				rxantenna:value("1", translate("Antenna 1"))
-				rxantenna:value("2", translate("Antenna 2"))
-				rxantenna:value("4", translate("Antenna 3"))
-			end
-			function rxantenna.cfgvalue(self, section)
-				return uci:get("freifunk", "wizard", "rxantenna_" .. device)
-			end
-			function rxantenna.write(self, sec, value)
-				uci:set("freifunk", "wizard", "rxantenna_" .. device, value)
-				uci:save("freifunk")
-			end
-			wifi_tbl[device]["rxantenna"] = rxantenna
 		local meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Ihre Mesh IP Adresse erhalten Sie von der Freifunk Gemeinschaft in Ihrer Nachbarschaft. Es ist eine netzweit eindeutige Identifikation, z.B. 104.1.1.1.")
 			meship:depends("device_" .. device, "1")
 			meship.rmempty = true
@@ -1570,32 +1460,9 @@ function main.write(self, section, value)
 				end
 			end
 		end
-		local advanced = wifi_tbl[device]["advanced"]:formvalue(section)
-		if advanced then
-			local hwmode = wifi_tbl[device]["hwmode"]:formvalue(section)
-			if hwmode then
-				devconfig.hwmode = hwmode
-			end
-			local htmode = wifi_tbl[device]["htmode"]:formvalue(section)
-			if htmode then
-				devconfig.htmode = htmode
-			end
-			local txpower = wifi_tbl[device]["txpower"]:formvalue(section)
-			if txpower then
-				devconfig.txpower = txpower
-			end
-			local distance = wifi_tbl[device]["distance"]:formvalue(section)
-			if distance then
-				devconfig.distance = distance
-			end
-			local txantenna = wifi_tbl[device]["txantenna"]:formvalue(section)
-			if txantenna then
-				devconfig.txantenna = txantenna
-			end
-			local rxantenna = wifi_tbl[device]["rxantenna"]:formvalue(section)
-			if rxantenna then
-				devconfig.rxantenna = rxantenna
-			end
+		local distance = wifi_tbl[device]["distance"]:formvalue(section)
+		if distance then
+			devconfig.distance = distance
 		end
 		uci:tset("wireless", device, devconfig)
 		local ifconfig
