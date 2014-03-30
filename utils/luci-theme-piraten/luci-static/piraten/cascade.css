@@ -1,0 +1,939 @@
+@media screen {	
+	* {
+		margin: 0;
+		padding: 0;
+	}
+	
+	.low_res_only{
+		display:none;
+	}
+
+	body{
+		font-family:sans-serif;
+		font-size:12px;
+	}	
+	
+	/**** begin basic layout setting ****/
+		#main{
+			position:absolute;
+			min-height:100%;
+			min-width:980px;
+			width:100%;
+			background: transparent url('images/header_bg_pattern.png') repeat-x 0% 0%;
+		}
+
+		#header {		
+			background: transparent url('images/header_bg_image.png') no-repeat 100% 0%;
+			height:70px;
+		}
+		
+		#heading {
+			font-size:35px;
+			font-family:impact, sans-serif;
+			color:#ffffff;
+			text-decoration:none;
+			line-height:44px;
+			margin-left:1%;
+		}
+
+		#logo { 
+			background: transparent url('images/logo.png') 50% 50%;
+			position:absolute;
+			top:30px;
+			right:44px;
+			width:85px;
+			height:120px;
+		}
+
+		#stats {
+			position:absolute;
+			top:80px;
+			right:150px;
+			left:0px;
+			font-size:10px;	
+			text-align:right;
+		}
+	
+		#stats span {
+			padding:0 10px;
+		}
+
+		
+		#maincontent{
+			margin: 5%;
+			margin-bottom:55px;
+			margin-top:40px;
+		}
+
+		#footer {
+			position:absolute;
+			bottom:0px;
+			margin:0px;
+			width:100%;
+			border-top:5px solid #000;
+			background-color:#f80;
+			line-height:15px;
+		}
+
+		#footer a {
+			font-size:10px;
+			font-family:sans-serif;
+			font-weight:bold;
+			color:#fff;			
+			text-decoration:none;
+			margin-left:1%;
+		}
+		
+		#footer .piratenlink {
+			float:right;
+			margin-right:1%;
+		}
+	
+		#iphone_menu_open,
+		#iphone_menu_close{
+			display:none;
+		}
+
+	/**** End basic layout setting ****/
+	
+	
+	/**** Begin menu styles ****/	
+		/*** begin main menu styles ***/
+			#menubar {
+				background: transparent;
+				color: #ffffff;
+				vertical-align:middle;
+				height:20px;
+				font-size:12px;	
+				font-weight:bold;
+				margin-left:1%;
+			}
+
+			#mainmenu {	
+				float: left;
+				width: auto;
+				background: transparent;
+				height:100%;
+				margin-left:-6px;
+
+			}
+		
+			#modemenu {
+				float: right;
+				width: auto;
+				background: transparent;
+				height:100%;
+				margin-right:2%;
+			}
+
+			#changes a {
+				padding-right:10px;
+			}
+		
+			#changes {
+				float: right;
+				width: auto;
+				background: transparent;
+				height:100%;
+				margin-right:120px;
+			}
+
+			#changes a {
+				margin-right:6px;
+			}
+
+	
+			.pulldown div {
+				float: left;							
+				height:100%;
+				vertical-align:middle;
+			}
+			.pulldown li {
+				white-space: nowrap;
+			}		
+			/** first level styles **/	
+				.pulldown a {
+					padding: 1px 6px;				
+					color: #ffffff;
+					line-height:20px;
+					text-decoration:none;
+				}
+
+				.pulldown > div > a { /* first level links */
+					padding: 3px 4px;				
+				}
+
+				.pulldown > div > a:hover { /* first level links */
+					background: transparent url(images/black_25.png);
+				}
+
+				.pulldown div:hover > ul { /*show dropdown menus on hover*/
+					display:block;
+				}
+	
+				.pulldown div div:hover > a{
+					background: transparent url(images/black_60.png);
+				}
+
+				/** pulldown level styles **/
+					.pulldown > div > ul { 					
+						padding-top:5px;
+					}
+					.pulldown div ul { 
+						display: none;
+						position: absolute;
+						background: transparent url(images/black_60.png);
+						list-style-type: none;
+						z-index:20;
+					}
+					.pulldown li a{ 
+						line-height:1.5;
+		        		margin-left:0em;
+						padding-right:25px;	/*space for the submenu marker*/
+			       		display:block;
+					}
+					.pulldown ul li.show_left>a{ /* for submenus showing on the left*/
+						line-height:1.5;
+		        		margin-left:0em;
+						padding-left:25px;	/*space for the submenu marker*/
+		        		display:block;
+					}
+					.pulldown ul li:hover,
+					.pulldown ul li:focus{ /*menu item background, dropdown panels, active*/
+						background:transparent url(images/black_60.png);
+					}
+					.pulldown ul li:hover > ul{ /*show submenus on hover*/
+						display: block;
+					}
+			
+					.pulldown ul li:hover > a{
+						color: #4f9ed3;
+					}	
+					.pulldown li a.hasSub{ /* show submenu marker */
+						background:transparent url(images/right.png) 100% 50% no-repeat;
+					}	
+					.pulldown ul li.show_left > a.hasSub{ /* show submenu marker */
+						background:transparent url(images/left.png) 0% 50% no-repeat;
+					}			
+					.pulldown ul li > ul { /*submenus appear to the right*/
+						left: 100%;
+						margin-top:-18px; /* line-height times font-size*/
+						margin-left:-7px;  /*should not overlap the submenu marker*/
+					}
+					.pulldown ul li > ul.show_left { /*show submenu on the left*/
+						left:auto;
+						right:100%;
+						margin-right:-7px;					
+					}
+			
+				/** submenu frame **/
+					/* the frame consists in additional menu entries which are not links.
+					   Instead I use a table with 3 columns and 1 row to put rounded
+					   corners on the top and on the bottom of each submenu. The first 
+					   level dropdown menus get those only at the bottom. 
+					*/ 
+					.no_corner{
+						background: transparent url(images/black_60.png);
+					}
+					.upper_corners {
+						margin-top:-5px;
+						height:5px;
+						width:100%;
+						background:transparent none;
+						float:none;
+					}		
+					.lower_corners {
+						margin-bottom:-5px;
+						height:5px;
+						width:100%;
+						background:transparent none;
+						float:none;
+					}		
+					.upper_corners:hover,
+					.lower_corners:hover { /*the corners are not supposed to interact with the cursor */
+						background:transparent none !important; 
+					}		
+					.upper_corners table,
+					.lower_corners table {
+						width:100%;
+						border-collapse:collapse;
+						border-spacing:0px;
+					}		
+					.upper_corners .c,
+					.lower_corners .c {
+						height:5px;
+						background:transparent url(images/black_60.png);
+					}		
+					.upper_corners .l {
+						height:5px;
+						width:5px;
+						background:transparent url(images/black_ul.png);
+					}		
+					.upper_corners .r {
+						height:5px;
+						width:5px;
+						background:transparent url(images/black_ur.png);
+					}		
+					.lower_corners .l {
+						height:5px;
+						width:5px;
+						background:transparent url(images/black_ll.png);
+					}		
+					.lower_corners .r {
+						height:5px;
+						width:5px;
+						background:transparent url(images/black_lr.png);
+					}				
+		/*** end main menu styles ***/
+
+							
+	/**** end menu styles****/
+}
+/*****END @MEDIA SCREEN *****/
+
+
+/***** BEGIN MEDIA  ALL *****/
+@media all{
+
+	/**** Wozu ist das gut? rausscheissen? ****/
+	.pathbar {
+		display: none;
+	}
+	
+
+	/**** Begin main content ****/
+		#content {
+			width:50%;
+		}
+
+		#maincontent h2 {
+			margin: 0.25em 0 0.5em 0;
+			font-size: 160%;
+			font-weight: normal;
+			font-family: impact, sans-serif;
+		}
+
+		#maincontent h3 {
+			margin: 0.5em 0;
+			font-size: 120%;
+			font-weight: normal;
+			text-decoration: underline;
+		}
+		
+		#maincontent p {
+			margin-bottom: 1em;
+		}
+
+		#maincontent ul {
+			margin-left: 2em;
+		}
+		
+		#maincontent .multiColumn {
+			margin:1em 0px;
+			width:100%;
+		}
+
+		#maincontent .multiColumn .first{
+			width:49%;
+			float:left;
+			padding-right:1%;
+		}
+
+		#maincontent .multiColumn .second{
+			width:49%;
+			float:left;
+			padding-left:1%;
+		}
+		#maincontent .multiColumn .terminateMultiColumn{
+			clear:both;
+			float:none;
+			display:block;
+			width:50%;
+			margin:auto;
+			padding-top:2em;
+		}
+
+		#maincontent ul{
+			margin-bottom:1em;
+		}
+
+		#splash {
+			margin-top:3em;
+			text-align:center;
+		}
+		#splash td {
+			width:33%;
+			padding:2px;
+			vertical-align:middle;
+			text-align:center;
+		}
+
+		#splash_form input[type=submit]{
+			font-size:200%;
+			margin:3px;
+			width:90%;
+		}
+
+		#splash_form input[type=text]{
+			margin:0px;
+			margin-top:5px;
+			text-align:center;
+			width:auto;
+		}
+		
+		#splash_form textarea {
+			margin:0px;
+		}
+
+		#splash_form counter {
+			margin:0.2em;
+		}
+
+		#splash_form .toolong {
+			color:#c00;
+			border: 2px solid #d00;
+		}
+
+		#splash_form table {
+			display:inline;
+		}
+		
+		#splash_form #messages {
+			margin-top:35px;
+			padding:10px 30%;
+		}
+
+		#splash_form #messages .entry{
+			text-align:left;
+			border-bottom: 1px dashed #000;
+			padding:5px 7%;
+		}
+
+		#splash_form #messages .entry:first-line{
+			font-weight:bold;
+		}
+
+		textarea#syslog {
+			width: 98%;
+			min-height: 500px;
+			border: 3px solid #cccccc;
+			padding: 5px;
+			font-family: monospace;
+		}
+
+		/** Begin cbi section **/
+		.cbi-section {
+			margin-bottom: 0.5em;
+			padding: 0.5em 1em;
+			border: 1px dotted #555555;
+			background-color: #f2f3f9;
+		}
+
+			.cbi-section legend {
+				font-size: 110%;
+				font-weight: bold;
+				height: 1em;
+				padding: 0 0.25em;
+				color: #555555;
+			}
+	
+			.cbi-section h2 {
+				margin: 0em 0 0.5em -0.5em !important;
+			}
+
+			.cbi-section h3 {
+				height:	1.5em;
+				font-size: 90%;
+				color: #555555;
+			}
+	
+			.cbi-section-descr {
+				margin-bottom: 0.5em;
+				font-size: 95%;
+			}
+	
+			.cbi-title-ref {
+				color: inherit;
+				text-decoration: none;
+				padding-right: 18px;
+				background: url('../resources/cbi/link.gif') no-repeat scroll right center;
+				background-color: inherit;
+			}
+		/** End cbi section **/
+
+		input[type=submit],
+		input[type=reset],
+		input[type=image],
+		label {
+			cursor: pointer;
+		}
+
+		select,
+		input,
+		textarea {
+			background: #eeeeee;
+			color: #000000;
+			border-width: 1px;
+			border-color: #000000;
+		}
+
+		input[type=image] {
+			border: none;
+		}
+
+
+		input:focus,
+		input:hover,
+		select:focus,
+		select:hover,
+		textarea:focus,
+		textarea:hover {
+			background-color: #f2f3f9;
+		}
+		
+		select,
+		input[type=text],
+		input[type=password] {
+			width: 20em;
+		}
+		
+		td select,
+		td input[type=text],
+		td input[type=password] {
+			width: 99%;
+		}
+
+		input.cbi-input-user {
+			background: url('../resources/cbi/user.gif') no-repeat scroll 1px center;
+			background-color: inherit;
+			padding-left: 17px;
+		}
+		
+		input.cbi-input-password {
+			background: url('../resources/cbi/key.gif') no-repeat scroll 1px center;
+			background-color: inherit;
+			padding-left: 17px;
+		}
+		
+		input.cbi-input-find {
+			background: url('../resources/cbi/find.gif') no-repeat scroll 1px center;
+			background-color: inherit;
+			padding-left: 17px;
+		}
+		
+		input.cbi-input-reload {
+			background: url('../resources/cbi/reload.gif') no-repeat scroll 1px center;
+			background-color: inherit;
+			padding-left: 17px;
+		}
+		
+		input.cbi-input-add,
+		input.cbi-button-add {
+			background: url('../resources/cbi/add.gif') no-repeat scroll 1px center;
+			background-color: inherit;
+			padding-left: 17px;
+			padding-right: 1px;
+		}
+	
+		input.cbi-input-fieldadd,
+		input.cbi-button-fieldadd {
+			background: url(../resources/cbi/fieldadd.gif) no-repeat scroll 1px center;
+			background-color: inherit;
+			padding-left: 17px;
+			padding-right: 1px;
+		}
+		
+		input.cbi-input-reset,
+		input.cbi-button-reset {
+			background: url('../resources/cbi/reset.gif') no-repeat scroll 1px center;
+			background-color: inherit;
+			padding-left: 17px;
+			padding-right: 1px;
+		}
+		
+		input.cbi-input-save,
+		input.cbi-button-save {
+			background: url('../resources/cbi/save.gif') no-repeat scroll 1px center;
+			background-color: inherit;
+			padding-left: 17px;
+			padding-right: 1px;
+		}
+		
+		input.cbi-input-apply,
+		input.cbi-button-apply {
+			background: url('../resources/cbi/apply.gif') no-repeat scroll 1px center;
+			background-color: inherit;
+			padding-left: 17px;
+			padding-right: 1px;
+		}
+		
+		input.cbi-input-remove,
+		div.cbi-section-remove input {
+			background: url('../resources/cbi/remove.gif') no-repeat scroll 1px center;
+			background-color: inherit;
+			padding-left: 17px;
+			padding-right: 1px;
+		}
+		
+		div.cbi-section-remove input {
+			border-bottom: none;
+		}
+		
+		textarea {
+			margin-left: -1px;
+			margin-bottom: 0.5em;
+		}
+		
+		form > div > input[type=submit],
+		form > div > input[type=reset] {
+			float: right;
+			margin-left: 0.5em;
+		}
+		
+		table.smalltext {
+			background: #f5f5f5;
+			border-top: 1px solid #666666;
+			border-right: 1px solid #666666;
+			border-bottom: 1px solid #666666;
+			font-size: 90%;
+			width: 80%;
+			margin-left: auto;
+			margin-right: auto;
+			border-collapse: collapse;
+		}
+		
+		table.smalltext tr:hover td {
+			background-color: #bbddee;
+		}
+		
+		table.smalltext tr th {
+			padding: 0 0.25em;
+			border-left: 1px solid #666666;
+			text-align: left;
+		}
+		
+		table.smalltext tr td {
+			padding: 0 0.25em;
+			border-top: 1px solid #666666;
+			border-left: 1px solid #666666;
+		}
+		
+		.cbi-rowstyle-1 {
+			background-color: #eeeeff;
+		}
+		
+		.cbi-rowstyle-2 {
+		
+		}
+		
+		div.cbi-value {
+			clear: left;
+			vertical-align: middle;
+			padding-left: 0.25em;
+			border-bottom: 1px dotted #bbbbbb;
+		}
+		
+		div.cbi-value:hover {
+			background: #f8f8f8;
+		}
+	
+		div.cbi-value:last-child {
+			border: none;
+		}
+	
+		.cbi-value-title {
+			float: left;
+			width: 40%;
+		}
+		
+		div.cbi-value-field {
+			width: 58%;
+			margin: 0.25em 0 0.25em 40%;
+		}
+		
+		div.cbi-value-description {
+			font-size: 90%;
+		}
+		
+		div.cbi-section-create {
+			clear: left;
+			white-space: nowrap;
+		}
+		
+		div.cbi-map-descr {
+			margin-bottom: 1em;
+		}
+		
+		div.cbi-optionals {
+			margin: 0.5em 0;
+			padding: 0 0.25em;
+		}
+		
+		div.cbi-section-remove {
+			float: right;
+		}
+		
+		.cbi-section-node {
+			clear: both;
+			border: 1px dotted #bbbbbb;
+			padding-bottom: 0;
+		}
+		
+		.cbi-section-node div.cbi-section-table-row {
+			margin: 0.25em;
+		}
+		
+		table.cbi-section-table {
+			width: 100%;
+			font-size: 95%;
+		}		
+		
+		table.cbi-section-table th,
+		table.cbi-section-table td {
+			text-align: center;
+		}
+
+		tr.cbi-section-table-descr th {
+			font-weight: normal;
+			font-size: 90%;
+		}
+		
+		td.cbi-section-table-optionals {
+			text-align: left !important;
+			padding-top: 1em;
+		}
+		
+		.cbi-value-helpicon img {
+			vertical-align: bottom;
+		}
+		
+		div.cbi-error {
+			font-size: 95%;
+			font-weight: bold;
+			color: #FF0000;
+		}
+		
+		td.cbi-value-error {
+			border-color: red !important;
+		}
+		
+		.cbi-value-error input,
+		.cbi-value-error select {
+			color: red !important;
+			background-color: #FFCCCC;
+		}
+		
+		.cbi-section-error {
+			color: red;
+			font-size: 95%;
+			border: 1px dotted red;
+			margin: 3px;
+			padding: 3px;
+		}
+		
+		ul.cbi-apply {
+			font-size: 90%;
+		}
+		
+			/*** begin cbi tab menu  ***/
+			ul.cbi-tabmenu {
+				padding: 3px 0;
+				margin-left: 0 !important;
+				margin-bottom: -1px;
+				list-style-type: none;
+			}
+		
+				ul.cbi-tabmenu li.cbi-tab,
+				ul.cbi-tabmenu li.cbi-tab-disabled {
+					display: inline;
+					margin: 0;
+				}
+		
+				ul.cbi-tabmenu li.cbi-tab a,
+				ul.cbi-tabmenu li.cbi-tab-disabled a {
+					text-decoration: none;
+					padding: 3px 7px;
+					margin-right: 3px;
+					border: 1px outset #000000;
+					border-bottom: none;
+					background-color: #EEEEEE;
+					color: #BBBBBB;
+				}
+		
+				ul.cbi-tabmenu li a:hover {
+					color: #000000;
+				}
+		
+				ul.cbi-tabmenu li.cbi-tab a {
+					position: relative;
+					top: 1px;
+					padding-top: 4px;
+					color: #000000;
+					background-color: #FFFFFF;
+				}
+		
+				div.cbi-tab-descr {
+					background-image: url(/luci-static/resources/cbi/help.gif);
+					background-position: 0.25em 50%;
+					background-repeat: no-repeat;
+					border-bottom: 1px solid #CCCCCC;
+					margin: 0.25em 0.25em 2em;
+					padding: 0.5em 0.5em 0.5em 2em;
+				}
+			/*** End cbi tab menu ***/
+
+	/**** End main content ****/
+
+	/*** Begin miscellaneous ****/		
+	.hsep {
+		background-color:#000000; 
+		height:1px;
+		margin:1em 1em;
+	}
+	
+	code {
+		font-family: monospace;
+		white-space: pre;
+	}
+	
+	.warning {
+		color: red !important;
+		font-weight: bold;
+	}
+	
+	.clear {
+		clear: both;
+		height: 1px;
+	}
+	
+	.hidden {
+		display: none;
+	}
+	
+	.error {
+		color: #ff0000;
+	}
+
+	.right {
+		text-align: right;
+	}
+
+	.luci {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		text-align: right;
+	}	
+
+	.luci a {
+		color: #666666;
+		text-decoration: none;
+		font-size: 70%;
+	}	
+
+	.inline {
+		display: inline;
+	}
+
+	.error500 {
+		white-space: normal;
+		border: 1px dotted #FF0000;
+		background-color: #FFFFFF;
+		padding: 0.5em;
+	}
+
+	#memorybar {
+		width:200px;
+		height:8px;
+		border:1px solid #bbb;
+		background-color:red
+	}
+
+	#memfree, #membuffers, #memcached {
+		float:right;
+		border:1px solid #bbb;
+		height:6px;
+	}
+
+	#memfree {
+		background-color:green;
+	}
+
+	#membuffers {
+		background-color:yellow;
+	}
+
+	#memcached {
+		background-color:orange;
+	}
+	/**** End miscellaneous ****/
+
+
+
+
+
+/**** IE6 rausschmeissen?! ****/
+
+/* obligatory IE6 Voodoo Code */
+* html body {
+	padding-left: 50% !important;
+}
+
+* html div#header {
+	margin-left: -100% !important;
+}
+
+* html div#mainbar {
+	margin-left: -100% !important;
+	width: 200% !important;
+}
+
+* html div#maincontent {
+	margin-left: -80% !important;
+	width: 160% !important;
+}
+
+* html div#mainmenu div.hover ul,
+* html div#mainmenu div li.hover ul,
+* html div#mainmenu div li li.hover ul,
+* html div#mainmenu div li li li.hover ul,
+* html div#mainmenu div li li li li.hover ul {
+	display: block !important;
+	margin-left: 3em;
+}
+
+* html div#mainmenu div.hover ul {
+	margin-left: 0;
+}
+
+* html div#mainmenu .hover ul ul,
+* html div#mainmenu .hover ul ul ul,
+* html div#mainmenu .hover ul ul ul ul,
+* html div#mainmenu .hover ul ul ul ul ul {
+	display: none !important;
+}
+
+* html div#mainmenu li {
+	height: 1em !important;
+	width: 10em !important;
+}
+
+* html #mainmenu {
+	height: 1.8em;
+}
+
+* html div.cbi-value-description {
+	margin-left: 40%;
+}
+
+
+}
+/***** END @MEDIA ALL *****/
+
+
+
+
+
+
+
+
