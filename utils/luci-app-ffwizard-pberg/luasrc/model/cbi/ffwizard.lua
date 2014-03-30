@@ -215,6 +215,92 @@ function main.parse(self, section)
 		self:write(section, fvalue)
 	end
 end
+
+--Ethernet config
+local wired_tbl = {}
+uci:foreach("network", "interface",
+	function(section)
+		local device_i
+		local device = section[".name"]
+		local ifname = uci_state:get("network",device,"ifname")
+		for i, v in ipairs(device_il) do
+			if string.find(device, v) then
+				device_i = true
+			end
+		end
+		if device_i then
+			logger("ignore: "..device)
+			return
+		end
+		wired_tbl[device] = {}
+		local dev = f:field(Flag, "device_" .. device , "<b>Drahtgebundenes Freifunk Netzwerk \"" .. device:upper() .. "\"</b>", "Konfigurieren Sie Ihre drahtgebunde Schnittstelle: " .. device:upper() .. ".")
+			dev.rmempty = false
+			function dev.cfgvalue(self, section)
+				return uci:get("freifunk", "wizard", "device_" .. device)
+			end
+			function dev.write(self, sec, value)
+				uci:set("freifunk", "wizard", "device_" .. device, value)
+				uci:save("freifunk")
+			end
+			wired_tbl[device]["dev"] = dev
+		local meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Ihre Mesh IP Adresse erhalten Sie von der Freifunk Gemeinschaft in Ihrer Nachbarschaft. Es ist eine netzweit eindeutige Identifikation, z.B. 104.1.1.1.")
+			meship:depends("device_" .. device, "1")
+			meship.rmempty = true
+			meship.datatype = "ip4addr"
+			function meship.cfgvalue(self, section)
+				return uci:get("freifunk", "wizard", "meship_" .. device)
+			end
+			function meship.validate(self, value)
+				local x = ip.IPv4(value)
+				return ( x and x:is4()) and x:string() or ""
+			end
+			function meship.write(self, sec, value)
+				uci:set("freifunk", "wizard", "meship_" .. device, value)
+			end
+			wired_tbl[device]["meship"] = meship
+		local client = f:field(Flag, "client_" .. device, device:upper() .. "  DHCP anbieten","DHCP weist verbundenen Benutzern automatisch eine Adresse zu. Diese Option sollten Sie unbedingt aktivieren, wenn Sie Nutzer an der drahtlosen Schnittstelle erwarten.")
+			client:depends("device_" .. device, "1")
+			client.rmempty = false
+			function client.cfgvalue(self, section)
+				return uci:get("freifunk", "wizard", "client_" .. device)
+			end
+			function client.write(self, sec, value)
+				uci:set("freifunk", "wizard", "client_" .. device, value)
+				uci:save("freifunk")
+			end
+			wired_tbl[device]["client"] = client
+		local dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten ", "Bestimmen Sie den Adressbereich aus dem Ihre Nutzer IP Adressen erhalten. Es wird empfohlen einen Adressbereich aus Ihrer lokalen Freifunk Gemeinschaft zu nutzen. Der Adressbereich ist ein netzweit eindeutiger Netzbereich. z.B. 104.1.2.1/28")
+			dhcpmesh:depends("client_" .. device, "1")
+			dhcpmesh.rmempty = true
+			dhcpmesh.datatype = "ip4addr"
+			function dhcpmesh.cfgvalue(self, section)
+				return uci:get("freifunk", "wizard", "dhcpmesh_" .. device)
+			end
+			function dhcpmesh.validate(self, value)
+				local x = ip.IPv4(value)
+				return ( x and x:prefix() <= 30 and x:minhost()) and x:string() or ""
+			end
+			function dhcpmesh.write(self, sec, value)
+				uci:set("freifunk", "wizard", "dhcpmesh_" .. device, value)
+				uci:save("freifunk")
+			end
+			wired_tbl[device]["dhcpmesh"] = dhcpmesh
+		if has_splash then
+			local dhcpsplash = f:field(Flag, "dhcpsplash_" .. device, device:upper() .. "  DHCP Splash Seite", "Soll eine Splash Seite angezeigt werden?")
+				dhcpsplash:depends("client_" .. device, "1")
+				dhcpsplash.rmempty = true
+				function dhcpsplash.cfgvalue(self, section)
+					return uci:get("freifunk", "wizard", "dhcpsplash_" .. device)
+				end
+				function dhcpsplash.write(self, sec, value)
+					uci:set("freifunk", "wizard", "dhcpsplash_" .. device, value)
+					uci:save("freifunk")
+				end
+			wired_tbl[device]["dhcpsplash"] = dhcpsplash
+		end
+	end)
+
+--wireless config
 local wifi_tbl = {}
 uci:foreach("wireless", "wifi-device",
 	function(section)
@@ -477,90 +563,7 @@ uci:foreach("wireless", "wifi-device",
 		end
 	end)
 
-local wired_tbl = {}
-uci:foreach("network", "interface",
-	function(section)
-		local device_i
-		local device = section[".name"]
-		local ifname = uci_state:get("network",device,"ifname")
-		for i, v in ipairs(device_il) do
-			if string.find(device, v) then
-				device_i = true
-			end
-		end
-		if device_i then
-			logger("ignore: "..device)
-			return
-		end
-		wired_tbl[device] = {}
-		local dev = f:field(Flag, "device_" .. device , "<b>Drahtgebundenes Freifunk Netzwerk \"" .. device:upper() .. "\"</b>", "Konfigurieren Sie Ihre drahtgebunde Schnittstelle: " .. device:upper() .. ".")
-			dev.rmempty = false
-			function dev.cfgvalue(self, section)
-				return uci:get("freifunk", "wizard", "device_" .. device)
-			end
-			function dev.write(self, sec, value)
-				uci:set("freifunk", "wizard", "device_" .. device, value)
-				uci:save("freifunk")
-			end
-			wired_tbl[device]["dev"] = dev
-		local meship = f:field(Value, "meship_" .. device, device:upper() .. "  Mesh IP Adresse einrichten", "Ihre Mesh IP Adresse erhalten Sie von der Freifunk Gemeinschaft in Ihrer Nachbarschaft. Es ist eine netzweit eindeutige Identifikation, z.B. 104.1.1.1.")
-			meship:depends("device_" .. device, "1")
-			meship.rmempty = true
-			meship.datatype = "ip4addr"
-			function meship.cfgvalue(self, section)
-				return uci:get("freifunk", "wizard", "meship_" .. device)
-			end
-			function meship.validate(self, value)
-				local x = ip.IPv4(value)
-				return ( x and x:is4()) and x:string() or ""
-			end
-			function meship.write(self, sec, value)
-				uci:set("freifunk", "wizard", "meship_" .. device, value)
-			end
-			wired_tbl[device]["meship"] = meship
-		local client = f:field(Flag, "client_" .. device, device:upper() .. "  DHCP anbieten","DHCP weist verbundenen Benutzern automatisch eine Adresse zu. Diese Option sollten Sie unbedingt aktivieren, wenn Sie Nutzer an der drahtlosen Schnittstelle erwarten.")
-			client:depends("device_" .. device, "1")
-			client.rmempty = false
-			function client.cfgvalue(self, section)
-				return uci:get("freifunk", "wizard", "client_" .. device)
-			end
-			function client.write(self, sec, value)
-				uci:set("freifunk", "wizard", "client_" .. device, value)
-				uci:save("freifunk")
-			end
-			wired_tbl[device]["client"] = client
-		local dhcpmesh = f:field(Value, "dhcpmesh_" .. device, device:upper() .. "  Mesh DHCP anbieten ", "Bestimmen Sie den Adressbereich aus dem Ihre Nutzer IP Adressen erhalten. Es wird empfohlen einen Adressbereich aus Ihrer lokalen Freifunk Gemeinschaft zu nutzen. Der Adressbereich ist ein netzweit eindeutiger Netzbereich. z.B. 104.1.2.1/28")
-			dhcpmesh:depends("client_" .. device, "1")
-			dhcpmesh.rmempty = true
-			dhcpmesh.datatype = "ip4addr"
-			function dhcpmesh.cfgvalue(self, section)
-				return uci:get("freifunk", "wizard", "dhcpmesh_" .. device)
-			end
-			function dhcpmesh.validate(self, value)
-				local x = ip.IPv4(value)
-				return ( x and x:prefix() <= 30 and x:minhost()) and x:string() or ""
-			end
-			function dhcpmesh.write(self, sec, value)
-				uci:set("freifunk", "wizard", "dhcpmesh_" .. device, value)
-				uci:save("freifunk")
-			end
-			wired_tbl[device]["dhcpmesh"] = dhcpmesh
-		if has_splash then
-			local dhcpsplash = f:field(Flag, "dhcpsplash_" .. device, device:upper() .. "  DHCP Splash Seite", "Soll eine Splash Seite angezeigt werden?")
-				dhcpsplash:depends("client_" .. device, "1")
-				dhcpsplash.rmempty = true
-				function dhcpsplash.cfgvalue(self, section)
-					return uci:get("freifunk", "wizard", "dhcpsplash_" .. device)
-				end
-				function dhcpsplash.write(self, sec, value)
-					uci:set("freifunk", "wizard", "dhcpsplash_" .. device, value)
-					uci:save("freifunk")
-				end
-			wired_tbl[device]["dhcpsplash"] = dhcpsplash
-		end
-	end)
-
-
+--geo config
 local syslat
 local syslon
 uci:foreach("system", "system", function(s)
