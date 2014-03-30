@@ -1,0 +1,598 @@
+header {
+	background-size: 100% 100%;
+	height:5em;
+}	
+
+header .fill {
+	background-size: auto 5em;
+	background-position:100% 0%;
+	overflow:hidden;
+	height:5em;
+	min-height:5em;
+}
+
+header .brand{
+	font-size:1em;
+	margin:0;
+	margin-left: 0.5em;
+	padding:0;
+	min-height:0;
+	width:12em;
+	text-shadow:0 0 0.5em #000;
+	position:relative;
+}
+
+header .brand .hostname{
+	position:absolute;
+	top:0;
+	left:0;
+	font-size:2em;
+	line-height:1.6em;
+	font-weight:bold;
+}
+
+header .brand .pfn{
+	font-weight:normal;
+	position:absolute;
+	top:2.2em;
+	left:0;
+	font-size:1.35em;
+	line-height:1.5em;
+}
+
+header .open,
+header .back,
+header .hide {
+	position: absolute;
+	left:1em;
+	top:6em;
+	z-index:20;
+	margin:0;
+}
+
+.open,
+.back,
+.hide {
+	display:inline-block;
+	background:rgba(0,0,0,0.5);
+	border-radius:0.4em;
+	font-size:1em;
+	padding:0;
+	cursor:pointer;
+	width:5em;
+	height:4.06em;
+	line-height:4em;
+	text-align:center;
+	color:#fff;
+}
+
+.open {
+	margin-left:0.3em;
+}
+
+.back {
+	margin-right:0.3em;
+}
+
+.open:before{
+	font-size:2em;
+	content:'\25BC';
+}
+
+.back:before{
+	font-size:2em;
+	content:'\25C0';
+}
+
+.hide:before{
+	font-size:2em;
+	content:'\2716';
+}
+
+
+.mobile_nav{
+	position:absolute;
+	left:0;
+	top:0;
+	right:0;
+	min-height:100%;
+	padding:0;
+	padding-top:11em;
+	padding-left:1em;
+	padding-right:0em;
+	background:rgba(0,0,0,0.75);
+	margin:0;
+	box-shadow:5em 0 0  #f80;
+	list-style:none;
+	z-index:10;
+}
+
+.mobile_nav li{
+	position:relative;
+	margin-bottom:0.3em;
+	margin-top:0.3em;
+}
+
+.mobile_nav li a{
+	display:inline-block;
+	width:9.5em;
+	font-size:1.4em;
+	border-radius:0.4em;
+	background:rgba(0,0,0,0.5);
+	line-height:2.9em;
+	padding-left:1em;
+	color:#fff;
+	text-decoration:none;
+	font-weight:bold;
+	vertical-align:top;
+}
+
+.mobile_nav li.level_down{
+	margin-bottom:0.6em;
+}
+
+.mobile_nav li.level_down a {
+
+	text-transform: uppercase;
+}
+.mobile_nav li.level_down * {
+	background:#000;
+}
+
+
+a.menu:after, 
+.dropdown-toggle:after{
+	display:none;
+}
+
+#logo {
+    position: absolute;
+    right: 3.07em;
+    top: 2.1em;
+    width: 6.4em;
+	height: 9em;
+	background-position: 0 0;
+	background-size: cover;
+	z-index: 100;
+}
+
+#maincontent{
+	padding-top:6em;
+	padding-left: 1em;
+	padding-right:1em;
+}
+
+footer {
+	text-align: center;
+	line-height: 1.4em;
+	font-size:1.1em;
+	border-top: 0.3em solid #000;
+}
+
+footer > a{
+	display: block;
+	text-decoration:underline;
+	line-height:2em;
+	padding:0;
+}
+
+footer #modemenu {
+	display: block;
+	margin:0;
+	padding:0;
+	text-align:center;
+	overflow:hidden;
+}
+
+footer #modemenu li{
+	display:block;
+	margin:0.3em 0;
+}
+
+footer #modemenu li a{
+	display:block;
+	padding:0;
+	font-size:1.4em;
+	line-height:2.3em;	
+	font-weight:bold;
+}
+
+.container {
+	width: auto;
+	margin-left: 0em;
+	margin-right: 0em;
+	zoom: 1;
+}
+
+
+
+body {
+	line-height: 1.4em;
+}
+
+
+p,
+.cbi-map-descr,
+.cbi-section-descr {
+	font-size: 1em;
+	font-weight: normal;
+	line-height: 1.4em;
+	margin-bottom: 0.7em;
+}
+
+p small {
+	font-size: 0.9em;
+}
+
+h1 {
+	margin-bottom: 1.4em;
+	font-size: 2.3em;
+	line-height: 1.2em;
+}
+
+h1 small {
+	font-size: 0.6em;
+}
+
+h2 {
+	font-size: 1.8em;
+	line-height: 1.2em;
+	margin-bottom:1em;	
+}
+
+h2 small {
+	font-size: 0.6em;
+}
+
+h3,
+h4,
+h5,
+h6 {
+	line-height: 2em;
+}
+
+h3 {
+	font-size: 1.4em;
+}
+
+h3 small {
+	font-size: 0.6em;
+}
+
+h4 {
+	font-size: 1.2em;
+}
+
+h4 small {
+	font-size: 0.6em;
+}
+
+h5 {
+	font-size: 1.1em;
+}
+
+h6 {
+	font-size: 1em;
+}
+
+ul, ol {
+	margin: 1em 1em 1.2em 2em;
+	padding-left: 1em;
+}
+
+li {
+	line-height: 1.4em;
+}
+
+dl {
+	margin-bottom: 1.4em;
+}
+
+dl dt, dl dd {
+	line-height: 1.4em;
+}
+
+dl dd {
+	margin-left: 0.7em;
+}
+
+hr {
+	margin: 1.8em 0 1.4em;
+}
+
+small { font-size: 0.9em }
+
+address {
+	line-height: 1.4em;
+	margin-bottom: 1.4em;
+}
+
+code, pre {
+	padding: 0 0.2em 0.2em;
+	font-size: 0.9em;
+	border-radius: 0.2em;
+}
+
+pre {
+	padding: 0.8em;
+	margin: 0 0 1.4em;
+	line-height: 1.4em;
+	font-size: 0.9em;
+	border: 1px solid #ccc;
+	border: 1px solid rgba(0, 0, 0, 0.15);
+	border-radius: 0.3px;
+}
+
+form {
+	margin-bottom: 1.4em;
+}
+
+fieldset {
+	margin-bottom: 0.7em;
+	padding-top: 0.7em;
+}
+
+fieldset legend {
+	font-size: 1.8em;
+	*padding: 0 0 0.5em 0px;
+	/* IE6-7 */
+	*line-height: 1.5;
+	/* IE6-7 */
+
+}
+
+form .clearfix,
+form .cbi-value {
+	margin-bottom: 1.4em;
+}
+
+.btn,
+.cbi-button{
+	display:block;
+	cursor: pointer;
+	padding: 0.4em 1em 0.5em;
+	font-size: 1.6em;
+	margin: 0.5em auto;
+	width: 100%;
+}
+
+label,
+input,
+select,
+textarea {
+	font-size: 1em;
+}
+
+input[type=button], input[type=reset], input[type=submit] {
+	width: 100%;
+	height: auto;
+}
+
+form .cbi-value,
+.row_substitute {
+	border-radius: 0.3em;
+	box-shadow: 0 0 0.2em rgba(0,0,0,0.6);
+	padding: 0.5em;
+	margin-bottom:1.4em;
+}
+
+form .input,
+form .cbi-value-field {
+	margin-left: 0em;
+	display:block;
+	text-align:left;
+}
+
+form .cbi-value label.cbi-value-title {
+	padding-top: 0.7px;
+	font-size: 1em;
+	line-height: 1.4em;
+	width:auto;
+	display:block;
+	float:none;
+	text-align:left;
+	margin-bottom:0.5em;
+	font-weight: bold;
+}
+
+.cbi-value-description{
+	display:block;
+	width:20em;
+	text-align:left;
+	overflow:hidden;
+}
+
+input,
+textarea,
+select,
+.uneditable-input {
+	float:none;
+	width: 90%;
+	display:block;
+	height: auto;
+	padding: 0.5em;
+	font-size: 1em;
+	line-height: 1.4em;
+	border: 1px solid #ccc;
+	border-radius: 0.3em;
+	margin:auto;
+}
+
+input[type=checkbox], input[type=radio] {
+	margin: 0.3em 0;
+	*margin-top: 0;
+	/* IE6-7 */
+}
+
+.checkbox_substitute{
+	height:2em;
+	width:2em;
+	cursor:pointer;
+	border: 1px solid #ccc;
+	border-radius: 0.3em 0.3em 0.3em 0.3em;
+	margin-bottom:1em;
+	position:relative;
+}
+
+.checkbox_substitute div{
+	font-size:3.5em;
+	line-height:1em;
+	margin-left:50%;
+	margin-top:50%;
+	width:1em;
+	height:1em;
+}
+
+.checkbox_substitute > div:before{
+	display:block;
+	content:'\2713';
+	text-shadow: 0 0 0.01em #fff;
+	width:1em;
+	height:1em;
+	text-align:center;
+	margin-left:-35%;
+	margin-top:-55%;
+}
+
+.checkbox_substitute .on:before{
+	color:#000;
+}
+
+.checkbox_substitute .off:before{
+	color:#ddd;
+}
+
+select, input[type=file] {
+	height: auto;
+	*height: auto;
+	line-height: 2em;
+	*margin-top: 0.4em;
+	/* For IE7, add top margin to align select with labels */
+}
+
+.uneditable-input {
+	box-shadow: inset 0 0.1em 0.2em rgba(0, 0, 0, 0.025);
+}
+
+input, textarea {
+	transition: border linear 0.2s, box-shadow linear 0.2s;
+	box-shadow: inset 0 0.1em 0.3em rgba(0, 0, 0, 0.1);
+}
+
+input:focus, textarea:focus {
+	box-shadow: inset 0 0.1em 0.3em rgba(0, 0, 0, 0.1), 0 0 0.8em rgba(82, 168, 236, 0.6);
+}
+
+
+form .clearfix.error input:focus, form .clearfix.error textarea:focus {
+	box-shadow: 0 0 0.5em #f8b9b7;
+}
+
+
+form .clearfix.warning input:focus, form .clearfix.warning textarea:focus {
+	box-shadow: 0 0 0.5em #e5d6b1;
+}
+
+form .clearfix.success input:focus, form .clearfix.success textarea:focus {
+	box-shadow: 0 0 0.5em #9acc9a;
+}
+
+.actions,
+.cbi-page-actions {
+	margin-bottom: 1.4em;
+	padding: 0.5em;
+	border-radius: 0 0 0.3em 0.3em;
+}
+
+.btn.primary,
+.cbi-page-actions .cbi-button-apply,
+.cbi-page-actions .cbi-button-save,
+.cbi-page-actions .cbi-button-reset {
+	padding:0.5em;
+	display:block;
+}
+
+
+.actions .secondary-action a,
+.cbi-page-actions .secondary-action a {
+	line-height: 2.5em;
+}
+
+
+.help-inline, .help-block {
+	font-size: 1em;
+	line-height: 1.4em;
+}
+
+.help-inline {
+	padding-left: 0.4em;
+}
+
+.help-block {
+	display: block;
+	max-width: 20em;
+}
+
+table {
+	margin-bottom: 1.4em;
+	font-size: 1em;
+	border-radius:0.3em;
+	border: none;
+	overflow:hidden;
+}
+
+
+table th,
+table td {
+	vertical-align: top;
+	padding: 0.5em;
+	line-height: 1.4em;
+	border: none !important;
+}
+
+.cbi-tabmenu{
+	display:block;
+}
+
+.tabs > li,
+.cbi-tabmenu > li {
+	float:none;
+	display:block;
+	background:transparent;
+	margin: 0.5em 0em;
+}
+
+.tabs > li > a, 
+.cbi-tabmenu > li > a {
+	display:block;
+	background: rgba(0,0,0,0.6);
+	color:#fff;
+	border:none;
+	border-radius:0;
+	font-size:1.5em;
+	margin:0;
+	line-height:2em;
+}
+
+.tabs > li > a:hover, 
+.cbi-tabmenu > li > a:hover {
+	background:rgba(0,0,0,0.8)
+}
+
+
+.tabs .active > a, 
+.tabs .active > a:hover, 
+.cbi-tabmenu .active > a, 
+.cbi-tabmenu .active > a:hover, 
+.cbi-tab > a:link, 
+.cbi-tab > a:hover {
+	color:#fff;
+	background-color:rgba(0,0,0,0.8);
+	border:none;
+}
+
+
+
+
+
+

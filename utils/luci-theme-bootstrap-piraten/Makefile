@@ -2,23 +2,23 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=luci-theme-piraten
+PKG_NAME:=luci-theme-bootstrap-piraten
 PKG_VERSION:=0.0.1
-PKG_RELEASE:=2
+PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/luci-theme-piraten
+define Package/luci-theme-bootstrap-piraten
   SECTION:=luci
   CATEGORY:=LuCI
   SUBMENU:=Themes
-  TITLE:=Piraten Freifunk Theme
+  TITLE:=Piraten Bootstrap Theme
   DEPENDS+=+luci-theme-base
 endef
 
-define Package/luci-theme-piraten/description
+define Package/luci-theme-bootstrap-piraten/description
    Piraten-Freifunk Theme
 endef
 
@@ -32,7 +32,14 @@ endef
 define Build/Compile
 endef
 
-define Package/luci-theme-piraten/install
+define Package/luci-theme-bootstrap-piraten/postinst
+#!/bin/sh
+[ -n "$${IPKG_INSTROOT}" ] || {
+	( . /etc/uci-defaults/luci-theme-bootstrap-piraten ) &&	rm -f /etc/uci-defaults/luci-theme-bootstrap-piraten
+}
+endef
+
+define Package/luci-theme-bootstrap-piraten/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
 	$(CP) ./luasrc/* $(1)/usr/lib/lua/luci
 	$(INSTALL_DIR) $(1)/www/luci-static
@@ -41,4 +48,4 @@ define Package/luci-theme-piraten/install
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
 endef
 
-$(eval $(call BuildPackage,luci-theme-piraten))
+$(eval $(call BuildPackage,luci-theme-bootstrap-piraten))
