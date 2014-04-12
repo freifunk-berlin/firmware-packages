@@ -38,8 +38,11 @@ end
 
 function lock()
 	if luci.fs.isfile(lockfile) then
-		print(lockfile.." exist")
-		os.exit()
+		local timediff = os.time() - luci.fs.mtime(lockfile)
+		if timediff < 3600 then
+			print(lockfile.." exists, time since lock: "..timediff)
+			os.exit()
+		end
 	else
 		os.execute("lock "..lockfile)
 	end
