@@ -345,6 +345,36 @@ uci:foreach("wireless", "wifi-device",
 				end
 			end
 			wifi_tbl[device]["chan"] = chan
+		local mode = f:field(ListValue, "mode_" .. device, device:upper() .. "  Freifunk Mode", "Mode AP,Client, AdHoc")
+			mode:depends("device_" .. device, "1")
+			mode.rmempty = true
+			function mode.cfgvalue(self, section)
+				return uci:get("freifunk", "wizard", "mode_" .. device)
+			end
+			mode:value('adhoc')
+			mode:value('ap')
+			mode:value('sta')
+			function mode.write(self, sec, value)
+				if value then
+					uci:set("freifunk", "wizard", "mode_" .. device, value)
+					uci:save("freifunk")
+				end
+			end
+			wifi_tbl[device]["mode"] = mode
+		local ssid = f:field(Value, "ssid_" .. device, device:upper() .. "  Freifunk SSID", "SSID")
+			ssid:depends("mode_" .. device, "ap")
+			ssid:depends("mode_" .. device, "sta")
+			ssid.rmempty = true
+			function ssid.cfgvalue(self, section)
+				return uci:get("freifunk", "wizard", "ssid_" .. device)
+			end
+			function ssid.write(self, sec, value)
+				if value then
+					uci:set("freifunk", "wizard", "ssid_" .. device, value)
+					uci:save("freifunk")
+				end
+			end
+			wifi_tbl[device]["ssid"] = ssid
 		local distance = f:field(Value, "distance_" .. device, device:upper().."  "..translate("Distance Optimization"), translate("Distance to farthest network member in meters."))
 			distance:depends("device_" .. device, "1")
 			distance:depends("dhcpbr_" .. device, "1")
@@ -380,7 +410,7 @@ uci:foreach("wireless", "wifi-device",
 			end
 			wifi_tbl[device]["meship"] = meship
 		local client = f:field(Flag, "client_" .. device, device:upper() .. "  DHCP anbieten", "DHCP weist verbundenen Benutzern automatisch eine Adresse zu. Diese Option sollten Sie unbedingt aktivieren, wenn Sie Nutzer an der drahtlosen Schnittstelle erwarten.")
-			client:depends("device_" .. device, "1")
+			client:depends("mode_" .. device, "adhoc")
 			client.rmempty = false
 			function client.cfgvalue(self, section)
 				return uci:get("freifunk", "wizard", "client_" .. device)
@@ -464,9 +494,9 @@ uci:foreach("system", "system", function(s)
 end)
 
 if not syslat or not syslon then
-	f:field(DummyValue, "unset_latlon", "<b>Achtung Längengrad und Breitengrad nicht gesetzt</b>", "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV")
-	syslat = 52
-	syslon = 10
+	f:field(DummyValue, "unset_latlon", "<b>Achtung Längengrad und Breitengrad nicht gesetzt. Das Gerät wird auf keiner Freifunk Karte angezeigt.</b>", "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV")
+	--syslat = 52
+	--syslon = 10
 end
 
 local lat = f:field(Value, "lat", "geographischer Breitengrad", "Setzen Sie den Breitengrad (Latitude) Ihres Geräts.")
@@ -514,7 +544,7 @@ osm.centerlon = syslon
 osm.width = "100%"
 osm.height = "600"
 osm.popup = false
-syslatlengh = string.len(syslat)
+syslatlengh = string.len(syslat or "")
 if syslatlengh > 7 then
 	osm.zoom = "15"
 elseif syslatlengh > 5 then
@@ -1282,7 +1312,8 @@ function main.write(self, section, value)
 		local devconfig = uci:get_all("freifunk", "wifi_device") or {}
 		util.update(devconfig, uci:get_all(external, "wifi_device") or {})
 		local channel = wifi_tbl[device]["chan"]:formvalue(section) or "default"
-		logger("channel: "..channel)
+		local mode = wifi_tbl[device]["mode"]:formvalue(section) or "adhoc"
+		logger("ssid: "..ssid.." channel: "..channel.." mode: "..mode)
 		local hwtype = sec.type
 		local hwmode
 		local pre
@@ -1299,6 +1330,7 @@ function main.write(self, section, value)
 		local mrate = 5500
 		local freqlist
 		local doth
+		local country
 		if iw and iw.freqlist then
 			freqlist = iw.freqlist
 			local channel_c
@@ -1460,11 +1492,19 @@ function main.write(self, section, value)
 				end
 			end
 		end
+		if channel >= 100 and channel <= 140 and mode == "ap" then
+			devconfig.country = "F1"
+			devconfig.htmode = "HT20"
+			devconfig.doth = "1"
+		end
+
 		local distance = wifi_tbl[device]["distance"]:formvalue(section)
 		if distance then
 			devconfig.distance = distance
 		end
 		uci:tset("wireless", device, devconfig)
+		logger("ssid: "..ssid.." channel: "..channel.." mode: "..mode)
+		ssid = wifi_tbl[device]["ssid"]:formvalue(section) or ssid
 		local ifconfig
 		-- Create wifi iface
 		if mesh_device then
@@ -1473,7 +1513,8 @@ function main.write(self, section, value)
 			ifconfig.device = device
 			ifconfig.mcast_rate = mrate
 			ifconfig.network = nif
-			ifconfig.ifname = ifcfg.."-adhoc-"..pre
+			ifconfig.ifname = ifcfg.."-"..mode.."-"..pre
+			ifconfig.mode = mode
 			if ssid then
 				-- See Table https://pberg.freifunk.net/moin/channel-bssid-essid 
 				ifconfig.ssid = ssid
@@ -1481,8 +1522,13 @@ function main.write(self, section, value)
 				ifconfig.ssid = "olsr.freifunk.net"
 			end
 			-- See Table https://pberg.freifunk.net/moin/channel-bssid-essid
-			if bssid then
+			if bssid and mode == "adhoc" then
 				ifconfig.bssid = bssid
+			else
+				ifconfig.bssid = ""
+				ifconfig.probereq = ""
+				ifconfig.sw_merge = ""
+				ifconfig.bgscan = ""
 			end
 			ifconfig.encryption="none"
 			-- Read Preset 
