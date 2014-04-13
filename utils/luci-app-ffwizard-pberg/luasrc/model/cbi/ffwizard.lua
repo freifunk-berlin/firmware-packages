@@ -1492,7 +1492,7 @@ function main.write(self, section, value)
 				end
 			end
 		end
-		if channel >= 100 and channel <= 140 and mode == "ap" then
+		if channel >= 100 and channel <= 140 and (mode == "ap" or mode == "sta") then
 			devconfig.country = "F1"
 			devconfig.htmode = "HT20"
 			devconfig.doth = "1"
