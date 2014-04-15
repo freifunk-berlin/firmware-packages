@@ -1456,7 +1456,6 @@ function main.write(self, section, value)
 			bssid = uci:get(external,"bssidscheme",channel) or bssid
 		end
 		devconfig.hwmode = hwmode
-		devconfig.outdoor = outdoor
 		devconfig.doth = doth
 		if has_n then
 			if doth then
@@ -1493,9 +1492,14 @@ function main.write(self, section, value)
 			end
 		end
 		if channel >= 100 and channel <= 140 and (mode == "ap" or mode == "sta") then
-			devconfig.country = "F1"
+			devconfig.country = "DE"
 			devconfig.htmode = "HT20"
 			devconfig.doth = "1"
+			devconfig.dfs_chanlist = "100 104 108 112 116 120 124 128 132 136 140"
+		else
+			devconfig.country = "00"
+			devconfig.doth = "0"
+			devconfig.dfs_chanlist = ""
 		end
 
 		local distance = wifi_tbl[device]["distance"]:formvalue(section)
