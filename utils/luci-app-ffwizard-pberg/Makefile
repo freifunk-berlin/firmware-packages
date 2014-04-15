@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ffwizard-pberg
 PKG_VERSION:=0.0.2
-PKG_RELEASE:=13
+PKG_RELEASE:=14
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -52,6 +52,8 @@ define Package/luci-app-ffwizard-pberg/install
 	$(CP) ./openvpn/* $(1)/etc/openvpn
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/net
 	$(CP) ./hotplug.d/net/* $(1)/etc/hotplug.d/net/
+	$(INSTALL_DIR) $(1)/lib/upgrade/keep.d
+	$(CP) ./lib-upgrade/* $(1)/lib/upgrade/keep.d/
 endef
 
 $(eval $(call BuildPackage,luci-app-ffwizard-pberg))
