@@ -1495,11 +1495,11 @@ function main.write(self, section, value)
 			devconfig.country = "DE"
 			devconfig.htmode = "HT20"
 			devconfig.doth = "1"
-			devconfig.dfs_chanlist = "100 104 108 112 116 120 124 128 132 136 140"
+			devconfig.chanlist = "100 104 108 112 116 120 124 128 132 136 140"
 		else
 			devconfig.country = "00"
 			devconfig.doth = "0"
-			devconfig.dfs_chanlist = ""
+			devconfig.chanlist = ""
 		end
 
 		local distance = wifi_tbl[device]["distance"]:formvalue(section)
