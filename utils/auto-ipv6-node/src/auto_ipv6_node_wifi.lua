@@ -31,7 +31,7 @@ end
 
 function valid_channel(iw,channel)
 	for _, f in ipairs(iw and iw.freqlist or { }) do 
-		if f.channel == channel then 
+		if f.channel == channel and not f.restricted then 
 			return true
 		end
 	end
@@ -60,42 +60,46 @@ function get_wconf(iw,tbl,pft)
 
 	for i, net in ipairs(tbl) do
 		if net.mode == "Ad-Hoc" then
-			print(net.quality,net.bssid,net.channel,net.signal.." dB",net.quality,net.quality_max.." max")
-			wconf.mode = "adhoc"
-			wconf.ssid = net.ssid
-			wconf.bssid = net.bssid
-			wconf.channel = net.channel
-			wconf.profile = "berlin"
-			for i, profile in ipairs(pft) do
-				--print("profile"..profile.ssid,net.ssid)
---				if net.ssid == profile.ssid then
---					print("ssid profile "..profile.uciname,"net "..net.ssid,net.bssid)
---				end
+			if valid_channel(iw,net.channel) then
+				print(net.quality,net.bssid,net.channel,net.signal.." dB",net.quality,net.quality_max.." max")
+				wconf.mode = "adhoc"
+				wconf.ssid = net.ssid
+				wconf.bssid = net.bssid
+				wconf.channel = net.channel
+				wconf.profile = "berlin"
+				for i, profile in ipairs(pft) do
+					--print("profile"..profile.ssid,net.ssid)
+	--				if net.ssid == profile.ssid then
+	--					print("ssid profile "..profile.uciname,"net "..net.ssid,net.bssid)
+	--				end
+				end
+				for i, profile in ipairs(pft) do
+					--print("profile: "..profile.bssid.."net: "..net.bssid)
+	--				if net.bssid == profile.bssid then
+	--					print("bssid profile "..profile.uciname,"net "..net.ssid,net.bssid)
+	--				end
+				end
+				for i, profile in ipairs(pft) do
+					--print("profile "..profile.bssid,"net "..net.bssid)
+					local pssid = string.gsub(profile.ssid,"%..*","")
+					local nssid = string.gsub(net.ssid,"%..*","")
+	--				if nbssid == pbssid then
+	--					print("ssid profile %..*:[] "..profile.uciname,"profile "..profile.ssid,"net "..net.ssid)
+	--				end
+				end
+				for i, profile in ipairs(pft) do
+					--print("profile "..profile.bssid,"net "..net.bssid)
+					local pbssid = string.gsub(profile.bssid,"%x%x:","",1)
+					local nbssid = string.gsub(net.bssid,"%x%x:","",1)
+	--				if nbssid == pbssid then
+	--					print("bssid profile %x%x:[] "..profile.uciname,"profile"..profile.bssid,"net "..net.bssid)
+	--				end
+				end
+	
+				return  wconf
+			else
+				print(net.quality,net.bssid,net.channel,net.signal.." dB",net.quality,net.quality_max.." max not valid")
 			end
-			for i, profile in ipairs(pft) do
-				--print("profile: "..profile.bssid.."net: "..net.bssid)
---				if net.bssid == profile.bssid then
---					print("bssid profile "..profile.uciname,"net "..net.ssid,net.bssid)
---				end
-			end
-			for i, profile in ipairs(pft) do
-				--print("profile "..profile.bssid,"net "..net.bssid)
-				local pssid = string.gsub(profile.ssid,"%..*","")
-				local nssid = string.gsub(net.ssid,"%..*","")
---				if nbssid == pbssid then
---					print("ssid profile %..*:[] "..profile.uciname,"profile "..profile.ssid,"net "..net.ssid)
---				end
-			end
-			for i, profile in ipairs(pft) do
-				--print("profile "..profile.bssid,"net "..net.bssid)
-				local pbssid = string.gsub(profile.bssid,"%x%x:","",1)
-				local nbssid = string.gsub(net.bssid,"%x%x:","",1)
---				if nbssid == pbssid then
---					print("bssid profile %x%x:[] "..profile.uciname,"profile"..profile.bssid,"net "..net.bssid)
---				end
-			end
-
-			return  wconf
 		end
 	end
 	wconf.profile = "berlin"
@@ -151,6 +155,8 @@ for i,dev in ipairs(devices) do
 	if dev:get("disabled") == "1" then
 		dev:set("disabled", "0")
 		dev:set("country", "DE")
+		ntm:save("wireless")
+		sys.exec("/sbin/wifi reload_legacy")
 		for _, net in ipairs(dev:get_wifinets()) do
 			local ifc = net:get_interface()
 			local iw, scan = iwscanlist(ifc.ifname,3)
