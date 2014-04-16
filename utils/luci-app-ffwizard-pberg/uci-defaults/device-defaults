@@ -22,9 +22,6 @@ grep -q "113 olsr-tunnel" $tables || echo "113 olsr-tunnel" >> $tables
 (
 sleep 10
 if [ -f /etc/config/openvpn ] ; then
-	grep -q '/lib/uci/upload' /etc/sysupgrade.conf || \
-	echo "/lib/uci/upload" >> /etc/sysupgrade.conf
-	
 	if ! uci -q get openvpn.ffvpn >/dev/null ; then
 		uci delete openvpn.custom_config
 		uci delete openvpn.sample_server
