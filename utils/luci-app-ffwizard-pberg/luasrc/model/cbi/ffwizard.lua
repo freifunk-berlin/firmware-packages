@@ -1648,7 +1648,7 @@ function main.write(self, section, value)
 							mode="ap",
 							encryption ="none",
 							network=nif.."dhcp",
-							ifname=ifcfg.."-master-"..pre,
+							ifname=ifcfg.."-dhcp-"..pre,
 							ssid=vap_ssid
 						})
 						if has_firewall then
@@ -1738,7 +1738,7 @@ function main.write(self, section, value)
 				mode="ap",
 				encryption ="none",
 				network="lan",
-				ifname=ifcfg.."-master-"..pre,
+				ifname=ifcfg.."-dhcp-"..pre,
 				ssid=vap_ssid
 			})
 		end
