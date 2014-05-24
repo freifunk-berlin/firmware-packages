@@ -35,6 +35,7 @@ if [ -f /etc/config/openvpn ] ; then
 		uci set openvpn.ffvpn.dev=ffvpn
 		uci set openvpn.ffvpn.dev_type=tun
 		uci set openvpn.ffvpn.persist_key=1
+		uci set openvpn.ffvpn.keepalive="10 60"
 		uci set openvpn.ffvpn.ns_cert_type=server
 		uci set openvpn.ffvpn.comp_lzo="no"
 		uci set openvpn.ffvpn.script_security=2

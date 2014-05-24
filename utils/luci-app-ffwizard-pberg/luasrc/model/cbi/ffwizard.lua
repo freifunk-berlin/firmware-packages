@@ -948,7 +948,7 @@ if has_lan then
 end
 
 if has_ovpn then
-	ffvpn = f:field(Flag, "ffvpn", "Freifunk Internet Tunnel", "Verbinden Sie ihren Router mit mit dem Frefunk VPN Sever 03.")
+	ffvpn = f:field(Flag, "ffvpn", "Freifunk Internet Tunnel", "Verbinden Sie ihren Router mit mit dem Freifunk VPN03-Server.")
 	ffvpn.rmempty = false
 	ffvpn:depends("sharenet", "1")
 	function ffvpn.cfgvalue(self, section)
