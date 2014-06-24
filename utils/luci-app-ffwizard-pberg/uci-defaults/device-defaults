@@ -54,60 +54,6 @@ if [ -f /etc/config/openvpn ] ; then
 		uci set network.ffvpn.proto=none
 		uci commit network
 	fi
-	# henet server route
-	uci set network.henet_relay=rule
-	uci set network.henet_relay.priority=100
-	uci set network.henet_relay.dest='216.66.86.114/32'
-	uci set network.henet_relay.goto=32766
-	uci commit network
-	# 6to4-Relay server route
-	uci set network.6to4_relay=rule
-	uci set network.6to4_relay.priority=100
-	uci set network.6to4_relay.dest='192.88.99.1/32'
-	uci set network.6to4_relay.goto=32766
-	uci commit network
-	# vpn03 server route
-	uci set network.ffvpn_server=rule
-	uci set network.ffvpn_server.priority=100
-	uci set network.ffvpn_server.dest='77.87.48.10/32'
-	uci set network.ffvpn_server.goto=32766
-	uci commit network
-	# vpn03 backup server route
-	uci set network.ffvpn_backup_server=rule
-	uci set network.ffvpn_backup_server.priority=100
-	uci set network.ffvpn_backup_server.dest='78.41.116.65/32'
-	uci set network.ffvpn_backup_server.goto=32766
-	uci commit network
-	# dus.net
-	uci set network.dus_net=rule
-	uci set network.dus_net.priority=100
-	uci set network.dus_net.dest='83.125.8.0/22'
-	uci set network.dus_net.goto=32766
-	uci commit network
-	# pbx-network.de
-	uci set network.pbx_net=rule
-	uci set network.pbx_net.priority=100
-	uci set network.pbx_net.dest='46.182.250.0/25'
-	uci set network.pbx_net.goto=32766
-	uci commit network
-	# pbx-network.de
-	uci set network.pbx_net_1=rule
-	uci set network.pbx_net_1.priority=100
-	uci set network.pbx_net_1.dest='178.238.128.0/20'
-	uci set network.pbx_net_1.goto=32766
-	uci commit network
-	# freevoipdeal
-	uci set network.freevoipdeal=rule
-	uci set network.freevoipdeal.priority=100
-	uci set network.freevoipdeal.dest='77.72.174.0/24'
-	uci set network.freevoipdeal.goto=32766
-	uci commit network
-	# sipgate
-	uci set network.sipgate=rule
-	uci set network.sipgate.priority=100
-	uci set network.sipgate.dest='217.10.64.0/20'
-	uci set network.sipgate.goto=32766
-	uci commit network
 fi
 ) >/dev/null 2>&1 &
 exit 0

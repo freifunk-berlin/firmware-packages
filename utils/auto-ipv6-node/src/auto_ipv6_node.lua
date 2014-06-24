@@ -137,7 +137,7 @@ if uci_rewrite == 1 then
 	uci:commit("network")
 
 
-	uci:foreach("olsrd", "LoadPlugin",
+	uci:foreach("olsrd6", "LoadPlugin",
 	function(s)
 		if s.library == "olsrd_nameservice.so.0.3" then
 			--todo
@@ -145,17 +145,17 @@ if uci_rewrite == 1 then
 			--fix: str%%[! 	0-9A-Za-z./|:_-[]]*
 			--bug: in nameservice.c:378 do not match ip6 addr
 			--fix: ?
-			--uci:add_list("olsrd", s['.name'], "service", "http://["..p.netaddr.."1]:80|tcp|"..sys.hostname().." on "p.netaddr)
+			--uci:add_list("olsrd6", s['.name'], "service", "http://["..p.netaddr.."1]:80|tcp|"..sys.hostname().." on "p.netaddr)
 			local hosts = {}
 			for i, p in ipairs(ucihna6) do
 				local net = ip.IPv6(p.netaddr.."/"..p.prefix)
 				hosts[#hosts+1] = net:minhost():string().." pre"..i.."."..sys.hostname()
 			end
-			uci:set_list("olsrd", s['.name'], "hosts", hosts)
+			uci:set_list("olsrd6", s['.name'], "hosts", hosts)
 		end
 	end)
 
-	uci:delete_all("olsrd", "Hna6")
+	uci:delete_all("olsrd6", "Hna6")
 	if ula_prefix:is6() then
 		ucihna6[#ucihna6+1] = {
 			prefix = ula_prefix:prefix(),
@@ -164,16 +164,16 @@ if uci_rewrite == 1 then
 	end
 	for _, p in ipairs(ucihna6) do
 		print("Olsr Hna6:",p.netaddr)
-		uci:section("olsrd", "Hna6", nil, {
+		uci:section("olsrd6", "Hna6", nil, {
 				prefix = p.prefix,
 				netaddr = p.netaddr
 		})
 	end
-	uci:save("olsrd")
-	uci:commit("olsrd")
+	uci:save("olsrd6")
+	uci:commit("olsrd6")
 	util.exec("/etc/init.d/network restart")
 	util.exec("/bin/sleep 3")
-	util.exec("/etc/init.d/olsrd restart")
+	util.exec("/etc/init.d/olsrd6 restart")
 	util.exec("/etc/init.d/6relayd restart")
 	util.exec("chmod 0644 /etc/config/*")
 	util.exec("chmod 777 /var/run/ubus.sock")

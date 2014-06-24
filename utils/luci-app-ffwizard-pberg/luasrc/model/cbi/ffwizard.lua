@@ -1024,6 +1024,7 @@ function f.handle(self, state, data)
 			uci:commit("system")
 			uci:commit("uhttpd")
 			uci:commit("olsrd")
+			uci:commit("olsrd6")
 			uci:commit("manager")
 			if has_auto_ipv6_gw then
 				uci:commit("auto_ipv6_gw")
@@ -1130,36 +1131,33 @@ function main.write(self, section, value)
 		uci:delete_all("luci_splash", "subnet")
 	end
 
-	-- Delete olsrdv4
+	-- Delete olsrd
 	uci:delete_all("olsrd", "olsrd")
-	local olsrbase = uci:get_all("freifunk", "olsrd") or {}
-	util.update(olsrbase, uci:get_all(external, "olsrd") or {})
-	if has_ipv6 then
-		olsrbase.IpVersion='6and4'
-		uci:foreach("olsrd", "LoadPlugin",
-		function(s)
-			if s.library == "olsrd_jsoninfo.so.0.0" then
-				uci:set("olsrd", s['.name'], "accept", "0.0.0.0")
-			end
-		end)
-	elseif has_ipv6_only then
-		olsrbase.IpVersion='6'
-		uci:foreach("olsrd", "LoadPlugin",
-		function(s)
-			if s.library == "olsrd_jsoninfo.so.0.0" then
-				uci:set("olsrd", s['.name'], "accept", "::")
-			end
-		end)
-	else
-		olsrbase.IpVersion='4'
-		uci:foreach("olsrd", "LoadPlugin",
-		function(s)
-			if s.library == "olsrd_jsoninfo.so.0.0" then
-				uci:set("olsrd", s['.name'], "accept", "0.0.0.0")
-			end
-		end)
-	end
+	uci:delete_all("olsrd6", "olsrd")
 
+	-- Set jsoninfo defaults
+	uci:foreach("olsrd", "LoadPlugin",
+	function(s)
+		if s.library == "olsrd_jsoninfo.so.0.0" then
+			uci:set("olsrd", s['.name'], "accept", "0.0.0.0")
+		end
+	end)
+	uci:foreach("olsrd6", "LoadPlugin",
+	function(s)
+		if s.library == "olsrd_jsoninfo.so.0.0" then
+			uci:set("olsrd6", s['.name'], "accept", "::")
+		end
+	end)
+
+	-- Get freifunk olsrd defaults
+	local olsrbase = uci:get_all("freifunk", "olsrd") or {}
+	local olsrbase6 = uci:get_all("freifunk", "olsrd") or {}
+	util.update(olsrbase, uci:get_all(external, "olsrd") or {})
+	util.update(olsrbase6, uci:get_all(external, "olsrd") or {})
+	olsrbase.LinkQualityAlgorithm = "etx_ff"
+	olsrbase6.LinkQualityAlgorithm = "etx_ffeth"
+	olsrbase6.NatThreshold = nil
+	olsrbase6.SmartGateway= nil
 	if has_6relayd then
 		uci:delete("6relayd", "default")
 		uci:section("6relayd","server","default", {
@@ -1204,31 +1202,43 @@ function main.write(self, section, value)
 		end
 	end
 	uci:section("olsrd", "olsrd", nil, olsrbase)
+	uci:section("olsrd6", "olsrd", nil, olsrbase6)
 
 	-- Delete interface defaults
 	uci:delete_all("olsrd", "InterfaceDefaults")
-	-- Write new olsrv4 interface
+	uci:delete_all("olsrd6", "InterfaceDefaults")
+	-- Write new olsr interface
 	local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
+	local olsrifbase6 = uci:get_all("freifunk", "olsr_interface") or {}
 	util.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
+	util.update(olsrifbase6, uci:get_all(external, "olsr_interface") or {})
 	uci:section("olsrd", "InterfaceDefaults", nil, olsrifbase)
+	uci:section("olsrd6", "InterfaceDefaults", nil, olsrifbase6)
 
-	-- Delete olsrdv4 old p2pd settings
+	-- Delete olsr old p2pd settings
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})
+	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_p2pd.so.0.1.0"})
-	-- Write olsrdv4 new p2pd settings
+	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_p2pd.so.0.1.0"})
+	-- Write olsr new p2pd settings
 	uci:section("olsrd", "LoadPlugin", nil, {
 		library     = "olsrd_p2pd.so.0.1.0",
 		P2pdTtl     = 10,
 		UdpDestPort = "224.0.0.251 5353",
 		ignore      = 1,
 	})
-	-- Delete http plugin
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
+	uci:section("olsrd6", "LoadPlugin", nil, {
+		library     = "olsrd_p2pd.so.0.1.0",
+		P2pdTtl     = 10,
+		UdpDestPort = "ff02::fb 5353",
+		ignore      = 1,
+	})
 
-	-- Delete olsrdv4 old interface
+	-- Delete olsr old interface
 	uci:delete_all("olsrd", "Interface")
+	uci:delete_all("olsrd6", "Interface")
 	uci:delete_all("olsrd", "Hna4")
-	uci:delete_all("olsrd", "Hna6")
+	uci:delete_all("olsrd6", "Hna6")
 	
 	if has_6relayd then
 		uci:delete("6relayd","default","network")
@@ -1558,11 +1568,15 @@ function main.write(self, section, value)
 				tools.firewall_zone_add_interface("freifunk", nif)
 				uci:save("firewall")
 			end
-			-- Write new olsrv4 interface
+			-- Write new olsr interface
 			local olsrifbase = {}
+			local olsrifbase6 = {}
 			olsrifbase.interface = nif
-			olsrifbase.ignore    = "0"
+			olsrifbase6.interface = nif
+			olsrifbase.ignore = "0"
+			olsrifbase6.ignore = "0"
 			uci:section("olsrd", "Interface", nil, olsrifbase)
+			uci:section("olsrd6", "Interface", nil, olsrifbase6)
 			-- Collect MESH DHCP IP NET
 			local client = wifi_tbl[device]["client"]:formvalue(section)
 			if client then
@@ -1597,6 +1611,19 @@ function main.write(self, section, value)
 									table.insert(nonolsr,nif)
 								end
 								uci:set_list("olsrd", s['.name'], "NonOlsrIf", nonolsr)
+							end
+						end)
+					uci:foreach("olsrd6", "LoadPlugin",
+						function(s)
+							if s.library == "olsrd_p2pd.so.0.1.0" then
+								uci:set("olsrd6", s['.name'], "ignore", "1")
+								local nonolsr = uci:get_list("olsrd6", s['.name'], "NonOlsrIf") or {}
+								if vap then
+									table.insert(nonolsr,nif.."dhcp")
+								else
+									table.insert(nonolsr,nif)
+								end
+								uci:set_list("olsrd6", s['.name'], "NonOlsrIf", nonolsr)
 							end
 						end)
 				else
@@ -1838,12 +1865,17 @@ function main.write(self, section, value)
 			tools.firewall_zone_add_interface("freifunk", device)
 			uci:save("firewall")
 		end
-		-- Write new olsrv4 interface
+		-- Write new olsr interface
 		local olsrifbase = {}
+		local olsrifbase6 = {}
 		olsrifbase.interface = device
-		olsrifbase.ignore    = "0"
-		olsrifbase.Mode = 'ether'
+		olsrifbase6.interface = device
+		olsrifbase.ignore = "0"
+		olsrifbase6.ignore = "0"
+		olsrifbase.Mode = 'mesh'
+		olsrifbase6.Mode = 'ether'
 		uci:section("olsrd", "Interface", nil, olsrifbase)
+		uci:section("olsrd6", "Interface", nil, olsrifbase6)
 		-- Collect MESH DHCP IP NET
 		local client = wired_tbl[device]["client"]:formvalue(section)
 		if client then
@@ -1873,6 +1905,15 @@ function main.write(self, section, value)
 							local nonolsr = uci:get_list("olsrd", s['.name'], "NonOlsrIf") or {}
 							table.insert(nonolsr,device)
 							uci:set_list("olsrd", s['.name'], "NonOlsrIf", nonolsr)
+						end
+					end)
+				uci:foreach("olsrd6", "LoadPlugin",
+					function(s)		
+						if s.library == "olsrd_p2pd.so.0.1.0" then
+							uci:set("olsrd6", s['.name'], "ignore", "1")
+							local nonolsr = uci:get_list("olsrd6", s['.name'], "NonOlsrIf") or {}
+							table.insert(nonolsr,device)
+							uci:set_list("olsrd6", s['.name'], "NonOlsrIf", nonolsr)
 						end
 					end)
 			else
@@ -1968,7 +2009,8 @@ function main.write(self, section, value)
 				end
 			end
 		end
-		uci:save("olsr")
+		uci:save("olsrd")
+		uci:save("olsrd6")
 		uci:save("wireless")
 		uci:save("network")
 		if has_firewall then
@@ -2101,22 +2143,36 @@ function main.write(self, section, value)
 
 	-- Delete old watchdog settings
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_watchdog.so.0.1"})
+	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_watchdog.so.0.1"})
 	-- Write new watchdog settings
 	uci:section("olsrd", "LoadPlugin", nil, {
 		library  = "olsrd_watchdog.so.0.1",
-		file     = "/var/run/olsrd.watchdog",
+		file     = "/var/run/olsrd.watchdog.ipv4",
+		interval = "30"
+	})
+	uci:section("olsrd6", "LoadPlugin", nil, {
+		library  = "olsrd_watchdog.so.0.1",
+		file     = "/var/run/olsrd6.watchdog.ipv6",
 		interval = "30"
 	})
 
 	-- Delete old nameservice settings
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
+	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
 	-- Write new nameservice settings
 	uci:section("olsrd", "LoadPlugin", nil, {
 		library     = "olsrd_nameservice.so.0.3",
 		suffix      = "." .. suffix ,
-		hosts_file  = "/tmp/hosts/olsr",
-		latlon_file = "/var/run/latlon.js",
-		services_file = "/var/etc/services.olsr"
+		hosts_file  = "/tmp/hosts/olsr.ipv4",
+		latlon_file = "/var/run/latlon.js.ipv4",
+		services_file = "/var/etc/services.olsr.ipv4"
+	})
+	uci:section("olsrd6", "LoadPlugin", nil, {
+		library     = "olsrd_nameservice.so.0.3",
+		suffix      = "." .. suffix ,
+		hosts_file  = "/tmp/hosts/olsr.ipv6",
+		latlon_file = "/var/run/latlon.js.ipv6",
+		services_file = "/var/etc/services.olsr.ipv6"
 	})
 
 	if has_ipv6 then
@@ -2124,7 +2180,7 @@ function main.write(self, section, value)
 		if ula_prefix then
 			ula_prefix = ip.IPv6(ula_prefix)
 			if ula_prefix:is6() then
-				uci:section("olsrd", "Hna6", nil, {
+				uci:section("olsrd6", "Hna6", nil, {
 					prefix = ula_prefix:prefix(),
 					netaddr = ula_prefix:network():string()
 				})
@@ -2134,21 +2190,21 @@ function main.write(self, section, value)
 		for i, p in ipairs(lanprefixs) do
 			p = ip.IPv6(p)
 			if p:is6() then
-				uci:section("olsrd", "Hna6", nil, {
+				uci:section("olsrd6", "Hna6", nil, {
 					prefix = p:prefix(),
 					netaddr = p:network():string()
 				})
-				uci:foreach("olsrd", "LoadPlugin",
+				uci:foreach("olsrd6", "LoadPlugin",
 				function(s)
 					if s.library == "olsrd_nameservice.so.0.3" then
-						local service = uci:get_list("olsrd", s['.name'], "service") or {}
+						local service = uci:get_list("olsrd6", s['.name'], "service") or {}
 						local hn = "pre"..i.."."..sys.hostname()
 						local fqhn = hn.."."..suffix
 						service[#service+1] = "http://"..fqhn..":80|tcp|"..fqhn.." on "..p:minhost():string()
-						uci:set_list("olsrd", s['.name'], "service", service)
-						local hosts = uci:get_list("olsrd", s['.name'], "hosts") or {}
+						uci:set_list("olsrd6", s['.name'], "service", service)
+						local hosts = uci:get_list("olsrd6", s['.name'], "hosts") or {}
 						hosts[#hosts+1] = p:minhost():string().." "..hn
-						uci:set_list("olsrd", s['.name'], "hosts", hosts)
+						uci:set_list("olsrd6", s['.name'], "hosts", hosts)
 					end
 				end)
 			end
@@ -2161,29 +2217,23 @@ function main.write(self, section, value)
 			henet_prefix = ip.IPv6(henet_prefix)
 			henet_ip6addr = ip.IPv6(henet_ip6addr)
 			if henet_prefix:is6() and henet_ip6addr:is6() then
-				uci:section("olsrd", "Hna6", nil, {
+				uci:section("olsrd6", "Hna6", nil, {
 					prefix = henet_prefix:prefix(),
 					netaddr = henet_prefix:network():string()
 				})
-				uci:foreach("olsrd", "LoadPlugin",
+				uci:foreach("olsrd6", "LoadPlugin",
 				function(s)
 					if s.library == "olsrd_nameservice.so.0.3" then
-						local service = uci:get_list("olsrd", s['.name'], "service") or {}
+						local service = uci:get_list("olsrd6", s['.name'], "service") or {}
 						local hn = "henet."..sys.hostname()
 						local fqhn = hn.."."..suffix
 						service[#service+1] = "http://"..fqhn..":80|tcp|"..fqhn.." on "henet_prefix:minhost():string()
-						uci:set_list("olsrd", s['.name'], "service", service)
-						local hosts = uci:get_list("olsrd", s['.name'], "hosts") or {}
+						uci:set_list("olsrd6", s['.name'], "service", service)
+						local hosts = uci:get_list("olsrd6", s['.name'], "hosts") or {}
 						hosts[#hosts+1] = henet_prefix:minhost():string().." "..hn
-						uci:set_list("olsrd", s['.name'], "hosts", hosts)
+						uci:set_list("olsrd6", s['.name'], "hosts", hosts)
 					end
 				end)
-				--Compat for old auto-ipv6-node
-				uci:foreach("olsrd", "olsrd",
-				function(s)
-					uci:set("olsrd", s['.name'], "MainIp", henet_prefix:minhost():string())
-				end)
-				uci:save("olsr")
 
 				local route6_new = 1
 				uci:foreach("network", "route6",
@@ -2207,8 +2257,10 @@ function main.write(self, section, value)
 
 	-- Make sure that OLSR is enabled
 	sys.init.enable("olsrd")
+	sys.init.enable("olsrd6")
 
 	uci:save("olsrd")
+	uci:save("olsrd6")
 
 	-- Import hosts and set domain
 	uci:foreach("dhcp", "dnsmasq", function(s)
@@ -2306,7 +2358,9 @@ function main.write(self, section, value)
 
 	-- Delete/Disable gateway plugin
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
+	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
+	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 	if share_value == "1" then
 		uci:set("freifunk", "wizard", "shareconfig", "1")
 		uci:save("freifunk")
@@ -2428,6 +2482,11 @@ function main.write(self, section, value)
 						dest_port="1194",
 						target="REJECT"
 					})
+					uci:section("network", "rule", "ffvpn"..i, {
+						priority="100",
+						dest=v.."/32",
+						goto="32766"
+					})
 				end
 				uci:save("firewall")
 				uci:set("openvpn","ffvpn", "enabled", "1")
@@ -2452,11 +2511,12 @@ function main.write(self, section, value)
 			uci:set("auto_ipv6_gw", "tunnel", "enable", "0")
 			uci:save("auto_ipv6_gw")
 		end
-		-- Delete gateway plugins
-		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
-		uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 		-- Disable gateway_plain plugin
 		uci:section("olsrd", "LoadPlugin", nil, {
+			library     = "olsrd_dyn_gw_plain.so.0.4",
+			ignore      = 1,
+		})
+		uci:section("olsrd6", "LoadPlugin", nil, {
 			library     = "olsrd_dyn_gw_plain.so.0.4",
 			ignore      = 1,
 		})
@@ -2487,6 +2547,7 @@ function main.write(self, section, value)
 		uci:save("firewall")
 	end
 	uci:save("olsrd")
+	uci:save("olsrd6")
 	uci:save("system")
 end
 

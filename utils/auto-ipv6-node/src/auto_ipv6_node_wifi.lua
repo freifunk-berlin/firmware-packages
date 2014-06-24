@@ -135,7 +135,7 @@ local profile_suffix
 local external
 local rand = sys.exec("echo -n $(head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4)")
 
---Add LAN to olsrd p2p
+--Add LAN to olsrd6 p2p
 local p2p_if = {}
 table.insert(p2p_if,"lan")
 
@@ -145,9 +145,9 @@ table.insert(rifn,"lan")
 uci:set_list("6relayd","default","network",rifn)
 uci:save("6relayd")
 
---Delete all olsrd Interfaces
-uci:delete_all("olsrd", "Interface")
-uci:save("olsrd")
+--Delete all olsrd6 Interfaces
+uci:delete_all("olsrd6", "Interface")
+uci:save("olsrd6")
 
 for i,dev in ipairs(devices) do
 	seq = i - 1
@@ -250,8 +250,8 @@ for i,dev in ipairs(devices) do
 			local olsrifbase = {}
 			olsrifbase.interface = "wireless"..seq
 			olsrifbase.ignore = "0"
-			uci:section("olsrd", "Interface", nil, olsrifbase)
-			uci:save("olsrd")
+			uci:section("olsrd6", "Interface", nil, olsrifbase)
+			uci:save("olsrd6")
 			ready = true
 		end
 	end
@@ -280,18 +280,18 @@ if ready then
 	uci:save("freifunk")
 	uci:commit("freifunk")
 
-	--set olsrd base config
-	uci:delete_all("olsrd", "olsrd")
+	--set olsrd6 base config
+	uci:delete_all("olsrd6", "olsrd")
 	local olsrbase = uci:get_all("freifunk", "olsrd") or {}
 	utl.update(olsrbase, uci:get_all(external, "olsrd") or {})
-	olsrbase.IpVersion = "6"
+	--olsrbase.IpVersion = "6"
 	olsrbase.LinkQualityAlgorithm = "etx_ffeth"
 	olsrbase.NatThreshold = nil
-	uci:section("olsrd", "olsrd", nil, olsrbase)
+	uci:section("olsrd6", "olsrd", nil, olsrbase)
 
-	--set olsrd nameservice defaults
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
-	uci:section("olsrd", "LoadPlugin", nil, {
+	--set olsrd6 nameservice defaults
+	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
+	uci:section("olsrd6", "LoadPlugin", nil, {
 		library = "olsrd_nameservice.so.0.3",
 		suffix = "." .. profile_suffix,
 		hosts_file = "/tmp/hosts/olsr",
@@ -299,15 +299,15 @@ if ready then
 		services_file = "/var/etc/services.olsr"
 	})
 
-	--set olsrd interface defaults
+	--set olsrd6 interface defaults
 	local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
 	utl.update(olsrifbase, uci:get_all(external, "olsr_interface") or {})
 	olsrifbase.Ip4Broadcast = nil
-	uci:section("olsrd", "InterfaceDefaults", nil, olsrifbase)
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_jsoninfo.so.0.0"})
+	uci:section("olsrd6", "InterfaceDefaults", nil, olsrifbase)
+	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_jsoninfo.so.0.0"})
 
-	--set olsrd jsoninfo listen on ipv6
-	uci:section("olsrd", "LoadPlugin", nil, {
+	--set olsrd6 jsoninfo listen on ipv6
+	uci:section("olsrd6", "LoadPlugin", nil, {
 		library = "olsrd_jsoninfo.so.0.0",
 		ignore = 0,
 		accept = "::"
@@ -318,10 +318,10 @@ if ready then
 	olsrifbase.interface = "lan"
 	olsrifbase.ignore = "0"
 	olsrifbase.Mode = 'ether'
-	uci:section("olsrd", "Interface", nil, olsrifbase)
+	uci:section("olsrd6", "Interface", nil, olsrifbase)
 	
-	--set olsrd p2p listen on ipv6
-	uci:section("olsrd", "LoadPlugin", nil, {
+	--set olsrd6 p2p listen on ipv6
+	uci:section("olsrd6", "LoadPlugin", nil, {
 		library = "olsrd_p2pd.so.0.1.0",
 		ignore = 1,
 		P2pdTtl = 10,
@@ -329,9 +329,9 @@ if ready then
 		NonOlsrIf = p2p_if
 	})
 
-	--save olsrd
-	uci:save("olsrd")
-	uci:commit("olsrd")
+	--save olsrd6
+	uci:save("olsrd6")
+	uci:commit("olsrd6")
 
 	-- Import hosts and set domain
 	uci:foreach("dhcp", "dnsmasq", function(s)
@@ -367,7 +367,7 @@ if ready then
 	--restart deamons
 	luci.sys.call("(/etc/init.d/network restart) >/dev/null 2>/dev/null")
 	luci.sys.call("/bin/sleep 3")
-	luci.sys.call("(/etc/init.d/olsrd restart) >/dev/null 2>/dev/null")
+	luci.sys.call("(/etc/init.d/olsrd6 restart) >/dev/null 2>/dev/null")
 	luci.sys.call("(/etc/init.d/6relayd restart) >/dev/null 2>/dev/null")
 	luci.sys.call("(/etc/init.d/uhttpd restart) >/dev/null 2>/dev/null")
 	luci.sys.call("(/etc/init.d/dnsmasq restart) >/dev/null 2>/dev/null")
@@ -379,7 +379,7 @@ else
 	uci:revert("wireless")
 	uci:revert("uhttpd")
 	uci:revert("freifunk")
-	uci:revert("olsrd")
+	uci:revert("olsrd6")
 	uci:revert("dhcp")
 	uci:revert("system")
 	uci:revert("6relayd")
