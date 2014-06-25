@@ -2175,6 +2175,18 @@ function main.write(self, section, value)
 		services_file = "/var/etc/services.olsr.ipv6"
 	})
 
+	--set olsrd jsoninfo listen on 9090
+	uci:section("olsrd", "LoadPlugin", nil, {
+		library = "olsrd_jsoninfo.so.0.0",
+		ignore = 0,
+		accept = "0.0.0.0"
+	})
+	uci:section("olsrd6", "LoadPlugin", nil, {
+		library = "olsrd_jsoninfo.so.0.0",
+		ignore = 0,
+		accept = "::"
+	})
+
 	if has_ipv6 then
 		local ula_prefix = uci:get("network","globals","ula_prefix")
 		if ula_prefix then
