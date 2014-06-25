@@ -34,10 +34,10 @@ else
 fi
 
 uci -q batch <<-EOF >/dev/null
-add olsrd Hna6
-set "olsrd.@Hna6[-1].prefix=48"
-set "olsrd.@Hna6[-1].netaddr=$uprefix::"
-commit olsrd
+add olsrd6 Hna6
+set "olsrd6.@Hna6[-1].prefix=48"
+set "olsrd6.@Hna6[-1].netaddr=$uprefix::"
+commit olsrd6
 delete 6relayd.default
 set 6relayd.default=server
 set 6relayd.default.rd=server
