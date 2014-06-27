@@ -42,12 +42,12 @@ endef
 
 define Package/luci-app-owm-gui
   $(call Package/luci-app-owm/default)
-  DEPENDS:=luci-app-owm +luci-lib-web
+  DEPENDS:=luci-app-owm +luci-base
   TITLE:=luci-app-owm-gui - GUI Open Wireless Map
 endef
 define Package/luci-app-owm-ant
   $(call Package/luci-app-owm/default)
-  DEPENDS:=luci-app-owm +luci-lib-web
+  DEPENDS:=luci-app-owm +luci-base
   TITLE:=luci-app-owm-ant - GUI Antenna settings
 endef
 

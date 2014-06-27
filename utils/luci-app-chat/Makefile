@@ -12,7 +12,7 @@ define Package/luci-app-chat
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
   TITLE:=LocalChat
-  DEPENDS:=+ws-mirror-server +luci-lib-web 
+  DEPENDS:=+ws-mirror-server +luci-base
 endef
 
 define Package/luci-app-chat/description

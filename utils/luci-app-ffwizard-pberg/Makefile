@@ -16,7 +16,7 @@ define Package/luci-app-ffwizard-pberg
   SUBMENU:=3. Applications
   TITLE:=Freifunk Prenzlauerberg configuration wizard
   URL:=http://pberg.freifunk.net
-  DEPENDS+= +luci-lib-web +luci-mod-freifunk +luci-mod-admin-full
+  DEPENDS+= +luci-base +luci-mod-freifunk +luci-mod-admin-full
 endef
 
 define Package/luci-app-ffwizard-pberg/description
