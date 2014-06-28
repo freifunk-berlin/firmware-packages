@@ -51,7 +51,7 @@ for _, r in ipairs(routes6.routes) do
 end
 
 for _, p in ipairs(prefix) do
-	if p.genmask > 0 and p.genmask < 49 then
+	if p.genmask == 56 or p.genmask == 56 or p.genmask > 0 and p.genmask < 49 then
 		local ipnet = ip.IPv6(p.net)
 		if not ula:contains(ipnet) then
 			local con = 0
@@ -72,13 +72,33 @@ for _, p in ipairs(prefix) do
 			end
 			if con == 0 then
 				print("Not Configured:",p.net)
-				local rand = sys.exec("head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4")
-				local net = string.gsub(p.destination,"::",":"..rand.."::/61")
-				net = ip.IPv6(net)
-				if net:is6() then
-					net = net:network()
-					print("New Configuration:",net:string().."/61")
-					uciprefix[#uciprefix+1] = { net=net:string().."/61",gateway=p.gateway,con=0 }
+				if p.genmask == 56 then
+					local rand = sys.exec("head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-2")
+					local net = string.gsub(p.destination,"00::",rand.."::/62")
+					net = ip.IPv6(net)
+					if net and net:is6() then
+						net = net:network()
+						print("New Configuration:",net:string().."/56")
+						uciprefix[#uciprefix+1] = { net=net:string().."/62",gateway=p.gateway,con=0 }
+					end
+				elseif p.genmask == 52 then
+					local rand = sys.exec("head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-3")
+					local net = string.gsub(p.destination,"000::",rand.."::/62")
+					net = ip.IPv6(net)
+					if net and net:is6() then
+						net = net:network()
+						print("New Configuration:",net:string().."/52")
+						uciprefix[#uciprefix+1] = { net=net:string().."/62",gateway=p.gateway,con=0 }
+					end
+				else
+					local rand = sys.exec("head -n 1 /dev/urandom 2>/dev/null | md5sum | cut -b 1-4")
+					local net = string.gsub(p.destination,"::",":"..rand.."::/61")
+					net = ip.IPv6(net)
+					if net and net:is6() then
+						net = net:network()
+						print("New Configuration:",net:string().."/61")
+						uciprefix[#uciprefix+1] = { net=net:string().."/61",gateway=p.gateway,con=0 }
+					end
 				end
 			end
 		end
