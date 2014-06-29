@@ -1,0 +1,17 @@
+form, .section {
+	width:800px;
+	margin-left:auto;
+	margin-right:auto;
+}
+
+.tile {
+	float:left;
+	width:50%;
+}
+.tile .alert-message {
+	margin:5px;
+}
+
+.clear {
+	clear:both;
+}

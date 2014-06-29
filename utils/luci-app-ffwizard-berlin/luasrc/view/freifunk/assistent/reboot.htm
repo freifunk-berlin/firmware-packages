@@ -1,0 +1,24 @@
+<%
+	luci.sys.reboot()
+%>
+
+<%+header%>
+
+<link href="/freifunk/assistent/assistent.css" rel="stylesheet" />
+<div class="section">
+	<div class="info alert-message">
+		<p class="success">
+			Du hast alle Einstellungen geschafft und dein Router wird jetzt neu gestartet. :D
+			Sobald alle Lichter wieder blinken, bist du Freifunker! 
+		</p>
+		<p>
+			Es gibt auch Services im Freifunknetz. Ein Liste kannst du dir 
+			<a href="<%=luci.dispatcher.build_url("freifunk/services")%>">hier</a> oder im 
+			Freifunk Hauptmenu unter Services ansehen, 
+			sobald dein Router neugestartet hat. 
+		</p>
+	</div>
+</div>
+
+<%+footer%>
+	
