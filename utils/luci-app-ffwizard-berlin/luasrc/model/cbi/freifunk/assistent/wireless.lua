@@ -33,7 +33,7 @@ uci:foreach("wireless", "wifi-device",
 		local device = section[".name"]
 		wifi_tbl[device] = {}
 		local meship = f:field(Value, "meship_" .. device, device:upper() .. " Mesh IP", "")
-		meship.rmempty = true
+		meship.rmempty = false
 		meship.datatype = "ip4addr"
 		function meship.cfgvalue(self, section)
 			return uci:get("freifunk", "wizard", "meship_" .. device)
@@ -49,13 +49,13 @@ meshipinfo = f:field(DummyValue, "meshinfo", "")
 meshipinfo.template = "freifunk/assistent/snippets/meshipinfo"
 
 ssid = f:field(Value, "ssid", "Freifunk SSID", "")
-ssid.rmempty = true
+ssid.rmempty = false
 function ssid.cfgvalue(self, section)
 	return uci:get("freifunk", "wizard", "ssid") or uci:get(external, "profile","ssid")
 end
 
 dhcpmesh = f:field(Value, "dhcpmesh", "Addressraum", "")
-dhcpmesh.rmempty = true
+dhcpmesh.rmempty = false
 dhcpmesh.datatype = "ip4addr"
 function dhcpmesh.cfgvalue(self, section)
 	return uci:get("freifunk", "wizard", "dhcpmesh")
@@ -236,7 +236,8 @@ end
 
 
 function f.handle(self, state, data)
-        if state == FORM_VALID then
+        --how can I read form data here to get rid of this main field??
+	if state == FORM_VALID then
         	luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/applyChanges"))
         end
 end
