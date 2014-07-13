@@ -212,6 +212,11 @@ function main.write(self, section, value)
 				uci:set_list("olsrd", s['.name'], "NonOlsrIf", nonolsr)
 			end
 		end)
+	--TODO read this from profile?
+	uci:section("olsrd6", "Hna6", nil, {
+                prefix = "48",
+                netaddr = "fdde:6653:27f5::"
+        })
 
 	uci:foreach("olsrd6", "LoadPlugin",
                	function(s)

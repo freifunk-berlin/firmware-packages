@@ -32,7 +32,9 @@ function prepare()
 	uci:save("freifunk")
 
 	--OLSR CONFIG
-        tools.prepareOLSR(external)
+        olsr.prepareOLSR(external)
+
+
 
 	--FIREWALL CONFIG
 	tools.prepareFirewall(external)
