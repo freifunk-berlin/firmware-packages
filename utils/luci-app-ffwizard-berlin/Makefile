@@ -44,6 +44,7 @@ define Package/luci-app-ffwizard-berlin/install
 	$(CP) $(PKG_BUILD_DIR)/luasrc/model/* $(1)/usr/lib/lua/luci/model
 	$(CP) $(PKG_BUILD_DIR)/luasrc/tools/* $(1)/usr/lib/lua/luci/tools
 	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view
+	$(CP) $(PKG_BUILD_DIR)/htdocs/* $(1)/www
 endef
 
 $(eval $(call BuildPackage,luci-app-ffwizard-berlin))
