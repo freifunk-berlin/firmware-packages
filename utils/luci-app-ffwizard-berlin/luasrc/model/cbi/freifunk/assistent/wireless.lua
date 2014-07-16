@@ -79,6 +79,7 @@ function main.parse(self, section)
 end
 function main.write(self, section, value)
 	tools.logger("wireless sharenet: "..sharenet)
+
 	if (sharenet == "2") then
 		--share internet was not enabled before, set to false now
 		uci:set("freifunk","wizard","sharenet", 0)
@@ -89,6 +90,11 @@ function main.write(self, section, value)
 	uci:set("freifunk", "wizard", "ssid", ssid:formvalue(section))
 	uci:set("freifunk", "wizard", "dhcpmesh", dhcpmesh:formvalue(section))
 
+	if (string.len(ssid:formvalue(section)) == 0 or string.len(dhcpmesh:formvalue(section)) == 0) then
+		-- form is not valid
+		return
+	end
+
 	uci:foreach("wireless", "wifi-device",
 		function(sec)
 			local device = sec[".name"]
@@ -96,8 +102,12 @@ function main.write(self, section, value)
 			-- store wizard data to fill fields if wizeard is rerun
 			uci:set("freifunk", "wizard", "meship_" .. device, wifi_tbl[device]["meship"]:formvalue(section))
 
-			cleanup(device)
+			if (string.len(wifi_tbl[device]["meship"]:formvalue(section)) == 0) then
+				-- form is not valid
+				return
+			end
 
+			cleanup(device)
 
 			--OLSR CONFIG device
 			local olsrifbase = {}

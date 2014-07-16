@@ -51,7 +51,7 @@ function commit()
 	local sharenet = uci:get("freifunk","wizard","sharenet")
 
 	--change hostname to mesh ip if it is still Openwrt-something
-	if (string.sub(uci:get_first("system","system","hostname"),1,string.len("OpenWrt"))=="OpenWrt") then
+	if (not uci:get_first("system","system","hostname") or string.sub(uci:get_first("system","system","hostname"),1,string.len("OpenWrt"))=="OpenWrt") then
         	local dhcpmesh = uci:get("freifunk", "wizard","dhcpmesh")
         	dhcpmesh = ip.IPv4(dhcpmesh):minhost()
        	 	uci:foreach("system", "system",

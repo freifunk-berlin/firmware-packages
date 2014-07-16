@@ -12,10 +12,12 @@ css.template = "freifunk/assistent/snippets/css"
 
 local cert = f:field(FileUpload, "cert", translate("Local Certificate"),"freifunk_client.crt")
 cert.default="/etc/openvpn/freifunk_client.crt"
+cert.rmempty = false
 cert.optional = false
 
 local key = f:field(FileUpload, "key", translate("Local Key"),"freifunk_client.key")
 key.default="/etc/openvpn/freifunk_client.key"
+key.rmempty = false
 key.optional = false
 
 apinfo = f:field(DummyValue, "apinfo", "")                                                          
