@@ -21,6 +21,7 @@ function prepareOLSR(community)
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
+	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_jsoninfo.so.0.0"})
 
 	local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
 	util.update(olsrifbase, uci:get_all(community, "olsr_interface") or {})
@@ -36,6 +37,7 @@ function prepareOLSR(community)
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
+	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_jsoninfo.so.0.0"})
 
 	uci:section("olsrd6", "InterfaceDefaults", nil, olsrifbase)
 
@@ -70,19 +72,17 @@ function configureOLSR()
 end
 
 function configureOLSRPlugins()
-	uci:foreach("olsrd", "LoadPlugin",                                                                               
-        	function(s)
-			if s.library == "olsrd_jsoninfo.so.0.0" then
-				uci:set("olsrd", s['.name'], "accept", "0.0.0.0")
-        	end
-	end) 
 
-	uci:foreach("olsrd6", "LoadPlugin",
-                function(s)
-			if s.library == "olsrd_jsoninfo.so.0.0" then
-				uci:set("olsrd6", s['.name'], "accept", "::")
-                end
-        end)
+	uci:section("olsrd", "LoadPlugin", nil, {
+		accept = '0.0.0.0',
+		library 'olsrd_jsoninfo.so.0.0',
+		ignore '0'
+	})
+	uci:section("olsrd6", "LoadPlugin", nil, {
+		accept = '::',
+		library 'olsrd_jsoninfo.so.0.0',
+		ignore '0'
+	})
 
 	-- Write olsrdv4 new p2pd settings 
 	uci:section("olsrd", "LoadPlugin", nil, {
