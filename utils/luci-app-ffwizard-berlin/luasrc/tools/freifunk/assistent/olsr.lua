@@ -41,6 +41,20 @@ function prepareOLSR(community)
 
 	uci:section("olsrd6", "InterfaceDefaults", nil, olsrifbase)
 
+	-- Write p2pd settings here because its needed in model/cbi/freifunk/assistent/wireless.lua
+	uci:section("olsrd", "LoadPlugin", nil, {
+		library = "olsrd_p2pd.so.0.1.0",
+		P2pdTtl = "10",
+		UdpDestPort = "224.0.0.2515353",
+		ignore = "1",
+	})
+	uci:section("olsrd6", "LoadPlugin", nil, {
+                library = "olsrd_p2pd.so.0.1.0",
+                P2pdTtl = "10",
+                UdpDestPort = "ff02::fb 5353",
+                ignore = "1",
+        })
+
 	uci:save("olsrd")
 	uci:save("olsrd6")
 end
@@ -74,29 +88,16 @@ end
 function configureOLSRPlugins()
 
 	uci:section("olsrd", "LoadPlugin", nil, {
-		accept = '0.0.0.0',
-		library 'olsrd_jsoninfo.so.0.0',
-		ignore '0'
+		accept = "0.0.0.0",
+		library = "olsrd_jsoninfo.so.0.0",
+		ignore = "0"
 	})
 	uci:section("olsrd6", "LoadPlugin", nil, {
-		accept = '::',
-		library 'olsrd_jsoninfo.so.0.0',
-		ignore '0'
+		accept = "::",
+		library = "olsrd_jsoninfo.so.0.0",
+		ignore = "0"
 	})
 
-	-- Write olsrdv4 new p2pd settings 
-	uci:section("olsrd", "LoadPlugin", nil, {
-        	library = "olsrd_p2pd.so.0.1.0", 
-        	P2pdTtl = 10,
-        	UdpDestPort="224.0.0.2515353",
-        	ignore = 1,
-	})
-	uci:section("olsrd6", "LoadPlugin", nil, {
-                library = "olsrd_p2pd.so.0.1.0",
-                P2pdTtl = 10,
-                UdpDestPort="ff02::fb 5353",
-                ignore = 1,
-        })
 	if (sharenet) then
 		uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
 		uci:section("olsrd6", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
