@@ -11,6 +11,9 @@ local ntm = require "luci.model.network"
 local profiles = "/etc/config/profile_"
 local ready = false
 
+local has_6relayd = fs.access("/usr/sbin/6relayd")
+local has_odhcpd = fs.access("/usr/sbin/odhcpd")
+
 function iwscanlist(ifname,times)
 	local iw = sys.wifi.getiwinfo(ifname)
 	local i, k, v
@@ -139,11 +142,9 @@ local rand = sys.exec("echo -n $(head -n 1 /dev/urandom 2>/dev/null | md5sum | c
 local p2p_if = {}
 table.insert(p2p_if,"lan")
 
---Add LAN to 6relayd
+--Add Define 
 local rifn = {}
 table.insert(rifn,"lan")
-uci:set_list("6relayd","default","network",rifn)
-uci:save("6relayd")
 
 --Delete all olsrd6 Interfaces
 uci:delete_all("olsrd6", "Interface")
@@ -241,11 +242,8 @@ for i,dev in ipairs(devices) do
 
 			uci:save("network")
 	
-			local rifn = uci:get_list("6relayd","default","network") or {}
 			table.insert(rifn,"wireless"..seq)
 			table.insert(rifn,"wireless"..seq.."dhcp")
-			uci:set_list("6relayd","default","network",rifn)
-			uci:save("6relayd")
 
 			local olsrifbase = {}
 			olsrifbase.interface = "wireless"..seq
@@ -333,11 +331,28 @@ if ready then
 	uci:save("olsrd6")
 	uci:commit("olsrd6")
 
+	if has_6relayd then
+		uci:set_list("6relayd","default","network",rifn)
+		uci:save("6relayd")
+	end
+
 	-- Import hosts and set domain
 	uci:foreach("dhcp", "dnsmasq", function(s)
 		uci:set("dhcp", s[".name"], "local", "/" .. profile_suffix .. "/")
 		uci:set("dhcp", s[".name"], "domain", profile_suffix)
 	end)
+
+	if has_odhcpd then
+		for i,ifn in ipairs(rifn) do
+			if not uci:get("dhcp", ifn) then
+				uci:section("dhcp", "dhcp", ifn, { })
+			end
+			uci:set("dhcp", ifn, "dhcpv6", "server")
+			uci:set("dhcp", ifn, "ra", "server")
+			uci:set("dhcp", ifn, "domain", profile_suffix)
+			uci:set("dhcp", ifn, "ra_preference", "low")
+		end
+	end
 
 	--save system
 	uci:save("dhcp")
@@ -368,7 +383,12 @@ if ready then
 	luci.sys.call("(/etc/init.d/network restart) >/dev/null 2>/dev/null")
 	luci.sys.call("/bin/sleep 3")
 	luci.sys.call("(/etc/init.d/olsrd6 restart) >/dev/null 2>/dev/null")
-	luci.sys.call("(/etc/init.d/6relayd restart) >/dev/null 2>/dev/null")
+	if has_6relayd then
+		luci.sys.call("(/etc/init.d/6relayd restart) >/dev/null 2>/dev/null")
+	end
+	if has_odhcpd then
+		luci.sys.call("(/etc/init.d/odhcpd restart) >/dev/null 2>/dev/null")
+	end
 	luci.sys.call("(/etc/init.d/uhttpd restart) >/dev/null 2>/dev/null")
 	luci.sys.call("(/etc/init.d/dnsmasq restart) >/dev/null 2>/dev/null")
 
@@ -382,7 +402,9 @@ else
 	uci:revert("olsrd6")
 	uci:revert("dhcp")
 	uci:revert("system")
-	uci:revert("6relayd")
+	if has_6relayd then
+		uci:revert("6relayd")
+	end
 
 end
 

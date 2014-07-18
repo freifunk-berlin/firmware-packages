@@ -38,6 +38,9 @@ add olsrd6 Hna6
 set "olsrd6.@Hna6[-1].prefix=48"
 set "olsrd6.@Hna6[-1].netaddr=$uprefix::"
 commit olsrd6
+EOF
+if [ -f /etc/config/6relayd ] ; then
+uci -q batch <<-EOF >/dev/null
 delete 6relayd.default
 set 6relayd.default=server
 set 6relayd.default.rd=server
@@ -47,6 +50,16 @@ set 6relayd.default.compat_ula=1
 set 6relayd.default.always_assume_default=1
 commit 6relayd
 EOF
+elif [ -x /sbin/odhcpd ] ; then
+uci -q batch <<-EOF >/dev/null
+delete dhcp.odhcpd
+set dhcp.odhcpd=odhcpd
+set dhcp.odhcpd.maindhcp=0
+set dhcp.odhcpd.leasefile=/tmp/hosts/odhcpd
+set dhcp.odhcpd.leasetrigger=/usr/sbin/odhcpd-update
+commit dhcp
+EOF
+fi
 
 config_load network
 local interfaces=""
@@ -57,10 +70,19 @@ for i in $(echo $interfaces) ; do
 done
 uci commit network
 
-for i in $(echo $interfaces) ; do
-	uci add_list 6relayd.default.network="$i"
-done
-uci commit 6relayd
+if [ -f /etc/config/6relayd ] ; then
+	for i in $(echo $interfaces) ; do
+		uci add_list 6relayd.default.network="$i"
+	done
+	uci commit 6relayd
+elif [ -x /sbin/odhcpd ] ; then
+	for i in $(echo $interfaces) ; do
+		uci set dhcp.$i.dhcpv6="server"
+		uci set dhcp.$i.ra="server"
+		uci set dhcp.$i.ra_preference="low"
+	done
+	uci commit dhcp
+fi
 
 (
 sleep 20

@@ -194,7 +194,7 @@ if uci_rewrite == 1 then
 	util.exec("/etc/init.d/network restart")
 	util.exec("/bin/sleep 3")
 	util.exec("/etc/init.d/olsrd6 restart")
-	util.exec("/etc/init.d/6relayd restart")
+	util.exec("/etc/init.d/odhcpd restart")
 	util.exec("chmod 0644 /etc/config/*")
 	util.exec("chmod 777 /var/run/ubus.sock")
 end

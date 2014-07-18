@@ -15,7 +15,7 @@ define Package/auto-ipv6-node
   CATEGORY:=IPv6
   TITLE:=Auto IPv6 configuration via olrs Hna6
   URL:=http://pberg.freifunk.net
-  DEPENDS:=+6relayd +olsrd-mod-jsoninfo\
+  DEPENDS:=@(PACKAGE_odhcpd||PACKAGE_6relayd) +olsrd-mod-jsoninfo\
   +luci-base +luci-lib-json
 endef
 

@@ -39,6 +39,7 @@ local has_auto_ipv6_gw = fs.access("/etc/config/auto_ipv6_gw")
 local has_qos = fs.access("/etc/init.d/qos")
 local has_ipv6 = fs.access("/proc/sys/net/ipv6")
 local has_6relayd = fs.access("/usr/sbin/6relayd")
+local has_odhcpd = fs.access("/usr/sbin/odhcpd")
 local has_hostapd = fs.access("/usr/sbin/hostapd")
 local has_wan = uci:get("network", "wan", "proto")
 local has_lan = uci:get("network", "lan", "proto")
@@ -1169,6 +1170,15 @@ function main.write(self, section, value)
 		})
 		uci:save("6relayd")
 	end
+	if has_odhcpd then
+		uci:delete("dhcp", "odhcpd")
+		uci:section("dhcp","odhcpd","odhcpd", {
+			maindhcp = "0",
+			leasefile = "/tmp/hosts/odhcpd"
+			leasetrigger = "/usr/sbin/odhcpd-update"
+		})
+		uci:save("dhcp")
+	end
 
 	-- Internet sharing
 	local share_value = "0"
@@ -1242,6 +1252,9 @@ function main.write(self, section, value)
 	
 	if has_6relayd then
 		uci:delete("6relayd","default","network")
+	end
+	if has_odhcpd then
+		uci:delete("dhcp","odhcpd","odhcpd")
 	end
 
 	-- Create wireless ip4/ip6 and firewall config
@@ -1561,6 +1574,14 @@ function main.write(self, section, value)
 				uci:set_list("6relayd","default","network",rifn)
 				uci:save("6relayd")
 			end
+			if has_odhcpd then
+				uci:section("dhcp", "dhcp", nif, {
+					dhcpv6 = "server",
+					ra = "server",
+					domain = profile_suffix,
+					ra_preference = "low",
+				})
+			end
 			local new_hostname = node_ip:string():gsub("%.", "-")
 			uci:set("freifunk", "wizard", "hostname", new_hostname)
 			uci:save("freifunk")
@@ -1656,6 +1677,12 @@ function main.write(self, section, value)
 					aliasbase.ipaddr = dhcp_ip
 					aliasbase.netmask = dhcp_mask
 					aliasbase.proto = "static"
+					-- Create dhcp
+					local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
+					util.update(dhcpbase, uci:get_all(external, "dhcp") or {})
+					dhcpbase.interface = nif .. "dhcp"
+					dhcpbase.force = 1
+					dhcpbase.ignore = 0
 					if vap then
 						local vap_ssid = wifi_tbl[device]["vapssid"]:formvalue(section)
 						if(string.len(vap_ssid)==0) then
@@ -1668,6 +1695,12 @@ function main.write(self, section, value)
 							table.insert(rifn,nif.."dhcp")
 							uci:set_list("6relayd","default","network",rifn)
 							uci:save("6relayd")
+						end
+						if has_6relayd then
+							dhcpbase.dhcpv6 = "server",
+							dhcpbase.ra = "server",
+							dhcpbase.domain = profile_suffix,
+							dhcpbase.ra_preference = "low",
 						end
 						uci:section("network", "interface", nif .. "dhcp", aliasbase)
 						uci:section("wireless", "wifi-iface", nil, {
@@ -1696,12 +1729,6 @@ function main.write(self, section, value)
 						end
 					end
 					uci:save("network")
-					-- Create dhcp
-					local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
-					util.update(dhcpbase, uci:get_all(external, "dhcp") or {})
-					dhcpbase.interface = nif .. "dhcp"
-					dhcpbase.force = 1
-					dhcpbase.ignore = 0
 					uci:section("dhcp", "dhcp", nif .. "dhcp", dhcpbase)
 					uci:set_list("dhcp", nif .. "dhcp", "dhcp_option", "119,olsr")
 					if has_firewall then
@@ -1850,6 +1877,14 @@ function main.write(self, section, value)
 			table.insert(rifn,device)
 			uci:set_list("6relayd","default","network",rifn)
 			uci:save("6relayd")
+		end
+		if has_odhcpd then
+			uci:section("dhcp", "dhcp", device, {
+				dhcpv6 = "server",
+				ra = "server",
+				domain = profile_suffix,
+				ra_preference = "low",
+			})
 		end
 		if has_wan and device == "wan" then
 			has_wan=nil
