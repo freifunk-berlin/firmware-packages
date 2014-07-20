@@ -116,6 +116,7 @@ function commit()
 
 	sys.hostname(uci:get_first("system","system","hostname"))
 	sys.init.enable("olsrd")
+	sys.init.enable("olsrd6")
 	sys.init.enable("freifunk-p2pblock")
 	sys.init.enable("qos")
 	sys.exec("chmod +x /etc/init.d/freifunk-p2pblock")
