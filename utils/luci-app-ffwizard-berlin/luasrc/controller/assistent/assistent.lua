@@ -48,6 +48,8 @@ end
 
 function commit()
 
+	uci:set("freifunk","wizard","runbefore","true")
+	uci:save("freifunk")
 	local sharenet = uci:get("freifunk","wizard","sharenet")
 
 	--change hostname to mesh ip if it is still Openwrt-something
