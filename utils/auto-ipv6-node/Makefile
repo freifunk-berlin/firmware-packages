@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=auto-ipv6-node
 PKG_VERSION:=0.0.7
-PKG_RELEASE:=2
+PKG_RELEASE:=4
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -15,7 +15,7 @@ define Package/auto-ipv6-node
   CATEGORY:=IPv6
   TITLE:=Auto IPv6 configuration via olrs Hna6
   URL:=http://pberg.freifunk.net
-  DEPENDS:=@(PACKAGE_odhcpd||PACKAGE_6relayd) +olsrd-mod-jsoninfo\
+  DEPENDS:=+PACKAGE_odhcpd:odhcpd +PACKAGE_6relayd:6relayd +olsrd-mod-jsoninfo\
   +luci-base +luci-lib-json
 endef
 
