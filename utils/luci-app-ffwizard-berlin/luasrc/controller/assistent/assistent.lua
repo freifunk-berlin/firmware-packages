@@ -15,14 +15,14 @@ module ("luci.controller.assistent.assistent", package.seeall)
 
 function index()
 	entry({"admin", "freifunk", "assistent"}, call("prepare"), "Freifunkassistent", 1).dependent=false
-	entry({"admin", "freifunk", "assistent", "changePassword"}, form("freifunk/assistent/changePassword", {skip=true,
-	autoapply=false}), "", 2)
+	entry({"admin", "freifunk", "assistent", "changePassword"}, form("freifunk/assistent/changePassword"), "",1)
 	entry({"admin", "freifunk", "assistent", "generalInfo"}, form("freifunk/assistent/generalInfo"), "", 1)
 	entry({"admin", "freifunk", "assistent", "decide"}, template("freifunk/assistent/decide"), "", 2)
 	entry({"admin", "freifunk", "assistent", "sharedInternet"}, form("freifunk/assistent/shareInternet"), "", 10)
 	entry({"admin", "freifunk", "assistent", "wireless"}, form("freifunk/assistent/wireless"), "", 20)
 	entry({"admin", "freifunk", "assistent", "applyChanges"}, call("commit"), "", 100)
 	entry({"admin", "freifunk", "assistent", "reboot"}, template("freifunk/assistent/reboot"), "", 101)
+	entry({"admin", "freifunk", "assistent", "cancel"}, call("reset"), "", 102)
 end
 
 function prepare()
@@ -128,4 +128,25 @@ function commit()
 	end
 	
 	luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/reboot"))
+end
+
+function reset()
+	uci:revert("dhcp")
+	uci:revert("olsrd")
+	uci:revert("olsrd6")
+	uci:revert("firewall")
+	uci:revert("system")
+	uci:revert("freifunk")
+	uci:revert("freifunk_p2pblock")
+	uci:revert("freifunk-policyrouting")
+	uci:revert("wireless")
+	uci:revert("network")
+	uci:revert("freifunk-watchdog")
+	uci:revert("qos")
+
+	uci:set("freifunk","wizard","runbefore","true")
+	uci:save("freifunk")
+	uci:commit("freifunk")
+
+	luci.http.redirect(luci.dispatcher.build_url("/"))
 end

@@ -4,7 +4,6 @@ local tools = require "luci.tools.freifunk.assistent.ffwizard"
 
 f = SimpleForm("ffwizward", "", "")
 f.submit = "Next"
-f.cancel = "Skip"
 f.reset = false
 
 css = f:field(DummyValue, "css", "")
@@ -95,10 +94,8 @@ function f.handle(self, state, data)
         end
 end
 
---don't know how to trigger reset button, so I use skip button instead
 function f.on_cancel()
-        tools.logger("skip general settings")
-        luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/decide"))
+        luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/cancel"))
 end
                                                                                                                         
 
