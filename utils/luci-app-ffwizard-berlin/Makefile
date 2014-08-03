@@ -46,6 +46,8 @@ define Package/luci-app-ffwizard-berlin/install
 	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view
 	$(INSTALL_DIR) $(1)/www
 	$(CP) ./htdocs/* $(1)/www
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(CP) ./root/etc/uci-defaults/* $(1)/etc/uci-defaults
 endef
 
 $(eval $(call BuildPackage,luci-app-ffwizard-berlin))
