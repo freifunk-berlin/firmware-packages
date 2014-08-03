@@ -1174,7 +1174,7 @@ function main.write(self, section, value)
 		uci:delete("dhcp", "odhcpd")
 		uci:section("dhcp","odhcpd","odhcpd", {
 			maindhcp = "0",
-			leasefile = "/tmp/hosts/odhcpd"
+			leasefile = "/tmp/hosts/odhcpd",
 			leasetrigger = "/usr/sbin/odhcpd-update"
 		})
 		uci:save("dhcp")
@@ -1697,10 +1697,10 @@ function main.write(self, section, value)
 							uci:save("6relayd")
 						end
 						if has_6relayd then
-							dhcpbase.dhcpv6 = "server",
-							dhcpbase.ra = "server",
-							dhcpbase.domain = profile_suffix,
-							dhcpbase.ra_preference = "low",
+							dhcpbase.dhcpv6 = "server"
+							dhcpbase.ra = "server"
+							dhcpbase.domain = profile_suffix
+							dhcpbase.ra_preference = "low"
 						end
 						uci:section("network", "interface", nif .. "dhcp", aliasbase)
 						uci:section("wireless", "wifi-iface", nil, {
