@@ -33,7 +33,7 @@ endef
 define Build/Compile
 endef
 
-define Package/luci-app-ffwizard-pberg/install
+define Package/freifunk-berlin-openvpn-files/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
 	$(INSTALL_DIR) $(1)/etc/openvpn
