@@ -95,7 +95,8 @@ function configureOLSRPlugins()
 	uci:section("olsrd6", "LoadPlugin", nil, {
 		accept = "::",
 		library = "olsrd_jsoninfo.so.0.0",
-		ignore = "0"
+		ignore = "0",
+		port = '9091'
 	})
 
 	if (sharenet) then
@@ -144,8 +145,8 @@ function configureOLSRPlugins()
 	        library = "olsrd_nameservice.so.0.3",
 		suffix = "." .. suffix ,
 	        hosts_file = "/tmp/hosts/olsr",
-		latlon_file = "/var/run/latlon.js",
-	        services_file = "/var/etc/services.olsr"
+		latlon_file = "/var/run/latlon.js.ipv6",
+	        services_file = "/var/etc/services.olsr.ipv6"
 	})
 	uci:save("olsrd")
 	uci:save("olsrd6")
