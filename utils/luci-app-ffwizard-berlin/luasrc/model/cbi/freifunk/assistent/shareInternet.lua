@@ -1,5 +1,6 @@
 local uci = require "luci.model.uci".cursor()
 local tools = require "luci.tools.freifunk.assistent.ffwizard"
+local fs = require "nixio.fs"
 
 f = SimpleForm("ffvpn","","")
 f.submit = "Next"
@@ -37,43 +38,16 @@ end
 function main.write(self, section, value)
 
 	uci:set("freifunk", "wizard", "sharenet", 1)
-	--für den alten assistenten
-	uci:set("freifunk", "wizard", "wan_security", 1)
-	uci:set("freifunk", "wizard", "wan_input_accept", 1)
-
 		
 	uci:section("openvpn", "openvpn", "ffvpn", {
- 		client='1',
-	        nobind='1',
-        	proto='udp',
-	        dev='ffvpn',
-       	 	dev_type='tun',
-	        persist_key='1',
-        	ns_cert_type='server',
-	        comp_lzo='no',
-        	script_security='2',
-	        cipher='none',
-        	ca='/etc/openvpn/freifunk-ca.crt',
-	        status='/var/log/openvpn-status-ffvpn.log',
-        	up='/etc/openvpn/ffvpn-up.sh',
-	        route_nopull='1',
-        	persist_tun='0',
+        	--persist_tun='0',
 	        enabled='1',
-	        cert='/lib/uci/upload/cbid.ffvpn.1.cert',
-	        key='/lib/uci/upload/cbid.ffvpn.1.key'
 	})
 
+	fs.copy("/lib/uci/upload/cbid.ffvpn.1.cert","/etc/openvpn/freifunk_client.crt")
+	fs.copy("/lib/uci/upload/cbid.ffvpn.1.key","/etc/openvpn/freifunk_client.key")
+	
 	uci:save("openvpn")
-	uci:set_list ("openvpn", "ffvpn", "remote", {'77.87.48.10 1194 udp','78.41.116.65 1194 udp'})
-
-
-	uci:section("network", "interface", "tunl0", {
-		proto = "none",
-		ifname = "tunl0"
-	})
-
-	tools.firewall_zone_add_interface("freifunk", "tunl0")
- 	
  	uci:save("freifunk")
 	uci:save("network")
 	uci:save("firewall")
