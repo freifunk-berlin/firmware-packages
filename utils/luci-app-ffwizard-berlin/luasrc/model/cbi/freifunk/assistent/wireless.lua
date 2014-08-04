@@ -342,14 +342,27 @@ end
 
 
 function getchannel(device)
+	--local wifi require "luci.sys.wifi"
+	--wifi.channels(device) --from luci reference: does not work
+	--sys.wifi.getiwinfo(device) --from sys.lua: does not work
+	-- >:( why?
+
+	local iwinfo = require "iwinfo"
+	local type = iwinfo.type(device)
+	local something = iwinfo[type]
+	local freqlist = something.freqlist(device)
+
+	--TODO read channels from profile
 	local r_channel
-	--TODO get channel from profile
-	if device == "radio0" then
-		r_channel=13
+	if (freqlist[1].mhz > 2411 and freqlist[1].mhz < 2484) then
+		--this is 2.4 Ghz
+		r_channel = 13
 	end
-	if device == "radio1" then
+	if (freqlist[1].mhz > 5179 and freqlist[1].mhz < 5701) then
+		--this is 5 Ghz
 		r_channel = 36
 	end
+	tools.logger("channel for device "..device.." is "..tostring(r_channel))
 	return r_channel
 end
 
