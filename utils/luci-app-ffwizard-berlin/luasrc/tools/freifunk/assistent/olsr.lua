@@ -95,8 +95,7 @@ function configureOLSRPlugins()
 	uci:section("olsrd6", "LoadPlugin", nil, {
 		accept = "::",
 		library = "olsrd_jsoninfo.so.0.0",
-		ignore = "0",
-		port = '9091'
+		ignore = "0"
 	})
 
 	if (sharenet) then
