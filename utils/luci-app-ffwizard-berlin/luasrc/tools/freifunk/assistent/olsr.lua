@@ -1,6 +1,6 @@
 local util = require "luci.util"
 local uci = require "luci.model.uci".cursor()
-
+local tools = require "luci.tools.freifunk.assistent.ffwizard"
 
 local sharenet = uci:get("freifunk","wizard","sharenet")
 --TODO set profile in general config and read here                                                                       
@@ -63,7 +63,7 @@ function configureOLSR()
 	local olsrbase = uci:get_all("freifunk", "olsrd") or {}                           
 	util.update(olsrbase, uci:get_all(external, "olsrd") or {})                      
 	olsrbase.IpVersion='4'                                                          
-	if (sharenet) then
+	if (sharenet == "1") then
         	olsrbase.SmartGateway="yes"
         	olsrbase.SmartGatewaySpeed="500 10000"
         	olsrbase.RtTable="111"
@@ -86,7 +86,6 @@ function configureOLSR()
 end
 
 function configureOLSRPlugins()
-
 	uci:section("olsrd", "LoadPlugin", nil, {
 		accept = "0.0.0.0",
 		library = "olsrd_jsoninfo.so.0.0",
@@ -97,19 +96,20 @@ function configureOLSRPlugins()
 		library = "olsrd_jsoninfo.so.0.0",
 		ignore = "0"
 	})
-
-	if (sharenet) then
+	if (sharenet == "1") then
+		tools.logger("enable olsr plugin dyn_gw_plain")
 		uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
 		uci:section("olsrd6", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
 	else
 		-- Disable gateway_plain plugin
+		tools.logger("disable olsr plugin dyn_gw_plain")
 		uci:section("olsrd", "LoadPlugin", nil, {
         		library = "olsrd_dyn_gw_plain.so.0.4", 
-        		ignore = 1,
+			ignore = 1
 		})
 		uci:section("olsrd6", "LoadPlugin", nil, {
 			library = "olsrd_dyn_gw_plain.so.0.4",
-			ignore = 1,
+			ignore = 1
 		})
 	end
 
