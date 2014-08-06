@@ -213,25 +213,6 @@ function main.write(self, section, value)
 		netmask = dhcpmeshnet:mask():string(),
 		netaddr = dhcpmeshnet:network():string()
 	})
-	uci:foreach("olsrd", "LoadPlugin",
-		function(s)
-			if s.library == "olsrd_p2pd.so.0.1.0" then
-				uci:set("olsrd", s['.name'], "ignore", "1")
-				local nonolsr = uci:get_list("olsrd", s['.name'], "NonOlsrIf") or {}
-				table.insert(nonolsr,"dhcp")
-				uci:set_list("olsrd", s['.name'], "NonOlsrIf", nonolsr)
-			end
-		end)
-
-	uci:foreach("olsrd6", "LoadPlugin",
-               	function(s)
-                       	if s.library == "olsrd_p2pd.so.0.1.0" then
-                               	uci:set("olsrd6", s['.name'], "ignore", "1")
-                               	local nonolsr = uci:get_list("olsrd", s['.name'], "NonOlsrIf") or {}
-                               	table.insert(nonolsr,"dhcp")
-                               	uci:set_list("olsrd6", s['.name'], "NonOlsrIf", nonolsr)
-                       	end
-               	end)
 
 	uci:save("dhcp")
 	uci:save("olsrd")

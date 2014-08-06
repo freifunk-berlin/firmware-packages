@@ -17,7 +17,6 @@ function prepareOLSR(community)
 	uci:delete_all("olsrd", "Hna4")
 	uci:delete_all("olsrd", "Hna6")
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_p2pd.so.0.1.0"})
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
@@ -33,27 +32,12 @@ function prepareOLSR(community)
 	uci:delete_all("olsrd6", "Hna4")
 	uci:delete_all("olsrd6", "Hna6")
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})
-	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_p2pd.so.0.1.0"})
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_jsoninfo.so.0.0"})
 
 	uci:section("olsrd6", "InterfaceDefaults", nil, olsrifbase)
-
-	-- Write p2pd settings here because its needed in model/cbi/freifunk/assistent/wireless.lua
-	uci:section("olsrd", "LoadPlugin", nil, {
-		library = "olsrd_p2pd.so.0.1.0",
-		P2pdTtl = "10",
-		UdpDestPort = "224.0.0.2515353",
-		ignore = "1",
-	})
-	uci:section("olsrd6", "LoadPlugin", nil, {
-                library = "olsrd_p2pd.so.0.1.0",
-                P2pdTtl = "10",
-                UdpDestPort = "ff02::fb 5353",
-                ignore = "1",
-        })
 
 	uci:save("olsrd")
 	uci:save("olsrd6")
