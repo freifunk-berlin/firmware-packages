@@ -4,7 +4,7 @@ local sharenet = uci:get("freifunk","wizard","sharenet")
 module "luci.tools.freifunk.assistent.tools"
 
 function configureWatchdog()
-	if (sharenet) then
+	if (sharenet =="1") then
 		uci:section("freifunk-watchdog", "process", nil, {
 			process="openvpn",
 			initscript="/etc/init.d/openvpn"
@@ -14,7 +14,7 @@ function configureWatchdog()
 end
 
 function configureQOS()
-	if (sharenet) then
+	if (sharenet == "1") then
 		uci:delete("qos","wan")
 		uci:delete("qos","lan")
 		uci:section("qos", 'interface', "wan", {
@@ -25,7 +25,7 @@ function configureQOS()
 	uci:save("qos")
 end
 function configureP2PBlock()
-	if (sharenet) then
+	if (sharenet == "1") then
 		uci:set("freifunk_p2pblock", "p2pblock", "interface", "wan")
 		uci:save("freifunk_p2pblock")
 	end

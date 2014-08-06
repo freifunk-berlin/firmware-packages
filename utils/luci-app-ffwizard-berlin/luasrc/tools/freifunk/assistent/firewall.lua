@@ -55,7 +55,7 @@ function configureFirewall()
 	end
 
 
-	if (sharenet) then
+	if (sharenet == "1") then
 		uci:delete_all("firewall","zone", {name="wan"})
 		uci:section("firewall", "zone", nil, {
 			masq	= "1",
@@ -114,7 +114,7 @@ function configureFirewall()
 end
 
 function configurePolicyRouting()
-	if (sharenet) then
+	if (sharenet == "1") then
 	        uci:set("freifunk-policyrouting","pr","enable","1")
         	uci:set("freifunk-policyrouting","pr","strict","1")
 	        uci:set("freifunk-policyrouting","pr","fallback","1")

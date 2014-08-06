@@ -120,7 +120,7 @@ function commit()
 	sys.init.enable("freifunk-p2pblock")
 	sys.init.enable("qos")
 	sys.exec("chmod +x /etc/init.d/freifunk-p2pblock")
-	if (sharenet) then
+	if (sharenet == "1") then
         	sys.init.enable("freifunk-policyrouting")
 	        sys.exec('grep wan /etc/crontabs/root >/dev/null || echo "0 6 * * * ifup wan" >> /etc/crontabs/root')
 	else
