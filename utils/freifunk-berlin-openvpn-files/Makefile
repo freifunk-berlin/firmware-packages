@@ -11,11 +11,10 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 include $(INCLUDE_DIR)/package.mk
 
 define Package/freifunk-berlin-openvpn-files
-  SECTION:=luci
-  CATEGORY:=LuCI
-  SUBMENU:=3. Applications
+  SECTION:=freifunk-berlin
+  CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin openVPN files
-  URL:=http://pberg.freifunk.net
+  URL:=http://github.com/freifunk-berlin/packages_berlin
   DEPENDS+= +openvpn-polarssl
 endef
 
