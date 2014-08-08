@@ -1,3 +1,7 @@
+.container .alert-message.warning {
+	display:none;
+}
+
 form, .section {
 	width:800px;
 	margin-left:auto;
