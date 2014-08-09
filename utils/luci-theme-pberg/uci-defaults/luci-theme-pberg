@@ -1,6 +1,0 @@
-#!/bin/sh
-uci batch <<-EOF
-	set luci.themes.pberg=/luci-static/pberg
-        commit luci
-EOF
-	
