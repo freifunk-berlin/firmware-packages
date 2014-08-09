@@ -1,4 +1,2 @@
 #!/bin/sh
 
-uci set freifunk.wizard=settings
-uci commit

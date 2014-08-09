@@ -28,8 +28,8 @@ end
 function prepare()
 
 	--reset sharenet value, will be set in shareInternet or wireless and read in applyChanges
-	uci:set("freifunk","wizard","sharenet", 2)
-	uci:save("freifunk")
+	uci:set("ffwizard","settings","sharenet", 2)
+	uci:save("ffwizard")
 
 	--OLSR CONFIG
         olsr.prepareOLSR(external)
@@ -48,13 +48,13 @@ end
 
 function commit()
 
-	uci:set("freifunk","wizard","runbefore","true")
-	uci:save("freifunk")
-	local sharenet = uci:get("freifunk","wizard","sharenet")
+	uci:set("ffwizard","settings","runbefore","true")
+	uci:save("ffwizard")
+	local sharenet = uci:get("ffwizard","settings","sharenet")
 
 	--change hostname to mesh ip if it is still Openwrt-something
 	if (not uci:get_first("system","system","hostname") or string.sub(uci:get_first("system","system","hostname"),1,string.len("OpenWrt"))=="OpenWrt") then
-        	local dhcpmesh = uci:get("freifunk", "wizard","dhcpmesh")
+		local dhcpmesh = uci:get("ffwizard","settings","dhcpmesh")
         	dhcpmesh = ip.IPv4(dhcpmesh):minhost()
        	 	uci:foreach("system", "system",
                 	function(section)
@@ -105,7 +105,7 @@ function commit()
 	uci:commit("olsrd6")
 	uci:commit("firewall")
 	uci:commit("system")
-	uci:commit("freifunk")
+	uci:commit("ffwizard")
 	uci:commit("freifunk_p2pblock")
 	uci:commit("freifunk-policyrouting")
 	uci:commit("wireless")
@@ -144,9 +144,9 @@ function reset()
 	uci:revert("freifunk-watchdog")
 	uci:revert("qos")
 
-	uci:set("freifunk","wizard","runbefore","true")
-	uci:save("freifunk")
-	uci:commit("freifunk")
+	uci:set("ffwizard","settings","runbefore","true")
+	uci:save("ffwizard")
+	uci:commit("ffwizard")
 
 	luci.http.redirect(luci.dispatcher.build_url("/"))
 end

@@ -37,7 +37,7 @@ end
 
 function main.write(self, section, value)
 
-	uci:set("freifunk", "wizard", "sharenet", 1)
+	uci:set("ffwizard", "settings", "sharenet", 1)
 		
 	uci:section("openvpn", "openvpn", "ffvpn", {
         	--persist_tun='0',
@@ -48,10 +48,7 @@ function main.write(self, section, value)
 	fs.copy("/lib/uci/upload/cbid.ffvpn.1.key","/etc/openvpn/freifunk_client.key")
 	
 	uci:save("openvpn")
- 	uci:save("freifunk")
-	uci:save("network")
-	uci:save("firewall")
-
+	uci:save("ffwizard")
 
 	-- I need to commit this here, don't know why I can not do this in apply changes
 	uci:commit("openvpn")

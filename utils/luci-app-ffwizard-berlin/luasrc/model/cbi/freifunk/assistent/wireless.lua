@@ -15,7 +15,7 @@ local ifcfgname = "wlan"
 --TODO set profile in general config and read here
 local community = "berlin"
 local external = "profile_"..community
-local sharenet = uci:get("freifunk","wizard","sharenet")
+local sharenet = uci:get("ffwizard","settings","sharenet")
 
 
 
@@ -36,7 +36,7 @@ uci:foreach("wireless", "wifi-device",
 		meship.rmempty = false
 		meship.datatype = "ip4addr"
 		function meship.cfgvalue(self, section)
-			return uci:get("freifunk", "wizard", "meship_" .. device)
+			return uci:get("ffwizard","settings", "meship_" .. device)
 		end
 		function meship.validate(self, value)
 			local x = ip.IPv4(value)
@@ -51,14 +51,14 @@ meshipinfo.template = "freifunk/assistent/snippets/meshipinfo"
 ssid = f:field(Value, "ssid", "Freifunk SSID", "")
 ssid.rmempty = false
 function ssid.cfgvalue(self, section)
-	return uci:get("freifunk", "wizard", "ssid") or uci:get(external, "profile","ssid")
+	return uci:get("ffwizard","settings", "ssid") or uci:get(external, "profile","ssid")
 end
 
 dhcpmesh = f:field(Value, "dhcpmesh", "Addressraum", "")
 dhcpmesh.rmempty = false
 dhcpmesh.datatype = "ip4addr"
 function dhcpmesh.cfgvalue(self, section)
-	return uci:get("freifunk", "wizard", "dhcpmesh")
+	return uci:get("ffwizard","settings", "dhcpmesh")
 end
 function dhcpmesh.validate(self, value)
 	local x = ip.IPv4(value)
@@ -78,17 +78,16 @@ function main.parse(self, section)
 	end
 end
 function main.write(self, section, value)
-	tools.logger("wireless sharenet: "..sharenet)
 
 	if (sharenet == "2") then
 		--share internet was not enabled before, set to false now
-		uci:set("freifunk","wizard","sharenet", 0)
-		uci:save("freifunk")
+		uci:set("ffwizard","settings","sharenet", 0)
+		uci:save("ffwizard")
 	end
 
-	-- store wizard data to fill fields if wizeard is rerun
-	uci:set("freifunk", "wizard", "ssid", ssid:formvalue(section))
-	uci:set("freifunk", "wizard", "dhcpmesh", dhcpmesh:formvalue(section))
+	-- store wizard data to fill fields if wizard is rerun
+	uci:set("ffwizard","settings", "ssid", ssid:formvalue(section))
+	uci:set("ffwizard","settings", "dhcpmesh", dhcpmesh:formvalue(section))
 
 	if (string.len(ssid:formvalue(section)) == 0 or string.len(dhcpmesh:formvalue(section)) == 0) then
 		-- form is not valid
@@ -99,8 +98,8 @@ function main.write(self, section, value)
 		function(sec)
 			local device = sec[".name"]
 
-			-- store wizard data to fill fields if wizeard is rerun
-			uci:set("freifunk", "wizard", "meship_" .. device, wifi_tbl[device]["meship"]:formvalue(section))
+			-- store wizard data to fill fields if wizard is rerun
+			uci:set("ffwizard","settings", "meship_" .. device, wifi_tbl[device]["meship"]:formvalue(section))
 
 			if (string.len(wifi_tbl[device]["meship"]:formvalue(section)) == 0) then
 				-- form is not valid
@@ -218,7 +217,7 @@ function main.write(self, section, value)
 	uci:save("olsrd")
 	uci:save("olsrd6")
 	uci:save("network")
-	uci:save("freifunk")
+	uci:save("ffwizard")
 end
 
 function f.on_cancel()

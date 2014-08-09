@@ -1,5 +1,5 @@
 local uci = require "luci.model.uci".cursor()
-local sharenet = uci:get("freifunk","wizard","sharenet")
+local sharenet = uci:get("ffwizard","settings","sharenet")
 
 module "luci.tools.freifunk.assistent.tools"
 

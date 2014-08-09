@@ -2,7 +2,7 @@ local util = require "luci.util"
 local uci = require "luci.model.uci".cursor()
 local tools = require "luci.tools.freifunk.assistent.ffwizard"
 
-local sharenet = uci:get("freifunk","wizard","sharenet")
+local sharenet = uci:get("ffwizard","settings","sharenet")
 --TODO set profile in general config and read here                                                                       
 local community = "berlin"                                                                                               
 local external = "profile_"..community

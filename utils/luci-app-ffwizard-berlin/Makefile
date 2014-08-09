@@ -3,7 +3,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ffwizard-berlin
-PKG_VERSION:=0.0.3
+PKG_VERSION:=0.0.1
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
@@ -47,8 +47,8 @@ define Package/luci-app-ffwizard-berlin/install
 	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view
 	$(INSTALL_DIR) $(1)/www
 	$(CP) ./htdocs/* $(1)/www
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(CP) ./root/etc/uci-defaults/* $(1)/etc/uci-defaults
+	$(INSTALL_DIR) $(1)/etc
+	$(CP) ./root/etc/* $(1)/etc
 endef
 
 $(eval $(call BuildPackage,luci-app-ffwizard-berlin))
