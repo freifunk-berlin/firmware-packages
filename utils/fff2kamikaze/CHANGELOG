@@ -1,5 +1,0 @@
-0.0.1-3 Fix LinkQualityMult for more than one interface
-	Script is now triggered by "run_fff2kamikaze" somewhere in ff_adm_note (Verwalten->Kontakt->Notiz in the german FFF Webinterface)
-0.0.1-2 rename virtual interface wifi0 to wlan
-	add support for ff_mtu and wl0_frameburst (broadcom specific)
-0.0.1-1	Basic functionality
