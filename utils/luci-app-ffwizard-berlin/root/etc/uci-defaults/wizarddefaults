@@ -1,4 +1,11 @@
 #!/bin/sh
 
+#change default ip to avoid collision with uses's local network
 uci set network.lan.ipaddr=192.168.42.1
 uci commit network
+
+#set dns name frei.funk
+DOMAIN="$(uci add dhcp domain)"
+uci set dhcp.$DOMAIN.name=frei.funk
+uci set dhcp.$DOMAIN.ip=192.168.42.1
+uci commit dhcp
