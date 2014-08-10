@@ -1,6 +1,6 @@
 local uci = require "luci.model.uci".cursor()
 local tools = require "luci.tools.freifunk.assistent.ffwizard"
-local sharenet = uci:get("ffwizard","settings","sharenet") == "1"
+local sharenet = uci:get("ffwizard","settings","sharenet")
 module ("luci.tools.freifunk.assistent.firewall",package.seeall)
 
 
