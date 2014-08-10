@@ -12,12 +12,8 @@ local fs = require "nixio.fs"
 }
 local netname = "wireless"
 local ifcfgname = "wlan"
---TODO set profile in general config and read here
-local community = "berlin"
-local external = "profile_"..community
+local community = "profile_"..uci:get("freifunk", "community", "name")
 local sharenet = uci:get("ffwizard","settings","sharenet")
-
-
 
 f = SimpleForm("ffwizard","","")
 f.submit = "Next"
@@ -51,7 +47,7 @@ meshipinfo.template = "freifunk/assistent/snippets/meshipinfo"
 ssid = f:field(Value, "ssid", "Freifunk SSID", "")
 ssid.rmempty = false
 function ssid.cfgvalue(self, section)
-	return uci:get("ffwizard","settings", "ssid") or uci:get(external, "profile","ssid")
+	return uci:get("ffwizard","settings", "ssid") or uci:get(community, "profile","ssid")
 end
 
 dhcpmesh = f:field(Value, "dhcpmesh", "Addressraum", "")
@@ -126,7 +122,7 @@ function main.write(self, section, value)
 
 			--WIRELESS CONFIG device
 			local devconfig = uci:get_all("freifunk", "wifi_device") or {}
-			util.update(devconfig, uci:get_all(external, "wifi_device") or {})
+			util.update(devconfig, uci:get_all(community, "wifi_device") or {})
 			devconfig.channel = getchannel(device)
 			devconfig.hwmode = calchwmode(devconfig.channel, sec)
 			devconfig.doth = calcdoth(devconfig.channel)
@@ -138,14 +134,14 @@ function main.write(self, section, value)
 
 			--WIRELESS CONFIG ad-hoc
 			local ifconfig = uci:get_all("freifunk", "wifi_iface")
-			util.update(ifconfig, uci:get_all(external, "wifi_iface") or {})
+			util.update(ifconfig, uci:get_all(community, "wifi_iface") or {})
 			ifconfig.device = device
 			ifconfig.mcast_rate = ""
 			ifconfig.network = calcnif(device)
 			ifconfig.ifname = calcifcfg(device).."-".."adhoc".."-"..calcpre(devconfig.channel)
 			ifconfig.mode = "adhoc"
-			ifconfig.ssid = uci:get("profile_"..community,"ssidscheme",devconfig.channel)
-			ifconfig.bssid = uci:get("profile_"..community,"bssidscheme",devconfig.channel)
+			ifconfig.ssid = uci:get(community,"ssidscheme",devconfig.channel)
+			ifconfig.bssid = uci:get(community,"bssidscheme",devconfig.channel)
 			uci:section("wireless", "wifi-iface", nil, ifconfig)
 
 
@@ -153,7 +149,7 @@ function main.write(self, section, value)
 			local node_ip = wifi_tbl[device]["meship"]:formvalue(section)
 			node_ip = ip.IPv4(node_ip)
 			local prenetconfig = uci:get_all("freifunk", "interface") or {}
-			util.update(prenetconfig, uci:get_all(external, "interface") or {})
+			util.update(prenetconfig, uci:get_all(community, "interface") or {})
 			prenetconfig.proto = "static"
 			prenetconfig.ipaddr = node_ip:host():string()
 			if node_ip:prefix() < 32 then
@@ -199,7 +195,7 @@ function main.write(self, section, value)
 
 	--DHCP CONFIG bridge for wifi APs
 	local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
-	util.update(dhcpbase, uci:get_all(external, "dhcp") or {})
+	util.update(dhcpbase, uci:get_all(community, "dhcp") or {})
 	dhcpbase.interface = "dhcp"
 	dhcpbase.force = 1
 	dhcpbase.ignore = 0

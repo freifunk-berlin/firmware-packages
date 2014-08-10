@@ -4,9 +4,6 @@ local tools = require "luci.tools.freifunk.assistent.ffwizard"
 local atools = require "luci.tools.freifunk.assistent.tools"
 local ip = require "luci.ip"
 
---TODO can not read community here :/ maybe reset delete all?
-local community = "berlin"
-local external = "profile_"..community
 local olsr = require "luci.tools.freifunk.assistent.olsr"
 local firewall = require "luci.tools.freifunk.assistent.firewall"
 
@@ -32,12 +29,10 @@ function prepare()
 	uci:save("ffwizard")
 
 	--OLSR CONFIG
-        olsr.prepareOLSR(external)
-
-
+        olsr.prepareOLSR()
 
 	--FIREWALL CONFIG
-	tools.prepareFirewall(external)
+	tools.prepareFirewall()
 
 	uci:save("olsrd")
 	uci:save("freifunk_p2pblock")
@@ -51,6 +46,8 @@ function commit()
 	uci:set("ffwizard","settings","runbefore","true")
 	uci:save("ffwizard")
 	local sharenet = uci:get("ffwizard","settings","sharenet")
+
+	local community = "profile_"..uci:get("freifunk","community","name")
 
 	--change hostname to mesh ip if it is still Openwrt-something
 	if (not uci:get_first("system","system","hostname") or string.sub(uci:get_first("system","system","hostname"),1,string.len("OpenWrt"))=="OpenWrt") then
@@ -66,8 +63,8 @@ function commit()
 	--remove geo data if it is still default
 	local latval = tonumber(uci:get_first("system", "system", "latitude"))
 	local lonval = tonumber(uci:get_first("system", "system", "longitude"))
-	local latval_com = tonumber(uci:get_first("profile_"..community, "community", "latitude"))
-	local lonval_com = tonumber(uci:get_first("profile_"..community, "community", "longitude"))
+	local latval_com = tonumber(uci:get_first(community, "community", "latitude"))
+	local lonval_com = tonumber(uci:get_first(community, "community", "longitude"))
 
 	if latval and latval == 52 then
         	latval = nil
@@ -105,8 +102,9 @@ function commit()
 	uci:commit("olsrd6")
 	uci:commit("firewall")
 	uci:commit("system")
-	uci:commit("ffwizard")
 	uci:commit("freifunk_p2pblock")
+	uci:commit("ffwizard")
+	uci:commit("freifunk")
 	uci:commit("freifunk-policyrouting")
 	uci:commit("wireless")
 	uci:commit("network")

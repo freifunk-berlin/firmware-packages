@@ -192,7 +192,7 @@ function prepareOLSR(community)
 	c:save("olsrd")
 end
 
-function prepareFirewall(community)
+function prepareFirewall()
 	local c = uci.cursor()
 	c:delete_all("firewall","zone", {name="freifunk"})
 	c:delete_all("firewall","forwarding", {dest="freifunk"})
@@ -202,6 +202,7 @@ function prepareFirewall(community)
 	c:save("firewall")	
 
 	local newzone = firewall_create_zone("freifunk", "ACCEPT", "ACCEPT", "REJECT", 1)
+	local community = "profile"..c:get("freifunk","community","name")
         if newzone then                                                                        
 		firewall_zone_add_masq_src("freifunk", "255.255.255.255/32") 
 		c:foreach("freifunk", "fw_forwarding", function(section) 

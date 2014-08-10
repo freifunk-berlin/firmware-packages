@@ -3,13 +3,11 @@ local uci = require "luci.model.uci".cursor()
 local tools = require "luci.tools.freifunk.assistent.ffwizard"
 
 local sharenet = uci:get("ffwizard","settings","sharenet")
---TODO set profile in general config and read here                                                                       
-local community = "berlin"                                                                                               
-local external = "profile_"..community
+local community = "profile_"..uci:get("freifunk", "community", "name")
 
 module "luci.tools.freifunk.assistent.olsr"
 
-function prepareOLSR(community)
+function prepareOLSR()
 	local c = uci.cursor()
 	uci:delete_all("olsrd", "olsrd")
 	uci:delete_all("olsrd", "InterfaceDefaults")
@@ -45,7 +43,7 @@ end
 
 function configureOLSR()
 	local olsrbase = uci:get_all("freifunk", "olsrd") or {}                           
-	util.update(olsrbase, uci:get_all(external, "olsrd") or {})                      
+	util.update(olsrbase, uci:get_all(community, "olsrd") or {})
 	olsrbase.IpVersion='4'                                                          
 	if (sharenet == "1") then
         	olsrbase.SmartGateway="yes"
@@ -116,7 +114,7 @@ function configureOLSRPlugins()
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
 	-- Write new nameservice settings
-	local suffix = uci:get_first(external, "community", "suffix") or "olsr"
+	local suffix = uci:get_first(community, "community", "suffix") or "olsr"
 	uci:section("olsrd", "LoadPlugin", nil, {
 	        library = "olsrd_nameservice.so.0.3",
         	suffix = "." .. suffix ,

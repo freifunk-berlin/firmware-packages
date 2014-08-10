@@ -1,6 +1,7 @@
 local uci = require "luci.model.uci".cursor()
 local sys = require "luci.sys"
 local tools = require "luci.tools.freifunk.assistent.ffwizard"
+local fs = require "luci.fs"
 
 f = SimpleForm("ffwizward", "", "")
 f.submit = "Next"
@@ -8,6 +9,19 @@ f.reset = false
 
 css = f:field(DummyValue, "css", "")
 css.template = "freifunk/assistent/snippets/css"
+
+community = f:field(ListValue, "net", "Freifunk Community", "")
+function community.cfgvalue(self, section)
+	return uci:get("freifunk", "community", "name") or "berlin"
+end
+local profiles = "/etc/config/profile_"
+local communities = {}
+local communities = fs.glob(profiles.."*")
+for k,v in ipairs(communities) do
+	local n = string.gsub(v, profiles, "")
+	local name = uci:get_first("profile_"..n, "community", "name") or "?"
+	community:value(n, name)
+end
 
 hostname = f:field(Value, "hostname", "Knoten Name", "")
 hostname.datatype = "hostname"
@@ -52,9 +66,11 @@ function main.parse(self, section)
 	end
 end
 function main.write(self, section, value)
-	
 	uci:set("freifunk", "contact", "mail", mail:formvalue(section))
 	uci:set("freifunk", "contact", "location",location:formvalue(section))
+	local selectedCommunity = community:formvalue(section) or "Freifunk"
+	uci:tset("freifunk", "community", uci:get_all("profile_"..selectedCommunity, "profile"))
+	uci:set("freifunk", "community", "name", selectedCommunity)
 
 	local latval
 	local lonval
