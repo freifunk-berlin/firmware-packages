@@ -74,8 +74,8 @@ function main.write(self, section, value)
 
 	local latval
 	local lonval
-	if (lat:formvalue(section) and lon:formvalue(section)) then	
-		latval = tonumber(lat:formvalue(section)) 
+	if (lat:formvalue(section) and lon:formvalue(section)) then
+		latval = tonumber(lat:formvalue(section))
 		lonval = tonumber(lon:formvalue(section))
 	end
 
@@ -85,21 +85,21 @@ function main.write(self, section, value)
 			uci:set("system", s[".name"], "cronloglevel", "10")
 			uci:set("system", s[".name"], "zonename", "Europe/Berlin")
 			uci:set("system", s[".name"], "timezone", 'CET-1CEST,M3.5.0,M10.5.0/3')
-			uci:set("system", s[".name"], "hostname", hostname:formvalue(section))	
+			uci:set("system", s[".name"], "hostname", hostname:formvalue(section))
 			if (lonval and latval) then
 				uci:set("system", s[".name"], "latlon",string.format("%.15f %.15f", latval, lonval))
 				uci:set("system", s[".name"], "latitude",string.format("%.15f", latval))
 				uci:set("system", s[".name"], "longitude",string.format("%.15f", lonval))
 			else
 				uci:delete("system", s[".name"], "latlon")
-				uci:delete("system", s[".name"], "latitude")            
-				uci:delete("system", s[".name"], "longitude")	
+				uci:delete("system", s[".name"], "latitude")
+				uci:delete("system", s[".name"], "longitude")
 			end
 			uci:set("system", s[".name"], "location",location:formvalue(section))
-		
+
 		end)
-		
-		
+
+
 	uci:save("system")
 	uci:save("freifunk")
 end
@@ -113,9 +113,9 @@ end
 function f.on_cancel()
         luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/cancel"))
 end
-                                                                                                                        
 
- 
+
+
 return f
- 
- 
+
+
