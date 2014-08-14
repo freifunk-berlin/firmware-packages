@@ -42,9 +42,9 @@ function prepareOLSR()
 end
 
 function configureOLSR()
-	local olsrbase = uci:get_all("freifunk", "olsrd") or {}                           
+	local olsrbase = uci:get_all("freifunk", "olsrd") or {}
 	util.update(olsrbase, uci:get_all(community, "olsrd") or {})
-	olsrbase.IpVersion='4'                                                          
+	olsrbase.IpVersion='4'
 	if (sharenet == "1") then
         	olsrbase.SmartGateway="yes"
         	olsrbase.SmartGatewaySpeed="500 10000"
@@ -52,7 +52,7 @@ function configureOLSR()
        	 	olsrbase.RtTableDefault="112"
         	olsrbase.RtTableTunnel="113"
 	end
-	uci:section("olsrd", "olsrd", nil, olsrbase)                                      
+	uci:section("olsrd", "olsrd", nil, olsrbase)
 
 	--just guessing here :/
 	uci:section("olsrd6", "olsrd", nil, {
@@ -86,7 +86,7 @@ function configureOLSRPlugins()
 		-- Disable gateway_plain plugin
 		tools.logger("disable olsr plugin dyn_gw_plain")
 		uci:section("olsrd", "LoadPlugin", nil, {
-        		library = "olsrd_dyn_gw_plain.so.0.4", 
+        		library = "olsrd_dyn_gw_plain.so.0.4",
 			ignore = 1
 		})
 		uci:section("olsrd6", "LoadPlugin", nil, {
@@ -109,7 +109,7 @@ function configureOLSRPlugins()
 		file = "/var/run/olsrd.watchdog",
 		interval = "30"
 	})
-        
+
 	-- Delete old nameservice settings
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
