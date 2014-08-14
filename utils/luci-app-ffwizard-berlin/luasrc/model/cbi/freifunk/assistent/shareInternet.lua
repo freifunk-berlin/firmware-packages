@@ -21,24 +21,24 @@ key.default="/etc/openvpn/freifunk_client.key"
 key.rmempty = false
 key.optional = false
 
-apinfo = f:field(DummyValue, "apinfo", "")                                                          
-apinfo.template = "freifunk/assistent/snippets/vpninfo"                                              
-                                                                                                    
+apinfo = f:field(DummyValue, "apinfo", "")
+apinfo.template = "freifunk/assistent/snippets/vpninfo"
 
-main = f:field(DummyValue, "openvpnconfig", "", "") 
+
+main = f:field(DummyValue, "openvpnconfig", "", "")
 main.forcewrite = true
 
 function main.parse(self, section)
 	local fvalue = "1"
-	if self.forcewrite then 
-		self:write(section, fvalue) 
-	end 
-end 
+	if self.forcewrite then
+		self:write(section, fvalue)
+	end
+end
 
 function main.write(self, section, value)
 
 	uci:set("ffwizard", "settings", "sharenet", 1)
-		
+
 	uci:section("openvpn", "openvpn", "ffvpn", {
         	--persist_tun='0',
 	        enabled='1',
@@ -46,7 +46,7 @@ function main.write(self, section, value)
 
 	fs.copy("/lib/uci/upload/cbid.ffvpn.1.cert","/etc/openvpn/freifunk_client.crt")
 	fs.copy("/lib/uci/upload/cbid.ffvpn.1.key","/etc/openvpn/freifunk_client.key")
-	
+
 	uci:save("openvpn")
 	uci:save("ffwizard")
 
@@ -55,11 +55,11 @@ function main.write(self, section, value)
 
 end
 
-function f.handle(self, state, data)                                                                                     
-        if state == FORM_VALID then                                                                                      
-	        luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/wireless"))                 
-        end                                                                                                              
-end 
+function f.handle(self, state, data)
+        if state == FORM_VALID then
+	        luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/wireless"))
+        end
+end
 
 function f.on_cancel()
 	luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/decide"))
