@@ -5,53 +5,53 @@ module ("luci.tools.freifunk.assistent.firewall",package.seeall)
 
 
 function configureFirewall()
-	tools.firewall_zone_add_interface("freifunk", "dhcp")                                       
-	        uci:delete_all("firewall", "rule", {                                                      
-        	src="freifunk", 
-  	      	proto="udp", 
-        	dest_port="53" 
-	})
-	uci:section("firewall", "rule", nil, {
-        	src="freifunk", 
-	        proto="udp",
-        	dest_port="53", 
-	        target="ACCEPT" 
-	})
-	uci:delete_all("firewall", "rule", {
-        	src="freifunk",                                                                     
-      	  	proto="udp",                                                                        
-        	src_port="68",                                                                      
-        	dest_port="67"                                                   
-	})                                                               
-	uci:section("firewall", "rule", nil, {                                    
-        	src="freifunk",                                                  
-	        proto="udp",                                                  
-        	src_port="68",                                                
-	        dest_port="67",                                               
-        	target="ACCEPT"                                               
-	})                                                            
-	uci:delete_all("firewall", "rule", {                          
-        	src="freifunk",                                                                
-	        proto="tcp",                                                  
-        	dest_port="8082",                                             
+	tools.firewall_zone_add_interface("freifunk", "dhcp")
+	        uci:delete_all("firewall", "rule", {
+        	src="freifunk",
+  	      	proto="udp",
+        	dest_port="53"
 	})
 	uci:section("firewall", "rule", nil, {
         	src="freifunk",
-	        proto="tcp", 
+	        proto="udp",
+        	dest_port="53",
+	        target="ACCEPT"
+	})
+	uci:delete_all("firewall", "rule", {
+        	src="freifunk",
+      	  	proto="udp",
+        	src_port="68",
+        	dest_port="67"
+	})
+	uci:section("firewall", "rule", nil, {
+        	src="freifunk",
+	        proto="udp",
+        	src_port="68",
+	        dest_port="67",
+        	target="ACCEPT"
+	})
+	uci:delete_all("firewall", "rule", {
+        	src="freifunk",
+	        proto="tcp",
+        	dest_port="8082",
+	})
+	uci:section("firewall", "rule", nil, {
+        	src="freifunk",
+	        proto="tcp",
         	dest_port="8082",
 	        target="ACCEPT"
-	}) 
-	uci:foreach("firewall", "defaults",                                                 
-        	function(section)                                                                    
-                	uci:set("firewall", section[".name"], "drop_invalid", "0")                             
+	})
+	uci:foreach("firewall", "defaults",
+        	function(section)
+                	uci:set("firewall", section[".name"], "drop_invalid", "0")
         	end)
-	
-	local has_advanced = false                                                           
+
+	local has_advanced = false
 	uci:foreach("firewall", "advanced",
         	function(section) has_advanced = true end)
 	if not has_advanced then
         	uci:section("firewall", "advanced", nil,
-               	{ tcp_ecn = "0", ip_conntrack_max = "8192", tcp_westwood = "1" }) 
+               	{ tcp_ecn = "0", ip_conntrack_max = "8192", tcp_westwood = "1" })
 	end
 
 
@@ -72,7 +72,7 @@ function configureFirewall()
 		uci:delete_all("firewall","forwarding", {src="lan", dest="wan"})
 		uci:section("firewall", "forwarding", nil, {src="lan", dest="wan"})
 		uci:foreach("firewall", "zone",
-			function(s)	
+			function(s)
 				if s.name == "wan" then
 					uci:set("firewall", s['.name'], "local_restrict", "1")
 					uci:set("firewall", s['.name'], "masq", "1")
@@ -80,7 +80,7 @@ function configureFirewall()
 				end
 			end)
 		uci:foreach("firewall", "zone",
-			function(s)	
+			function(s)
 				if s.name == "wan" then
 					uci:set("firewall", s['.name'], "input", "ACCEPT")
 					return false
@@ -101,12 +101,12 @@ function configureFirewall()
 		end
 	else
 		uci:delete_all("firewall", "forwarding", {src="freifunk", dest="wan"})
-		uci:foreach("firewall", "zone", 
-       		 	function(s) 
-                		if s.name == "wan" then 
+		uci:foreach("firewall", "zone",
+       		 	function(s)
+                		if s.name == "wan" then
                         		uci:delete("firewall", s['.name'], "local_restrict")
                         		return false
-                		end 
+                		end
 			end)
 	end
 
@@ -119,9 +119,9 @@ function configurePolicyRouting()
         	uci:set("freifunk-policyrouting","pr","strict","1")
 	        uci:set("freifunk-policyrouting","pr","fallback","1")
         	uci:set("freifunk-policyrouting","pr","zones", "freifunk")
-	else 
+	else
         	uci:set("freifunk-policyrouting","pr","enable","0")
-        	uci:delete_all("network","rule") 
+        	uci:delete_all("network","rule")
 	end
 	uci:save("network")
 	uci:save("freifunk-policyrouting")
