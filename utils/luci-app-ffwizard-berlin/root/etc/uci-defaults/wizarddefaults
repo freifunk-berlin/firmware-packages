@@ -17,6 +17,6 @@ uci set olsrd.$PLUGIN.library=olsrd_jsoninfo.so.0.0
 uci set olsrd.$PLUGIN.ignore=0
 
 PLUGIN="$(uci add olsrd6 LoadPlugin)"
-uci set olsrd.$PLUGIN.accept=::
-uci set olsrd.$PLUGIN.library=olsrd_jsoninfo.so.0.0
-uci set olsrd.$PLUGIN.ignore=0
+uci set olsrd6.$PLUGIN.accept=::
+uci set olsrd6.$PLUGIN.library=olsrd_jsoninfo.so.0.0
+uci set olsrd6.$PLUGIN.ignore=0
