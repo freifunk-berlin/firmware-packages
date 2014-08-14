@@ -17,7 +17,7 @@ $Id$
 local uci = require "luci.model.uci"
 local util = require "luci.util"
 local table = require "table"
-local sys = require "luci.sys" 
+local sys = require "luci.sys"
 local type = type
 
 module "luci.tools.freifunk.assistent.ffwizard"
@@ -173,21 +173,21 @@ end
 
 function prepareOLSR(community)
 	local c = uci.cursor()
- 	c:delete_all("olsrd", "olsrd") 
+ 	c:delete_all("olsrd", "olsrd")
 	c:delete_all("olsrd", "InterfaceDefaults")
-	c:delete_all("olsrd", "Interface")                                     
-	c:delete_all("olsrd", "Hna4")                                          
+	c:delete_all("olsrd", "Interface")
+	c:delete_all("olsrd", "Hna4")
 	c:delete_all("olsrd", "Hna6")
-	c:delete_all("olsrd", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})                      
+	c:delete_all("olsrd", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})
 	c:delete_all("olsrd", "LoadPlugin", {library="olsrd_p2pd.so.0.1.0"})
-	c:delete_all("olsrd", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"}) 
-	c:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})                                   
+	c:delete_all("olsrd", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
+	c:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
         c:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 
-	
-	local olsrifbase = c:get_all("freifunk", "olsr_interface") or {}                                               
-        util.update(olsrifbase, c:get_all(community, "olsr_interface") or {})                                           
-        c:section("olsrd", "InterfaceDefaults", nil, olsrifbase)	
+
+	local olsrifbase = c:get_all("freifunk", "olsr_interface") or {}
+        util.update(olsrifbase, c:get_all(community, "olsr_interface") or {})
+        c:section("olsrd", "InterfaceDefaults", nil, olsrifbase)
 
 	c:save("olsrd")
 end
@@ -199,30 +199,30 @@ function prepareFirewall()
 	c:delete_all("firewall","forwarding", {src="freifunk"})
 	c:delete_all("firewall","rule", {dest="freifunk"})
 	c:delete_all("firewall","rule", {src="freifunk"})
-	c:save("firewall")	
+	c:save("firewall")
 
 	local newzone = firewall_create_zone("freifunk", "ACCEPT", "ACCEPT", "REJECT", 1)
 	local community = "profile"..c:get("freifunk","community","name")
-        if newzone then                                                                        
-		firewall_zone_add_masq_src("freifunk", "255.255.255.255/32") 
-		c:foreach("freifunk", "fw_forwarding", function(section) 
+        if newzone then
+		firewall_zone_add_masq_src("freifunk", "255.255.255.255/32")
+		c:foreach("freifunk", "fw_forwarding", function(section)
 			c:section("firewall", "forwarding", nil, section)
-		end) 
+		end)
 		c:foreach(community, "fw_forwarding", function(section)
-			c:section("firewall", "forwarding", nil, section) 
-		end) 
-	
-		c:foreach("freifunk", "fw_rule", function(section) 
+			c:section("firewall", "forwarding", nil, section)
+		end)
+
+		c:foreach("freifunk", "fw_rule", function(section)
 			c:section("firewall", "rule", nil, section)
-		end) 
-		c:foreach(community, "fw_rule", function(section) 
+		end)
+		c:foreach(community, "fw_rule", function(section)
 			c:section("firewall", "rule", nil, section)
-		end) 
+		end)
 	end
-	
+
 	c:save("firewall")
 end
 
-function logger(msg)                                                                                        
-        sys.exec("logger -t ffwizard -p 5 '"..msg.."'")                                                     
-end 
+function logger(msg)
+        sys.exec("logger -t ffwizard -p 5 '"..msg.."'")
+end
