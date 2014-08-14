@@ -9,3 +9,14 @@ DOMAIN="$(uci add dhcp domain)"
 uci set dhcp.$DOMAIN.name=frei.funk
 uci set dhcp.$DOMAIN.ip=192.168.42.1
 uci commit dhcp
+
+#configure olsr jsoninfo plugin
+PLUGIN="$(uci add olsrd LoadPlugin)"
+uci set olsrd.$PLUGIN.accept=0.0.0.0
+uci set olsrd.$PLUGIN.library=olsrd_jsoninfo.so.0.0
+uci set olsrd.$PLUGIN.ignore=0
+
+PLUGIN="$(uci add olsrd6 LoadPlugin)"
+uci set olsrd.$PLUGIN.accept=::
+uci set olsrd.$PLUGIN.library=olsrd_jsoninfo.so.0.0
+uci set olsrd.$PLUGIN.ignore=0
