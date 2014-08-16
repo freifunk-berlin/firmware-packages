@@ -15,10 +15,23 @@ PLUGIN="$(uci add olsrd LoadPlugin)"
 uci set olsrd.$PLUGIN.accept=0.0.0.0
 uci set olsrd.$PLUGIN.library=olsrd_jsoninfo.so.0.0
 uci set olsrd.$PLUGIN.ignore=0
-uci commit olsrd
 
 PLUGIN="$(uci add olsrd6 LoadPlugin)"
 uci set olsrd6.$PLUGIN.accept=::
 uci set olsrd6.$PLUGIN.library=olsrd_jsoninfo.so.0.0
 uci set olsrd6.$PLUGIN.ignore=0
+
+#configure olsr watchdog plugin
+PLUGIN="$(uci add olsrd LoadPlugin)"
+uci set olsrd.$PLUGIN.library=olsrd_watchdog.so.0.1
+uci set olsrd.$PLUGIN.file=/var/run/olsrd.watchdog
+uci set olsrd.$PLUGIN.interval=30
+
+PLUGIN="$(uci add olsrd6 LoadPlugin)"
+uci set olsrd6.$PLUGIN.library=olsrd_watchdog.so.0.1
+uci set olsrd6.$PLUGIN.file=/var/run/olsrd.watchdog
+uci set olsrd6.$PLUGIN.interval=30
+
+uci commit olsrd
 uci commit olsrd6
+

@@ -78,21 +78,6 @@ function configureOLSRPlugins()
 		})
 	end
 
-	-- Delete old watchdog settings
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_watchdog.so.0.1"})
-	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_watchdog.so.0.1"})
-	-- Write new watchdog settings
-	uci:section("olsrd", "LoadPlugin", nil, {
-        	library = "olsrd_watchdog.so.0.1",
-        	file = "/var/run/olsrd.watchdog",
-        	interval = "30"
-	})
-	uci:section("olsrd6", "LoadPlugin", nil, {
-		library = "olsrd_watchdog.so.0.1",
-		file = "/var/run/olsrd.watchdog",
-		interval = "30"
-	})
-
 	-- Delete old nameservice settings
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
