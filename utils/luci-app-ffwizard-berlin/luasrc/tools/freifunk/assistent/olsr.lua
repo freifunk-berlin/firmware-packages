@@ -17,10 +17,6 @@ function prepareOLSR()
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 
-	local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
-	util.update(olsrifbase, uci:get_all(community, "olsr_interface") or {})
-	uci:section("olsrd", "InterfaceDefaults", nil, olsrifbase)
-
 	uci:delete_all("olsrd6", "olsrd")
 	uci:delete_all("olsrd6", "InterfaceDefaults")
 	uci:delete_all("olsrd6", "Interface")
@@ -28,8 +24,6 @@ function prepareOLSR()
 	uci:delete_all("olsrd6", "Hna6")
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
-
-	uci:section("olsrd6", "InterfaceDefaults", nil, olsrifbase)
 
 	uci:save("olsrd")
 	uci:save("olsrd6")
@@ -47,6 +41,11 @@ function configureOLSR()
         	olsrbase.RtTableTunnel="113"
 	end
 	uci:section("olsrd", "olsrd", nil, olsrbase)
+
+	local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
+	util.update(olsrifbase, uci:get_all(community, "olsr_interface") or {})
+	uci:section("olsrd", "InterfaceDefaults", nil, olsrifbase)
+	uci:section("olsrd6", "InterfaceDefaults", nil, olsrifbase)
 
 	--just guessing here :/
 	uci:section("olsrd6", "olsrd", nil, {
