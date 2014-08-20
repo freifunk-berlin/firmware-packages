@@ -184,14 +184,19 @@ function main.write(self, section, value)
 	local dhcpmeshnet = dhcpmesh:formvalue(section)
 	dhcpmeshnet = ip.IPv4(dhcpmeshnet)
 
+
 	--NETWORK CONFIG bridge for wifi APs
 	uci:section("network", "interface", "dhcp", {
         	type="bridge",
         	proto="static",
        		ipaddr=dhcpmeshnet:minhost():string(),
         	netmask=dhcpmeshnet:mask():string(),
-        	ip6assign="64"
+        	ip6assign="64",
+          ifname=uci:get("network", "interface", "lan", "ifname") or ""
 	})
+
+  --NETWORK CONFIG remove lan bridge because ports a part of dhcp bridge now
+  uci:delete("network", "interface", "lan")
 
 	--DHCP CONFIG bridge for wifi APs
 	local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
