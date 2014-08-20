@@ -24,9 +24,3 @@ function configureQOS()
 	end
 	uci:save("qos")
 end
-function configureP2PBlock()
-	if (sharenet == "1") then
-		uci:set("freifunk_p2pblock", "p2pblock", "interface", "wan")
-		uci:save("freifunk_p2pblock")
-	end
-end
