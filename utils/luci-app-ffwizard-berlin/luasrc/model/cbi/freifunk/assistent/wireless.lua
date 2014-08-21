@@ -192,11 +192,13 @@ function main.write(self, section, value)
        		ipaddr=dhcpmeshnet:minhost():string(),
         	netmask=dhcpmeshnet:mask():string(),
         	ip6assign="64",
-          ifname=uci:get("network", "interface", "lan", "ifname") or ""
+          ifname=uci:get("network", "lan", "ifname")
+            or uci:get("network", "dhcp", "ifname")
+            -- use ifname from dhcp bridge on a consecutive run of assistent
 	})
 
   --NETWORK CONFIG remove lan bridge because ports a part of dhcp bridge now
-  uci:delete("network", "interface", "lan")
+  uci:delete("network", "lan")
 
 	--DHCP CONFIG bridge for wifi APs
 	local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
