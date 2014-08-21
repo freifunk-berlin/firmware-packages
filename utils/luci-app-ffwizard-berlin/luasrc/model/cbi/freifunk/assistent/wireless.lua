@@ -64,7 +64,6 @@ end
 apinfo = f:field(DummyValue, "apinfo", "")
 apinfo.template = "freifunk/assistent/snippets/apinfo"
 
-
 main = f:field(DummyValue, "netconfig", "", "")
 main.forcewrite = true
 function main.parse(self, section)
@@ -184,7 +183,6 @@ function main.write(self, section, value)
 	local dhcpmeshnet = dhcpmesh:formvalue(section)
 	dhcpmeshnet = ip.IPv4(dhcpmeshnet)
 
-
 	--NETWORK CONFIG bridge for wifi APs
 	uci:section("network", "interface", "dhcp", {
         	type="bridge",
@@ -209,7 +207,6 @@ function main.write(self, section, value)
 	uci:section("dhcp", "dhcp", "dhcp", dhcpbase)
 	uci:set_list("dhcp", "dhcp", "dhcp_option", "119,olsr")
 
-
 	--OLSR CONFIG bridge interface
 	uci:section("olsrd", "Hna4", nil, {
 		netmask = dhcpmeshnet:mask():string(),
@@ -227,7 +224,6 @@ function f.on_cancel()
         luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/decide"))
 end
 
-
 function f.handle(self, state, data)
         --how can I read form data here to get rid of this main field??
 	if state == FORM_VALID then
@@ -244,7 +240,6 @@ function calcpre(channel)
 	end
 	return pre
 end
-
 
 function calccountry(channel)
 	local country
@@ -323,7 +318,6 @@ function calchwmode(channel, sec)
 	return hwmode
 end
 
-
 function getchannel(device)
 	--local wifi require "luci.sys.wifi"
 	--wifi.channels(device) --from luci reference: does not work
@@ -349,8 +343,6 @@ function getchannel(device)
 	return r_channel
 end
 
-
-
 function calcnif(device)
 	local nif
 	for i, v in ipairs(device_l) do
@@ -371,9 +363,6 @@ function calcifcfg(device)
 	return ifcfg
 end
 
-
-
-
 function cleanup(device)
 	tools.wifi_delete_ifaces(device)
 	tools.wifi_delete_ifaces("wlan")
@@ -391,12 +380,5 @@ function cleanup(device)
 	uci:delete("dhcp", nif)
 	uci:delete("dhcp", nif .. "dhcp")
 end
-
-
-
-
-
-
-
 
 return f
