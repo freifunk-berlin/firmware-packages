@@ -77,27 +77,23 @@ function configureOLSRPlugins()
 			ignore = 1
 		})
 	end
-
-	-- Delete old nameservice settings
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
-	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_nameservice.so.0.3"})
-	-- Write new nameservice settings
 	local suffix = uci:get_first(community, "community", "suffix") or "olsr"
-	uci:section("olsrd", "LoadPlugin", nil, {
-	        library = "olsrd_nameservice.so.0.3",
-        	suffix = "." .. suffix ,
-	        hosts_file = "/tmp/hosts/olsr",
-        	latlon_file = "/var/run/latlon.js",
-	        services_file = "/var/etc/services.olsr"
-	})
-	uci:section("olsrd6", "LoadPlugin", nil, {
-	        library = "olsrd_nameservice.so.0.3",
-		suffix = "." .. suffix ,
-	        hosts_file = "/tmp/hosts/olsr",
-		latlon_file = "/var/run/latlon.js.ipv6",
-	        services_file = "/var/etc/services.olsr.ipv6"
-	})
+	updatePlugin("olsrd_nameservice.so.0.3", "suffix", "."..suffix)
 	uci:save("olsrd")
 	uci:save("olsrd6")
 
+end
+
+function updatePluginInConfig(config, pluginName, key, value)
+	uci:foreach(config, "LoadPlugin",
+		function(plugin)
+			if (plugin.library == pluginName) then
+				uci:set("olsrd", plugin['.name'], key, value)
+			end
+		end)
+end
+
+function updatePlugin(pluginName, key, value)
+	updatePluginInConfig("olsrd", pluginName, key, value)
+	updatePluginInConfig("olsrd6", pluginName, key, value)
 end
