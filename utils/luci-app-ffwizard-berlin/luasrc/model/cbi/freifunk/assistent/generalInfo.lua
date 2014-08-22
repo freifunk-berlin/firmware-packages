@@ -29,6 +29,18 @@ function hostname.cfgvalue(self, section)
 	return uci:get_first("system", "system","hostname") or sys.hostname()
 end
 
+nickname = f:field(Value, "nickname", "Nickname","")
+nickname.datatype = "string"
+function nickname.cfgvalue(self, section)
+	return uci:get("freifunk", "contact", "nickname")
+end
+
+realname = f:field(Value, "realname", "Realname","")
+realname.datatype = "string"
+function realname.cfgvalue(self, section)
+	return uci:get("freifunk", "contact", "name")
+end
+
 mail = f:field(Value, "mail", "E-Mail", "")
 mail.datatype = "string"
 function mail.cfgvalue(self, section)
@@ -66,8 +78,11 @@ function main.parse(self, section)
 	end
 end
 function main.write(self, section, value)
+	uci:set("freifunk", "contact", "nickname", nickname:formvalue(section))
+	uci:set("freifunk", "contact", "name", realname:formvalue(section))
 	uci:set("freifunk", "contact", "mail", mail:formvalue(section))
 	uci:set("freifunk", "contact", "location",location:formvalue(section))
+
 	local selectedCommunity = community:formvalue(section) or "Freifunk"
 	uci:tset("freifunk", "community", uci:get_all("profile_"..selectedCommunity, "profile"))
 	uci:set("freifunk", "community", "name", selectedCommunity)
