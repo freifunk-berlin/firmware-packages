@@ -53,7 +53,7 @@ done
 #it's not available in olsrd6 config file > create a new section
 PLUGIN="$(uci add olsrd6 LoadPlugin)"
 uci set olsrd6.$PLUGIN.library=olsrd_nameservice.so.0.3
-uci set olsrd6.$PLUGIN.suffix=olsr
+uci set olsrd6.$PLUGIN.suffix=.olsr
 uci set olsrd6.$PLUGIN.hosts_file=/tmp/hosts/olsr
 uci set olsrd6.$PLUGIN.latlon_file=/var/run/latlon.js.ipv6
 uci set olsrd6.$PLUGIN.services_file=/var/etc/services.olsr.ipv6
