@@ -195,6 +195,9 @@ function main.write(self, section, value)
   --NETWORK CONFIG remove lan bridge because ports a part of dhcp bridge now
   uci:delete("network", "lan")
 
+  --DHCP CONFIG change ip of frei.funk domain
+  uci:set("dhcp", "frei_funk", "ip", dhcpmeshnet:minhost():string())
+
   --DHCP CONFIG bridge for wifi APs
   local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
   util.update(dhcpbase, uci:get_all(community, "dhcp") or {})
