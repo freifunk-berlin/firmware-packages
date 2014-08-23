@@ -12,59 +12,58 @@ css.template = "freifunk/assistent/snippets/css"
 
 community = f:field(ListValue, "net", "Freifunk Community", "")
 function community.cfgvalue(self, section)
-	return uci:get("freifunk", "community", "name") or "berlin"
+  return uci:get("freifunk", "community", "name") or "berlin"
 end
 local profiles = "/etc/config/profile_"
 local communities = {}
 local communities = fs.glob(profiles.."*")
 for k,v in ipairs(communities) do
-	local n = string.gsub(v, profiles, "")
-	local name = uci:get_first("profile_"..n, "community", "name") or "?"
-	community:value(n, name)
+  local n = string.gsub(v, profiles, "")
+  local name = uci:get_first("profile_"..n, "community", "name") or "?"
+  community:value(n, name)
 end
 
 hostname = f:field(Value, "hostname", "Knoten Name", "")
 hostname.datatype = "hostname"
 function hostname.cfgvalue(self, section)
-	return uci:get_first("system", "system","hostname") or sys.hostname()
+  return uci:get_first("system", "system","hostname") or sys.hostname()
 end
 
 nickname = f:field(Value, "nickname", "Nickname","")
 nickname.datatype = "string"
 function nickname.cfgvalue(self, section)
-	return uci:get("freifunk", "contact", "nickname")
+  return uci:get("freifunk", "contact", "nickname")
 end
 
 realname = f:field(Value, "realname", "Realname","")
 realname.datatype = "string"
 function realname.cfgvalue(self, section)
-	return uci:get("freifunk", "contact", "name")
+  return uci:get("freifunk", "contact", "name")
 end
 
 mail = f:field(Value, "mail", "E-Mail", "")
 mail.datatype = "string"
 function mail.cfgvalue(self, section)
-	return uci:get("freifunk", "contact", "mail")
+  return uci:get("freifunk", "contact", "mail")
 end
 
 location = f:field(Value, "location", "Standort", "")
 location.datatype = "string"
 function location.cfgvalue(self, section)
-	return uci:get_first("system", "system", "location") or uci:get("freifunk", "contact", "location")
+  return uci:get_first("system", "system", "location") or uci:get("freifunk", "contact", "location")
 end
 
 lat = f:field(Value, "lat", "geographischer Breitengrad", "")
 lat.datatype = "float"
 function lat.cfgvalue(self, section)
-	return uci:get_first("system", "system","latitude")
+  return uci:get_first("system", "system","latitude")
 end
 
 lon = f:field(Value, "lon", "geograpischer Längengrad", "")
 lon.datatype = "float"
 function lon.cfgvalue(self, section)
-	return uci:get_first("system", "system","longitude")
+  return uci:get_first("system", "system","longitude")
 end
-
 
 generalinfo = f:field(DummyValue,"","")
 generalinfo.template = "freifunk/assistent/snippets/generalInfo"
@@ -72,56 +71,56 @@ generalinfo.template = "freifunk/assistent/snippets/generalInfo"
 main = f:field(DummyValue, "config", "", "")
 main.forcewrite = true
 function main.parse(self, section)
-	local fvalue = "1"
-	if self.forcewrite then
-		self:write(section, fvalue)
-	end
+  local fvalue = "1"
+  if self.forcewrite then
+    self:write(section, fvalue)
+  end
 end
 function main.write(self, section, value)
-	uci:set("freifunk", "contact", "nickname", nickname:formvalue(section))
-	uci:set("freifunk", "contact", "name", realname:formvalue(section))
-	uci:set("freifunk", "contact", "mail", mail:formvalue(section))
-	uci:set("freifunk", "contact", "location",location:formvalue(section))
+  uci:set("freifunk", "contact", "nickname", nickname:formvalue(section))
+  uci:set("freifunk", "contact", "name", realname:formvalue(section))
+  uci:set("freifunk", "contact", "mail", mail:formvalue(section))
+  uci:set("freifunk", "contact", "location",location:formvalue(section))
 
-	local selectedCommunity = community:formvalue(section) or "Freifunk"
-	uci:tset("freifunk", "community", uci:get_all("profile_"..selectedCommunity, "profile"))
-	uci:set("freifunk", "community", "name", selectedCommunity)
+  local selectedCommunity = community:formvalue(section) or "Freifunk"
+  uci:tset("freifunk", "community", uci:get_all("profile_"..selectedCommunity, "profile"))
+  uci:set("freifunk", "community", "name", selectedCommunity)
 
-	local latval
-	local lonval
-	if (lat:formvalue(section) and lon:formvalue(section)) then
-		latval = tonumber(lat:formvalue(section))
-		lonval = tonumber(lon:formvalue(section))
-	end
+  local latval
+  local lonval
+  if (lat:formvalue(section) and lon:formvalue(section)) then
+    latval = tonumber(lat:formvalue(section))
+    lonval = tonumber(lon:formvalue(section))
+  end
 
-	--SYSTEM CONFIG
-	uci:foreach("system", "system",
-		function(s)
-			uci:set("system", s[".name"], "cronloglevel", "10")
-			uci:set("system", s[".name"], "zonename", "Europe/Berlin")
-			uci:set("system", s[".name"], "timezone", 'CET-1CEST,M3.5.0,M10.5.0/3')
-			uci:set("system", s[".name"], "hostname", hostname:formvalue(section))
-			if (lonval and latval) then
-				uci:set("system", s[".name"], "latlon",string.format("%.15f %.15f", latval, lonval))
-				uci:set("system", s[".name"], "latitude",string.format("%.15f", latval))
-				uci:set("system", s[".name"], "longitude",string.format("%.15f", lonval))
-			else
-				uci:delete("system", s[".name"], "latlon")
-				uci:delete("system", s[".name"], "latitude")
-				uci:delete("system", s[".name"], "longitude")
-			end
-			uci:set("system", s[".name"], "location",location:formvalue(section))
+  --SYSTEM CONFIG
+  uci:foreach("system", "system",
+    function(s)
+      uci:set("system", s[".name"], "cronloglevel", "10")
+      uci:set("system", s[".name"], "zonename", "Europe/Berlin")
+      uci:set("system", s[".name"], "timezone", 'CET-1CEST,M3.5.0,M10.5.0/3')
+      uci:set("system", s[".name"], "hostname", hostname:formvalue(section))
+      if (lonval and latval) then
+        uci:set("system", s[".name"], "latlon",string.format("%.15f %.15f", latval, lonval))
+        uci:set("system", s[".name"], "latitude",string.format("%.15f", latval))
+        uci:set("system", s[".name"], "longitude",string.format("%.15f", lonval))
+      else
+        uci:delete("system", s[".name"], "latlon")
+        uci:delete("system", s[".name"], "latitude")
+        uci:delete("system", s[".name"], "longitude")
+      end
+      uci:set("system", s[".name"], "location",location:formvalue(section))
 
-		end)
+    end)
 
 
-	uci:save("system")
-	uci:save("freifunk")
+  uci:save("system")
+  uci:save("freifunk")
 end
 
 function f.handle(self, state, data)
         if state == FORM_VALID then
-        	luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/decide"))
+          luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/decide"))
         end
 end
 
@@ -129,8 +128,4 @@ function f.on_cancel()
         luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/cancel"))
 end
 
-
-
 return f
-
-
