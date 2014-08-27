@@ -156,6 +156,8 @@ function main.write(self, section, value)
         prenetconfig.netmask = node_ip:mask():string()
       end
       prenetconfig.ip6assign = 64
+      --not not use dns provided by wan dhcp
+      prenetconfig.peerdns=0
       uci:section("network", "interface", calcnif(device), prenetconfig)
 
       --WIRELESS CONFIG ap
@@ -181,16 +183,18 @@ function main.write(self, section, value)
   dhcpmeshnet = ip.IPv4(dhcpmeshnet)
 
   --NETWORK CONFIG bridge for wifi APs
-  uci:section("network", "interface", "dhcp", {
-          type="bridge",
-          proto="static",
-          ipaddr=dhcpmeshnet:minhost():string(),
-          netmask=dhcpmeshnet:mask():string(),
-          ip6assign="64",
-          ifname=uci:get("network", "lan", "ifname")
-            or uci:get("network", "dhcp", "ifname")
-            -- use ifname from dhcp bridge on a consecutive run of assistent
-  })
+  local prenetconfig = uci:get_all("freifunk", "interface") or {}
+  util.update(prenetconfig, uci:get_all(community, "interface") or {}) --get dns config
+  --do not use dns provided by wan dhcp
+  prenetconfig.peerdns=0
+  prenetconfig.type="bridge"
+  prenetconfig.proto="static"
+  prenetconfig.ipaddr=dhcpmeshnet:minhost():string()
+  prenetconfig.netmask=dhcpmeshnet:mask():string()
+  prenetconfig.ip6assign="64"
+  -- use ifname from dhcp bridge on a consecutive run of assistent
+  prenetconfig.ifname=uci:get("network", "lan", "ifname") or uci:get("network", "dhcp", "ifname")
+  uci:section("network","interface","dhcp", prenetconfig)
 
   --NETWORK CONFIG remove lan bridge because ports a part of dhcp bridge now
   uci:delete("network", "lan")
