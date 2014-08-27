@@ -151,7 +151,7 @@ function main.write(self, section, value)
       local prenetconfig = {}
       prenetconfig.proto = "static"
       prenetconfig.ipaddr = node_ip:host():string()
-      prenetconfig.netmask = "255.0.0.0" --get this from profile?
+      prenetconfig.netmask = uci:get(community,'interface','netmask')
       prenetconfig.ip6assign = 64
       uci:section("network", "interface", calcnif(device), prenetconfig)
 
@@ -178,9 +178,8 @@ function main.write(self, section, value)
   dhcpmeshnet = ip.IPv4(dhcpmeshnet)
 
   --NETWORK CONFIG bridge for wifi APs
-  local prenetconfig = uci:get_all("freifunk", "interface") or {}
-  util.update(prenetconfig, uci:get_all(community, "interface") or {}) --get dns config
-  --do not use dns provided by wan dhcp
+  local prenetconfig =  {}
+  prenetconfig.dns=uci:get(community,"interface","dns")
   prenetconfig.type="bridge"
   prenetconfig.proto="static"
   prenetconfig.ipaddr=dhcpmeshnet:minhost():string()
