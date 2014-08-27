@@ -148,16 +148,11 @@ function main.write(self, section, value)
       --NETWORK CONFIG ad-hoc
       local node_ip = wifi_tbl[device]["meship"]:formvalue(section)
       node_ip = ip.IPv4(node_ip)
-      local prenetconfig = uci:get_all("freifunk", "interface") or {}
-      util.update(prenetconfig, uci:get_all(community, "interface") or {})
+      local prenetconfig = {}
       prenetconfig.proto = "static"
       prenetconfig.ipaddr = node_ip:host():string()
-      if node_ip:prefix() < 32 then
-        prenetconfig.netmask = node_ip:mask():string()
-      end
+      prenetconfig.netmask = "255.0.0.0" --get this from profile?
       prenetconfig.ip6assign = 64
-      --not not use dns provided by wan dhcp
-      prenetconfig.peerdns=0
       uci:section("network", "interface", calcnif(device), prenetconfig)
 
       --WIRELESS CONFIG ap
@@ -186,7 +181,6 @@ function main.write(self, section, value)
   local prenetconfig = uci:get_all("freifunk", "interface") or {}
   util.update(prenetconfig, uci:get_all(community, "interface") or {}) --get dns config
   --do not use dns provided by wan dhcp
-  prenetconfig.peerdns=0
   prenetconfig.type="bridge"
   prenetconfig.proto="static"
   prenetconfig.ipaddr=dhcpmeshnet:minhost():string()
