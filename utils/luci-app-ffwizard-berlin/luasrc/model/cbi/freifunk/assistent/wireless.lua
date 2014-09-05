@@ -60,7 +60,7 @@ function dhcpmesh.cfgvalue(self, section)
 end
 function dhcpmesh.validate(self, value)
   local x = ip.IPv4(value)
-  return ( x and x:minhost()) and x:string() or ""
+  return ( x and x:minhost() and x:prefix() < 32) and x:string() or ""
 end
 
 apinfo = f:field(DummyValue, "apinfo", "")
@@ -180,38 +180,41 @@ function main.write(self, section, value)
   local dhcpmeshnet = dhcpmesh:formvalue(section)
   dhcpmeshnet = ip.IPv4(dhcpmeshnet)
 
-  --NETWORK CONFIG bridge for wifi APs
-  uci:section("network", "interface", "dhcp", {
-          type="bridge",
-          proto="static",
-          ipaddr=dhcpmeshnet:minhost():string(),
-          netmask=dhcpmeshnet:mask():string(),
-          ip6assign="64",
-          ifname=uci:get("network", "lan", "ifname")
-            or uci:get("network", "dhcp", "ifname")
-            -- use ifname from dhcp bridge on a consecutive run of assistent
-  })
+  --only do this if user entered cidr
+  if (dhcpmeshnet:prefix() < 32) then
+    --NETWORK CONFIG bridge for wifi APs
+    uci:section("network", "interface", "dhcp", {
+      type="bridge",
+      proto="static",
+      ipaddr=dhcpmeshnet:minhost():string(),
+      netmask=dhcpmeshnet:mask():string(),
+      ip6assign="64",
+      ifname=uci:get("network", "lan", "ifname")
+      or uci:get("network", "dhcp", "ifname")
+      -- use ifname from dhcp bridge on a consecutive run of assistent
+    })
 
-  --NETWORK CONFIG remove lan bridge because ports a part of dhcp bridge now
-  uci:delete("network", "lan")
+    --NETWORK CONFIG remove lan bridge because ports a part of dhcp bridge now
+    uci:delete("network", "lan")
 
-  --DHCP CONFIG change ip of frei.funk domain
-  uci:set("dhcp", "frei_funk", "ip", dhcpmeshnet:minhost():string())
+    --DHCP CONFIG change ip of frei.funk domain
+    uci:set("dhcp", "frei_funk", "ip", dhcpmeshnet:minhost():string())
 
-  --DHCP CONFIG bridge for wifi APs
-  local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
-  util.update(dhcpbase, uci:get_all(community, "dhcp") or {})
-  dhcpbase.interface = "dhcp"
-  dhcpbase.force = 1
-  dhcpbase.ignore = 0
-  uci:section("dhcp", "dhcp", "dhcp", dhcpbase)
-  uci:set_list("dhcp", "dhcp", "dhcp_option", "119,olsr")
+    --DHCP CONFIG bridge for wifi APs
+    local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
+    util.update(dhcpbase, uci:get_all(community, "dhcp") or {})
+    dhcpbase.interface = "dhcp"
+    dhcpbase.force = 1
+    dhcpbase.ignore = 0
+    uci:section("dhcp", "dhcp", "dhcp", dhcpbase)
+    uci:set_list("dhcp", "dhcp", "dhcp_option", "119,olsr")
 
-  --OLSR CONFIG announce dhcp bridge subnet (HNA)
-  uci:section("olsrd", "Hna4", nil, {
-    netmask = dhcpmeshnet:mask():string(),
-    netaddr = dhcpmeshnet:network():string()
-  })
+    --OLSR CONFIG announce dhcp bridge subnet (HNA)
+    uci:section("olsrd", "Hna4", nil, {
+      netmask = dhcpmeshnet:mask():string(),
+      netaddr = dhcpmeshnet:network():string()
+    })
+  end
 
   uci:save("dhcp")
   uci:save("olsrd")
