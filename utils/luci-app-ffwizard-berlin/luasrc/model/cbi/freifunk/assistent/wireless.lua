@@ -181,7 +181,7 @@ function main.write(self, section, value)
   if (dhcpmeshnet:prefix() < 32) then
     --NETWORK CONFIG bridge for wifi APs
     local prenetconfig =  {}
-    prenetconfig.dns=uci:get(community,"interface","dns")
+    prenetconfig.dns=uci:get(community, "interface", "dns")
     prenetconfig.type="bridge"
     prenetconfig.proto="static"
     prenetconfig.ipaddr=dhcpmeshnet:minhost():string()
@@ -189,7 +189,8 @@ function main.write(self, section, value)
     prenetconfig.ip6assign="64"
     -- use ifname from dhcp bridge on a consecutive run of assistent
     prenetconfig.ifname=uci:get("network", "lan", "ifname") or uci:get("network", "dhcp", "ifname")
-    uci:section("network","interface","dhcp", prenetconfig)
+    uci:section("network", "interface", "dhcp", prenetconfig)
+
     --NETWORK CONFIG remove lan bridge because ports a part of dhcp bridge now
     uci:delete("network", "lan")
 
