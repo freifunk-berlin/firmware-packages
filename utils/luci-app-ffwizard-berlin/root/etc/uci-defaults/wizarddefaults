@@ -61,3 +61,6 @@ uci set olsrd6.$PLUGIN.services_file=/var/etc/services.olsr.ipv6
 uci commit olsrd
 uci commit olsrd6
 
+uci set network.wan.peerdns=0
+uci set network.wan6.peerdns=0
+uci commit network

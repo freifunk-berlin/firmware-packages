@@ -148,13 +148,10 @@ function main.write(self, section, value)
       --NETWORK CONFIG ad-hoc
       local node_ip = wifi_tbl[device]["meship"]:formvalue(section)
       node_ip = ip.IPv4(node_ip)
-      local prenetconfig = uci:get_all("freifunk", "interface") or {}
-      util.update(prenetconfig, uci:get_all(community, "interface") or {})
+      local prenetconfig = {}
       prenetconfig.proto = "static"
       prenetconfig.ipaddr = node_ip:host():string()
-      if node_ip:prefix() < 32 then
-        prenetconfig.netmask = node_ip:mask():string()
-      end
+      prenetconfig.netmask = uci:get(community,'interface','netmask')
       prenetconfig.ip6assign = 64
       uci:section("network", "interface", calcnif(device), prenetconfig)
 
@@ -183,17 +180,16 @@ function main.write(self, section, value)
   --only do this if user entered cidr
   if (dhcpmeshnet:prefix() < 32) then
     --NETWORK CONFIG bridge for wifi APs
-    uci:section("network", "interface", "dhcp", {
-      type="bridge",
-      proto="static",
-      ipaddr=dhcpmeshnet:minhost():string(),
-      netmask=dhcpmeshnet:mask():string(),
-      ip6assign="64",
-      ifname=uci:get("network", "lan", "ifname")
-      or uci:get("network", "dhcp", "ifname")
-      -- use ifname from dhcp bridge on a consecutive run of assistent
-    })
-
+    local prenetconfig =  {}
+    prenetconfig.dns=uci:get(community,"interface","dns")
+    prenetconfig.type="bridge"
+    prenetconfig.proto="static"
+    prenetconfig.ipaddr=dhcpmeshnet:minhost():string()
+    prenetconfig.netmask=dhcpmeshnet:mask():string()
+    prenetconfig.ip6assign="64"
+    -- use ifname from dhcp bridge on a consecutive run of assistent
+    prenetconfig.ifname=uci:get("network", "lan", "ifname") or uci:get("network", "dhcp", "ifname")
+    uci:section("network","interface","dhcp", prenetconfig)
     --NETWORK CONFIG remove lan bridge because ports a part of dhcp bridge now
     uci:delete("network", "lan")
 
