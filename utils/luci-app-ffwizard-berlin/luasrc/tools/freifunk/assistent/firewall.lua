@@ -112,17 +112,3 @@ function configureFirewall()
 
 	uci:save("firewall")
 end
-
-function configurePolicyRouting()
-	if (sharenet == "1") then
-	        uci:set("freifunk-policyrouting","pr","enable","1")
-        	uci:set("freifunk-policyrouting","pr","strict","1")
-	        uci:set("freifunk-policyrouting","pr","fallback","1")
-        	uci:set("freifunk-policyrouting","pr","zones", "freifunk")
-	else
-        	uci:set("freifunk-policyrouting","pr","enable","0")
-        	uci:delete_all("network","rule")
-	end
-	uci:save("network")
-	uci:save("freifunk-policyrouting")
-end
