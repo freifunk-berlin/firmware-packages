@@ -15,7 +15,6 @@ function prepareOLSR()
 	uci:delete_all("olsrd", "Hna4")
 	uci:delete_all("olsrd", "Hna6")
 	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 
 	uci:delete_all("olsrd6", "olsrd")
 	uci:delete_all("olsrd6", "InterfaceDefaults")
@@ -23,7 +22,6 @@ function prepareOLSR()
 	uci:delete_all("olsrd6", "Hna4")
 	uci:delete_all("olsrd6", "Hna6")
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
-	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 
 	uci:save("olsrd")
 	uci:save("olsrd6")
@@ -33,13 +31,7 @@ function configureOLSR()
 	local olsrbase = uci:get_all("freifunk", "olsrd") or {}
 	util.update(olsrbase, uci:get_all(community, "olsrd") or {})
 	olsrbase.IpVersion='4'
-	if (sharenet == "1") then
-        	olsrbase.SmartGateway="yes"
-        	olsrbase.SmartGatewaySpeed="500 10000"
-        	olsrbase.RtTable="111"
-       	 	olsrbase.RtTableDefault="112"
-        	olsrbase.RtTableTunnel="113"
-	end
+	olsrbase.SmartGateway="yes"
 	uci:section("olsrd", "olsrd", nil, olsrbase)
 
 	local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
@@ -61,22 +53,6 @@ function configureOLSR()
 end
 
 function configureOLSRPlugins()
-	if (sharenet == "1") then
-		tools.logger("enable olsr plugin dyn_gw_plain")
-		uci:section("olsrd", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
-		uci:section("olsrd6", "LoadPlugin", nil, {library="olsrd_dyn_gw_plain.so.0.4"})
-	else
-		-- Disable gateway_plain plugin
-		tools.logger("disable olsr plugin dyn_gw_plain")
-		uci:section("olsrd", "LoadPlugin", nil, {
-        		library = "olsrd_dyn_gw_plain.so.0.4",
-			ignore = 1
-		})
-		uci:section("olsrd6", "LoadPlugin", nil, {
-			library = "olsrd_dyn_gw_plain.so.0.4",
-			ignore = 1
-		})
-	end
 	local suffix = uci:get_first(community, "community", "suffix") or "olsr"
 	updatePlugin("olsrd_nameservice.so.0.3", "suffix", "."..suffix)
 	uci:save("olsrd")
