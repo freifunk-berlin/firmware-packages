@@ -32,6 +32,15 @@ uci set olsrd6.$PLUGIN.library=olsrd_watchdog.so.0.1
 uci set olsrd6.$PLUGIN.file=/var/run/olsrd.watchdog
 uci set olsrd6.$PLUGIN.interval=30
 
+#configure olsr dyngw plugin
+PLUGIN="$(uci add olsrd LoadPlugin)"
+uci set olsrd.$PLUGIN.library=olsrd_dyn_gw_plain.so.0.4
+uci set olsrd.$PLUGIN.ignore=0
+
+PLUGIN="$(uci add olsrd6 LoadPlugin)"
+uci set olsrd.$PLUGIN.library=olsrd_dyn_gw_plain.so.0.4
+uci set olsrd.$PLUGIN.ignore=0
+
 #configure olsr nameservice plugin
 # it's already available in olsrd config file
 COUNTER=0
