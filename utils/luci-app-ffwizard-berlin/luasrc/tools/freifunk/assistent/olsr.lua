@@ -31,13 +31,7 @@ function configureOLSR()
 	local olsrbase = uci:get_all("freifunk", "olsrd") or {}
 	util.update(olsrbase, uci:get_all(community, "olsrd") or {})
 	olsrbase.IpVersion='4'
-	if (sharenet == "1") then
-        	olsrbase.SmartGateway="yes"
-        	olsrbase.SmartGatewaySpeed="500 10000"
-        	olsrbase.RtTable="111"
-       	 	olsrbase.RtTableDefault="112"
-        	olsrbase.RtTableTunnel="113"
-	end
+	olsrbase.SmartGateway="yes"
 	uci:section("olsrd", "olsrd", nil, olsrbase)
 
 	local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
