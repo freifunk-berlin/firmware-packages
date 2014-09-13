@@ -89,7 +89,6 @@ function commit()
   end
 
   firewall.configureFirewall()
-  firewall.configurePolicyRouting()
 
   olsr.configureOLSR()
   olsr.configureOLSRPlugins()
@@ -104,7 +103,6 @@ function commit()
   uci:commit("system")
   uci:commit("ffwizard")
   uci:commit("freifunk")
-  uci:commit("freifunk-policyrouting")
   uci:commit("wireless")
   uci:commit("network")
   uci:commit("freifunk-watchdog")
@@ -116,10 +114,7 @@ function commit()
   sys.init.enable("olsrd6")
   sys.init.enable("qos")
   if (sharenet == "1") then
-    sys.init.enable("freifunk-policyrouting")
     sys.exec('grep wan /etc/crontabs/root >/dev/null || echo "0 6 * * * ifup wan" >> /etc/crontabs/root')
-  else
-    sys.init.disable("freifunk-policyrouting")
   end
 
   luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/reboot"))
@@ -132,7 +127,6 @@ function reset()
   uci:revert("firewall")
   uci:revert("system")
   uci:revert("freifunk")
-  uci:revert("freifunk-policyrouting")
   uci:revert("wireless")
   uci:revert("network")
   uci:revert("freifunk-watchdog")
