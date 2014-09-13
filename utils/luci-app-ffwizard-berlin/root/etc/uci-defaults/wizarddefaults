@@ -72,6 +72,10 @@ uci commit olsrd6
 
 uci set network.wan.peerdns=0
 uci set network.wan6.peerdns=0
+#tunl0 is the ipip tunnel interface for the olsr SmartGateway plugin
+uci set network.tunl0=interface
+uci set network.tunl0.ifname=tunl0
+uci set network.tunl0.proto=none
 uci commit network
 
 # enable freifunk-policyrouting by default
