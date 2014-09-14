@@ -34,9 +34,6 @@ function prepare()
   --FIREWALL CONFIG
   tools.prepareFirewall()
 
-  uci:save("olsrd")
-  uci:save("firewall")
-
   luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/changePassword"))
 end
 
