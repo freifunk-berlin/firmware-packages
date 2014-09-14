@@ -171,26 +171,6 @@ function remove_list_entry(value, entry)
 	return result ~= value and result
 end
 
-function prepareOLSR(community)
-	local c = uci.cursor()
- 	c:delete_all("olsrd", "olsrd")
-	c:delete_all("olsrd", "InterfaceDefaults")
-	c:delete_all("olsrd", "Interface")
-	c:delete_all("olsrd", "Hna4")
-	c:delete_all("olsrd", "Hna6")
-	c:delete_all("olsrd", "LoadPlugin", {library="olsrd_mdns.so.1.0.0"})
-	c:delete_all("olsrd", "LoadPlugin", {library="olsrd_p2pd.so.0.1.0"})
-	c:delete_all("olsrd", "LoadPlugin", {library="olsrd_httpinfo.so.0.1"})
-	c:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
-        c:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
-
-
-	local olsrifbase = c:get_all("freifunk", "olsr_interface") or {}
-        util.update(olsrifbase, c:get_all(community, "olsr_interface") or {})
-        c:section("olsrd", "InterfaceDefaults", nil, olsrifbase)
-
-	c:save("olsrd")
-end
 
 function prepareFirewall()
 	local c = uci.cursor()
