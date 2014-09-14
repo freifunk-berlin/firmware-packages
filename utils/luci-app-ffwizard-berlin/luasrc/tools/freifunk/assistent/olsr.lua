@@ -28,25 +28,22 @@ function prepareOLSR()
 end
 
 function configureOLSR()
+	-- olsr 4
 	local olsrbase = uci:get_all("freifunk", "olsrd") or {}
 	util.update(olsrbase, uci:get_all(community, "olsrd") or {})
-	olsrbase.IpVersion='4'
-	olsrbase.SmartGateway="yes"
 	uci:section("olsrd", "olsrd", nil, olsrbase)
 
+	-- olsr 6
+	local olsr6base = uci:get_all("freifunk", "olsrd6") or {}
+	util.update(olsr6base, uci:get_all(community, "olsrd6") or {})
+	uci:section("olsrd6", "olsrd", nil, olsr6base)
+
+	-- olsr 4 and 6 interface defaults
 	local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
 	util.update(olsrifbase, uci:get_all(community, "olsr_interface") or {})
 	uci:section("olsrd", "InterfaceDefaults", nil, olsrifbase)
 	uci:section("olsrd6", "InterfaceDefaults", nil, olsrifbase)
 
-	--just guessing here :/
-	uci:section("olsrd6", "olsrd", nil, {
-                AllowNoInt = "yes",
-                LinkQualityAlgorithm = "etx_ffeth",
-                FIBMetric = "flat",
-                TcRedundancy = "2",
-                Pollrate = "0.025"
-        })
 
 	uci:save("olsrd")
 	uci:save("olsrd6")
@@ -57,7 +54,6 @@ function configureOLSRPlugins()
 	updatePlugin("olsrd_nameservice.so.0.3", "suffix", "."..suffix)
 	uci:save("olsrd")
 	uci:save("olsrd6")
-
 end
 
 function updatePluginInConfig(config, pluginName, key, value)
