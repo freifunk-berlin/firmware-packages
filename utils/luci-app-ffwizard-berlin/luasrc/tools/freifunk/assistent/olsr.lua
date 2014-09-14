@@ -21,6 +21,7 @@ function prepareOLSR()
 	uci:delete_all("olsrd6", "Interface")
 	uci:delete_all("olsrd6", "Hna4")
 	uci:delete_all("olsrd6", "Hna6")
+	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
 	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 
 	uci:save("olsrd")
