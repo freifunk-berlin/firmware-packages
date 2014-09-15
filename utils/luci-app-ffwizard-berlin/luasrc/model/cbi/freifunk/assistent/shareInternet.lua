@@ -1,5 +1,4 @@
 local uci = require "luci.model.uci".cursor()
-local tools = require "luci.tools.freifunk.assistent.ffwizard"
 local fs = require "nixio.fs"
 
 f = SimpleForm("ffvpn","","")
