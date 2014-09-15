@@ -13,10 +13,10 @@ function prepareFirewall()
 	c:delete_all("firewall","rule", {src="freifunk"})
 	c:save("firewall")
 
-	local newzone = firewall_create_zone("freifunk", "ACCEPT", "ACCEPT", "REJECT", 1)
+	local newzone = tools.firewall_create_zone("freifunk", "ACCEPT", "ACCEPT", "REJECT", 1)
 	local community = "profile"..c:get("freifunk","community","name")
-        if newzone then
-		firewall_zone_add_masq_src("freifunk", "255.255.255.255/32")
+	if newzone then
+		tools.firewall_zone_add_masq_src("freifunk", "255.255.255.255/32")
 		c:foreach("freifunk", "fw_forwarding", function(section)
 			c:section("firewall", "forwarding", nil, section)
 		end)

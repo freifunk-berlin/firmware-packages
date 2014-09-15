@@ -14,10 +14,8 @@ $Id$
 
 ]]--
 
-local uci = require "luci.model.uci"
-local util = require "luci.util"
+local uci = require "luci.model.uci".cursor()
 local table = require "table"
-local sys = require "luci.sys"
 local type = type
 
 module "luci.tools.freifunk.assistent.ffwizard"
@@ -28,8 +26,8 @@ function configureWatchdog()
 			process="openvpn",
 			initscript="/etc/init.d/openvpn"
 		})
+		uci:save("freifunk-watchdog")
 	end
-	uci:save("freifunk-watchdog")
 end
 
 
@@ -41,6 +39,6 @@ function configureQOS()
 		enabled = "1",
 			classgroup = "Default",
 		})
+		uci:save("qos")
 	end
-	uci:save("qos")
 end
