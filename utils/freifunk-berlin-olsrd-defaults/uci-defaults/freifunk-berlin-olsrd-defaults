@@ -108,24 +108,24 @@ uci set olsrd6.$PLUGIN.interval=30
 
 # set olsrd defaults
 OLSRD="$(uci add olsrd6 olsrd)"
-uci set olsrd.$OLSRD.FIBMetric=flat
-uci set olsrd.$OLSRD.AllowNoInt=yes
-uci set olsrd.$OLSRD.TcRedundancy=2
-uci set olsrd.$OLSRD.LinkQualityAlgorithm=etx_ffeth
-uci set olsrd.$OLSRD.Pollrate=0.025
-uci set olsrd.$OLSRD.RtTable=111
-uci set olsrd.$OLSRD.RtTableDefault=112
-uci set olsrd.$OLSRD.RtTableDefaultOlsrPriority=20000
+uci set olsrd6.$OLSRD.FIBMetric=flat
+uci set olsrd6.$OLSRD.AllowNoInt=yes
+uci set olsrd6.$OLSRD.TcRedundancy=2
+uci set olsrd6.$OLSRD.LinkQualityAlgorithm=etx_ffeth
+uci set olsrd6.$OLSRD.Pollrate=0.025
+uci set olsrd6.$OLSRD.RtTable=111
+uci set olsrd6.$OLSRD.RtTableDefault=112
+uci set olsrd6.$OLSRD.RtTableDefaultOlsrPriority=20000
 
 # set InterfaceDefaults parameters
-INTERFACES="$(uci add olsrd InterfaceDefaults)"
-uci set olsrd.$INTERFACES.MidValidityTime=500.0
-uci set olsrd.$INTERFACES.TcInterval=2.0
-uci set olsrd.$INTERFACES.HnaValidityTime=125.0
-uci set olsrd.$INTERFACES.HelloValidityTime=125.0
-uci set olsrd.$INTERFACES.TcValidityTime=500.0
-uci set olsrd.$INTERFACES.MidInterval=25.0
-uci set olsrd.$INTERFACES.HelloInterval=3.0
-uci set olsrd.$INTERFACES.HnaInterval=10.0
+INTERFACES="$(uci add olsrd6 InterfaceDefaults)"
+uci set olsrd6.$INTERFACES.MidValidityTime=500.0
+uci set olsrd6.$INTERFACES.TcInterval=2.0
+uci set olsrd6.$INTERFACES.HnaValidityTime=125.0
+uci set olsrd6.$INTERFACES.HelloValidityTime=125.0
+uci set olsrd6.$INTERFACES.TcValidityTime=500.0
+uci set olsrd6.$INTERFACES.MidInterval=25.0
+uci set olsrd6.$INTERFACES.HelloInterval=3.0
+uci set olsrd6.$INTERFACES.HnaInterval=10.0
 
 uci commit olsrd6
