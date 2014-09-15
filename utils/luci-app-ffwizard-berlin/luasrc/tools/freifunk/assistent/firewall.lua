@@ -1,7 +1,39 @@
 local uci = require "luci.model.uci".cursor()
-local tools = require "luci.tools.freifunk.assistent.ffwizard"
+local tools = require "luci.tools.freifunk.assistent.tools"
 local sharenet = uci:get("ffwizard","settings","sharenet")
-module ("luci.tools.freifunk.assistent.firewall",package.seeall)
+
+module ("luci.tools.freifunk.assistent.firewall", package.seeall)
+
+function prepareFirewall()
+	local c = uci.cursor()
+	c:delete_all("firewall","zone", {name="freifunk"})
+	c:delete_all("firewall","forwarding", {dest="freifunk"})
+	c:delete_all("firewall","forwarding", {src="freifunk"})
+	c:delete_all("firewall","rule", {dest="freifunk"})
+	c:delete_all("firewall","rule", {src="freifunk"})
+	c:save("firewall")
+
+	local newzone = tools.firewall_create_zone("freifunk", "ACCEPT", "ACCEPT", "REJECT", 1)
+	local community = "profile"..c:get("freifunk","community","name")
+	if newzone then
+		tools.firewall_zone_add_masq_src("freifunk", "255.255.255.255/32")
+		c:foreach("freifunk", "fw_forwarding", function(section)
+			c:section("firewall", "forwarding", nil, section)
+		end)
+		c:foreach(community, "fw_forwarding", function(section)
+			c:section("firewall", "forwarding", nil, section)
+		end)
+
+		c:foreach("freifunk", "fw_rule", function(section)
+			c:section("firewall", "rule", nil, section)
+		end)
+		c:foreach(community, "fw_rule", function(section)
+			c:section("firewall", "rule", nil, section)
+		end)
+	end
+
+	c:save("firewall")
+end
 
 
 function configureFirewall()

@@ -1,7 +1,7 @@
 local uci = require "luci.model.uci".cursor()
 local ip = require "luci.ip"
 local util = require "luci.util"
-local tools = require "luci.tools.freifunk.assistent.ffwizard"
+local tools = require "luci.tools.freifunk.assistent.tools"
 local sys = require "luci.sys"
 local fs = require "nixio.fs"
 

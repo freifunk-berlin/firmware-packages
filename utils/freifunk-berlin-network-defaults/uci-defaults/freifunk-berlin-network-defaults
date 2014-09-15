@@ -1,0 +1,31 @@
+###########
+# Network #
+###########
+
+# change default ip to avoid collision with user's local network
+uci set network.lan.ipaddr=192.168.42.1
+
+# do not use dns servers provided by dhcp - we maintain a static list of 
+# dns servers instead
+uci set network.wan.peerdns=0
+uci set network.wan6.peerdns=0
+
+# add tunl0 interface - tunl0 is the ipip tunnel interface for the olsr
+# SmartGateway plugin
+uci set network.tunl0=interface
+uci set network.tunl0.ifname=tunl0
+uci set network.tunl0.proto=none
+
+uci commit network
+
+
+########
+# DHCP #
+########
+
+# add dns entry frei.funk
+uci set dhcp.frei_funk=domain
+uci set dhcp.frei_funk.name=frei.funk
+uci set dhcp.frei_funk.ip=192.168.42.1
+
+uci commit dhcp

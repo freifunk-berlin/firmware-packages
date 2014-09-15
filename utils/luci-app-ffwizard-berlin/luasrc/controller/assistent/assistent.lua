@@ -1,12 +1,10 @@
 local uci = require "luci.model.uci".cursor()
 local sys = require "luci.sys"
 local tools = require "luci.tools.freifunk.assistent.ffwizard"
-local atools = require "luci.tools.freifunk.assistent.tools"
 local ip = require "luci.ip"
 
 local olsr = require "luci.tools.freifunk.assistent.olsr"
 local firewall = require "luci.tools.freifunk.assistent.firewall"
-
 
 module ("luci.controller.assistent.assistent", package.seeall)
 
@@ -32,7 +30,7 @@ function prepare()
   olsr.prepareOLSR()
 
   --FIREWALL CONFIG
-  tools.prepareFirewall()
+  firewall.prepareFirewall()
 
   luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/changePassword"))
 end
@@ -90,8 +88,8 @@ function commit()
   olsr.configureOLSR()
   olsr.configureOLSRPlugins()
 
-  atools.configureWatchdog()
-  atools.configureQOS()
+  tools.configureWatchdog()
+  tools.configureQOS()
 
   uci:commit("dhcp")
   uci:commit("olsrd")
@@ -104,7 +102,6 @@ function commit()
   uci:commit("network")
   uci:commit("freifunk-watchdog")
   uci:commit("qos")
-
 
   sys.hostname(uci:get_first("system","system","hostname"))
   sys.init.enable("olsrd")

@@ -1,6 +1,5 @@
 local uci = require "luci.model.uci".cursor()
 local sys = require "luci.sys"
-local tools = require "luci.tools.freifunk.assistent.ffwizard"
 local fs = require "luci.fs"
 
 f = SimpleForm("ffwizward", "", "")

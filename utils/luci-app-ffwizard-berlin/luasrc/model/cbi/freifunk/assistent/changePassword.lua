@@ -1,5 +1,5 @@
 local uci = require "luci.model.uci".cursor()
-local tools = require "luci.tools.freifunk.assistent.ffwizard"
+
 f = SimpleForm("ffwizward", "", "")
 --change button texts
 f.submit = "Next"

@@ -1,6 +1,7 @@
 local util = require "luci.util"
 local uci = require "luci.model.uci".cursor()
-local tools = require "luci.tools.freifunk.assistent.ffwizard"
+local ip = require "luci.ip"
+local tools = require "luci.tools.freifunk.assistent.tools"
 
 local sharenet = uci:get("ffwizard","settings","sharenet")
 local community = "profile_"..uci:get("freifunk", "community", "name")
@@ -28,6 +29,7 @@ function prepareOLSR()
 	uci:save("olsrd6")
 end
 
+
 function configureOLSR()
 	-- olsr 4
 	local olsrbase = uci:get_all("freifunk", "olsrd") or {}
@@ -38,6 +40,17 @@ function configureOLSR()
 	local olsr6base = uci:get_all("freifunk", "olsrd6") or {}
 	util.update(olsr6base, uci:get_all(community, "olsrd6") or {})
 	uci:section("olsrd6", "olsrd", nil, olsr6base)
+	local ula_prefix = uci:get("network","globals","ula_prefix")
+	if ula_prefix then
+		ula_prefix = ip.IPv6(ula_prefix)
+		if ula_prefix:is6() then
+			uci:section("olsrd6", "Hna6", nil, {
+				prefix = ula_prefix:prefix(),
+				netaddr = ula_prefix:network():string()
+			})
+		end
+	end
+
 
 	-- olsr 4 and 6 interface defaults
 	local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
@@ -50,6 +63,7 @@ function configureOLSR()
 	uci:save("olsrd6")
 end
 
+
 function configureOLSRPlugins()
 	local suffix = uci:get_first(community, "community", "suffix") or "olsr"
 	updatePlugin("olsrd_nameservice.so.0.3", "suffix", "."..suffix)
@@ -57,14 +71,16 @@ function configureOLSRPlugins()
 	uci:save("olsrd6")
 end
 
+
 function updatePluginInConfig(config, pluginName, key, value)
 	uci:foreach(config, "LoadPlugin",
 		function(plugin)
 			if (plugin.library == pluginName) then
-				uci:set("olsrd", plugin['.name'], key, value)
+				uci:set(config, plugin['.name'], key, value)
 			end
 		end)
 end
+
 
 function updatePlugin(pluginName, key, value)
 	updatePluginInConfig("olsrd", pluginName, key, value)
