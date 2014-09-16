@@ -252,31 +252,30 @@ function calcdoth(channel)
 end
 
 function calchtmode(channel)
-  local htmode
-  if channel >= 100 and channel <= 140 then
-    htmode = "HT20"
+  -- use HT20 for 2.4 GHz and channel 100+ for 5Ghz
+  local htmode = "HT20"
+  local ht40plus = {
+    1,2,3,4,5,6,7,
+    36,44,52,60
+  }
+  local ht40minus = {
+    8,9,10,11,12,13,14,
+    40,48,56,64
+  }
 
-  else
-    local ht40plus = {
-      1,2,3,4,5,6,7,
-      36,44,52,60
-    }
+  if channel > 14 and channel < 100  then
     for i, v in ipairs(ht40plus) do
       if v == channel then
         htmode = 'HT40+'
       end
     end
-    local ht40minus = {
-      8,9,10,11,12,13,14,
-      40,48,56,64
-    }
     for i, v in ipairs(ht40minus) do
       if v == channel then
         htmode = 'HT40-'
       end
     end
-
   end
+
   return htmode
 end
 
