@@ -10,20 +10,11 @@ module "luci.tools.freifunk.assistent.olsr"
 
 function prepareOLSR()
 	local c = uci.cursor()
-	uci:delete_all("olsrd", "olsrd")
-	uci:delete_all("olsrd", "InterfaceDefaults")
 	uci:delete_all("olsrd", "Interface")
 	uci:delete_all("olsrd", "Hna4")
-	uci:delete_all("olsrd", "Hna6")
-	uci:delete_all("olsrd", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 
-	uci:delete_all("olsrd6", "olsrd")
-	uci:delete_all("olsrd6", "InterfaceDefaults")
 	uci:delete_all("olsrd6", "Interface")
-	uci:delete_all("olsrd6", "Hna4")
 	uci:delete_all("olsrd6", "Hna6")
-	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw_plain.so.0.4"})
-	uci:delete_all("olsrd6", "LoadPlugin", {library="olsrd_dyn_gw.so.0.5"})
 
 	uci:save("olsrd")
 	uci:save("olsrd6")
