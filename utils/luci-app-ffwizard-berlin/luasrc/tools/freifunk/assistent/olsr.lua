@@ -22,6 +22,17 @@ end
 
 
 function configureOLSR()
+	-- olsr 4
+	local olsrbase = uci:get_all("freifunk", "olsrd") or {}
+	util.update(olsrbase, uci:get_all(community, "olsrd") or {})
+	uci:section("olsrd", "olsrd", nil, olsrbase)
+
+	-- olsr 6
+	local olsr6base = uci:get_all("freifunk", "olsrd6") or {}
+	util.update(olsr6base, uci:get_all(community, "olsrd6") or {})
+	uci:section("olsrd6", "olsrd", nil, olsr6base)
+
+	-- set HNA for olsr6
 	local ula_prefix = uci:get("network","globals","ula_prefix")
 	if ula_prefix then
 		ula_prefix = ip.IPv6(ula_prefix)
@@ -33,6 +44,12 @@ function configureOLSR()
 		end
 	end
 
+	-- olsr 4 interface defaults
+	local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
+	util.update(olsrifbase, uci:get_all(community, "olsr_interface") or {})
+	uci:section("olsrd", "InterfaceDefaults", nil, olsrifbase)
+
+	uci:save("olsrd")
 	uci:save("olsrd6")
 end
 
