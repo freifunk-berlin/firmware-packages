@@ -129,7 +129,7 @@ function main.write(self, section, value)
       devconfig.hwmode = calchwmode(devconfig.channel, sec)
       devconfig.doth = calcdoth(devconfig.channel)
       devconfig.htmode = calchtmode(devconfig.channel)
-      devconfig.country = calccountry(devconfig.channel)
+      devconfig.country = 'DE'
       devconfig.chanlist = calcchanlist(devconfig.channel)
       uci:tset("wireless", device, devconfig)
 
@@ -239,16 +239,6 @@ function calcpre(channel)
     pre = 5
   end
   return pre
-end
-
-function calccountry(channel)
-  local country
-  if channel >= 100 and channel <= 140 then
-    country = "DE"
-  else
-    country = "00"
-  end
-  return country
 end
 
 function calcchanlist(channel)
