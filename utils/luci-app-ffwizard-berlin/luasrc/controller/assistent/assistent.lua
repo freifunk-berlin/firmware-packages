@@ -106,8 +106,8 @@ function commit()
   sys.hostname(uci:get_first("system","system","hostname"))
   sys.init.enable("olsrd")
   sys.init.enable("olsrd6")
-  sys.init.enable("qos")
   if (sharenet == "1") then
+    sys.init.enable("qos")
     sys.exec('grep wan /etc/crontabs/root >/dev/null || echo "0 6 * * * ifup wan" >> /etc/crontabs/root')
   end
 
