@@ -43,6 +43,9 @@ function private_ap_key.validate(self, value)
   return value:len() > 8
 end
 
+private_ap_js = f:field(DummyValue, "private_ap_js", "")
+private_ap_js.template = "freifunk/assistent/snippets/private_ap_js"
+
 apinfo = f:field(DummyValue, "apinfo", "")
 apinfo.template = "freifunk/assistent/snippets/vpninfo"
 
