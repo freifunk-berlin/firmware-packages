@@ -24,6 +24,7 @@ f.reset = false
 css = f:field(DummyValue, "css", "")
 css.template = "freifunk/assistent/snippets/css"
 
+-- ADHOC
 local wifi_tbl = {}
 uci:foreach("wireless", "wifi-device",
   function(section)
@@ -45,26 +46,31 @@ uci:foreach("wireless", "wifi-device",
 meshipinfo = f:field(DummyValue, "meshinfo", "")
 meshipinfo.template = "freifunk/assistent/snippets/meshipinfo"
 
-ssid = f:field(Value, "ssid", "Freifunk SSID", "")
-ssid.rmempty = false
-function ssid.cfgvalue(self, section)
-  return uci:get("ffwizard", "settings", "ssid")
-    or uci:get(community, "profile", "ssid")
-end
+-- VAP
+local community = "profile_"..uci:get("freifunk", "community", "name")
+local vap = uci:get_first(community, "community", "vap") or "1"
+if vap == "1" then
+  ssid = f:field(Value, "ssid", "Freifunk SSID", "")
+  ssid.rmempty = false
+  function ssid.cfgvalue(self, section)
+    return uci:get("ffwizard", "settings", "ssid")
+      or uci:get(community, "profile", "ssid")
+  end
 
-dhcpmesh = f:field(Value, "dhcpmesh", "Addressraum", "")
-dhcpmesh.rmempty = false
-dhcpmesh.datatype = "ip4addr"
-function dhcpmesh.cfgvalue(self, section)
-  return uci:get("ffwizard","settings", "dhcpmesh")
-end
-function dhcpmesh.validate(self, value)
-  local x = ip.IPv4(value)
-  return ( x and x:minhost() and x:prefix() < 32) and x:string() or ""
-end
+  dhcpmesh = f:field(Value, "dhcpmesh", "Addressraum", "")
+  dhcpmesh.rmempty = false
+  dhcpmesh.datatype = "ip4addr"
+  function dhcpmesh.cfgvalue(self, section)
+    return uci:get("ffwizard","settings", "dhcpmesh")
+  end
+  function dhcpmesh.validate(self, value)
+    local x = ip.IPv4(value)
+    return ( x and x:minhost() and x:prefix() < 32) and x:string() or ""
+  end
 
-apinfo = f:field(DummyValue, "apinfo", "")
-apinfo.template = "freifunk/assistent/snippets/apinfo"
+  apinfo = f:field(DummyValue, "apinfo", "")
+  apinfo.template = "freifunk/assistent/snippets/apinfo"
+end
 
 main = f:field(DummyValue, "netconfig", "", "")
 main.forcewrite = true
@@ -156,14 +162,16 @@ function main.write(self, section, value)
       uci:section("network", "interface", calcnif(device), prenetconfig)
 
       --WIRELESS CONFIG ap
-      uci:section("wireless", "wifi-iface", nil, {
-        device=device,
-        mode="ap",
-        encryption="none",
-        network="dhcp",
-        ifname=calcifcfg(device).."-dhcp-"..calcpre(devconfig.channel),
-        ssid=ssid:formvalue(section)
-      })
+      if vap == "1" then
+        uci:section("wireless", "wifi-iface", nil, {
+          device=device,
+          mode="ap",
+          encryption="none",
+          network="dhcp",
+          ifname=calcifcfg(device).."-dhcp-"..calcpre(devconfig.channel),
+          ssid=ssid:formvalue(section)
+        })
+      end
 
       uci:save("firewall")
       uci:save("olsrd")
