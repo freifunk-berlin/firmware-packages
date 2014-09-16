@@ -232,13 +232,8 @@ function f.handle(self, state, data)
 end
 
 function calcpre(channel)
-  local pre
-  if channel > 0 and channel <= 14 then
-    pre = 2
-  elseif channel >= 36 and channel <= 64 or channel >= 100 and channel <= 140 then
-    pre = 5
-  end
-  return pre
+  -- calculates suffix of wifi interface (like 2 or 5)
+  return (channel > 0 and channel <= 14) and 2 or 5
 end
 
 function calcchanlist(channel)
@@ -252,13 +247,8 @@ function calcchanlist(channel)
 end
 
 function calcdoth(channel)
-  local doth
-  if channel >= 100 and channel <= 140 then
-    doth = "1"
-  else
-    doth = "0"
-  end
-  return doth
+  -- doth activates 802.11h (radar detection)
+  return (channel >= 52 and channel <= 140) and "1" or "0"
 end
 
 function calchtmode(channel)
@@ -291,7 +281,7 @@ function calchtmode(channel)
 end
 
 function calchwmode(channel, sec)
-  local hwmode
+  local has_n = ""
 
   if sec.type == "mac80211" then
     hwmode = sec.hwmode
@@ -299,13 +289,8 @@ function calchwmode(channel, sec)
       has_n = "n"
     end
   end
-  local hwmode = "11"..(has_n or "")
-  if channel >0 and channel <=14 then
-    hwmode = hwmode.."g"
-  elseif channel >= 100 and channel <= 140 then
-    hwmode = hwmode.."a"
-  end
-  return hwmode
+
+  return "11" .. has_n .. ((channel > 0 and channel <= 14) and "g" or "a")
 end
 
 function getchannel(device)
