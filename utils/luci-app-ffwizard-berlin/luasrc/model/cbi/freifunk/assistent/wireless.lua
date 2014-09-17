@@ -126,7 +126,7 @@ function main.write(self, section, value)
       local devconfig = uci:get_all("freifunk", "wifi_device") or {}
       util.update(devconfig, uci:get_all(community, "wifi_device") or {})
       devconfig.channel = getchannel(device)
-      devconfig.hwmode = calchwmode(devconfig.channel, sec)
+      devconfig.hwmode = calchwmode(sec)
       devconfig.doth = calcdoth(devconfig.channel)
       devconfig.htmode = calchtmode(devconfig.channel)
       devconfig.country = 'DE'
@@ -279,17 +279,17 @@ function calchtmode(channel)
   return htmode
 end
 
-function calchwmode(channel, sec)
-  local has_n = ""
+function calchwmode(device)
+  local hwmode = "11"
+  local iwinfo = require "iwinfo"
 
-  if sec.type == "mac80211" then
-    hwmode = sec.hwmode
-    if hwmode and string.find(hwmode, "n") then
-      has_n = "n"
+  for k,v in pairs(iwinfo.nl80211.hwmodelist(device)) do
+    if v then
+      hwmode = hwmode .. k
     end
   end
 
-  return "11" .. has_n .. ((channel > 0 and channel <= 14) and "g" or "a")
+  return hwmode
 end
 
 function getchannel(device)
