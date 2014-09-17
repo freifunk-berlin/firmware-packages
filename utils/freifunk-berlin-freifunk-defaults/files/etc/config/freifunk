@@ -8,9 +8,9 @@ config 'public' 'contact'
 	option 'note' ''
 
 config 'public' 'community'
-	option 'name' 'Freifunk Berlin'
+	option 'name' 'berlin'
 	option 'homepage' 'http://berlin.freifunk.net'
 
 config 'defaults' 'system'
 	option 'zonename' 'Europe/Berlin'
-	option 'timezone' 'CET-1CES
+	option 'timezone' 'CET-1CES'
