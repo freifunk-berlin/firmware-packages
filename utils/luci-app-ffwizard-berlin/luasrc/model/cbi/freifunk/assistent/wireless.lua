@@ -126,7 +126,7 @@ function main.write(self, section, value)
       local devconfig = uci:get_all("freifunk", "wifi_device") or {}
       util.update(devconfig, uci:get_all(community, "wifi_device") or {})
       devconfig.channel = getchannel(device)
-      devconfig.hwmode = calchwmode(sec)
+      devconfig.hwmode = calchwmode(device)
       devconfig.doth = calcdoth(devconfig.channel)
       devconfig.htmode = calchtmode(devconfig.channel)
       devconfig.country = 'DE'
@@ -279,11 +279,19 @@ function calchtmode(channel)
   return htmode
 end
 
+function get_iwinfo(device)
+  -- luci.sys.getiwinfo() seems broken
+  -- call iwinfo directly (through libiwinfo-lua)
+  local iwinfo = require "iwinfo"
+  local backend = iwinfo.type(device)
+  return iwinfo[backend]
+end
+
 function calchwmode(device)
   local hwmode = "11"
-  local iwinfo = require "iwinfo"
+  local iwinfo = get_iwinfo(device)
 
-  for k,v in pairs(iwinfo.nl80211.hwmodelist(device)) do
+  for k,v in pairs(iwinfo.hwmodelist(device)) do
     if v then
       hwmode = hwmode .. k
     end
@@ -293,15 +301,11 @@ function calchwmode(device)
 end
 
 function getchannel(device)
-  --local wifi require "luci.sys.wifi"
-  --wifi.channels(device) --from luci reference: does not work
-  --sys.wifi.getiwinfo(device) --from sys.lua: does not work
-  -- >:( why?
+  -- luci.sys.wifi.channels() is not exposed anymore
+  -- therefor use get_iwinfo()
 
-  local iwinfo = require "iwinfo"
-  local type = iwinfo.type(device)
-  local something = iwinfo[type]
-  local freqlist = something.freqlist(device)
+  local iwinfo = get_iwinfo(device)
+  local freqlist = iwinfo.freqlist(device)
 
   --TODO read channels from profile
   local r_channel
