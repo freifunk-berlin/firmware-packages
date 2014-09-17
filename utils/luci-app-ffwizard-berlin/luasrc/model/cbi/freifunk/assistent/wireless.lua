@@ -134,7 +134,7 @@ function main.write(self, section, value)
       uci:tset("wireless", device, devconfig)
 
       --WIRELESS CONFIG ad-hoc
-      local ifconfig = uci:get_all("freifunk", "wifi_iface")
+      local ifconfig = uci:get_all("freifunk", "wifi_iface") or {}
       util.update(ifconfig, uci:get_all(community, "wifi_iface") or {})
       ifconfig.device = device
       ifconfig.mcast_rate = ""
