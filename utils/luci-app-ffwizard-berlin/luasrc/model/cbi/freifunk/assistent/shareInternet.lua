@@ -9,6 +9,9 @@ f.reset = false
 css = f:field(DummyValue, "css", "")
 css.template = "freifunk/assistent/snippets/css"
 
+vpninfo = f:field(DummyValue, "apinfo", "")
+vpninfo.template = "freifunk/assistent/snippets/vpninfo"
+
 local cert = f:field(FileUpload, "cert", translate("Local Certificate"),"freifunk_client.crt")
 cert.default="/etc/openvpn/freifunk_client.crt"
 cert.rmempty = false
@@ -18,6 +21,9 @@ local key = f:field(FileUpload, "key", translate("Local Key"),"freifunk_client.k
 key.default="/etc/openvpn/freifunk_client.key"
 key.rmempty = false
 key.optional = false
+
+apinfo = f:field(DummyValue, "apinfo", "")
+apinfo.template = "freifunk/assistent/snippets/apinfo"
 
 local private_ap = f:field(Flag, "private_ap", "privater Access Point")
 private_ap.rmempty = false
@@ -45,9 +51,6 @@ end
 
 private_ap_js = f:field(DummyValue, "private_ap_js", "")
 private_ap_js.template = "freifunk/assistent/snippets/private_ap_js"
-
-apinfo = f:field(DummyValue, "apinfo", "")
-apinfo.template = "freifunk/assistent/snippets/vpninfo"
 
 main = f:field(DummyValue, "openvpnconfig", "", "")
 main.forcewrite = true
