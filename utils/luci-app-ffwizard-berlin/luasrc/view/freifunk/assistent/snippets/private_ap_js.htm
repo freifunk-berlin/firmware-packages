@@ -1,6 +1,7 @@
-<script language="JavaScript">
+<script type="text/javascript">
   var hideElements = function() {
-    var displayStyle = this.checked ? "block" : "none";
+    var elem = document.getElementById("cbid.ffvpn.1.private_ap");
+    var displayStyle = elem.checked ? "block" : "none";
     document.getElementById("cbi-ffvpn-1-private_ap_ssid").style.display = displayStyle;
     document.getElementById("cbi-ffvpn-1-private_ap_key").style.display = displayStyle;
   }
