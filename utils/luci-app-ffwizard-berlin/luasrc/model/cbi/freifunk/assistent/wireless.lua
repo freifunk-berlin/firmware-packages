@@ -129,7 +129,6 @@ function main.write(self, section, value)
       devconfig.hwmode = calchwmode(device)
       devconfig.doth = calcdoth(devconfig.channel)
       devconfig.htmode = calchtmode(devconfig.channel)
-      devconfig.country = 'DE'
       devconfig.chanlist = calcchanlist(devconfig.channel)
       uci:tset("wireless", device, devconfig)
 
@@ -137,7 +136,6 @@ function main.write(self, section, value)
       local ifconfig = uci:get_all("freifunk", "wifi_iface") or {}
       util.update(ifconfig, uci:get_all(community, "wifi_iface") or {})
       ifconfig.device = device
-      ifconfig.mcast_rate = ""
       ifconfig.network = calcnif(device)
       ifconfig.ifname = calcifcfg(device).."-".."adhoc".."-"..calcpre(devconfig.channel)
       ifconfig.mode = "adhoc"
