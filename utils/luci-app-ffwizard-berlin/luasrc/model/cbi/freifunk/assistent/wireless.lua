@@ -171,6 +171,19 @@ function main.write(self, section, value)
         })
       end
 
+      -- WIRELESS CONFIG private ap
+      if uci:get_first("ffwizard", "settings", "private_ap") == "1" then
+      uci:section("wireless", "wifi-iface", nil, {
+        device=device,
+        mode="ap",
+        encryption="psk2",
+        key=uci:get_first("ffwizard", "settings", "private_ap_key"),
+        network="wan",
+        ifname=calcifcfg(device).."-private-"..calcpre(devconfig.channel),
+        ssid=uci:get_first("ffwizard", "settings", "private_ap_ssid"),
+      })
+      end
+
       uci:save("firewall")
       uci:save("olsrd")
       uci:save("olsrd6")
