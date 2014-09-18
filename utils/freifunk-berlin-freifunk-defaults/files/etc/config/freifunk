@@ -14,3 +14,16 @@ config 'public' 'community'
 config 'defaults' 'system'
 	option 'zonename' 'Europe/Berlin'
 	option 'timezone' 'CET-1CES'
+
+config 'defaults' 'wifi_device'
+	option 'diversity' '1'
+	option 'disabled' '0'
+	option 'country' 'DE'
+
+config 'defaults' 'wifi_device_5'
+	option 'diversity' '1'
+	option 'disabled' '0'
+	option 'country' 'DE'
+
+config 'defaults' 'olsr_interface'
+	option 'Ip4Broadcast' '255.255.255.255'
