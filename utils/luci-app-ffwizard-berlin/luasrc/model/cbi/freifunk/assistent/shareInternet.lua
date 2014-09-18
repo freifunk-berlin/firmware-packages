@@ -37,7 +37,7 @@ function private_ap_ssid.cfgvalue(self, section)
   return uci:get("ffwizard", "settings", "private_ap_ssid")
 end
 function private_ap_ssid.validate(self, value)
-  return value:len() > 4
+  return value:len() >= 4
 end
 
 local private_ap_key = f:field(Value, "private_ap_key", "Passwort", "")
@@ -46,7 +46,7 @@ function private_ap_key.cfgvalue(self, section)
   return uci:get("ffwizard", "settings", "private_ap_key")
 end
 function private_ap_key.validate(self, value)
-  return value:len() > 8
+  return value:len() >= 8
 end
 
 private_ap_js = f:field(DummyValue, "private_ap_js", "")
