@@ -115,6 +115,7 @@ uci set olsrd6.$OLSRD.LinkQualityAlgorithm=etx_ffeth
 uci set olsrd6.$OLSRD.Pollrate=0.025
 uci set olsrd6.$OLSRD.RtTable=111
 uci set olsrd6.$OLSRD.RtTableDefault=112
+uci set olsrd6.$OLSRD.RtTablePriority=1000
 uci set olsrd6.$OLSRD.RtTableDefaultOlsrPriority=20000
 
 # set InterfaceDefaults parameters
