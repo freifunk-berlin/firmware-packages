@@ -1,0 +1,40 @@
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+
+<script type="text/javascript">
+var initMap = function() {
+  // create map container
+  var map = document.createElement("div");
+  map.style.height = '300px';
+  map.id = 'map';
+  document.getElementById('cbi-ffwizward-1-lon').appendChild(map);
+
+  // init leaflet
+  var map = L.map('map').setView([52.51706, 13.38924], 12);
+  L.tileLayer('https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+      '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+      'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+    id: 'examples.map-i86knfo3'
+  }).addTo(map);
+
+  // init click handler
+  var popup = L.popup();
+  var inputLat = document.getElementById('cbid.ffwizward.1.lat');
+  var inputLng = document.getElementById('cbid.ffwizward.1.lng');
+  function onMapClick(e) {
+      popup.setLatLng(e.latlng)
+           .setContent(e.latlng.lat.toString() + ", " + +e.latlng.lng.toString())
+           .openOn(map);
+      inputLat.value = e.latlng.lat;
+      inputLng.value = e.latlng.lng;
+  }
+  map.on('click', onMapClick);
+}
+
+// only show map if browser as access to the internet
+if(navigator.onLine) {
+  initMap();
+}
+</script>

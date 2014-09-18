@@ -64,6 +64,9 @@ function lon.cfgvalue(self, section)
   return uci:get_first("system", "system","longitude")
 end
 
+map = f:field(DummyValue,"","")
+map.template = "freifunk/assistent/snippets/map"
+
 generalinfo = f:field(DummyValue,"","")
 generalinfo.template = "freifunk/assistent/snippets/generalInfo"
 
