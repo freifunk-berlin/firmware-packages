@@ -182,6 +182,7 @@ function main.write(self, section, value)
         ifname=calcifcfg(device).."-private-"..calcpre(devconfig.channel),
         ssid=uci:get_first("ffwizard", "settings", "private_ap_ssid"),
       })
+      uci:set("network", "wan", "type", "bridge")
       end
 
       uci:save("firewall")
