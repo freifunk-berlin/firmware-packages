@@ -129,21 +129,25 @@ function main.write(self, section, value)
       tools.firewall_zone_add_interface("freifunk", calcnif(device))
 
       --WIRELESS CONFIG device
-      local devconfig = uci:get_all("freifunk", "wifi_device") or {}
-      util.update(devconfig, uci:get_all(community, "wifi_device") or {})
+      local hwmode = calchwmode(device)
+      local deviceSection = (hwmode:find("a")) and "wifi_device_5" or "wifi_device"
+      local devconfig = uci:get_all("freifunk", deviceSection) or {}
+      util.update(devconfig, uci:get_all(community, deviceSection) or {})
       devconfig.channel = getchannel(device)
-      devconfig.hwmode = calchwmode(device)
+      devconfig.hwmode = hwmode
       devconfig.doth = calcdoth(devconfig.channel)
       devconfig.htmode = calchtmode(devconfig.channel)
       devconfig.chanlist = calcchanlist(devconfig.channel)
       uci:tset("wireless", device, devconfig)
 
       --WIRELESS CONFIG ad-hoc
-      local ifconfig = uci:get_all("freifunk", "wifi_iface") or {}
-      util.update(ifconfig, uci:get_all(community, "wifi_iface") or {})
+      local pre = calcpre(devconfig.channel)
+      local ifaceSection = (pre == 2) and "wifi_iface" or "wifi_iface_5"
+      local ifconfig = uci:get_all("freifunk", ifaceSection) or {}
+      util.update(ifconfig, uci:get_all(community, ifaceSection) or {})
       ifconfig.device = device
       ifconfig.network = calcnif(device)
-      ifconfig.ifname = calcifcfg(device).."-".."adhoc".."-"..calcpre(devconfig.channel)
+      ifconfig.ifname = calcifcfg(device).."-".."adhoc".."-"..pre
       ifconfig.mode = "adhoc"
       ifconfig.ssid = uci:get(community, "ssidscheme", devconfig.channel)
       ifconfig.bssid = uci:get(community, "bssidscheme", devconfig.channel)
@@ -166,7 +170,7 @@ function main.write(self, section, value)
           mode="ap",
           encryption="none",
           network="dhcp",
-          ifname=calcifcfg(device).."-dhcp-"..calcpre(devconfig.channel),
+          ifname=calcifcfg(device).."-dhcp-"..pre,
           ssid=ssid:formvalue(section)
         })
       end
@@ -179,7 +183,7 @@ function main.write(self, section, value)
         encryption="psk2",
         key=uci:get_first("ffwizard", "settings", "private_ap_key"),
         network="wan",
-        ifname=calcifcfg(device).."-private-"..calcpre(devconfig.channel),
+        ifname=calcifcfg(device).."-private-"..pre,
         ssid=uci:get_first("ffwizard", "settings", "private_ap_ssid"),
       })
       uci:set("network", "wan", "type", "bridge")
