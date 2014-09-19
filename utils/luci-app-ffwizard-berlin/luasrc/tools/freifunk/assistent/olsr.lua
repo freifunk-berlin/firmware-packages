@@ -25,12 +25,12 @@ function configureOLSR()
 	-- olsr 4
 	local olsrbase = uci:get_all("freifunk", "olsrd") or {}
 	util.update(olsrbase, uci:get_all(community, "olsrd") or {})
-	uci:section("olsrd", "olsrd", nil, olsrbase)
+	uci:tset("olsrd", "olsrd", olsrbase)
 
 	-- olsr 6
 	local olsr6base = uci:get_all("freifunk", "olsrd6") or {}
 	util.update(olsr6base, uci:get_all(community, "olsrd6") or {})
-	uci:section("olsrd6", "olsrd", nil, olsr6base)
+	uci:tset("olsrd6", "olsrd", olsr6base)
 
 	-- set HNA for olsr6
 	local ula_prefix = uci:get("network","globals","ula_prefix")
