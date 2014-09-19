@@ -14,7 +14,7 @@ var initMap = function() {
   var map = L.map('map').setView([52.51706, 13.38924], 12);
   var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
-  var osm = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 12, attribution:
+  var osm = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 18, attribution:
               osmAttrib}).addTo(map);
 
   // init click handler
