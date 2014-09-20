@@ -33,12 +33,14 @@ end
 
 local private_ap_ssid = f:field(Value, "private_ap_ssid", "SSID", "")
 private_ap_ssid.rmempty = false
+private_ap_ssid.optional = true
 function private_ap_ssid.cfgvalue(self, section)
   return uci:get("ffwizard", "settings", "private_ap_ssid")
 end
 
 local private_ap_key = f:field(Value, "private_ap_key", "Passwort", "")
 private_ap_key.rmempty = false
+private_ap_key.optional = true
 function private_ap_key.cfgvalue(self, section)
   return uci:get("ffwizard", "settings", "private_ap_key")
 end
