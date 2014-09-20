@@ -58,6 +58,7 @@ function configureOLSRPlugins()
 	local suffix = uci:get_first(community, "community", "suffix") or "olsr"
 	updatePlugin("olsrd_nameservice.so.0.3", "suffix", "."..suffix)
 	updatePluginInConfig("olsrd", "olsrd_dyn_gw.so.0.5", "PingCmd", "ping -c 1 -q -I ffvpn %s")
+	updatePluginInConfig("olsrd", "olsrd_dyn_gw.so.0.5", "PingInterval", "30")
 	uci:save("olsrd")
 	uci:save("olsrd6")
 end
