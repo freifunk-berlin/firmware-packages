@@ -229,6 +229,8 @@ function main.write(self, section, value)
     dhcpbase.ignore = 0
     uci:section("dhcp", "dhcp", "dhcp", dhcpbase)
     uci:set_list("dhcp", "dhcp", "dhcp_option", "119,olsr")
+    uci:set("dhcp", "dhcp", "dhcpv6", "server")
+    uci:set("dhcp", "dhcp", "ra", "server")
 
     --OLSR CONFIG announce dhcp bridge subnet (HNA)
     uci:section("olsrd", "Hna4", nil, {
