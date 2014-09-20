@@ -31,8 +31,10 @@ var initMap = function() {
   map.on('click', onMapClick);
 }
 
-// only show map if browser as access to the internet
-if(navigator.onLine) {
+// only show map if browser could load leaflet
+try {
+  L;
   initMap();
+} catch(e) {
 }
 </script>
