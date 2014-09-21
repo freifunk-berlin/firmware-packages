@@ -27,6 +27,7 @@ end
 
 
 function configureFirewall()
+	tools.firewall_zone_add_interface("freifunk", "dhcp")
 	if (sharenet == "1") then
 		tools.firewall_zone_add_interface("freifunk", "tunl0")
 		tools.firewall_zone_add_interface("freifunk", "ffvpn")
