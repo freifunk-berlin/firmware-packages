@@ -15,7 +15,7 @@ define Package/luci-app-ffwizard-berlin
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
   TITLE:=Freifunk Berlin configuration wizard
-  URL:=http://pberg.freifunk.net
+  URL:=http://berlin.freifunk.net
   DEPENDS+= +luci-base +luci-mod-freifunk +luci-mod-admin-full \
 						+freifunk-policyrouting +freifunk-berlin-openvpn-files
 endef
