@@ -118,9 +118,8 @@ uci set firewall.$FORWARDING.src=wan
 
 uci commit
 
-# SmartGateway - set client rules
+# SmartGateway - set client rules (no nat, just forward)
 # see http://wiki.freifunk.net/OLSR/SmartGateway#.22Client.22
 FORWARD_TNL="iptables -I FORWARD -o tnl_+ -j ACCEPT"
 grep -q "$FORWARD_TNL" /etc/firewall.user || echo $FORWARD_TNL >> /etc/firewall.user
 MASQUERADE_TNL="iptables -t nat -I POSTROUTING -o tnl_+ -j MASQUERADE"
-grep -q "$MASQUERADE_TNL" /etc/firewall.user || echo $MASQUERADE_TNL >> /etc/firewall.user
