@@ -13,6 +13,7 @@ define Package/freifunk-berlin-network-defaults
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin network default configuration
   URL:=http://github.com/freifunk-berlin/packages_berlin
+  DEPENDS+= +freifunk-berlin-lib-guard
 endef
 
 define Package/freifunk-berlin-network-defaults/description

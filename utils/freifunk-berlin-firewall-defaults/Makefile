@@ -13,6 +13,7 @@ define Package/freifunk-berlin-firewall-defaults
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin firewall default configuration
   URL:=http://github.com/freifunk-berlin/packages_berlin
+  DEPENDS+= +firewall +freifunk-berlin-lib-guard
 endef
 
 define Package/freifunk-berlin-firewall-defaults/description

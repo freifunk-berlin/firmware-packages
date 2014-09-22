@@ -13,7 +13,7 @@ define Package/freifunk-berlin-olsrd-defaults
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin olsrd default configuration
   URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+= +olsrd
+  DEPENDS+= +olsrd +freifunk-berlin-lib-guard
 endef
 
 define Package/freifunk-berlin-olsrd-defaults/description

@@ -13,7 +13,7 @@ define Package/freifunk-berlin-uhttpd-defaults
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin uhttpd default configuration
   URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+= +uhttpd
+  DEPENDS+= +uhttpd +freifunk-berlin-lib-guard
 endef
 
 define Package/freifunk-berlin-uhttpd-defaults/description

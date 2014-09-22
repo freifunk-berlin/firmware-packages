@@ -15,7 +15,7 @@ define Package/freifunk-berlin-openvpn-files
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin openVPN files
   URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+= +openvpn-polarssl
+  DEPENDS+= +openvpn-polarssl +freifunk-berlin-lib-guard
 endef
 
 define Package/freifunk-berlin-openvpn-files/description

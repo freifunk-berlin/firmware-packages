@@ -13,7 +13,7 @@ define Package/freifunk-berlin-dhcp-defaults
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin dhcp default configuration
   URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+= +dnsmasq
+  DEPENDS+= +dnsmasq +freifunk-berlin-lib-guard
 endef
 
 define Package/freifunk-berlin-dhcp-defaults/description
