@@ -33,6 +33,13 @@ function firewall_create_zone(zone, input, output, forward, masq)
 end
 
 
+function statistics_interface_add(mod, interface)
+	local c = uci.cursor()
+	local old = c:get("luci_statistics", mod, "Interfaces") or ""
+	c:set("luci_statistics", mod, "Interfaces", old .. " " .. interface)
+	c:save("luci_statistics")
+end
+
 -- Adds interface to zone, creates zone on-demand
 function firewall_zone_add_interface(name, interface)
 	local cursor = uci.cursor()

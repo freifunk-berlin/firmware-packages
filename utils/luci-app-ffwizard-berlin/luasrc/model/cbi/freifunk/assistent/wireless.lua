@@ -144,14 +144,17 @@ function main.write(self, section, value)
       local pre = calcpre(devconfig.channel)
       local ifaceSection = (pre == 2) and "wifi_iface" or "wifi_iface_5"
       local ifconfig = uci:get_all("freifunk", ifaceSection) or {}
+      local ifnameAdhoc = calcifcfg(device).."-".."adhoc".."-"..pre
       util.update(ifconfig, uci:get_all(community, ifaceSection) or {})
       ifconfig.device = device
       ifconfig.network = calcnif(device)
-      ifconfig.ifname = calcifcfg(device).."-".."adhoc".."-"..pre
+      ifconfig.ifname = ifnameAdhoc
       ifconfig.mode = "adhoc"
       ifconfig.ssid = uci:get(community, "ssidscheme", devconfig.channel)
       ifconfig.bssid = uci:get(community, "bssidscheme", devconfig.channel)
       uci:section("wireless", "wifi-iface", nil, ifconfig)
+      tools.statistics_interface_add("collectd_iwinfo", ifnameAdhoc)
+      tools.statistics_interface_add("collectd_interface", ifnameAdhoc)
 
       --NETWORK CONFIG ad-hoc
       local node_ip = wifi_tbl[device]["meship"]:formvalue(section)
@@ -165,14 +168,16 @@ function main.write(self, section, value)
 
       --WIRELESS CONFIG ap
       if vap == "1" then
+        local ifnameAp = calcifcfg(device).."-dhcp-"..pre
         uci:section("wireless", "wifi-iface", nil, {
           device=device,
           mode="ap",
           encryption="none",
           network="dhcp",
-          ifname=calcifcfg(device).."-dhcp-"..pre,
+          ifname=ifnameAp,
           ssid=ssid:formvalue(section)
         })
+        tools.statistics_interface_add("collectd_iwinfo", ifnameAp)
       end
 
       -- WIRELESS CONFIG private ap
@@ -194,6 +199,7 @@ function main.write(self, section, value)
       uci:save("olsrd6")
       uci:save("wireless")
       uci:save("network")
+      uci:save("luci_statistics")
 
     end)
 
@@ -214,6 +220,9 @@ function main.write(self, section, value)
     -- use ifname from dhcp bridge on a consecutive run of assistent
     prenetconfig.ifname=uci:get("network", "lan", "ifname") or uci:get("network", "dhcp", "ifname")
     uci:section("network", "interface", "dhcp", prenetconfig)
+
+    -- add to statistics
+    tools.statistics_interface_add("collectd_interface", "br-dhcp")
 
     --NETWORK CONFIG remove lan bridge because ports a part of dhcp bridge now
     uci:delete("network", "lan")
