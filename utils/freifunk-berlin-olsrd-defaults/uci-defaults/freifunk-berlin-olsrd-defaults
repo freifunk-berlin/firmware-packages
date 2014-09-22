@@ -7,6 +7,12 @@ guard "olsrd"
 uci import olsrd <<EOF
 EOF
 
+# add txtinfo plugin - needed for collectd-mod-txtinfo
+PLUGIN="$(uci add olsrd LoadPlugin)"
+uci set olsrd.$PLUGIN.accept=0.0.0.0
+uci set olsrd.$PLUGIN.library=olsrd_txtinfo.so.0.1
+uci set olsrd.$PLUGIN.port=2007
+
 # add arprefresh plugin
 PLUGIN="$(uci add olsrd LoadPlugin)"
 uci set olsrd.$PLUGIN.library=olsrd_arprefresh.so.0.1
@@ -75,6 +81,12 @@ uci commit olsrd
 # reset olsrd6 config
 uci import olsrd6 <<EOF
 EOF
+
+# add txtinfo plugin - needed for collectd-mod-olsrd
+PLUGIN="$(uci add olsrd6 LoadPlugin)"
+uci set olsrd6.$PLUGIN.accept=::
+uci set olsrd6.$PLUGIN.library=olsrd_txtinfo.so.0.1
+uci set olsrd6.$PLUGIN.port=2007
 
 # add nameservice plugin
 PLUGIN="$(uci add olsrd6 LoadPlugin)"
