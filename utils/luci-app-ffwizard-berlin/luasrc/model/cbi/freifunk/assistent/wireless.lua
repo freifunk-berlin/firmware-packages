@@ -68,8 +68,8 @@ if vap == "1" then
     return ( x and x:minhost() and x:prefix() < 32) and x:string() or ""
   end
 
-  apinfo = f:field(DummyValue, "apinfo", "")
-  apinfo.template = "freifunk/assistent/snippets/apinfo"
+  ipinfo = f:field(DummyValue, "ipinfo", "")
+  ipinfo.template = "freifunk/assistent/snippets/ipinfo"
 end
 
 main = f:field(DummyValue, "netconfig", "", "")
