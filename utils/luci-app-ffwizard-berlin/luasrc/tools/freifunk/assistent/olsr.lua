@@ -44,12 +44,17 @@ function configureOLSR()
 		end
 	end
 
-	-- olsr 4 interface defaults
-	local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
-	util.update(olsrifbase, uci:get_all(community, "olsr_interface") or {})
-	uci:section("olsrd", "InterfaceDefaults", nil, olsrifbase)
+  -- olsr 4 interface defaults
+  local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
+  util.update(olsrifbase, uci:get_all(community, "olsr_interface") or {})
+  local s = uci:get_first("olsrd", "InterfaceDefaults")
+  if (s) then
+    uci:tset("olsrd", s, olsrifbase)
+  else
+    uci:section("olsrd", "InterfaceDefaults", nil, olsrifbase)
+  end
 
-	uci:save("olsrd")
+  uci:save("olsrd")
 	uci:save("olsrd6")
 end
 
