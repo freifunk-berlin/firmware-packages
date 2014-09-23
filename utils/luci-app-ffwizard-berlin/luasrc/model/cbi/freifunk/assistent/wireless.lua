@@ -4,6 +4,8 @@ local util = require "luci.util"
 local tools = require "luci.tools.freifunk.assistent.tools"
 local sys = require "luci.sys"
 local fs = require "nixio.fs"
+local ipkg = require "luci.model.ipkg"
+
 
 local device_l = {
   "wifi",
@@ -97,6 +99,7 @@ function main.write(self, section, value)
     return
   end
 
+  local statistics_installed = ipkg.installed("luci-app-statistics") == True
   uci:foreach("wireless", "wifi-device",
     function(sec)
       local device = sec[".name"]
@@ -153,8 +156,10 @@ function main.write(self, section, value)
       ifconfig.ssid = uci:get(community, "ssidscheme", devconfig.channel)
       ifconfig.bssid = uci:get(community, "bssidscheme", devconfig.channel)
       uci:section("wireless", "wifi-iface", nil, ifconfig)
-      tools.statistics_interface_add("collectd_iwinfo", ifnameAdhoc)
-      tools.statistics_interface_add("collectd_interface", ifnameAdhoc)
+      if statistics_installed then
+        tools.statistics_interface_add("collectd_iwinfo", ifnameAdhoc)
+        tools.statistics_interface_add("collectd_interface", ifnameAdhoc)
+      end
 
       --NETWORK CONFIG ad-hoc
       local node_ip = wifi_tbl[device]["meship"]:formvalue(section)
@@ -177,7 +182,9 @@ function main.write(self, section, value)
           ifname=ifnameAp,
           ssid=ssid:formvalue(section)
         })
-        tools.statistics_interface_add("collectd_iwinfo", ifnameAp)
+        if statistics_installed then
+          tools.statistics_interface_add("collectd_iwinfo", ifnameAp)
+        end
       end
 
       -- WIRELESS CONFIG private ap
@@ -199,7 +206,9 @@ function main.write(self, section, value)
       uci:save("olsrd6")
       uci:save("wireless")
       uci:save("network")
-      uci:save("luci_statistics")
+      if statistics_installed then
+        uci:save("luci_statistics")
+      end
 
     end)
 
@@ -222,7 +231,9 @@ function main.write(self, section, value)
     uci:section("network", "interface", "dhcp", prenetconfig)
 
     -- add to statistics
-    tools.statistics_interface_add("collectd_interface", "br-dhcp")
+    if statistics_installed then
+      tools.statistics_interface_add("collectd_interface", "br-dhcp")
+    end
 
     --NETWORK CONFIG remove lan bridge because ports a part of dhcp bridge now
     uci:delete("network", "lan")

@@ -2,6 +2,7 @@ local uci = require "luci.model.uci".cursor()
 local sys = require "luci.sys"
 local tools = require "luci.tools.freifunk.assistent.ffwizard"
 local ip = require "luci.ip"
+local ipkg = require "luci.model.ipkg"
 
 local olsr = require "luci.tools.freifunk.assistent.olsr"
 local firewall = require "luci.tools.freifunk.assistent.firewall"
@@ -102,16 +103,22 @@ function commit()
   uci:commit("network")
   uci:commit("freifunk-watchdog")
   uci:commit("qos")
-  uci:commit("luci_statistics")
 
-  sys.hostname(uci:get_first("system","system","hostname"))
   sys.init.enable("olsrd")
   sys.init.enable("olsrd6")
-  sys.init.enable("luci_statistics")
+
   if (sharenet == "1") then
     sys.init.enable("qos")
     sys.exec('grep wan /etc/crontabs/root >/dev/null || echo "0 6 * * * ifup wan" >> /etc/crontabs/root')
   end
+
+  if ipkg.installed("luci-app-statistics") == True then
+    uci:commit("luci_statistics")
+    sys.init.enable("luci_statistics")
+  end
+
+  sys.hostname(uci:get_first("system","system","hostname"))
+
 
   luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/reboot"))
 end
@@ -127,6 +134,10 @@ function reset()
   uci:revert("network")
   uci:revert("freifunk-watchdog")
   uci:revert("qos")
+
+  if ipkg.installed("luci-app-statistics") == True then
+    uci:revert("luci-app-statistics")
+  end
 
   uci:set("ffwizard","settings","runbefore","true")
   uci:save("ffwizard")
