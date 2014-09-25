@@ -16,6 +16,7 @@ function index()
   entry({"admin", "freifunk", "assistent", "decide"}, template("freifunk/assistent/decide"), "", 2)
   entry({"admin", "freifunk", "assistent", "sharedInternet"}, form("freifunk/assistent/shareInternet"), "", 10)
   entry({"admin", "freifunk", "assistent", "wireless"}, form("freifunk/assistent/wireless"), "", 20)
+  entry({"admin", "freifunk", "assistent", "optionalConfigs"}, form("freifunk/assistent/optionalConfigs"), "", 20)
   entry({"admin", "freifunk", "assistent", "applyChanges"}, call("commit"), "", 100)
   entry({"admin", "freifunk", "assistent", "reboot"}, template("freifunk/assistent/reboot"), "", 101)
   entry({"admin", "freifunk", "assistent", "cancel"}, call("reset"), "", 102)
@@ -112,13 +113,22 @@ function commit()
     sys.exec('grep wan /etc/crontabs/root >/dev/null || echo "0 6 * * * ifup wan" >> /etc/crontabs/root')
   end
 
-  if ipkg.installed("luci-app-statistics") == True then
+  if ipkg.installed("luci-app-statistics") == true then
+    local enableStats = uci:get("ffwizard", "settings", "enableStats") or "0"
+    uci:foreach("luci_statistics", "statistics",
+      function(s)
+        uci:set("luci_statistics", s['.name'], "enable", enableStats)
+      end)
+    uci:save("luci_statistics")
     uci:commit("luci_statistics")
-    sys.init.enable("luci_statistics")
+    if (enableStats == "1") then
+      sys.init.enable("luci_statistics")
+    else
+      sys.init.disable("luci_statistics")
+    end
   end
 
   sys.hostname(uci:get_first("system","system","hostname"))
-
 
   luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/reboot"))
 end
