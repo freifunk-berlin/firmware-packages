@@ -2,12 +2,6 @@
 	display:none;
 }
 
-form, .section {
-	width:800px;
-	margin-left:auto;
-	margin-right:auto;
-}
-
 .tile {
 	float:left;
 	width:50%;
@@ -18,4 +12,8 @@ form, .section {
 
 .clear {
 	clear:both;
+}
+
+#map {
+  margin-top:20px;
 }
