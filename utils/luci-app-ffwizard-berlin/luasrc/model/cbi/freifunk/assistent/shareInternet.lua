@@ -54,7 +54,7 @@ end
 
 function f.handle(self, state, data)
   if state == FORM_VALID then
-    luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/wireless"))
+    luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/optionalConfigs"))
   end
 end
 
