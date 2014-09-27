@@ -28,30 +28,10 @@ apinfo.template = "freifunk/assistent/snippets/apinfo"
 
 local private_ap = f:field(Flag, "private_ap", "privater Access Point")
 function private_ap.cfgvalue(self, section)
-	return tostring(uci:get_first("ffwizard", "settings", "private_ap")) or "0"
+  return tostring(uci:get_first("ffwizard", "settings", "private_ap")) or "0"
 end
 
-local private_ap_ssid = f:field(Value, "private_ap_ssid", "SSID", "")
-private_ap_ssid:depends("private_ap","1")
-private_ap_ssid.rmempty = false
-function private_ap_ssid.cfgvalue(self, section)
-  return uci:get("ffwizard", "settings", "private_ap_ssid")
-end
-
-local private_ap_key = f:field(Value, "private_ap_key", "Passwort", "")
-private_ap_key:depends("private_ap","1")
-private_ap_key.rmempty = false
-function private_ap_key.cfgvalue(self, section)
-  return uci:get("ffwizard", "settings", "private_ap_key")
-end
-function private_ap_key.validate(self, value)
-  if value then
-    return value:len() > 7
-  else
-    return true
-  end
-end
-
+-- main field needs to be defined before ssid and key or validation of these fields does not work properly
 main = f:field(DummyValue, "optionalConfigs", "", "")
 main.forcewrite = true
 function main.parse(self, section)
@@ -61,6 +41,23 @@ function main.parse(self, section)
   end
 end
 
+local private_ap_ssid = f:field(Value, "private_ap_ssid", "SSID", "")
+private_ap_ssid:depends("private_ap",1)
+private_ap_ssid.rmempty = false
+function private_ap_ssid.cfgvalue(self, section)
+  return uci:get("ffwizard", "settings", "private_ap_ssid")
+end
+
+local private_ap_key = f:field(Value, "private_ap_key", "Passwort", "")
+private_ap_key:depends("private_ap",1)
+private_ap_key.rmempty = false
+function private_ap_key.cfgvalue(self, section)
+  return uci:get("ffwizard", "settings", "private_ap_key")
+end
+function private_ap_key.validate(self, value)
+  return value and value:len() > 7
+end
+
 function main.write(self, section, value)
   uci:set("ffwizard", "settings", "enableStats", enableStats:formvalue(section) or "0")
   private_ap = private_ap:formvalue(section) or "0"
@@ -68,6 +65,9 @@ function main.write(self, section, value)
   if private_ap == "1" then
     uci:set("ffwizard", "settings", "private_ap_ssid", private_ap_ssid:formvalue(section))
     uci:set("ffwizard", "settings", "private_ap_key", private_ap_key:formvalue(section))
+  else
+    uci:set("ffwizard", "settings", "private_ap_ssid", "")
+    uci:set("ffwizard", "settings", "private_ap_key", "")
   end
   uci:save("ffwizard")
 end
