@@ -273,7 +273,7 @@ end
 function f.handle(self, state, data)
   --how can I read form data here to get rid of this main field??
   if state == FORM_VALID then
-    luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/applyChanges"))
+    luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/optionalConfigs"))
   end
 end
 
