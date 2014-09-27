@@ -14,13 +14,43 @@ f.reset = false
 css = f:field(DummyValue, "css", "")
 css.template = "freifunk/assistent/snippets/css"
 
+enableStatsInfo = f:field(DummyValue, "statsInfo", "")
+enableStatsInfo.template = "freifunk/assistent/snippets/enableStats"
+
 enableStats = f:field(Flag, "stats", "Monitoring anschalten")
 enableStats.default = 0 -- this does not work
 function enableStats.cfgvalue(self, section)
   return tostring(uci:get("ffwizard", "settings" , "enableStats")) or "0"
 end
-enableStatsInfo = f:field(DummyValue, "statsInfo", "")
-enableStatsInfo.template = "freifunk/assistent/snippets/enableStats"
+
+apinfo = f:field(DummyValue, "apinfo", "")
+apinfo.template = "freifunk/assistent/snippets/apinfo"
+
+local private_ap = f:field(Flag, "private_ap", "privater Access Point")
+function private_ap.cfgvalue(self, section)
+	return tostring(uci:get_first("ffwizard", "settings", "private_ap")) or "0"
+end
+
+local private_ap_ssid = f:field(Value, "private_ap_ssid", "SSID", "")
+private_ap_ssid:depends("private_ap","1")
+private_ap_ssid.rmempty = false
+function private_ap_ssid.cfgvalue(self, section)
+  return uci:get("ffwizard", "settings", "private_ap_ssid")
+end
+
+local private_ap_key = f:field(Value, "private_ap_key", "Passwort", "")
+private_ap_key:depends("private_ap","1")
+private_ap_key.rmempty = false
+function private_ap_key.cfgvalue(self, section)
+  return uci:get("ffwizard", "settings", "private_ap_key")
+end
+function private_ap_key.validate(self, value)
+  if value then
+    return value:len() > 7
+  else
+    return true
+  end
+end
 
 main = f:field(DummyValue, "optionalConfigs", "", "")
 main.forcewrite = true
@@ -33,6 +63,12 @@ end
 
 function main.write(self, section, value)
   uci:set("ffwizard", "settings", "enableStats", enableStats:formvalue(section) or "0")
+  private_ap = private_ap:formvalue(section) or "0"
+  uci:set("ffwizard", "settings", "private_ap", private_ap)
+  if private_ap == "1" then
+    uci:set("ffwizard", "settings", "private_ap_ssid", private_ap_ssid:formvalue(section))
+    uci:set("ffwizard", "settings", "private_ap_key", private_ap_key:formvalue(section))
+  end
   uci:save("ffwizard")
 end
 
