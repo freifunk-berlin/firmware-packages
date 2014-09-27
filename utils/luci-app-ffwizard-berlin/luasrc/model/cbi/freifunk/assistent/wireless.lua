@@ -267,13 +267,13 @@ function main.write(self, section, value)
 end
 
 function f.on_cancel()
-  luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/decide"))
+  luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/optionalConfigs"))
 end
 
 function f.handle(self, state, data)
   --how can I read form data here to get rid of this main field??
   if state == FORM_VALID then
-    luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/optionalConfigs"))
+    luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/applyChanges"))
   end
 end
 
