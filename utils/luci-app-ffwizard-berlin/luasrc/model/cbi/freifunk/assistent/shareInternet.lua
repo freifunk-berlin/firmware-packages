@@ -1,5 +1,7 @@
 local uci = require "luci.model.uci".cursor()
 local fs = require "nixio.fs"
+local tools = require "luci.tools.freifunk.assistent.tools"
+local defaults = require "luci.tools.freifunk.assistent.defaults"
 
 f = SimpleForm("ffvpn","","")
 f.submit = "Next"
@@ -22,6 +24,26 @@ key.default="/etc/openvpn/freifunk_client.key"
 key.rmempty = false
 key.optional = false
 
+local usersBandwidth = f:field(Value, "usersBandwidth", "Deine Bandbreite")
+local bandwidths = defaults.bandwidths()
+usersBandwidth.rmempty = false
+for k,v in pairs(bandwidths) do
+  usersBandwidth:value(k, v.name)
+end
+function usersBandwidth.cfgvalue(self, section)
+  return uci:get("ffwizard", "settings", "usersBandwidth")
+end
+local share = f:field(Value, "share", "Wieviel möchtest du teilen?")
+share.default = 100
+share.rmempty = false
+share:value(25,"25%")
+share:value(50,"50%")
+share:value(75,"75%")
+share:value(100,"100%")
+function share.cfgvalue(self, section)
+	return uci:get("ffwizard", "settigs", "shareBandwidth")
+end
+
 main = f:field(DummyValue, "openvpnconfig", "", "")
 main.forcewrite = true
 
@@ -35,6 +57,8 @@ end
 function main.write(self, section, value)
 
   uci:set("ffwizard", "settings", "sharenet", 1)
+  uci:set("ffwizard", "settings", "usersBandwidth", usersBandwidth:formvalue(section) or "")
+  uci:set("ffwizard", "settings", "shareBandwidth", share:formvalue(section) or "")
 
   uci:section("openvpn", "openvpn", "ffvpn", {
     --persist_tun='0',
