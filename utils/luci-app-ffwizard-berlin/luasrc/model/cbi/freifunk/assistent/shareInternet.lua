@@ -24,17 +24,20 @@ key.default="/etc/openvpn/freifunk_client.key"
 key.rmempty = false
 key.optional = false
 
+shareBandwidth = f:field(DummyValue, "shareBandwidthfo", "")
+shareBandwidth.template = "freifunk/assistent/snippets/shareBandwidth"
+
 local customBW = f:field(Flag, "customBW", "Benutzerdefinierte Einstellungen")
 function customBW.cfgvalue(self, section)
   return tostring(uci:get_first("ffwizard", "settings", "customBW"))
 end
 
-local usersBandwidth = f:field(Value, "usersBandwidth", "Deine Bandbreite")
+local usersBandwidth = f:field(Value, "usersBandwidth", "Dein Anschluss")
 usersBandwidth:depends("customBW","")
 local bandwidths = defaults.bandwidths()
 usersBandwidth.rmempty = false
 for k,v in pairs(bandwidths) do
-  usersBandwidth:value(k, v.name)
+  usersBandwidth:value(k, v.name.." (up "..v.up.." / down "..v.down..")")
 end
 function usersBandwidth.cfgvalue(self, section)
   return uci:get("ffwizard", "settings", "usersBandwidth")
