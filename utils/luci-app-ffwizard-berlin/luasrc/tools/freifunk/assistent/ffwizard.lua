@@ -35,12 +35,20 @@ end
 
 
 function configureQOS()
-  local usersBandwidthUp = bandwidths[uci:get("ffwizard", "settings", "usersBandwidth")].up
-  local usersBandwidthDown = bandwidths[uci:get("ffwizard", "settings", "usersBandwidth")].down
-  local shareBandwidth = uci:get("ffizward", "settings", "usersBandwidth") or 100
-  local up = (usersBandwidthUp * 100 / shareBandwidth) * 1000
-  local down = (usersBandwidthDown * 100 / shareBandwidth) * 1000
-  if (sharenet == "1") then
+  if sharenet == "1" then
+    -- values have to be in kilobits/seconed
+    local up = 128
+    local down = 1024
+    if uci:get("ffwizard", "settings", "customBW") == "0" then
+      local usersBandwidthUp = bandwidths[uci:get("ffwizard", "settings", "usersBandwidth")].up
+      local usersBandwidthDown = bandwidths[uci:get("ffwizard", "settings", "usersBandwidth")].down
+      local shareBandwidth = uci:get("ffizward", "settings", "usersBandwidth") or 100
+      up = (usersBandwidthUp * 100 / shareBandwidth) * 1000
+      down = (usersBandwidthDown * 100 / shareBandwidth) * 1000
+    elseif uci:get("ffwizard", "settings", "customBW") == "1" then
+      up = uci:get("ffwizard", "settings", "usersBandwidthUp") * 1000
+      down = uci:get("ffwizard", "settings", "usersBandwidthDown") * 1000
+    end
     uci:delete("qos","wan")
     uci:delete("qos","lan")
     uci:section("qos", 'interface', "wan", {

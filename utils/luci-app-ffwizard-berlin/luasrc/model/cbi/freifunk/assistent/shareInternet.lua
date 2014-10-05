@@ -24,7 +24,13 @@ key.default="/etc/openvpn/freifunk_client.key"
 key.rmempty = false
 key.optional = false
 
+local customBW = f:field(Flag, "customBW", "Benutzerdefinierte Einstellungen")
+function customBW.cfgvalue(self, section)
+  return tostring(uci:get_first("ffwizard", "settings", "customBW"))
+end
+
 local usersBandwidth = f:field(Value, "usersBandwidth", "Deine Bandbreite")
+usersBandwidth:depends("customBW","")
 local bandwidths = defaults.bandwidths()
 usersBandwidth.rmempty = false
 for k,v in pairs(bandwidths) do
@@ -34,6 +40,7 @@ function usersBandwidth.cfgvalue(self, section)
   return uci:get("ffwizard", "settings", "usersBandwidth")
 end
 local share = f:field(Value, "share", "Wieviel möchtest du teilen?")
+share:depends("customBW","")
 share.default = 100
 share.rmempty = false
 share:value(25,"25%")
@@ -42,6 +49,20 @@ share:value(75,"75%")
 share:value(100,"100%")
 function share.cfgvalue(self, section)
 	return uci:get("ffwizard", "settigs", "shareBandwidth")
+end
+
+local usersBandwidthUp = f:field(Value, "usersBandwidthUp", "Upload Bandbreite in Mbit/s", "")
+usersBandwidthUp:depends("customBW",1)
+usersBandwidthUp.rmempty = false
+function usersBandwidthUp.cfgvalue(self, section)
+  return uci:get("ffwizard", "settings", "usersBandwidthUp")
+end
+
+local usersBandwidthDown = f:field(Value, "usersBandwidthDown", "Download Bandbreite in Mbit/s")
+usersBandwidthDown:depends("customBW",1)
+usersBandwidthDown.rmempty = false
+function usersBandwidthDown.cfgvalue(self, section)
+  return uci:get("ffwizard", "settings", "usersBandwidthDown")
 end
 
 main = f:field(DummyValue, "openvpnconfig", "", "")
@@ -57,9 +78,14 @@ end
 function main.write(self, section, value)
 
   uci:set("ffwizard", "settings", "sharenet", 1)
-  uci:set("ffwizard", "settings", "usersBandwidth", usersBandwidth:formvalue(section) or "")
-  uci:set("ffwizard", "settings", "shareBandwidth", share:formvalue(section) or "")
-
+  uci:set("ffwizard", "settings", "customBW", customBW:formvalue(section) or 0)
+  if(customBW:formvalue(section) == "1") then
+    uci:set("ffwizard", "settings", "usersBandwidthUp", usersBandwidthUp:formvalue(section) or "")
+    uci:set("ffwizard", "settings", "usersBandwidthDown", usersBandwidthDown:formvalue(section) or "")
+  else
+    uci:set("ffwizard", "settings", "usersBandwidth", usersBandwidth:formvalue(section) or "")
+    uci:set("ffwizard", "settings", "shareBandwidth", share:formvalue(section) or "")
+  end
   uci:section("openvpn", "openvpn", "ffvpn", {
     --persist_tun='0',
     enabled='1'
