@@ -25,7 +25,7 @@ if [ $enable != 1 ] ; then
 fi
 
 config_get strict pr strict
-table="olsr-default"
+table="olsr-tunnel"
 dev="$1"
 remote="$5"
 
