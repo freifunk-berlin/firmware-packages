@@ -99,7 +99,7 @@ function main.write(self, section, value)
     return
   end
 
-  local statistics_installed = ipkg.installed("luci-app-statistics") == True
+  local statistics_installed = ipkg.installed("luci-app-statistics") == true
   uci:foreach("wireless", "wifi-device",
     function(sec)
       local device = sec[".name"]
