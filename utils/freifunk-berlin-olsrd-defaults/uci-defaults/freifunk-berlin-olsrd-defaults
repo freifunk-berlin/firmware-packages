@@ -84,9 +84,10 @@ EOF
 
 # add txtinfo plugin - needed for collectd-mod-olsrd
 PLUGIN="$(uci add olsrd6 LoadPlugin)"
-uci set olsrd6.$PLUGIN.accept=::
+uci set olsrd6.$PLUGIN.accept=0::
 uci set olsrd6.$PLUGIN.library=olsrd_txtinfo.so.0.1
 uci set olsrd6.$PLUGIN.port=2007
+uci set olsrd6.$PLUGIN.ipv6only=true
 
 # add nameservice plugin
 PLUGIN="$(uci add olsrd6 LoadPlugin)"
@@ -98,9 +99,10 @@ uci set olsrd6.$PLUGIN.services_file=/var/etc/services.olsr.ipv6
 
 # add jsoninfo plugin
 PLUGIN="$(uci add olsrd6 LoadPlugin)"
-uci set olsrd6.$PLUGIN.accept=::
+uci set olsrd6.$PLUGIN.accept=0::
 uci set olsrd6.$PLUGIN.library=olsrd_jsoninfo.so.0.0
 uci set olsrd6.$PLUGIN.ignore=0
+uci set olsrd6.$PLUGIN.ipv6only=true
 
 # add watchdog plugin
 PLUGIN="$(uci add olsrd6 LoadPlugin)"
