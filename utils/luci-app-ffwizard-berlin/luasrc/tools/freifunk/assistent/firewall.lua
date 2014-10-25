@@ -29,7 +29,6 @@ end
 function configureFirewall()
 	tools.firewall_zone_add_interface("freifunk", "dhcp")
 	if (sharenet == "1") then
-		tools.firewall_zone_add_interface("freifunk", "tunl0")
 		tools.firewall_zone_add_interface("freifunk", "ffvpn")
 		ovpn_server_list = uci:get_list("openvpn","ffvpn","remote")
 		for i,v in ipairs(ovpn_server_list) do
