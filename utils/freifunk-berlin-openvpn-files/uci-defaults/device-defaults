@@ -24,8 +24,8 @@ if [ -f /etc/config/openvpn ] ; then
 		uci set openvpn.ffvpn.comp_lzo="no"
 		uci set openvpn.ffvpn.script_security=2
 		uci set openvpn.ffvpn.cipher="none"
-		uci add_list openvpn.ffvpn.remote="77.87.48.10 1194 udp"
-		uci add_list openvpn.ffvpn.remote="78.41.116.65 1194 udp"
+		uci add_list openvpn.ffvpn.remote="vpn03.berlin.freifunk.net 1194 udp"
+		uci add_list openvpn.ffvpn.remote="vpn03-backup.berlin.freifunk.net 1194 udp"
 		uci set openvpn.ffvpn.ca="/etc/openvpn/freifunk-ca.crt"
 		uci set openvpn.ffvpn.cert="/etc/openvpn/freifunk_client.crt"
 		uci set openvpn.ffvpn.key="/etc/openvpn/freifunk_client.key"
