@@ -13,26 +13,6 @@ function wifi_delete_ifaces(device)
 end
 
 
--- Creates a firewall zone
-function firewall_create_zone(zone, input, output, forward, masq)
-	local cursor = uci.cursor()
-	if not firewall_find_zone(zone) then
-		logger("before create firewallzone")
-		local stat = cursor:section("firewall", "zone", "zone_"..zone, {
-			input = input,
-			output = output,
-			forward = forward,
-			masq = masq and "1",
-			name = zone
-		})
-		cursor:save("firewall")
-		return stat
-	else
-		--logger("zone "..zone.." alread exists")
-	end
-end
-
-
 function statistics_interface_add(mod, interface)
 	local c = uci.cursor()
 	local old = c:get("luci_statistics", mod, "Interfaces") or ""

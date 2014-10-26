@@ -80,6 +80,7 @@ uci set firewall.zone_freifunk.input=ACCEPT
 uci set firewall.zone_freifunk.forward=REJECT
 uci set firewall.zone_freifunk.name=freifunk
 uci set firewall.zone_freifunk.output=ACCEPT
+uci set firewall.zone_freifunk.network=tunl0
 
 FORWARDING="$(uci add firewall forwarding)"
 uci set firewall.$FORWARDING.dest=freifunk
