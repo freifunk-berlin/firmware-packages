@@ -228,6 +228,13 @@ function main.write(self, section, value)
     prenetconfig.ip6assign="64"
     -- use ifname from dhcp bridge on a consecutive run of assistent
     prenetconfig.ifname=uci:get("network", "lan", "ifname") or uci:get("network", "dhcp", "ifname")
+
+    -- if macaddr is set for lan interface also set it for dhcp interface (needed for wdr4900)
+    local macaddr=uci:get("network", "lan", "macaddr") or uci:get("network", "dhcp", "macaddr")
+    if (macaddr) then
+      prenetconfig.macaddr = macaddr
+    end
+
     uci:section("network", "interface", "dhcp", prenetconfig)
 
     -- add to statistics
