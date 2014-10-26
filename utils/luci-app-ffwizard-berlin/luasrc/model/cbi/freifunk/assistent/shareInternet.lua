@@ -68,6 +68,19 @@ function usersBandwidthDown.cfgvalue(self, section)
   return uci:get("ffwizard", "settings", "usersBandwidthDown")
 end
 
+-- it seems not to be possible to have several fields depend on one flag
+-- workaround is to remove cfg entries otherwise validation will fail
+-- for not submitted fields
+function customBW.parse(self, section)
+  if(customBW:formvalue(section) == "1") then
+    uci:delete("ffwizard", "settings", "usersBandwidth")
+    uci:delete("ffwizard", "settings", "shareBandwidth")
+  else
+    uci:delete("ffwizard", "settings", "usersBandwidthUp")
+    uci:delete("ffwizard", "settings", "usersBandwidthDown")
+  end
+end
+
 main = f:field(DummyValue, "openvpnconfig", "", "")
 main.forcewrite = true
 
