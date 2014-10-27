@@ -15,8 +15,8 @@ end
 
 function statistics_interface_add(mod, interface)
 	local c = uci.cursor()
-	local old = c:get("luci_statistics", mod, "Interfaces") or ""
-	c:set("luci_statistics", mod, "Interfaces", old .. " " .. interface)
+	local old = c:get("luci_statistics", mod, "Interfaces")
+	c:set("luci_statistics", mod, "Interfaces", (old and old .. " " or "") .. interface)
 	c:save("luci_statistics")
 end
 
