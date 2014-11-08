@@ -117,15 +117,12 @@ function commit()
     local enableStats = uci:get("ffwizard", "settings", "enableStats") or "0"
     uci:foreach("luci_statistics", "statistics",
       function(s)
-        uci:set("luci_statistics", s['.name'], "enable", enableStats)
+        if (s['.name'] ~= 'collectd' and s['.name'] ~= 'rrdtool') then
+          uci:set("luci_statistics", s['.name'], "enable", enableStats)
+        end
       end)
     uci:save("luci_statistics")
     uci:commit("luci_statistics")
-    if (enableStats == "1") then
-      sys.init.enable("luci_statistics")
-    else
-      sys.init.disable("luci_statistics")
-    end
   end
 
   sys.hostname(uci:get_first("system","system","hostname"))
