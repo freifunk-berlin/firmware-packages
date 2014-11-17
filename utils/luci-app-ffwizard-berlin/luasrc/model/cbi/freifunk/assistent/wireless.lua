@@ -307,11 +307,6 @@ end
 function calchtmode(channel)
   -- use HT20 for 2.4 GHz and channel 100+ for 5Ghz
   local htmode = "HT20"
-
-  -- TODO: remove the following line and uncomment the subsequent block once
-  -- HT40 works with ap+adhoc simultaneously in openwrt.
-  return htmode
---[[
   local ht40plus = {
     1,2,3,4,5,6,7,
     36,44,52,60
@@ -335,7 +330,6 @@ function calchtmode(channel)
   end
 
   return htmode
---]]
 end
 
 function get_iwinfo(device)
