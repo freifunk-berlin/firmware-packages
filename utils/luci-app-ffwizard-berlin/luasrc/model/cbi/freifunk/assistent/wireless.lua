@@ -139,7 +139,7 @@ function main.write(self, section, value)
       devconfig.channel = getchannel(device)
       devconfig.hwmode = hwmode
       devconfig.doth = calcdoth(devconfig.channel)
-      devconfig.htmode = calchtmode(devconfig.channel)
+      devconfig.htmode = "HT20"
       devconfig.chanlist = calcchanlist(devconfig.channel)
       uci:tset("wireless", device, devconfig)
 
@@ -302,34 +302,6 @@ end
 function calcdoth(channel)
   -- doth activates 802.11h (radar detection)
   return (channel >= 52 and channel <= 140) and "1" or "0"
-end
-
-function calchtmode(channel)
-  -- use HT20 for 2.4 GHz and channel 100+ for 5Ghz
-  local htmode = "HT20"
-  local ht40plus = {
-    1,2,3,4,5,6,7,
-    36,44,52,60
-  }
-  local ht40minus = {
-    8,9,10,11,12,13,14,
-    40,48,56,64
-  }
-
-  if channel > 14 and channel < 100  then
-    for i, v in ipairs(ht40plus) do
-      if v == channel then
-        htmode = 'HT40+'
-      end
-    end
-    for i, v in ipairs(ht40minus) do
-      if v == channel then
-        htmode = 'HT40-'
-      end
-    end
-  end
-
-  return htmode
 end
 
 function get_iwinfo(device)
