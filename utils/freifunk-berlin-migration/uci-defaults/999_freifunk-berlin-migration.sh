@@ -40,13 +40,15 @@ update_wireless_ht20_config() {
 }
 
 update_luci_statistics_config() {
-  #if users disabled stats with wizard some settings need be corrected so they can enable stats later
-  log "Update luci_statistics"
-  #delete wrong config
+  # if users disabled stats with the wizard some settings need be corrected
+  # so they can enable stats later
+  log "remove luci_statistics.rrdtool.enable"
+  log "remove luci_statistics.collectd.enable"
   uci delete luci_statistics.rrdtool.enable
   uci delete luci_statistics.collectd.enable
 
-  #enable luci_statistics service
+  # enable luci_statistics service
+  log "enable luci_statistics service"
   /etc/init.d/luci_statistics enable
 }
 
