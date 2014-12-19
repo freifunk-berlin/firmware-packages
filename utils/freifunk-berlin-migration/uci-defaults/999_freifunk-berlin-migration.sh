@@ -25,7 +25,6 @@ update_dhcp_lease_config() {
     log "Setting dhcp lease time to 5m"
     uci set dhcp.dhcp.leasetime='5m'
   fi
-  
 }
 
 update_wireless_ht20_config() {
@@ -40,6 +39,17 @@ update_wireless_ht20_config() {
   fi
 }
 
+update_luci_statistics_config() {
+  #if users disabled stats with wizard some settings need be corrected so they can enable stats later
+  log "Update luci_statistics"
+  #delete wrong config
+  uci delete luci_statistics.rrdtool.enable
+  uci delete luci_statistics.collectd.enable
+
+  #enable luci_statistics service
+  /etc/init.d/luci_statistics enable
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -47,6 +57,7 @@ migrate () {
     update_openvpn_remote_config
     update_dhcp_lease_config
     update_wireless_ht20_config
+    update_luci_statistics_config
   fi
 
   # overwrite version with the new version
