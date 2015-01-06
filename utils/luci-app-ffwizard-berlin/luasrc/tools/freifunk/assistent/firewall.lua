@@ -30,17 +30,6 @@ function configureFirewall()
 	tools.firewall_zone_add_interface("freifunk", "dhcp")
 	if (sharenet == "1") then
 		tools.firewall_zone_add_interface("freifunk", "ffvpn")
-		ovpn_server_list = uci:get_list("openvpn","ffvpn","remote")
-		for i,v in ipairs(ovpn_server_list) do
-			uci:section("firewall", "rule", nil, {
-				name="Reject-VPN-over-ff-"..i,
-				dest="freifunk",
-				family="ipv4",
-				proto="udp",
-				dest_ip=v,
-				target="REJECT"
-			})
-		end
 	end
 	uci:delete_all("firewall", "forwarding", {src="freifunk", dest="wan"})
 	uci:save("firewall")
