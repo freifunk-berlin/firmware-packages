@@ -52,6 +52,7 @@ uci set olsrd.$OLSRD.TcRedundancy=2
 uci set olsrd.$OLSRD.NatThreshold=0.75
 uci set olsrd.$OLSRD.LinkQualityAlgorithm=etx_ff
 uci set olsrd.$OLSRD.SmartGateway=yes
+uci set olsrd.$OLSRD.SmartGatewayThreshold=50
 uci set olsrd.$OLSRD.Pollrate=0.025
 uci set olsrd.$OLSRD.RtTable=111
 uci set olsrd.$OLSRD.RtTableDefault=112
