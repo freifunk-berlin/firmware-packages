@@ -9,7 +9,10 @@ f.reset = false
 css = f:field(DummyValue, "css", "")
 css.template = "freifunk/assistent/snippets/css"
 
-community = f:field(ListValue, "net", "Freifunk Community", "")
+generalinfo = f:field(DummyValue,"","")
+generalinfo.template = "freifunk/assistent/snippets/generalInfo"
+
+community = f:field(ListValue, "net", "Freifunk-Community", "")
 function community.cfgvalue(self, section)
   return uci:get("freifunk", "community", "name") or "berlin"
 end
@@ -22,19 +25,19 @@ for k,v in ipairs(communities) do
   community:value(n, name)
 end
 
-hostname = f:field(Value, "hostname", "Knoten Name", "")
+hostname = f:field(Value, "hostname", "Name dieses Freifunk-Knotens", "")
 hostname.datatype = "hostname"
 function hostname.cfgvalue(self, section)
   return uci:get_first("system", "system","hostname") or sys.hostname()
 end
 
-nickname = f:field(Value, "nickname", "Nickname","")
+nickname = f:field(Value, "nickname", "Dein Nickname","")
 nickname.datatype = "string"
 function nickname.cfgvalue(self, section)
   return uci:get("freifunk", "contact", "nickname")
 end
 
-realname = f:field(Value, "realname", "Realname","")
+realname = f:field(Value, "realname", "Dein Realname","")
 realname.datatype = "string"
 function realname.cfgvalue(self, section)
   return uci:get("freifunk", "contact", "name")
@@ -52,13 +55,13 @@ function location.cfgvalue(self, section)
   return uci:get_first("system", "system", "location") or uci:get("freifunk", "contact", "location")
 end
 
-lat = f:field(Value, "lat", "geographischer Breitengrad", "")
+lat = f:field(Value, "lat", "Geographischer Breitengrad", "")
 lat.datatype = "float"
 function lat.cfgvalue(self, section)
   return uci:get_first("system", "system","latitude")
 end
 
-lon = f:field(Value, "lon", "geograpischer Längengrad", "")
+lon = f:field(Value, "lon", "Geographischer Längengrad", "")
 lon.datatype = "float"
 function lon.cfgvalue(self, section)
   return uci:get_first("system", "system","longitude")
@@ -66,9 +69,6 @@ end
 
 map = f:field(DummyValue,"","")
 map.template = "freifunk/assistent/snippets/map"
-
-generalinfo = f:field(DummyValue,"","")
-generalinfo.template = "freifunk/assistent/snippets/generalInfo"
 
 main = f:field(DummyValue, "config", "", "")
 main.forcewrite = true
