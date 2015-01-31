@@ -316,6 +316,13 @@ function get()
 			}) do
 				interfaces[#interfaces][f] = iwinfo[f]
 			end
+			if iwinfo['encryption'] then
+				if iwinfo['encryption']['enabled'] then
+					-- fingers off encrypted wifi interfaces, they are likely private
+					table.remove(interfaces)
+					return
+				end
+			end
 		end
 		assoclist_if = {}
 		for _, v in ipairs(assoclist) do
