@@ -19,7 +19,7 @@ local community = "profile_"..uci:get("freifunk", "community", "name")
 local sharenet = uci:get("ffwizard", "settings", "sharenet")
 
 f = SimpleForm("ffwizard", "", "")
-f.submit = "Next"
+f.submit = "Save and reboot"
 f.cancel = "Back"
 f.reset = false
 
@@ -27,12 +27,15 @@ css = f:field(DummyValue, "css", "")
 css.template = "freifunk/assistent/snippets/css"
 
 -- ADHOC
+meshipinfo = f:field(DummyValue, "meshinfo", "")
+meshipinfo.template = "freifunk/assistent/snippets/meshipinfo"
+
 local wifi_tbl = {}
 uci:foreach("wireless", "wifi-device",
   function(section)
     local device = section[".name"]
     wifi_tbl[device] = {}
-    local meship = f:field(Value, "meship_" .. device, device:upper() .. " Mesh IP", "")
+    local meship = f:field(Value, "meship_" .. device, device:upper() .. " Mesh-IP", "")
     meship.rmempty = false
     meship.datatype = "ip4addr"
     function meship.cfgvalue(self, section)
@@ -45,21 +48,21 @@ uci:foreach("wireless", "wifi-device",
     wifi_tbl[device]["meship"] = meship
   end)
 
-meshipinfo = f:field(DummyValue, "meshinfo", "")
-meshipinfo.template = "freifunk/assistent/snippets/meshipinfo"
-
 -- VAP
 local community = "profile_"..uci:get("freifunk", "community", "name")
 local vap = uci:get_first(community, "community", "vap") or "1"
 if vap == "1" then
-  ssid = f:field(Value, "ssid", "Freifunk SSID", "")
+  ipinfo = f:field(DummyValue, "ipinfo", "")
+  ipinfo.template = "freifunk/assistent/snippets/ipinfo"
+
+  ssid = f:field(Value, "ssid", "Freifunk-SSID", "")
   ssid.rmempty = false
   function ssid.cfgvalue(self, section)
     return uci:get("ffwizard", "settings", "ssid")
       or uci:get(community, "profile", "ssid")
   end
 
-  dhcpmesh = f:field(Value, "dhcpmesh", "Addressraum", "")
+  dhcpmesh = f:field(Value, "dhcpmesh", "DHCP-Network", "")
   dhcpmesh.rmempty = false
   dhcpmesh.datatype = "ip4addr"
   function dhcpmesh.cfgvalue(self, section)
@@ -69,9 +72,6 @@ if vap == "1" then
     local x = ip.IPv4(value)
     return ( x and x:minhost() and x:prefix() < 32) and x:string() or ""
   end
-
-  ipinfo = f:field(DummyValue, "ipinfo", "")
-  ipinfo.template = "freifunk/assistent/snippets/ipinfo"
 end
 
 main = f:field(DummyValue, "netconfig", "", "")
