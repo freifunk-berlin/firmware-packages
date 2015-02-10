@@ -75,12 +75,15 @@ uci set firewall.$INCLUDE.path=/etc/firewall.user
 uci commit
 
 # add named freifunk zone section
+#
+# SmartGateway - tunl0 for server, tnl+ for client (ipip tunnels)
+# see http://wiki.freifunk.net/OLSR/SmartGateway#.22Client.22
 uci set firewall.zone_freifunk=zone
 uci set firewall.zone_freifunk.input=ACCEPT
 uci set firewall.zone_freifunk.forward=REJECT
 uci set firewall.zone_freifunk.name=freifunk
 uci set firewall.zone_freifunk.output=ACCEPT
-uci set firewall.zone_freifunk.network=tunl0
+uci set firewall.zone_freifunk.network="tunl0 tnl+"
 
 FORWARDING="$(uci add firewall forwarding)"
 uci set firewall.$FORWARDING.dest=freifunk
@@ -123,9 +126,3 @@ uci set firewall.$FORWARDING.dest=freifunk
 uci set firewall.$FORWARDING.src=wan
 
 uci commit
-
-# SmartGateway - set client rules (no nat, just forward)
-# see http://wiki.freifunk.net/OLSR/SmartGateway#.22Client.22
-FORWARD_TNL="iptables -I FORWARD -o tnl_+ -j ACCEPT"
-grep -q "$FORWARD_TNL" /etc/firewall.user || echo $FORWARD_TNL >> /etc/firewall.user
-MASQUERADE_TNL="iptables -t nat -I POSTROUTING -o tnl_+ -j MASQUERADE"
