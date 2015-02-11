@@ -107,8 +107,14 @@ function main.write(self, section, value)
     enabled='1'
   })
 
-  fs.copy("/lib/uci/upload/cbid.ffvpn.1.cert","/etc/openvpn/freifunk_client.crt")
-  fs.copy("/lib/uci/upload/cbid.ffvpn.1.key","/etc/openvpn/freifunk_client.key")
+  fs.move(
+    "/lib/uci/upload/cbid.ffvpn.1.cert",
+    "/etc/openvpn/freifunk_client.crt"
+  )
+  fs.move(
+    "/lib/uci/upload/cbid.ffvpn.1.key",
+    "/etc/openvpn/freifunk_client.key"
+  )
 
   uci:save("openvpn")
   uci:save("ffwizard")
