@@ -52,6 +52,15 @@ update_luci_statistics_config() {
   /etc/init.d/luci_statistics enable
 }
 
+update_olsr_smart_gateway_threshold() {
+  # set SmartGatewayThreshold if not set
+  local threshold=$(uci get olsrd.olsrd.SmartGatewayThreshold)
+  if [ "x${threshold}" = x ]; then
+    log "Setting SmartGatewayThreshold to 50."
+    uci set olsrd.olsrd.SmartGatewayThreshold='50'
+  fi
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -60,6 +69,7 @@ migrate () {
     update_dhcp_lease_config
     update_wireless_ht20_config
     update_luci_statistics_config
+    update_olsr_smart_gateway_threshold
   fi
 
   # overwrite version with the new version
