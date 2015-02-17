@@ -72,3 +72,11 @@ uci set luci_statistics.collectd_network=statistics
 uci set luci_statistics.collectd_network.enable=1                    
                                             
 uci commit luci_statistics                    
+
+# Hotfix for collectd memory leak: restart luci_statistics every 30 minutes
+# see https://github.com/freifunk-berlin/firmware/issues/217
+CRONTAB="/etc/crontabs/root"
+CMD="/etc/init.d/luci_statistics"
+test -f $CRONTAB || touch $CRONTAB
+grep -q $CMD $CRONTAB || echo "0,30 * * * *	$CMD" >> $CRONTAB
+/etc/init.d/cron restart
