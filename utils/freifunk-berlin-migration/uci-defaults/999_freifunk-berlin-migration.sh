@@ -52,6 +52,16 @@ update_luci_statistics_config() {
   /etc/init.d/luci_statistics enable
 }
 
+update_crontab_memory_leak_fix() {
+  # Hotfix for collectd memory leak: restart luci_statistics every 30 minutes
+  # see https://github.com/freifunk-berlin/firmware/issues/217
+  CRONTAB="/etc/crontabs/root"
+  CMD="/etc/init.d/luci_statistics"
+  test -f $CRONTAB || touch $CRONTAB
+  grep -q $CMD $CRONTAB || echo "0,30 * * * *    $CMD" >> $CRONTAB
+  /etc/init.d/cron restart
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -60,6 +70,7 @@ migrate () {
     update_dhcp_lease_config
     update_wireless_ht20_config
     update_luci_statistics_config
+    update_crontab_memory_leak_fix
   fi
 
   # overwrite version with the new version
