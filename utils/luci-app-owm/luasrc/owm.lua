@@ -316,6 +316,13 @@ function get()
 			}) do
 				interfaces[#interfaces][f] = iwinfo[f]
 			end
+			if iwinfo['encryption'] then
+				if iwinfo['encryption']['enabled'] then
+					-- fingers off encrypted wifi interfaces, they are likely private
+					table.remove(interfaces)
+					return
+				end
+			end
 		end
 		assoclist_if = {}
 		for _, v in ipairs(assoclist) do
@@ -345,6 +352,10 @@ function get()
 			return
 		end
 		local name = vif['.name']
+		if ('wan' == name) or ('wan6' == name) then
+			-- fingers off wan as this will be the private internet uplink
+			return
+		end
 		local net = netm:get_network(name)
 		local device = net and net:get_interface()
 		root.interfaces[#root.interfaces+1] =  vif
