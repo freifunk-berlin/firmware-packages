@@ -64,10 +64,10 @@ update_crontab_memory_leak_fix() {
 
 update_olsr_smart_gateway_threshold() {
   # set SmartGatewayThreshold if not set
-  local threshold=$(uci get olsrd.olsrd.SmartGatewayThreshold)
+  local threshold=$(uci get olsrd.@olsrd[0].SmartGatewayThreshold)
   if [ "x${threshold}" = x ]; then
     log "Setting SmartGatewayThreshold to 50."
-    uci set olsrd.olsrd.SmartGatewayThreshold='50'
+    uci set olsrd.@olsrd[0].SmartGatewayThreshold='50'
   fi
 }
 
