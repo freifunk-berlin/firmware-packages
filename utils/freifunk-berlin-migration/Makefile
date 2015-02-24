@@ -13,7 +13,6 @@ define Package/freifunk-berlin-migration
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin configuration migration script
   URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+= +semver
 endef
 
 define Package/freifunk-berlin-migration/description
