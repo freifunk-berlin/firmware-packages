@@ -52,13 +52,15 @@ update_luci_statistics_config() {
   /etc/init.d/luci_statistics enable
 }
 
-update_crontab_memory_leak_fix() {
-  # Hotfix for collectd memory leak: restart luci_statistics every 30 minutes
+update_collectd_memory_leak_hotfix() {
+  # Hotfix for collectd memory leak: restart luci_statistics every 15 minutes
   # see https://github.com/freifunk-berlin/firmware/issues/217
   CRONTAB="/etc/crontabs/root"
-  CMD="/etc/init.d/luci_statistics"
+  CMD="/etc/init.d/luci_statistics restart"
   test -f $CRONTAB || touch $CRONTAB
-  grep -q $CMD $CRONTAB || echo "0,30 * * * *    $CMD" >> $CRONTAB
+  # remove broken fix of 0.1.0
+  sed -i '/luci_statistics$/d' $CRONTAB
+  grep -q $CMD $CRONTAB || echo "0,15,30,45 * * * *    $CMD" >> $CRONTAB
   /etc/init.d/cron restart
 }
 
@@ -79,8 +81,11 @@ migrate () {
     update_dhcp_lease_config
     update_wireless_ht20_config
     update_luci_statistics_config
-    update_crontab_memory_leak_fix
     update_olsr_smart_gateway_threshold
+  fi
+
+  if semverLT ${OLD_VERSION} "0.1.1"; then
+    update_collectd_memory_leak_hotfix
   fi
 
   # overwrite version with the new version
