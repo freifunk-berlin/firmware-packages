@@ -57,6 +57,7 @@ end
 local usersBandwidthUp = f:field(Value, "usersBandwidthUp", "Upload Bandbreite in Mbit/s", "")
 usersBandwidthUp:depends("customBW",1)
 usersBandwidthUp.rmempty = false
+usersBandwidthUp.datatype = "float"
 function usersBandwidthUp.cfgvalue(self, section)
   return uci:get("ffwizard", "settings", "usersBandwidthUp")
 end
@@ -64,6 +65,7 @@ end
 local usersBandwidthDown = f:field(Value, "usersBandwidthDown", "Download Bandbreite in Mbit/s")
 usersBandwidthDown:depends("customBW",1)
 usersBandwidthDown.rmempty = false
+usersBandwidthDown.datatype = "float"
 function usersBandwidthDown.cfgvalue(self, section)
   return uci:get("ffwizard", "settings", "usersBandwidthDown")
 end
