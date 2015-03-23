@@ -184,6 +184,7 @@ function main.write(self, section, value)
         })
         if statistics_installed then
           tools.statistics_interface_add("collectd_iwinfo", ifnameAp)
+          tools.statistics_interface_add("collectd_interface", ifnameAp)
         end
       end
 
