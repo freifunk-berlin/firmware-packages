@@ -16,8 +16,7 @@ define Package/luci-app-ffwizard-berlin
   SUBMENU:=3. Applications
   TITLE:=Freifunk Berlin configuration wizard
   URL:=http://berlin.freifunk.net
-  DEPENDS+= +luci-base +luci-mod-freifunk +luci-mod-admin-full \
-						+freifunk-policyrouting +freifunk-berlin-openvpn-files
+  DEPENDS+= +luci-base +luci-mod-admin-full +freifunk-policyrouting +freifunk-berlin-openvpn-files
 endef
 
 define Package/luci-app-ffwizard-berlin/description

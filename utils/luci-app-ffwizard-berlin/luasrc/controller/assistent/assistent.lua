@@ -7,9 +7,14 @@ local ipkg = require "luci.model.ipkg"
 local olsr = require "luci.tools.freifunk.assistent.olsr"
 local firewall = require "luci.tools.freifunk.assistent.firewall"
 
+local have_mod_freifunk = (ipkg.installed("luci-mod-freifunk") == true)
+
 module ("luci.controller.assistent.assistent", package.seeall)
 
 function index()
+  if not have_mod_freifunk then
+    entry({"admin", "freifunk"}, firstchild(), "Freifunk", 5).dependent=false
+  end
   entry({"admin", "freifunk", "assistent"}, call("prepare"), "Freifunkassistent", 1).dependent=false
   entry({"admin", "freifunk", "assistent", "changePassword"}, form("freifunk/assistent/changePassword"), "",1)
   entry({"admin", "freifunk", "assistent", "generalInfo"}, form("freifunk/assistent/generalInfo"), "", 1)
