@@ -7,6 +7,13 @@ guard "luci_statistics"
 uci import luci_statistics <<EOF
 EOF
 
+# mod_ping and collectd_rrdtool use a lot of RAM, disable on 32MB routers
+if [ "$(cat /proc/meminfo |grep MemTotal:|awk {'print $2'})" -gt "65536" ]; then
+  HAVE_PLENTY_RAM=1
+else
+  HAVE_PLENTY_RAM=0
+fi
+
 # rrdtool
 uci set luci_statistics.rrdtool=statistics
 uci set luci_statistics.rrdtool.default_timespan=1hour
@@ -25,7 +32,7 @@ uci set luci_statistics.collectd.ReadThreads=2
 
 # mod ping
 uci set luci_statistics.collectd_ping=statistics
-uci set luci_statistics.collectd_ping.enable=1
+uci set luci_statistics.collectd_ping.enable=$HAVE_PLENTY_RAM
 uci set luci_statistics.collectd_ping.TTL=127
 uci set luci_statistics.collectd_ping.Interval=30
 uci set luci_statistics.collectd_ping.Hosts=monitor.berlin.freifunk.net
@@ -41,7 +48,7 @@ uci set luci_statistics.collectd_load.enable=1
 
 # collectd_rrdtool
 uci set luci_statistics.collectd_rrdtool=statistics
-uci set luci_statistics.collectd_rrdtool.enable=1
+uci set luci_statistics.collectd_rrdtool.enable=$HAVE_PLENTY_RAM
 uci set luci_statistics.collectd_rrdtool.DataDir=/tmp/rrd
 uci set luci_statistics.collectd_rrdtool.RRARows=100
 uci set luci_statistics.collectd_rrdtool.RRASingle=1
@@ -72,11 +79,3 @@ uci set luci_statistics.collectd_network=statistics
 uci set luci_statistics.collectd_network.enable=1                    
                                             
 uci commit luci_statistics                    
-
-# Hotfix for collectd memory leak: restart luci_statistics every 15 minutes
-# see https://github.com/freifunk-berlin/firmware/issues/217
-CRONTAB="/etc/crontabs/root"
-CMD="/etc/init.d/luci_statistics restart"
-test -f $CRONTAB || touch $CRONTAB
-grep -q $CMD $CRONTAB || echo "0,15,30,45 * * * *	$CMD" >> $CRONTAB
-/etc/init.d/cron restart

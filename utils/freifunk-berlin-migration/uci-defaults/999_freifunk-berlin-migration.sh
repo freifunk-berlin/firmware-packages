@@ -53,15 +53,18 @@ update_luci_statistics_config() {
 }
 
 update_collectd_memory_leak_hotfix() {
-  # Hotfix for collectd memory leak: restart luci_statistics every 15 minutes
+  # Remove old hotfixes for collectd RAM issues on 32MB routers
   # see https://github.com/freifunk-berlin/firmware/issues/217
   CRONTAB="/etc/crontabs/root"
-  CMD="/etc/init.d/luci_statistics restart"
   test -f $CRONTAB || touch $CRONTAB
-  # remove broken fix of 0.1.0
   sed -i '/luci_statistics$/d' $CRONTAB
-  grep -q $CMD $CRONTAB || echo "0,15,30,45 * * * *    $CMD" >> $CRONTAB
+  sed -i '/luci_statistics restart$/d' $CRONTAB
   /etc/init.d/cron restart
+
+  if [ "$(cat /proc/meminfo |grep MemTotal:|awk {'print $2'})" -lt "65536" ]; then
+    uci set luci_statistics.collectd_ping.enable=0
+    uci set luci_statistics.collectd_rrdtool.enable=0
+  fi
 }
 
 update_olsr_smart_gateway_threshold() {
