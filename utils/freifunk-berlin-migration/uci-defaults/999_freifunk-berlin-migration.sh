@@ -76,6 +76,11 @@ update_olsr_smart_gateway_threshold() {
   fi
 }
 
+fix_olsrd_txtinfo_port() {
+  uci set $(uci show olsrd|grep olsrd_txtinfo|cut -d '=' -f 1|sed 's/library/port/')=2006
+  uci set $(uci show olsrd6|grep olsrd_txtinfo|cut -d '=' -f 1|sed 's/library/port/')=2006
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -89,6 +94,7 @@ migrate () {
 
   if semverLT ${OLD_VERSION} "0.1.1"; then
     update_collectd_memory_leak_hotfix
+    fix_olsrd_txtinfo_port
   fi
 
   # overwrite version with the new version

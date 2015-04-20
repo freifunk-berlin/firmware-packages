@@ -11,7 +11,7 @@ EOF
 PLUGIN="$(uci add olsrd LoadPlugin)"
 uci set olsrd.$PLUGIN.accept=0.0.0.0
 uci set olsrd.$PLUGIN.library=olsrd_txtinfo.so.0.1
-uci set olsrd.$PLUGIN.port=2007
+uci set olsrd.$PLUGIN.port=2006
 
 # add arprefresh plugin
 PLUGIN="$(uci add olsrd LoadPlugin)"
@@ -87,7 +87,7 @@ EOF
 PLUGIN="$(uci add olsrd6 LoadPlugin)"
 uci set olsrd6.$PLUGIN.accept=0::
 uci set olsrd6.$PLUGIN.library=olsrd_txtinfo.so.0.1
-uci set olsrd6.$PLUGIN.port=2007
+uci set olsrd6.$PLUGIN.port=2006
 uci set olsrd6.$PLUGIN.ipv6only=true
 
 # add nameservice plugin
