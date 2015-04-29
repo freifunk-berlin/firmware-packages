@@ -15,7 +15,6 @@ $Id$
 ]]--
 
 local uci = require "luci.model.uci".cursor()
-local bandwidths = require "luci.tools.freifunk.assistent.defaults".bandwidths()
 local tools = require "luci.tools.freifunk.assistent.tools"
 local table = require "table"
 local type = type
@@ -36,19 +35,10 @@ end
 
 function configureQOS()
   if sharenet == "1" then
-    -- values have to be in kilobits/seconed
-    local up = 128
-    local down = 1024
-    if uci:get("ffwizard", "settings", "customBW") == "0" then
-      local usersBandwidthUp = bandwidths[uci:get("ffwizard", "settings", "usersBandwidth")].up
-      local usersBandwidthDown = bandwidths[uci:get("ffwizard", "settings", "usersBandwidth")].down
-      local shareBandwidth = uci:get("ffizward", "settings", "usersBandwidth") or 100
-      up = (usersBandwidthUp * 100 / shareBandwidth) * 1000
-      down = (usersBandwidthDown * 100 / shareBandwidth) * 1000
-    elseif uci:get("ffwizard", "settings", "customBW") == "1" then
-      up = uci:get("ffwizard", "settings", "usersBandwidthUp") * 1000
-      down = uci:get("ffwizard", "settings", "usersBandwidthDown") * 1000
-    end
+    -- values have to be in kilobits/second
+    local up = uci:get("ffwizard", "settings", "usersBandwidthUp") * 1000
+    local down = uci:get("ffwizard", "settings", "usersBandwidthDown") * 1000
+
     uci:delete("qos","wan")
     uci:delete("qos","lan")
     uci:section("qos", 'interface', "wan", {
@@ -57,6 +47,7 @@ function configureQOS()
       upload = up,
       download = down
     })
+
     local s = uci:get_first("olsrd", "olsrd")
     uci:set("olsrd", s, "SmartGatewaySpeed", up.." "..down)
     uci:set("olsrd", s, "SmartGatewayUplink", "both")
