@@ -1,6 +1,7 @@
 local uci = require "luci.model.uci".cursor()
 local fs = require "nixio.fs"
 local tools = require "luci.tools.freifunk.assistent.tools"
+local html = require "luci.http"
 
 f = SimpleForm("ffvpn","","")
 f.submit = "Next"
@@ -13,15 +14,20 @@ css.template = "freifunk/assistent/snippets/css"
 vpninfo = f:field(DummyValue, "apinfo", "")
 vpninfo.template = "freifunk/assistent/snippets/vpninfo"
 
-local cert = f:field(FileUpload, "cert", translate("Local Certificate"),"freifunk_client.crt")
-cert.default="/etc/openvpn/freifunk_client.crt"
-cert.rmempty = false
-cert.optional = false
+if fs.access("/etc/openvpn/freifunk_client.crt") and html.formvalue("reupload", true) ~= "1" then
+  vpncertreupload = f:field(DummyValue, "reupload", "")
+  vpncertreupload.template = "freifunk/assistent/snippets/vpncertreupload"
+else
+  local cert = f:field(FileUpload, "cert", translate("Local Certificate"),"freifunk_client.crt")
+  cert.default="/etc/openvpn/freifunk_client.crt"
+  cert.rmempty = false
+  cert.optional = false
 
-local key = f:field(FileUpload, "key", translate("Local Key"),"freifunk_client.key")
-key.default="/etc/openvpn/freifunk_client.key"
-key.rmempty = false
-key.optional = false
+  local key = f:field(FileUpload, "key", translate("Local Key"),"freifunk_client.key")
+  key.default="/etc/openvpn/freifunk_client.key"
+  key.rmempty = false
+  key.optional = false
+end
 
 shareBandwidth = f:field(DummyValue, "shareBandwidthfo", "")
 shareBandwidth.template = "freifunk/assistent/snippets/shareBandwidth"
