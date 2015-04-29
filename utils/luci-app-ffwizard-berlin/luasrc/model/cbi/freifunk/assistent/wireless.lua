@@ -6,6 +6,10 @@ local sys = require "luci.sys"
 local fs = require "nixio.fs"
 local ipkg = require "luci.model.ipkg"
 
+local olsr = require "luci.tools.freifunk.assistent.olsr"
+local firewall = require "luci.tools.freifunk.assistent.firewall"
+olsr.prepareOLSR()
+firewall.prepareFirewall()
 
 local device_l = {
   "wifi",

@@ -28,17 +28,6 @@ function index()
 end
 
 function prepare()
-
-  --reset sharenet value, will be set in shareInternet or wireless and read in applyChanges
-  uci:set("ffwizard","settings","sharenet", 2)
-  uci:save("ffwizard")
-
-  --OLSR CONFIG
-  olsr.prepareOLSR()
-
-  --FIREWALL CONFIG
-  firewall.prepareFirewall()
-
   luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/changePassword"))
 end
 
