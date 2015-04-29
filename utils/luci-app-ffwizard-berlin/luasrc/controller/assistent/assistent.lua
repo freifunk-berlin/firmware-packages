@@ -28,7 +28,11 @@ function index()
 end
 
 function prepare()
-  luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/changePassword"))
+  if not uci:get("ffwizard","settings","runbefore") then
+    luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/changePassword"))
+  else
+    luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/generalInfo"))
+  end
 end
 
 function commit()
