@@ -3,6 +3,7 @@ local sys = require "luci.sys"
 local tools = require "luci.tools.freifunk.assistent.ffwizard"
 local ip = require "luci.ip"
 local ipkg = require "luci.model.ipkg"
+local fs = require "nixio.fs"
 
 local olsr = require "luci.tools.freifunk.assistent.olsr"
 local firewall = require "luci.tools.freifunk.assistent.firewall"
@@ -28,6 +29,12 @@ function index()
 end
 
 function prepare()
+  if not fs.access("/etc/config/ffwizard") then
+    fs.writefile("/etc/config/ffwizard", "")
+    uci:set("ffwizard", "settings", "settings")
+    uci:save("ffwizard")
+    uci:commit("ffwizard")
+  end
   if not uci:get("ffwizard","settings","runbefore") then
     luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/changePassword"))
   else
