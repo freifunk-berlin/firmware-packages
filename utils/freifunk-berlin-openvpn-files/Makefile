@@ -36,7 +36,9 @@ define Package/freifunk-berlin-openvpn-files/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
 	$(INSTALL_DIR) $(1)/etc/openvpn
-	$(CP) ./openvpn/* $(1)/etc/openvpn
+	$(CP) ./openvpn/freifunk-ca.crt $(1)/etc/openvpn
+	$(INSTALL_DIR) $(1)/lib/freifunk
+	$(CP) ./openvpn/ffvpn-up.sh $(1)/lib/freifunk
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-openvpn-files))
