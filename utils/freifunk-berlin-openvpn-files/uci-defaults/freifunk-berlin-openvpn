@@ -26,7 +26,7 @@ uci set openvpn.ffvpn.ca="/etc/openvpn/freifunk-ca.crt"
 uci set openvpn.ffvpn.cert="/etc/openvpn/freifunk_client.crt"
 uci set openvpn.ffvpn.key="/etc/openvpn/freifunk_client.key"
 uci set openvpn.ffvpn.status="/var/log/openvpn-status-ffvpn.log"
-uci set openvpn.ffvpn.up="/etc/openvpn/ffvpn-up.sh"
+uci set openvpn.ffvpn.up="/lib/freifunk/ffvpn-up.sh"
 uci set openvpn.ffvpn.route_nopull=1
 uci commit openvpn
 
