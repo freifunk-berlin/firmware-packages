@@ -6,6 +6,12 @@ local sys = require "luci.sys"
 local fs = require "nixio.fs"
 local ipkg = require "luci.model.ipkg"
 
+local html = require "luci.http"
+if html.formvalue("sharenet", true) == "0" then
+  uci:set("ffwizard","settings","sharenet", 2)
+  uci:save("ffwizard")
+end
+
 f = SimpleForm("ffwizard", "", "")
 f.submit = "Next"
 f.cancel = "Back"

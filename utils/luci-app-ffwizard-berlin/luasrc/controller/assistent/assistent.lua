@@ -3,6 +3,7 @@ local sys = require "luci.sys"
 local tools = require "luci.tools.freifunk.assistent.ffwizard"
 local ip = require "luci.ip"
 local ipkg = require "luci.model.ipkg"
+local fs = require "nixio.fs"
 
 local olsr = require "luci.tools.freifunk.assistent.olsr"
 local firewall = require "luci.tools.freifunk.assistent.firewall"
@@ -28,18 +29,17 @@ function index()
 end
 
 function prepare()
-
-  --reset sharenet value, will be set in shareInternet or wireless and read in applyChanges
-  uci:set("ffwizard","settings","sharenet", 2)
-  uci:save("ffwizard")
-
-  --OLSR CONFIG
-  olsr.prepareOLSR()
-
-  --FIREWALL CONFIG
-  firewall.prepareFirewall()
-
-  luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/changePassword"))
+  if not fs.access("/etc/config/ffwizard") then
+    fs.writefile("/etc/config/ffwizard", "")
+    uci:set("ffwizard", "settings", "settings")
+    uci:save("ffwizard")
+    uci:commit("ffwizard")
+  end
+  if not uci:get("ffwizard","settings","runbefore") then
+    luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/changePassword"))
+  else
+    luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/generalInfo"))
+  end
 end
 
 function commit()

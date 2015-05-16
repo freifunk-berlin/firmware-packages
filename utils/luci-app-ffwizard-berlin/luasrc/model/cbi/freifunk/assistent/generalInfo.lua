@@ -117,7 +117,9 @@ function main.write(self, section, value)
 
 
   uci:save("system")
+  uci:commit("system")
   uci:save("freifunk")
+  uci:commit("freifunk")
 end
 
 function f.handle(self, state, data)
