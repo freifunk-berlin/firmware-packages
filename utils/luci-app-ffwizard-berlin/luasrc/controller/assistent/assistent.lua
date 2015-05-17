@@ -8,12 +8,10 @@ local fs = require "nixio.fs"
 local olsr = require "luci.tools.freifunk.assistent.olsr"
 local firewall = require "luci.tools.freifunk.assistent.firewall"
 
-local have_mod_freifunk = (ipkg.installed("luci-mod-freifunk") == true)
-
 module ("luci.controller.assistent.assistent", package.seeall)
 
 function index()
-  if not have_mod_freifunk then
+  if not nixio.fs.access("/usr/lib/lua/luci/controller/freifunk/freifunk.lua") then
     entry({"admin", "freifunk"}, firstchild(), "Freifunk", 5).dependent=false
   end
   entry({"admin", "freifunk", "assistent"}, call("prepare"), "Freifunkassistent", 1).dependent=false
