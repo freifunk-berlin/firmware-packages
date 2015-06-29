@@ -81,6 +81,10 @@ fix_olsrd_txtinfo_port() {
   uci set $(uci show olsrd6|grep olsrd_txtinfo|cut -d '=' -f 1|sed 's/library/port/')=2006
 }
 
+add_openvpn_mssfix() {
+  uci set openvpn.ffvpn.mssfix=1300
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -95,6 +99,10 @@ migrate () {
   if semverLT ${OLD_VERSION} "0.1.1"; then
     update_collectd_memory_leak_hotfix
     fix_olsrd_txtinfo_port
+  fi
+
+  if semverLT ${OLD_VERSION} "0.1.2"; then
+    add_openvpn_mssfix
   fi
 
   # overwrite version with the new version

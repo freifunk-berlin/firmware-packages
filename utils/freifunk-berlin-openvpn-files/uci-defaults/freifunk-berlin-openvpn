@@ -19,6 +19,7 @@ uci set openvpn.ffvpn.ns_cert_type=server
 uci set openvpn.ffvpn.comp_lzo="no"
 uci set openvpn.ffvpn.script_security=2
 uci set openvpn.ffvpn.cipher="none"
+uci set openvpn.ffvpn.mssfix=1300
 uci add_list openvpn.ffvpn.remote="vpn03.berlin.freifunk.net 1194 udp"
 uci add_list openvpn.ffvpn.remote="vpn03-backup.berlin.freifunk.net 1194 udp"
 uci set openvpn.ffvpn.ca="/etc/openvpn/freifunk-ca.crt"
