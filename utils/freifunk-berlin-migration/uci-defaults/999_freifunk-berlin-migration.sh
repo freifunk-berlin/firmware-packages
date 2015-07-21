@@ -85,6 +85,10 @@ add_openvpn_mssfix() {
   uci set openvpn.ffvpn.mssfix=1300
 }
 
+fix_openvpn_ffvpn_up() {
+  uci set openvpn.ffvpn.up="/lib/freifunk/ffvpn-up.sh"
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -103,6 +107,10 @@ migrate () {
 
   if semverLT ${OLD_VERSION} "0.1.2"; then
     add_openvpn_mssfix
+  fi
+
+  if semverLT ${OLD_VERSION} "0.2.0"; then
+    fix_openvpn_ffvpn_up
   fi
 
   # overwrite version with the new version
