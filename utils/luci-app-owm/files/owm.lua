@@ -64,6 +64,12 @@ local cname = uci:get("freifunk", "community", "name") or "freifunk"
 local suffix = uci:get("freifunk", "community", "suffix") or uci:get("profile_" .. cname, "profile", "suffix") or "olsr"
 local body = json.encode(owm.get())
 
+if arg[1]=="--dry-run" then
+	print(body)
+	unlock()
+	return
+end
+
 if type(owm_api)=="table" then
 	for i,v in ipairs(owm_api) do 
 		local owm_api = v
