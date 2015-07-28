@@ -23,6 +23,7 @@ local webadmin = require "luci.tools.webadmin"
 local status = require "luci.tools.status"
 local json = require "luci.json"
 local netm = require "luci.model.network"
+local sysinfo = luci.util.ubus("system", "info") or { }
 local table = require "table"
 local nixio = require "nixio"
 --local neightbl = require "neightbl"
@@ -230,15 +231,13 @@ function get()
 
 	root.system = {
 		uptime = {sys.uptime()},
-		loadavg = {sys.loadavg()},
-		sysinfo = {sys.sysinfo()},
+		loadavg = {sysinfo.load[1] / 65536.0},
+		sysinfo = {sysinfo},
 	}
 	root.hostname = sys.hostname() --owm
 
 
-	-- s system,a arch,r ram owm
-	local s,a,r = sys.sysinfo() --owm
-	root.hardware = s --owm
+	root.hardware = "unknown" --owm TODO
 	
 
 	root.firmware = {
@@ -408,6 +407,7 @@ function get()
 		root.interfaces[#root.interfaces].wifi = wireless_add
 	end)
 
+--[[
 	local dr4 = sys.net.defaultroute()
 	local dr6 = sys.net.defaultroute6()
 	
@@ -440,6 +440,8 @@ function get()
 
 	root.ipv4defaultGateway = def4
 	root.ipv6defaultGateway = def6
+--]]
+
 	local neighbors = fetch_olsrd_neighbors(root.interfaces)
 	local arptable = sys.net.arptable() or {}
 	if #root.interfaces ~= 0 then
