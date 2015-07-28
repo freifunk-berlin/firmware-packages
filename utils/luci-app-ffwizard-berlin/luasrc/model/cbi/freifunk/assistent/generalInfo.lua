@@ -1,6 +1,6 @@
 local uci = require "luci.model.uci".cursor()
 local sys = require "luci.sys"
-local fs = require "luci.fs"
+local fs = require "nixio.fs"
 
 f = SimpleForm("ffwizward", "", "")
 f.submit = "Next"
@@ -17,9 +17,7 @@ function community.cfgvalue(self, section)
   return uci:get("freifunk", "community", "name") or "berlin"
 end
 local profiles = "/etc/config/profile_"
-local communities = {}
-local communities = fs.glob(profiles.."*")
-for k,v in ipairs(communities) do
+for v in fs.glob(profiles.."*") do
   local n = string.gsub(v, profiles, "")
   local name = uci:get_first("profile_"..n, "community", "name") or "?"
   community:value(n, name)

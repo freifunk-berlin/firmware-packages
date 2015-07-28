@@ -23,7 +23,6 @@ local util = require "luci.util"
 local sys = require "luci.sys"
 local ip = require "luci.ip"
 local fs  = require "nixio.fs"
-local fs_luci = require "luci.fs"
 
 local has_3g = fs.access("/lib/netifd/proto/3g.sh")
 local has_pppoe = fs.glob("/usr/lib/pppd/*/rp-pppoe.so")()
@@ -146,7 +145,7 @@ net.optional = false
 net.datatype = "string"
 
 local list = {}
-local list = fs_luci.glob(profiles .. "*")
+local list = fs.glob(profiles .. "*")
 
 function net.cfgvalue(self, section)
 	return uci:get("freifunk", "wizard", "net") or "berlin"
@@ -162,7 +161,7 @@ net_lon = f:field(ListValue, "net_lon", "", "")
 net_lon:depends("net", "0")
 net_lon.datatype = "float"
 
-for k,v in ipairs(list) do
+for v in list do
 	local n = string.gsub(v, profiles, "")
 	local name = uci:get_first("profile_"..n, "community", "name") or "?"
 	net:value(n, name)
