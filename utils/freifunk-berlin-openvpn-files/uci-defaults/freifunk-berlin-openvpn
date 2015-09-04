@@ -54,4 +54,14 @@ uci set firewall.${RULE}.dest_ip=77.87.49.66
 uci set firewall.${RULE}.dest_port=1194
 uci set firewall.${RULE}.target=REJECT
 uci set firewall.${RULE}.family=ipv4
+
+RULE="$(uci add firewall rule)"
+uci set firewall.${RULE}.proto=udp
+uci set firewall.${RULE}.name=Reject-VPN-over-ff-3
+uci set firewall.${RULE}.dest=freifunk
+uci set firewall.${RULE}.dest_ip=77.87.49.68
+uci set firewall.${RULE}.dest_port=1194
+uci set firewall.${RULE}.target=REJECT
+uci set firewall.${RULE}.family=ipv4
+
 uci commit firewall
