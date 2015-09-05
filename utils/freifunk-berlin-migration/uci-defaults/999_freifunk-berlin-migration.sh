@@ -89,6 +89,22 @@ fix_openvpn_ffvpn_up() {
   uci set openvpn.ffvpn.up="/lib/freifunk/ffvpn-up.sh"
 }
 
+add_firewall_rule_vpn03c() {
+  # add a firewall rule for vpn03c
+  # do not create tunnels via the mesh network
+  local rule=$(grep Reject-VPN-over-ff-3 /etc/config/firewall)
+  if [ "x${rule}" = x ]; then
+    rule="$(uci add firewall rule)"
+    uci set firewall.${rule}.proto=udp
+    uci set firewall.${rule}.name=Reject-VPN-over-ff-3
+    uci set firewall.${rule}.dest=freifunk
+    uci set firewall.${rule}.dest_ip=77.87.49.68
+    uci set firewall.${rule}.dest_port=1194
+    uci set firewall.${rule}.target=REJECT
+    uci set firewall.${rule}.family=ipv4
+  fi
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -111,6 +127,7 @@ migrate () {
 
   if semverLT ${OLD_VERSION} "0.2.0"; then
     fix_openvpn_ffvpn_up
+    add_firewall_rule_vpn03c
   fi
 
   # overwrite version with the new version
