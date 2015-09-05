@@ -40,6 +40,7 @@ uci set olsrd.$PLUGIN.interval=30
 # add dyngw plain plugin - it is ipv4 only
 PLUGIN="$(uci add olsrd LoadPlugin)"
 uci set olsrd.$PLUGIN.library=olsrd_dyn_gw.so.0.5
+# 176.28.11.93 is freifunk.net
 uci set olsrd.$PLUGIN.Ping=176.28.11.93
 uci set olsrd.$PLUGIN.ignore=0
 
