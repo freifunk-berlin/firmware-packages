@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 
 local sys = require "luci.sys"
-local fs = require "luci.fs"
+local fs = require "nixio.fs"
 local utl = require "luci.util"
 local uci = require "luci.model.uci".cursor()
 local ip = require "luci.ip"
@@ -45,7 +45,7 @@ function get_profiles()
 	local list = fs.glob(profiles .. "*") or {}
 	local pft = {}
 
-	for k,v in ipairs(list) do
+	for v in list do
 		pft[#pft+1] = {}
 		local n = string.gsub(v, profiles, "")
 		pft[#pft].uciname = n

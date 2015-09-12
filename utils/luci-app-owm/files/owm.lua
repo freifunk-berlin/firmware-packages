@@ -3,7 +3,7 @@
 require("luci.util")
 require("luci.model.uci")
 require("luci.sys")
-require("luci.fs")
+require("nixio.fs")
 require("luci.httpclient")
 
 -- Init state session
@@ -37,8 +37,8 @@ end
 
 
 function lock()
-	if luci.fs.isfile(lockfile) then
-		local timediff = os.time() - luci.fs.mtime(lockfile)
+	if nixio.fs.access(lockfile) then
+		local timediff = os.time() - nixio.fs.stat(lockfile, "mtime")
 		if timediff < 3600 then
 			print(lockfile.." exists, time since lock: "..timediff)
 			os.exit()
@@ -63,6 +63,12 @@ local owm_api = uci:get("freifunk", "community", "owm_api") or "http://api.openw
 local cname = uci:get("freifunk", "community", "name") or "freifunk"
 local suffix = uci:get("freifunk", "community", "suffix") or uci:get("profile_" .. cname, "profile", "suffix") or "olsr"
 local body = json.encode(owm.get())
+
+if arg[1]=="--dry-run" then
+	print(body)
+	unlock()
+	return
+end
 
 if type(owm_api)=="table" then
 	for i,v in ipairs(owm_api) do 
