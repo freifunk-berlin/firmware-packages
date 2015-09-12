@@ -1,5 +1,0 @@
-#!/bin/sh
-
-#Migrate auto-ipv6 to auto-ipv6-gw
-[  "$(uci get autoipv6.tunnel.enable)" == 1 ] && uci set autoipv6gw.tunnel.enable=1
-
