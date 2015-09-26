@@ -1,2 +1,0 @@
-chmod 777 /var/run/ubus.sock
-chmod 0644 /etc/config/*
