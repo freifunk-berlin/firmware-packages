@@ -1,0 +1,55 @@
+#!/bin/sh
+
+. /lib/functions.sh
+. /lib/functions/network.sh
+
+config_load ffwizard
+local sharenet
+config_get sharenet settings sharenet
+
+[ "$sharenet" = 1 ] || exit
+
+[ "$INTERFACE" = ffvpn ] && [ "$ACTION" = ifup ] && logger -t ff-userlog "OpenVPN connection has been established"
+[ "$INTERFACE" = ffvpn ] && [ "$ACTION" = ifdown ] && logger -t ff-userlog "OpenVPN connection went down"
+
+[ "$INTERFACE" = wan ] || exit
+
+config_load openvpn
+local uci_vpn_enabled
+config_get uci_vpn_enabled ffvpn enabled
+
+if [ "$ACTION" = ifup ]; then
+  logger -t ff-userlog "WAN interface is up, starting OpenVPN"
+  if [ "$uci_vpn_enabled" = 1 ]; then
+    logger -t ff-vpn-hotplug "Using UCI OpenVPN configuration"
+    /etc/init.d/openvpn start
+    exit
+  fi
+  logger -t ff-vpn-hotplug "Using built-in Berlin VPN03 configuration"
+  # Make sure OpenVPN connects only through WAN: set "local" option with WAN IP
+  local wanip
+  network_get_ipaddr wanip "wan"
+  openvpn --client --proto udp --dev ffvpn --dev-type tun --persist-key \
+          --keepalive 10 60 --ns-cert-type server --comp-lzo no \
+          --script-security 2 --cipher none --route-nopull --mssfix 1300 \
+          --remote vpn03b.berlin.freifunk.net 1194 \
+          --remote vpn03-backup.berlin.freifunk.net 1194 \
+          --ca /etc/openvpn/freifunk-ca.crt \
+          --cert /etc/openvpn/freifunk_client.crt \
+          --key /etc/openvpn/freifunk_client.key \
+          --status /var/log/openvpn-status-ffvpn.log \
+          --up /etc/openvpn/ffvpn-up.sh \
+          --writepid /var/run/ff-openvpn.pid \
+          --local $wanip &
+fi
+
+if [ "$ACTION" = ifdown ]; then
+  logger -t ff-userlog "WAN interface went down, stopping OpenVPN"
+    if [ "$uci_vpn_enabled" = 1 ]; then
+    /etc/init.d/openvpn stop
+    exit
+  fi
+
+  kill $(cat /var/run/ff-openvpn.pid)
+fi
+

@@ -39,6 +39,8 @@ define Package/freifunk-berlin-openvpn-files/install
 	$(CP) ./openvpn/freifunk-ca.crt $(1)/etc/openvpn
 	$(INSTALL_DIR) $(1)/lib/freifunk
 	$(CP) ./openvpn/ffvpn-up.sh $(1)/lib/freifunk
+	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
+	$(CP) ./openvpn/60-ffopenvpn $(1)/etc/hotplug.d/iface
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-openvpn-files))

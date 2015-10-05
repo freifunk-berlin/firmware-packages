@@ -9,59 +9,9 @@ uci delete openvpn.sample_client
 uci set openvpn.ffvpn=openvpn
 uci set openvpn.ffvpn.enabled=0
 uci set openvpn.ffvpn.client=1
-uci set openvpn.ffvpn.nobind=1
-uci set openvpn.ffvpn.proto=udp
-uci set openvpn.ffvpn.dev=ffvpn
-uci set openvpn.ffvpn.dev_type=tun
-uci set openvpn.ffvpn.persist_key=1
-uci set openvpn.ffvpn.keepalive="10 60"
-uci set openvpn.ffvpn.ns_cert_type=server
-uci set openvpn.ffvpn.comp_lzo="no"
-uci set openvpn.ffvpn.script_security=2
-uci set openvpn.ffvpn.cipher="none"
-uci set openvpn.ffvpn.mssfix=1300
-uci add_list openvpn.ffvpn.remote="vpn03.berlin.freifunk.net 1194 udp"
-uci add_list openvpn.ffvpn.remote="vpn03-backup.berlin.freifunk.net 1194 udp"
-uci set openvpn.ffvpn.ca="/etc/openvpn/freifunk-ca.crt"
-uci set openvpn.ffvpn.cert="/etc/openvpn/freifunk_client.crt"
-uci set openvpn.ffvpn.key="/etc/openvpn/freifunk_client.key"
-uci set openvpn.ffvpn.status="/var/log/openvpn-status-ffvpn.log"
-uci set openvpn.ffvpn.up="/lib/freifunk/ffvpn-up.sh"
-uci set openvpn.ffvpn.route_nopull=1
 uci commit openvpn
 
 uci set network.ffvpn=interface
 uci set network.ffvpn.ifname=ffvpn
 uci set network.ffvpn.proto=none
 uci commit network
-
-# prevent connection to vpn03 via freifunk network
-# please add here all IPs that vpn03.berlin.freifunk.net resolves to
-RULE="$(uci add firewall rule)"
-uci set firewall.${RULE}.proto=udp
-uci set firewall.${RULE}.name=Reject-VPN-over-ff-1
-uci set firewall.${RULE}.dest=freifunk
-uci set firewall.${RULE}.dest_ip=77.87.48.10
-uci set firewall.${RULE}.dest_port=1194
-uci set firewall.${RULE}.target=REJECT
-uci set firewall.${RULE}.family=ipv4
-
-RULE="$(uci add firewall rule)"
-uci set firewall.${RULE}.proto=udp
-uci set firewall.${RULE}.name=Reject-VPN-over-ff-2
-uci set firewall.${RULE}.dest=freifunk
-uci set firewall.${RULE}.dest_ip=77.87.49.66
-uci set firewall.${RULE}.dest_port=1194
-uci set firewall.${RULE}.target=REJECT
-uci set firewall.${RULE}.family=ipv4
-
-RULE="$(uci add firewall rule)"
-uci set firewall.${RULE}.proto=udp
-uci set firewall.${RULE}.name=Reject-VPN-over-ff-3
-uci set firewall.${RULE}.dest=freifunk
-uci set firewall.${RULE}.dest_ip=77.87.49.68
-uci set firewall.${RULE}.dest_port=1194
-uci set firewall.${RULE}.target=REJECT
-uci set firewall.${RULE}.family=ipv4
-
-uci commit firewall
