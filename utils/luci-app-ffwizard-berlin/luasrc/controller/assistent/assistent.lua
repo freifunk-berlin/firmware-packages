@@ -93,7 +93,6 @@ function commit()
   olsr.configureOLSR()
   olsr.configureOLSRPlugins()
 
-  tools.configureWatchdog()
   tools.configureQOS()
 
   uci:commit("dhcp")
@@ -110,6 +109,8 @@ function commit()
 
   sys.init.enable("olsrd")
   sys.init.enable("olsrd6")
+  -- openvpn gets started by wan hotplug script
+  sys.init.disable("openvpn")
 
   if (sharenet == "1") then
     sys.init.enable("qos")
