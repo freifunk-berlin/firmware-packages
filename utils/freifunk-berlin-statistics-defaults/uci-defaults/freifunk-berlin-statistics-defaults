@@ -34,7 +34,7 @@ uci set luci_statistics.collectd.ReadThreads=2
 uci set luci_statistics.collectd_ping=statistics
 uci set luci_statistics.collectd_ping.enable=$HAVE_PLENTY_RAM
 uci set luci_statistics.collectd_ping.TTL=127
-uci set luci_statistics.collectd_ping.Interval=30
+uci set luci_statistics.collectd_ping.Interval=10
 uci set luci_statistics.collectd_ping.Hosts=ping.berlin.freifunk.net
 
 # mod interface
