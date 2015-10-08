@@ -105,6 +105,13 @@ add_firewall_rule_vpn03c() {
   fi
 }
 
+fix_qos_interface() {
+  for rule in `uci show qos|grep qos.wan`; do
+    uci set ${rule/wan/ffvpn}
+  done
+  uci delete qos.wan
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -128,6 +135,7 @@ migrate () {
   if semverLT ${OLD_VERSION} "0.2.0"; then
     fix_openvpn_ffvpn_up
     add_firewall_rule_vpn03c
+    fix_qos_interface
   fi
 
   # overwrite version with the new version
