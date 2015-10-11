@@ -107,6 +107,10 @@ fix_qos_interface() {
     uci set ${rule/wan/ffvpn}
   done
   uci delete qos.wan
+
+sgw_rules_to_fw3() {
+  uci set firewall.zone_freifunk.device=tnl_+
+  sed -i '/iptables -I FORWARD -o tnl_+ -j ACCEPT$/d' /etc/firewall.user
 }
 
 migrate () {
@@ -133,6 +137,7 @@ migrate () {
     update_collectd_ping
     fix_qos_interface
     openvpn_ffvpn_hotplug
+    sgw_rules_to_fw3
   fi
 
   # overwrite version with the new version
