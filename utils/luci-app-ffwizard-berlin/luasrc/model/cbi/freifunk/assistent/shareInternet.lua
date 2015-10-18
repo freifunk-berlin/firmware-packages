@@ -66,6 +66,13 @@ function main.write(self, section, value)
     enabled='1'
   })
 
+  fs.remove(
+    "/etc/openvpn/freifunk_client.crt"
+  )
+  fs.remove(
+    "/etc/openvpn/freifunk_client.key"
+  )
+
   fs.move(
     "/lib/uci/upload/cbid.ffvpn.1.cert",
     "/etc/openvpn/freifunk_client.crt"
