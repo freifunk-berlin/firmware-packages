@@ -66,21 +66,19 @@ function main.write(self, section, value)
     enabled='1'
   })
 
-  fs.remove(
-    "/etc/openvpn/freifunk_client.crt"
-  )
-  fs.remove(
-    "/etc/openvpn/freifunk_client.key"
-  )
+  if fs.access("/lib/uci/upload/cbid.ffvpn.1.cert") and fs.access("/lib/uci/upload/cbid.ffvpn.1.key") then
+    fs.remove("/etc/openvpn/freifunk_client.crt")
+    fs.remove("/etc/openvpn/freifunk_client.key")
 
-  fs.move(
-    "/lib/uci/upload/cbid.ffvpn.1.cert",
-    "/etc/openvpn/freifunk_client.crt"
-  )
-  fs.move(
-    "/lib/uci/upload/cbid.ffvpn.1.key",
-    "/etc/openvpn/freifunk_client.key"
-  )
+    fs.move(
+      "/lib/uci/upload/cbid.ffvpn.1.cert",
+      "/etc/openvpn/freifunk_client.crt"
+    )
+    fs.move(
+      "/lib/uci/upload/cbid.ffvpn.1.key",
+      "/etc/openvpn/freifunk_client.key"
+    )
+  end
 
   uci:save("openvpn")
   uci:save("ffwizard")
