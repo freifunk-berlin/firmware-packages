@@ -105,6 +105,11 @@ add_firewall_rule_vpn03c() {
   fi
 }
 
+update_collectd_ping() {
+ uci set luci_statistics.collectd_ping.Interval=10
+ uci set luci_statistics.collectd_ping.Hosts=ping.berlin.freifunk.net
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -128,6 +133,7 @@ migrate () {
   if semverLT ${OLD_VERSION} "0.2.0"; then
     fix_openvpn_ffvpn_up
     add_firewall_rule_vpn03c
+    update_collectd_ping
   fi
 
   # overwrite version with the new version
