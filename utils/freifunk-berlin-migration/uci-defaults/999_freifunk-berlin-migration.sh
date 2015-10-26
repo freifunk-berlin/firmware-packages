@@ -110,6 +110,13 @@ update_collectd_ping() {
  uci set luci_statistics.collectd_ping.Hosts=ping.berlin.freifunk.net
 }
 
+fix_qos_interface() {
+  for rule in `uci show qos|grep qos.wan`; do
+    uci set ${rule/wan/ffvpn}
+  done
+  uci delete qos.wan
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -134,6 +141,7 @@ migrate () {
     fix_openvpn_ffvpn_up
     add_firewall_rule_vpn03c
     update_collectd_ping
+    fix_qos_interface
   fi
 
   # overwrite version with the new version
