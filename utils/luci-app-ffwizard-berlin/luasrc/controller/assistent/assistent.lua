@@ -81,7 +81,6 @@ function commit()
   if not lonval or not latval then
     uci:foreach("system","system",
       function(s)
-        uci:delete("system", s[".name"], "latlon")
         uci:delete("system", s[".name"], "latitude")
         uci:delete("system", s[".name"], "longitude")
       end)
