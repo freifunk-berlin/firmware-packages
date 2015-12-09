@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-owm
-PKG_RELEASE:=0.4.11
+PKG_RELEASE:=0.4.10
 
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
@@ -66,11 +66,7 @@ endef
 define Package/luci-app-owm-cmd/postinst
 #!/bin/sh
 if [ -z $${IPKG_INSTROOT} ] ; then
-	test -f /etc/crontabs/root || touch /etc/crontabs/root
-	SEED="$$( dd if=/dev/urandom bs=2 count=1 2>&- | hexdump | if read line; then echo 0x$${line#* }; fi )"
-	MIN="$$(( $$SEED % 59 ))"
-	crontab -l | grep -q "owm.lua" || echo "$$MIN * * * *	test -e /usr/sbin/owm.lua && /usr/sbin/owm.lua" >> /etc/crontabs/root
-	/etc/init.d/cron restart
+	( . /etc/uci-defaults/owm ) && rm -f /etc/uci-defaults/owm
 	rm -f /tmp/luci-indexcache
 fi
 endef
@@ -78,6 +74,8 @@ endef
 define Package/luci-app-owm-cmd/install
 	$(INSTALL_DIR) $(1)/usr/sbin/
 	$(CP) files/owm.lua $(1)/usr/sbin/owm.lua
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(CP) files/owm-defaults $(1)/etc/uci-defaults/owm
 endef
 
 define Package/luci-app-owm-gui/install
