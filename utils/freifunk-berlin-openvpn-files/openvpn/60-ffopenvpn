@@ -38,7 +38,7 @@ if [ "$ACTION" = ifup ]; then
           --cert /etc/openvpn/freifunk_client.crt \
           --key /etc/openvpn/freifunk_client.key \
           --status /var/log/openvpn-status-ffvpn.log \
-          --up /etc/openvpn/ffvpn-up.sh \
+          --up /lib/freifunk/ffvpn-up.sh \
           --writepid /var/run/ff-openvpn.pid \
           --local $wanip &
 fi
