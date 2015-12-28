@@ -107,6 +107,7 @@ fix_qos_interface() {
     uci set ${rule/wan/ffvpn}
   done
   uci delete qos.wan
+}
 
 sgw_rules_to_fw3() {
   uci set firewall.zone_freifunk.device=tnl_+
