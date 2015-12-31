@@ -265,10 +265,10 @@ function main.write(self, section, value)
     -- DHCP CONFIG set start and limit option
     -- start (offset from network address) is 2
     -- first host address is used by the router
-    -- limit is 2 ^ ( 32 - prefix) - 2
+    -- limit is 2 ^ ( 32 - prefix) - 3
     -- do not assign broadcast address to dhcp clients
     local start = 2
-    local limit = math.pow(2, 32 - dhcpmeshnet:prefix()) - 2
+    local limit = math.pow(2, 32 - dhcpmeshnet:prefix()) - 3
     uci:set("dhcp", "dhcp", "start", start)
     uci:set("dhcp", "dhcp", "limit", limit)
 
