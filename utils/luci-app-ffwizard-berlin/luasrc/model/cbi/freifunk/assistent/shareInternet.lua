@@ -63,7 +63,7 @@ function main.write(self, section, value)
 
   uci:section("openvpn", "openvpn", "ffvpn", {
     --persist_tun='0',
-    enabled='1'
+    enabled='0'
   })
 
   fs.move(
