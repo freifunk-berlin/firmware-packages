@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 
 source /lib/functions/semver.sh
+source /lib/functions/network.sh
 
 OLD_VERSION=$(uci get system.@system[0].version)
 OLD_VERSION=${OLD_VERSION:-'0.0.0'}
@@ -117,6 +118,25 @@ fix_qos_interface() {
   uci delete qos.wan
 }
 
+fix_dhcp_start_limit() {
+  # only set start and limit if we have a dhcp section
+  if (uci show dhcp.dhcp); then
+    # only alter start and limit if not set by the user
+    if ! (uci get dhcp.dhcp.start || uci get dhcp.dhcp.limit); then
+      local subnet
+      local prefix
+      # get network in cidr format
+      network_get_subnet "subnet" "dhcp"
+      # extract prefix with basename command
+      prefix=$(basename ${subnet})
+      # compute limit (2^(32-prefix)-3) with arithmetic evaluation
+      limit=$((2**(32-${prefix})-3))
+      uci set dhcp.dhcp.start=2
+      uci set dhcp.dhcp.limit=${limit}
+    fi
+  fi
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -142,6 +162,7 @@ migrate () {
     add_firewall_rule_vpn03c
     update_collectd_ping
     fix_qos_interface
+    fix_dhcp_start_limit
   fi
 
   # overwrite version with the new version
