@@ -1,7 +1,6 @@
 #!/usr/bin/env sh
 
 source /lib/functions/semver.sh
-source /lib/functions/network.sh
 
 OLD_VERSION=$(uci get system.@system[0].version)
 OLD_VERSION=${OLD_VERSION:-'0.0.0'}
