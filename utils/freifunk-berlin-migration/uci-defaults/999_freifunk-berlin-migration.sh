@@ -123,12 +123,12 @@ fix_dhcp_start_limit() {
   if (uci show dhcp.dhcp); then
     # only alter start and limit if not set by the user
     if ! (uci get dhcp.dhcp.start || uci get dhcp.dhcp.limit); then
-      local subnet
+      local netmask
       local prefix
-      # get network in cidr format
-      network_get_subnet "subnet" "dhcp"
-      # extract prefix with basename command
-      prefix=$(basename ${subnet})
+      # get network-length
+      netmask="$(uci get network.dhcp.netmask)"
+      # use ipcalc.sh to and get prefix-length only
+      prefix="$(ipcalc.sh 0.0.0.0 ${netmask} |grep PREFIX|awk -F "=" '{print $2}')"
       # compute limit (2^(32-prefix)-3) with arithmetic evaluation
       limit=$((2**(32-${prefix})-3))
       uci set dhcp.dhcp.start=2
