@@ -119,9 +119,9 @@ fix_qos_interface() {
 
 fix_dhcp_start_limit() {
   # only set start and limit if we have a dhcp section
-  if (uci show dhcp.dhcp); then
+  if (uci -q show dhcp.dhcp); then
     # only alter start and limit if not set by the user
-    if ! (uci get dhcp.dhcp.start || uci get dhcp.dhcp.limit); then
+    if ! (uci -q get dhcp.dhcp.start || uci -q get dhcp.dhcp.limit); then
       local netmask
       local prefix
       # get network-length
@@ -132,8 +132,15 @@ fix_dhcp_start_limit() {
         limit=$((2**(32-${prefix})-3))
         uci set dhcp.dhcp.start=2
         uci set dhcp.dhcp.limit=${limit}
+        log "set new dhcp.limit and dhcp.start on interface dhcp"
+      else
+        log "interface dhcp has no netmask assigned. not fixing dhcp.limit"
       fi
+    else
+      log "interface dhcp has start and limit defined. not changing it"
     fi
+  else
+    log "interface dhcp has no dhcp-config at all"
   fi
 }
 
