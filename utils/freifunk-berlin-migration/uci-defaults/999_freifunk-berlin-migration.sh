@@ -132,8 +132,15 @@ fix_dhcp_start_limit() {
         limit=$((2**(32-${prefix})-3))
         uci set dhcp.dhcp.start=2
         uci set dhcp.dhcp.limit=${limit}
+        log "set new dhcp.limit and dhcp.start on interface dhcp"
+      else
+        log "interface dhcp has no netmask assigned. not fixing dhcp.limit"
       fi
+    else
+      log "interface dhcp has start and limit defined. not changing it"
     fi
+  else
+    log "interface dhcp has no dhcp-config at all"
   fi
 }
 
