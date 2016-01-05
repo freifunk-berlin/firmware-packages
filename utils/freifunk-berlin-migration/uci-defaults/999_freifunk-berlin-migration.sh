@@ -125,13 +125,14 @@ fix_dhcp_start_limit() {
       local netmask
       local prefix
       # get network-length
-      netmask="$(uci get network.dhcp.netmask)"
-      # use ipcalc.sh to and get prefix-length only
-      prefix="$(ipcalc.sh 0.0.0.0 ${netmask} |grep PREFIX|awk -F "=" '{print $2}')"
-      # compute limit (2^(32-prefix)-3) with arithmetic evaluation
-      limit=$((2**(32-${prefix})-3))
-      uci set dhcp.dhcp.start=2
-      uci set dhcp.dhcp.limit=${limit}
+      if netmask="$(uci -q get network.dhcp.netmask)"; then
+        # use ipcalc.sh to and get prefix-length only
+        prefix="$(ipcalc.sh 0.0.0.0 ${netmask} |grep PREFIX|awk -F "=" '{print $2}')"
+        # compute limit (2^(32-prefix)-3) with arithmetic evaluation
+        limit=$((2**(32-${prefix})-3))
+        uci set dhcp.dhcp.start=2
+        uci set dhcp.dhcp.limit=${limit}
+      fi
     fi
   fi
 }
