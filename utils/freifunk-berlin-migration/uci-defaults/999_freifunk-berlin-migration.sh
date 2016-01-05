@@ -119,9 +119,9 @@ fix_qos_interface() {
 
 fix_dhcp_start_limit() {
   # only set start and limit if we have a dhcp section
-  if (uci show dhcp.dhcp); then
+  if (uci -q show dhcp.dhcp); then
     # only alter start and limit if not set by the user
-    if ! (uci get dhcp.dhcp.start || uci get dhcp.dhcp.limit); then
+    if ! (uci -q get dhcp.dhcp.start || uci -q get dhcp.dhcp.limit); then
       local netmask
       local prefix
       # get network-length
