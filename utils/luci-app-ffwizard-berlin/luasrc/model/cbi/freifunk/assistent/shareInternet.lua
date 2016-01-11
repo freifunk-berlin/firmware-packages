@@ -1,7 +1,6 @@
 local uci = require "luci.model.uci".cursor()
 local fs = require "nixio.fs"
 local tools = require "luci.tools.freifunk.assistent.tools"
-local html = require "luci.http"
 
 f = SimpleForm("ffvpn","","")
 f.submit = "Next"
@@ -14,19 +13,24 @@ css.template = "freifunk/assistent/snippets/css"
 vpninfo = f:field(DummyValue, "apinfo", "")
 vpninfo.template = "freifunk/assistent/snippets/vpninfo"
 
-if fs.access("/etc/openvpn/freifunk_client.crt") and html.formvalue("reupload", true) ~= "1" then
-  vpncertreupload = f:field(DummyValue, "reupload", "")
-  vpncertreupload.template = "freifunk/assistent/snippets/vpncertreupload"
-else
-  local cert = f:field(FileUpload, "cert", translate("Local Certificate"),"freifunk_client.crt")
-  cert.default="/etc/openvpn/freifunk_client.crt"
-  cert.rmempty = false
-  cert.optional = false
+local cert = f:field(FileUpload, "cert", translate("Local Certificate"), "freifunk_client.crt")
+cert.default="/etc/openvpn/freifunk_client.crt"
+cert.rmempty = false
+function cert.cfgvalue(self, section)
+  if fs.access(self.default) then
+    return self.default
+  end
+  return nil
+end
 
-  local key = f:field(FileUpload, "key", translate("Local Key"),"freifunk_client.key")
-  key.default="/etc/openvpn/freifunk_client.key"
-  key.rmempty = false
-  key.optional = false
+local key = f:field(FileUpload, "key", translate("Local Key"), "freifunk_client.key")
+key.default="/etc/openvpn/freifunk_client.key"
+key.rmempty = false
+function key.cfgvalue(self, section)
+  if fs.access(self.default) then
+    return self.default
+  end
+  return nil
 end
 
 shareBandwidth = f:field(DummyValue, "shareBandwidthfo", "")
@@ -66,14 +70,14 @@ function main.write(self, section, value)
     enabled='1'
   })
 
-  if fs.access("/lib/uci/upload/cbid.ffvpn.1.cert") and fs.access("/lib/uci/upload/cbid.ffvpn.1.key") then
-    fs.remove("/etc/openvpn/freifunk_client.crt")
-    fs.remove("/etc/openvpn/freifunk_client.key")
-
+  if fs.access("/lib/uci/upload/cbid.ffvpn.1.cert") then
     fs.move(
       "/lib/uci/upload/cbid.ffvpn.1.cert",
       "/etc/openvpn/freifunk_client.crt"
     )
+  end
+
+  if fs.access("/lib/uci/upload/cbid.ffvpn.1.key") then
     fs.move(
       "/lib/uci/upload/cbid.ffvpn.1.key",
       "/etc/openvpn/freifunk_client.key"
