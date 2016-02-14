@@ -211,7 +211,11 @@ function get_position()
 		position['latitude'] = tonumber(s.latitude)
 		position['longitude'] = tonumber(s.longitude)
 	end)
-	return position
+	if (position['latitude'] and  position['longitude']) then
+		return position
+	else
+		return nil
+	end
 end
 
 function get()

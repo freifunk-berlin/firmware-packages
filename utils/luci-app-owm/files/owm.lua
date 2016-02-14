@@ -54,7 +54,7 @@ function unlock()
 end
 
 -- location for the node is required
-if next(owm.get_position())==nil then
+if owm.get_position()==nil then
 	if arg[1]=="--dry-run" then
 		print("no latitude/longitude specified for node.")
 	end
