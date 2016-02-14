@@ -207,9 +207,9 @@ end
 
 function get_position()
 	local position = {}
-	uci:foreach("system", "system", function(s) --owm
-		position['latitude'] = tonumber(s.latitude) --owm
-		position['longitude'] = tonumber(s.longitude) --owm
+	uci:foreach("system", "system", function(s)
+		position['latitude'] = tonumber(s.latitude)
+		position['longitude'] = tonumber(s.longitude)
 	end)
 	return position
 end
@@ -272,8 +272,8 @@ function get()
 		root.freifunk[pname] = s
 	end)
 
-	root.latitude = position["latitude"]
-	root.longitude = position["longitude"]
+	root.latitude = position["latitude"] --owm
+	root.longitude = position["longitude"] --owm
 
 	local devices = {}
 	uci:foreach("wireless", "wifi-device",function(s)
