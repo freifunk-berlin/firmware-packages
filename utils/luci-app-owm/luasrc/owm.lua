@@ -205,6 +205,19 @@ function showmac(mac)
 	return mac
 end
 
+function get_position()
+	local position = {}
+	uci:foreach("system", "system", function(s)
+		position['latitude'] = tonumber(s.latitude)
+		position['longitude'] = tonumber(s.longitude)
+	end)
+	if (position['latitude'] and  position['longitude']) then
+		return position
+	else
+		return nil
+	end
+end
+
 function get()
 	local root = {}
 	local ntm = netm.init()
@@ -212,6 +225,7 @@ function get()
 	local assoclist = {}
 	local _ubus = bus.connect()
 	local _ubusclicache = { }
+	local position = get_position()
 --	local _, object
 --	for _, object in ipairs(_ubus:objects()) do
 --		local _ubusclicache = object:match("^clicache%.(.+)")
@@ -262,10 +276,8 @@ function get()
 		root.freifunk[pname] = s
 	end)
 
-	uci:foreach("system", "system", function(s) --owm
-		root.latitude = tonumber(s.latitude) --owm
-		root.longitude = tonumber(s.longitude) --owm
-	end)
+	root.latitude = position["latitude"] --owm
+	root.longitude = position["longitude"] --owm
 
 	local devices = {}
 	uci:foreach("wireless", "wifi-device",function(s)
