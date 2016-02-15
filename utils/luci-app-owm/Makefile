@@ -63,7 +63,7 @@ define Build/Compile
 	$(MAKE) -C $(PKG_BUILD_DIR)/luasrc
 endef
 
-define Package/luci-app-owm-gui/postinst
+define Package/luci-app-owm-cmd/postinst
 #!/bin/sh
 if [ -z $${IPKG_INSTROOT} ] ; then
 	( . /etc/uci-defaults/owm ) && rm -f /etc/uci-defaults/owm
@@ -101,3 +101,4 @@ $(eval $(call BuildPackage,luci-app-owm))
 $(eval $(call BuildPackage,luci-app-owm-cmd))
 $(eval $(call BuildPackage,luci-app-owm-gui))
 $(eval $(call BuildPackage,luci-app-owm-ant))
+
