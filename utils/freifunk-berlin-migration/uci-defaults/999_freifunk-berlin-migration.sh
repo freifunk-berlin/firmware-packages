@@ -8,6 +8,7 @@ VERSION=$(cat /etc/openwrt_version)
 
 log() {
   logger -s -t freifunk-berlin-migration $@
+  echo >>/root/migrate.log $@
 }
 
 update_openvpn_remote_config() {
