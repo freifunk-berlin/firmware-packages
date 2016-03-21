@@ -3,7 +3,10 @@
 source /lib/functions/semver.sh
 
 OLD_VERSION=$(uci get system.@system[0].version)
+# use default "0.0.0" in case nothing defined
 OLD_VERSION=${OLD_VERSION:-'0.0.0'}
+# remove "special-version" e.g. "-alpha+3a7d"; only work on "basic" semver-strings
+OLD_VERSION=${OLD_VERSION%%-*}
 VERSION=$(cat /etc/openwrt_version)
 
 log() {
