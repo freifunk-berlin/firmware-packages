@@ -20,15 +20,17 @@ config_get uci_vpn_enabled ffvpn enabled
 
 if [ "$ACTION" = ifup ]; then
   logger -t ff-userlog "WAN interface is up, starting OpenVPN"
+  # Make sure OpenVPN connects only through WAN: set "local" option with WAN IP
+  local wanip
+  network_get_ipaddr wanip "wan"
   if [ "$uci_vpn_enabled" = 1 ]; then
     logger -t ff-vpn-hotplug "Using UCI OpenVPN configuration"
+    uci set openvpn.ffvpn.local=$wanip
+    uci commit openvpn
     /etc/init.d/openvpn start
     exit
   fi
   logger -t ff-vpn-hotplug "Using built-in Berlin VPN03 configuration"
-  # Make sure OpenVPN connects only through WAN: set "local" option with WAN IP
-  local wanip
-  network_get_ipaddr wanip "wan"
   openvpn --client --proto udp --dev ffvpn --dev-type tun --persist-key \
           --keepalive 10 60 --ns-cert-type server --comp-lzo no \
           --script-security 2 --cipher none --route-nopull --mssfix 1300 \
