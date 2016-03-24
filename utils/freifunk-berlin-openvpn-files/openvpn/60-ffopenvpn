@@ -16,12 +16,18 @@ config_get sharenet settings sharenet
 
 config_load openvpn
 local uci_vpn_enabled
+local uci_vpn_remote
 config_get uci_vpn_enabled ffvpn enabled
+config_get uci_vpn_remote ffvpn remote
 
 if [ "$ACTION" = ifup ]; then
   logger -t ff-userlog "WAN interface is up, starting OpenVPN"
   if [ "$uci_vpn_enabled" = 1 ]; then
     logger -t ff-vpn-hotplug "Using UCI OpenVPN configuration"
+    if [ -z "$uci_vpn_remote" ]; then
+      logger -t ff-vpn-hotplug "UCI OpenVPN configuration is incomplete - exiting!!"
+      exit
+    fi
     /etc/init.d/openvpn start
     exit
   fi
