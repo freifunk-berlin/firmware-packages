@@ -117,6 +117,11 @@ fix_qos_interface() {
   uci delete qos.wan
 }
 
+remove_dhcp_interface_lan() {
+  uci -q delete dhcp.lan
+  uci commit dhcp
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -142,6 +147,7 @@ migrate () {
     add_firewall_rule_vpn03c
     update_collectd_ping
     fix_qos_interface
+    remove_dhcp_interface_lan
   fi
 
   # overwrite version with the new version
