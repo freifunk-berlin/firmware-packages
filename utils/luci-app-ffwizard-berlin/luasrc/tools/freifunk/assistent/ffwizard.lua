@@ -22,17 +22,6 @@ local sharenet = uci:get("ffwizard", "settings", "sharenet")
 
 module ("luci.tools.freifunk.assistent.ffwizard", package.seeall)
 
-function configureWatchdog()
-	if (sharenet =="1") then
-		uci:section("freifunk-watchdog", "process", nil, {
-			process="openvpn",
-			initscript="/etc/init.d/openvpn"
-		})
-		uci:save("freifunk-watchdog")
-	end
-end
-
-
 function configureQOS()
   if sharenet == "1" then
     -- values have to be in kilobits/second
