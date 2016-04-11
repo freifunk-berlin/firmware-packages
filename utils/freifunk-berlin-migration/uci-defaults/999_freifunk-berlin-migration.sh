@@ -210,6 +210,10 @@ change_olsrd_dygw_ping() {
   config_foreach change_olsrd_dygw_ping_handle_config LoadPlugin
 }
 
+remove_freifunk_watchdog_from_crontab() {
+  crontab -l | grep -v "/usr/sbin/ffwatchd" | crontab -
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -238,6 +242,8 @@ migrate () {
     openvpn_ffvpn_hotplug
     sgw_rules_to_fw3
     change_olsrd_dygw_ping
+    remove_dhcp_interface_lan
+    remove_freifunk_watchdog_from_crontab
   fi
 
   # overwrite version with the new version
