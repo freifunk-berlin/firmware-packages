@@ -117,6 +117,10 @@ fix_qos_interface() {
   uci delete qos.wan
 }
 
+remove_freifunk_watchdog_from_crontab() {
+  crontab -l | grep "/usr/sbin/ffwatchd" && crontab -l | grep -v "/usr/sbin/ffwatchd" | crontab -
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -142,6 +146,7 @@ migrate () {
     add_firewall_rule_vpn03c
     update_collectd_ping
     fix_qos_interface
+    remove_freifunk_watchdog_from_crontab
   fi
 
   # overwrite version with the new version
