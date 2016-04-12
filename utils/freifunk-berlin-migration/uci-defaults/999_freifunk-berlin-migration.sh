@@ -118,7 +118,7 @@ fix_qos_interface() {
 }
 
 remove_freifunk_watchdog_from_crontab() {
-  crontab -l | grep "/usr/sbin/ffwatchd" && crontab -l | grep -v "/usr/sbin/ffwatchd" | crontab -
+  crontab -l | grep -v "/usr/sbin/ffwatchd" | crontab -
 }
 
 migrate () {
