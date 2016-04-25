@@ -167,6 +167,25 @@ remove_dhcp_interface_lan() {
   uci commit dhcp
 }
 
+change_olsrd_dygw_ping() {
+  change_olsrd_dygw_ping_handle_config() {
+    local config=$1
+    local library=''
+    config_get library $config library
+    if [ $library == 'olsrd_dyn_gw.so.0.5' ]; then
+      uci delete olsrd.$config.Ping
+      uci add_list olsrd.$config.Ping=85.214.20.141     # dns.digitalcourage.de
+      uci add_list olsrd.$config.Ping=213.73.91.35      # dnscache.ccc.berlin.de
+      uci add_list olsrd.$config.Ping=194.150.168.168   # dns.as250.net
+      uci commit
+      return 1
+    fi
+  }
+  reset_cb
+  config_load olsrd
+  config_foreach change_olsrd_dygw_ping_handle_config LoadPlugin
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -193,6 +212,7 @@ migrate () {
     update_collectd_ping
     fix_qos_interface
     remove_dhcp_interface_lan
+    change_olsrd_dygw_ping
   fi
 
   # overwrite version with the new version
