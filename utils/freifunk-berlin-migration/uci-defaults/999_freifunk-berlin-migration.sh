@@ -153,6 +153,11 @@ fix_qos_interface() {
   uci delete qos.wan
 }
 
+sgw_rules_to_fw3() {
+  uci set firewall.zone_freifunk.device=tnl_+
+  sed -i '/iptables -I FORWARD -o tnl_+ -j ACCEPT$/d' /etc/firewall.user
+}
+
 remove_dhcp_interface_lan() {
   uci -q delete dhcp.lan
   uci commit dhcp
@@ -183,6 +188,7 @@ migrate () {
     fix_qos_interface
     remove_dhcp_interface_lan
     openvpn_ffvpn_hotplug
+    sgw_rules_to_fw3
   fi
 
   # overwrite version with the new version
