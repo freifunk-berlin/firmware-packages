@@ -9,7 +9,6 @@ uci delete openvpn.sample_client
 uci set openvpn.ffvpn=openvpn
 uci set openvpn.ffvpn.enabled=0
 uci set openvpn.ffvpn.client=1
-uci set openvpn.ffvpn.nobind=1
 uci set openvpn.ffvpn.proto=udp
 uci set openvpn.ffvpn.dev=ffvpn
 uci set openvpn.ffvpn.dev_type=tun
