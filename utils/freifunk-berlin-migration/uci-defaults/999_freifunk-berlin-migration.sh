@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 
+source /lib/functions.sh
 source /lib/functions/semver.sh
 source /etc/openwrt_release
 
