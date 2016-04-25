@@ -33,34 +33,3 @@ uci set network.ffvpn=interface
 uci set network.ffvpn.ifname=ffvpn
 uci set network.ffvpn.proto=none
 uci commit network
-
-# prevent connection to vpn03 via freifunk network
-# please add here all IPs that vpn03.berlin.freifunk.net resolves to
-RULE="$(uci add firewall rule)"
-uci set firewall.${RULE}.proto=udp
-uci set firewall.${RULE}.name=Reject-VPN-over-ff-1
-uci set firewall.${RULE}.dest=freifunk
-uci set firewall.${RULE}.dest_ip=77.87.48.10
-uci set firewall.${RULE}.dest_port=1194
-uci set firewall.${RULE}.target=REJECT
-uci set firewall.${RULE}.family=ipv4
-
-RULE="$(uci add firewall rule)"
-uci set firewall.${RULE}.proto=udp
-uci set firewall.${RULE}.name=Reject-VPN-over-ff-2
-uci set firewall.${RULE}.dest=freifunk
-uci set firewall.${RULE}.dest_ip=77.87.49.66
-uci set firewall.${RULE}.dest_port=1194
-uci set firewall.${RULE}.target=REJECT
-uci set firewall.${RULE}.family=ipv4
-
-RULE="$(uci add firewall rule)"
-uci set firewall.${RULE}.proto=udp
-uci set firewall.${RULE}.name=Reject-VPN-over-ff-3
-uci set firewall.${RULE}.dest=freifunk
-uci set firewall.${RULE}.dest_ip=77.87.49.68
-uci set firewall.${RULE}.dest_port=1194
-uci set firewall.${RULE}.target=REJECT
-uci set firewall.${RULE}.family=ipv4
-
-uci commit firewall
