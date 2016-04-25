@@ -130,24 +130,15 @@ add_openvpn_mssfix() {
   uci set openvpn.ffvpn.mssfix=1300
 }
 
-fix_openvpn_ffvpn_up() {
+openvpn_ffvpn_hotplug() {
   uci set openvpn.ffvpn.up="/lib/freifunk/ffvpn-up.sh"
-}
-
-add_firewall_rule_vpn03c() {
-  # add a firewall rule for vpn03c
-  # do not create tunnels via the mesh network
-  local rule=$(grep Reject-VPN-over-ff-3 /etc/config/firewall)
-  if [ "x${rule}" = x ]; then
-    rule="$(uci add firewall rule)"
-    uci set firewall.${rule}.proto=udp
-    uci set firewall.${rule}.name=Reject-VPN-over-ff-3
-    uci set firewall.${rule}.dest=freifunk
-    uci set firewall.${rule}.dest_ip=77.87.49.68
-    uci set firewall.${rule}.dest_port=1194
-    uci set firewall.${rule}.target=REJECT
-    uci set firewall.${rule}.family=ipv4
-  fi
+  uci set openvpn.ffvpn.nobind=0
+  /etc/init.d/openvpn disable
+  for entry in `uci show firewall|grep Reject-VPN-over-ff|cut -d '=' -f 1`; do
+    uci delete ${entry%.name}
+  done
+  uci delete freifunk-watchdog
+  crontab -l | grep -v "/usr/sbin/ffwatchd" | crontab -
 }
 
 update_collectd_ping() {
@@ -188,11 +179,10 @@ migrate () {
   fi
 
   if semverLT ${OLD_VERSION} "0.2.0"; then
-    fix_openvpn_ffvpn_up
-    add_firewall_rule_vpn03c
     update_collectd_ping
     fix_qos_interface
     remove_dhcp_interface_lan
+    openvpn_ffvpn_hotplug
   fi
 
   # overwrite version with the new version
