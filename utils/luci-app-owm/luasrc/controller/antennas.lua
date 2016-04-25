@@ -18,6 +18,6 @@ module("luci.controller.antennas", package.seeall)
 function index()
 	local page = entry({"admin", "system", "antennas"}, cbi("antennas"), "Antennas settings", 10)
 	page.dependent = true	
-	assign({"mini", "system", "antennas"}, {"admin", "system", "antennas"}, "Antennnas settings", 1)
+	assign({"mini", "system", "antennas"}, {"admin", "system", "antennas"}, "Antennas settings", 1)
 end
 
