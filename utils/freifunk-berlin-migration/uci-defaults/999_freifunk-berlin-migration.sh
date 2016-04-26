@@ -1,14 +1,60 @@
 #!/usr/bin/env sh
 
+source /lib/functions.sh
 source /lib/functions/semver.sh
+source /etc/openwrt_release
 
-OLD_VERSION=$(uci get system.@system[0].version)
-OLD_VERSION=${OLD_VERSION:-'0.0.0'}
-VERSION=$(cat /etc/openwrt_version)
+# possible cases: 
+# 1) firstboot with kathleen --> uci system.version not defined
+# 2) upgrade from kathleen --> uci system.version defined
+# 3) upgrade from non kathleen / legacy --> no uci system.version
+
+OLD_VERSION=$(uci -q get system.@system[0].version)
+# remove "special-version" e.g. "-alpha+3a7d"; only work on "basic" semver-strings
+VERSION=${DISTRIB_RELEASE%%-*}
 
 log() {
   logger -s -t freifunk-berlin-migration $@
+  echo >>/root/migrate.log $@
 }
+
+if [ "Freifunk Berlin" = "${DISTRIB_ID}" ]; then
+  log "Migration is running on a Freifunk Berlin system"
+else
+  log "no Freifunk Berlin system detected ..."
+  exit 0
+fi
+
+# when upgrading from a pre-kathleen installation, there sould be
+# at least on "very old file" in /etc/config ...
+#
+FOUND_OLD_FILE=false
+# create helper to compare file ctime (1. Sep. 2014)
+touch -d "201409010000" /tmp/timestamp
+for testfile in /etc/config/*; do
+  if [ "${testfile}" -ot /tmp/timestamp ]; then
+    FOUND_OLD_FILE=true
+    echo "guessing pre-kathleen firmware as of ${testfile}"
+  fi
+done
+rm -f /tmp/timestamp
+
+if [ -n "${OLD_VERSION}" ]; then
+  # case 2)
+  log "normal migration within Release ..."
+elif [ ${FOUND_OLD_FILE} = true ]; then
+  # case 3)
+  log "migrating from legacy Freifunk Berlin system ..."
+  OLD_VERSION='0.0.0'
+else
+  # case 1)
+  log "fresh install - no migration"
+  # add system.version with the new version
+  log "Setting new system version to ${VERSION}; no migration needed."
+  uci set system.@system[0].version=${VERSION}
+  uci commit
+  exit 0
+fi
 
 update_openvpn_remote_config() {
   # use dns instead of ips for vpn servers (introduced with 0.1.0)
@@ -85,24 +131,15 @@ add_openvpn_mssfix() {
   uci set openvpn.ffvpn.mssfix=1300
 }
 
-fix_openvpn_ffvpn_up() {
+openvpn_ffvpn_hotplug() {
   uci set openvpn.ffvpn.up="/lib/freifunk/ffvpn-up.sh"
-}
-
-add_firewall_rule_vpn03c() {
-  # add a firewall rule for vpn03c
-  # do not create tunnels via the mesh network
-  local rule=$(grep Reject-VPN-over-ff-3 /etc/config/firewall)
-  if [ "x${rule}" = x ]; then
-    rule="$(uci add firewall rule)"
-    uci set firewall.${rule}.proto=udp
-    uci set firewall.${rule}.name=Reject-VPN-over-ff-3
-    uci set firewall.${rule}.dest=freifunk
-    uci set firewall.${rule}.dest_ip=77.87.49.68
-    uci set firewall.${rule}.dest_port=1194
-    uci set firewall.${rule}.target=REJECT
-    uci set firewall.${rule}.family=ipv4
-  fi
+  uci set openvpn.ffvpn.nobind=0
+  /etc/init.d/openvpn disable
+  for entry in `uci show firewall|grep Reject-VPN-over-ff|cut -d '=' -f 1`; do
+    uci delete ${entry%.name}
+  done
+  uci delete freifunk-watchdog
+  crontab -l | grep -v "/usr/sbin/ffwatchd" | crontab -
 }
 
 update_collectd_ping() {
@@ -144,6 +181,35 @@ fix_dhcp_start_limit() {
   fi
 }
 
+sgw_rules_to_fw3() {
+  uci set firewall.zone_freifunk.device=tnl_+
+  sed -i '/iptables -I FORWARD -o tnl_+ -j ACCEPT$/d' /etc/firewall.user
+}
+
+remove_dhcp_interface_lan() {
+  uci -q delete dhcp.lan
+  uci commit dhcp
+}
+
+change_olsrd_dygw_ping() {
+  change_olsrd_dygw_ping_handle_config() {
+    local config=$1
+    local library=''
+    config_get library $config library
+    if [ $library == 'olsrd_dyn_gw.so.0.5' ]; then
+      uci delete olsrd.$config.Ping
+      uci add_list olsrd.$config.Ping=85.214.20.141     # dns.digitalcourage.de
+      uci add_list olsrd.$config.Ping=213.73.91.35      # dnscache.ccc.berlin.de
+      uci add_list olsrd.$config.Ping=194.150.168.168   # dns.as250.net
+      uci commit
+      return 1
+    fi
+  }
+  reset_cb
+  config_load olsrd
+  config_foreach change_olsrd_dygw_ping_handle_config LoadPlugin
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -165,11 +231,13 @@ migrate () {
   fi
 
   if semverLT ${OLD_VERSION} "0.2.0"; then
-    fix_openvpn_ffvpn_up
-    add_firewall_rule_vpn03c
     update_collectd_ping
     fix_qos_interface
     fix_dhcp_start_limit
+    remove_dhcp_interface_lan
+    openvpn_ffvpn_hotplug
+    sgw_rules_to_fw3
+    change_olsrd_dygw_ping
   fi
 
   # overwrite version with the new version

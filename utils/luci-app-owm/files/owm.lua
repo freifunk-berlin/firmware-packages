@@ -53,9 +53,18 @@ function unlock()
 	os.execute("rm -f "..lockfile)
 end
 
+-- location for the node is required
+if owm.get_position()==nil then
+	if arg[1]=="--dry-run" then
+		print("no latitude/longitude specified for node.")
+	end
+	unlock()
+	return
+end
+
 lock()
 
-uci:foreach("system", "system", function(s) --owm
+uci:foreach("system", "system", function(s)
 	hostname = s.hostname
 end)
 

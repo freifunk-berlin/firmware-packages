@@ -81,7 +81,6 @@ function commit()
   if not lonval or not latval then
     uci:foreach("system","system",
       function(s)
-        uci:delete("system", s[".name"], "latlon")
         uci:delete("system", s[".name"], "latitude")
         uci:delete("system", s[".name"], "longitude")
       end)
@@ -93,7 +92,6 @@ function commit()
   olsr.configureOLSR()
   olsr.configureOLSRPlugins()
 
-  tools.configureWatchdog()
   tools.configureQOS()
 
   uci:commit("dhcp")
@@ -105,11 +103,12 @@ function commit()
   uci:commit("freifunk")
   uci:commit("wireless")
   uci:commit("network")
-  uci:commit("freifunk-watchdog")
   uci:commit("qos")
 
   sys.init.enable("olsrd")
   sys.init.enable("olsrd6")
+  -- openvpn gets started by wan hotplug script
+  sys.init.disable("openvpn")
 
   if (sharenet == "1") then
     sys.init.enable("qos")
@@ -142,7 +141,6 @@ function reset()
   uci:revert("freifunk")
   uci:revert("wireless")
   uci:revert("network")
-  uci:revert("freifunk-watchdog")
   uci:revert("qos")
 
   if ipkg.installed("luci-app-statistics") == True then

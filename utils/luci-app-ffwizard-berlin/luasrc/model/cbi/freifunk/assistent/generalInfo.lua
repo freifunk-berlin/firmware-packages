@@ -101,11 +101,9 @@ function main.write(self, section, value)
       uci:set("system", s[".name"], "timezone", 'CET-1CEST,M3.5.0,M10.5.0/3')
       uci:set("system", s[".name"], "hostname", hostname:formvalue(section))
       if (lonval and latval) then
-        uci:set("system", s[".name"], "latlon",string.format("%.15f %.15f", latval, lonval))
         uci:set("system", s[".name"], "latitude",string.format("%.15f", latval))
         uci:set("system", s[".name"], "longitude",string.format("%.15f", lonval))
       else
-        uci:delete("system", s[".name"], "latlon")
         uci:delete("system", s[".name"], "latitude")
         uci:delete("system", s[".name"], "longitude")
       end
