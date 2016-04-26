@@ -263,6 +263,15 @@ function main.write(self, section, value)
     uci:set_list("dhcp", "dhcp", "dhcp_option", "119,olsr")
     uci:set("dhcp", "dhcp", "dhcpv6", "server")
     uci:set("dhcp", "dhcp", "ra", "server")
+    -- DHCP CONFIG set start and limit option
+    -- start (offset from network address) is 2
+    -- first host address is used by the router
+    -- limit is 2 ^ ( 32 - prefix) - 3
+    -- do not assign broadcast address to dhcp clients
+    local start = 2
+    local limit = math.pow(2, 32 - dhcpmeshnet:prefix()) - 3
+    uci:set("dhcp", "dhcp", "start", start)
+    uci:set("dhcp", "dhcp", "limit", limit)
 
     --OLSR CONFIG announce dhcp bridge subnet (HNA)
     uci:section("olsrd", "Hna4", nil, {

@@ -183,6 +183,33 @@ change_olsrd_dygw_ping() {
   config_foreach change_olsrd_dygw_ping_handle_config LoadPlugin
 }
 
+fix_dhcp_start_limit() {
+  # only set start and limit if we have a dhcp section
+  if (uci -q show dhcp.dhcp); then
+    # only alter start and limit if not set by the user
+    if ! (uci -q get dhcp.dhcp.start || uci -q get dhcp.dhcp.limit); then
+      local netmask
+      local prefix
+      # get network-length
+      if netmask="$(uci -q get network.dhcp.netmask)"; then
+        # use ipcalc.sh to and get prefix-length only
+        prefix="$(ipcalc.sh 0.0.0.0 ${netmask} |grep PREFIX|awk -F "=" '{print $2}')"
+        # compute limit (2^(32-prefix)-3) with arithmetic evaluation
+        limit=$((2**(32-${prefix})-3))
+        uci set dhcp.dhcp.start=2
+        uci set dhcp.dhcp.limit=${limit}
+        log "set new dhcp.limit and dhcp.start on interface dhcp"
+      else
+        log "interface dhcp has no netmask assigned. not fixing dhcp.limit"
+      fi
+    else
+      log "interface dhcp has start and limit defined. not changing it"
+    fi
+  else
+    log "interface dhcp has no dhcp-config at all"
+  fi
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -210,6 +237,7 @@ migrate () {
     openvpn_ffvpn_hotplug
     sgw_rules_to_fw3
     change_olsrd_dygw_ping
+    fix_dhcp_start_limit
   fi
 
   # overwrite version with the new version
