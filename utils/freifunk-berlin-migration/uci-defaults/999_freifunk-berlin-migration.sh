@@ -154,6 +154,33 @@ fix_qos_interface() {
   uci delete qos.wan
 }
 
+fix_dhcp_start_limit() {
+  # only set start and limit if we have a dhcp section
+  if (uci -q show dhcp.dhcp); then
+    # only alter start and limit if not set by the user
+    if ! (uci -q get dhcp.dhcp.start || uci -q get dhcp.dhcp.limit); then
+      local netmask
+      local prefix
+      # get network-length
+      if netmask="$(uci -q get network.dhcp.netmask)"; then
+        # use ipcalc.sh to and get prefix-length only
+        prefix="$(ipcalc.sh 0.0.0.0 ${netmask} |grep PREFIX|awk -F "=" '{print $2}')"
+        # compute limit (2^(32-prefix)-3) with arithmetic evaluation
+        limit=$((2**(32-${prefix})-3))
+        uci set dhcp.dhcp.start=2
+        uci set dhcp.dhcp.limit=${limit}
+        log "set new dhcp.limit and dhcp.start on interface dhcp"
+      else
+        log "interface dhcp has no netmask assigned. not fixing dhcp.limit"
+      fi
+    else
+      log "interface dhcp has start and limit defined. not changing it"
+    fi
+  else
+    log "interface dhcp has no dhcp-config at all"
+  fi
+}
+
 sgw_rules_to_fw3() {
   uci set firewall.zone_freifunk.device=tnl_+
   sed -i '/iptables -I FORWARD -o tnl_+ -j ACCEPT$/d' /etc/firewall.user
@@ -183,6 +210,10 @@ change_olsrd_dygw_ping() {
   config_foreach change_olsrd_dygw_ping_handle_config LoadPlugin
 }
 
+remove_freifunk_watchdog_from_crontab() {
+  crontab -l | grep -v "/usr/sbin/ffwatchd" | crontab -
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -206,10 +237,13 @@ migrate () {
   if semverLT ${OLD_VERSION} "0.2.0"; then
     update_collectd_ping
     fix_qos_interface
+    fix_dhcp_start_limit
     remove_dhcp_interface_lan
     openvpn_ffvpn_hotplug
     sgw_rules_to_fw3
     change_olsrd_dygw_ping
+    remove_dhcp_interface_lan
+    remove_freifunk_watchdog_from_crontab
   fi
 
   # overwrite version with the new version
