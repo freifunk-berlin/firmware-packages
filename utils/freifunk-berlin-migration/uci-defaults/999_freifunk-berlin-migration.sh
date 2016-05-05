@@ -210,6 +210,12 @@ fix_dhcp_start_limit() {
   fi
 }
 
+delete_system_latlon() {
+  log "removing obsolete uci-setting system.system.latlon"
+  uci -q delete system.@system[0].latlon
+  uci commit system
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -238,6 +244,7 @@ migrate () {
     sgw_rules_to_fw3
     change_olsrd_dygw_ping
     fix_dhcp_start_limit
+    delete_system_latlon
   fi
 
   # overwrite version with the new version
