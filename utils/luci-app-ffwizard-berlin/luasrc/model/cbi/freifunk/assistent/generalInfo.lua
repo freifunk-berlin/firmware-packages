@@ -65,6 +65,12 @@ function lon.cfgvalue(self, section)
   return uci:get_first("system", "system","longitude")
 end
 
+alt = f:field(Value, "alt", "Höhe über Grund", "")
+alt.datatype = "float"
+function alt.cfgvalue(self, section)
+  return uci:get_first("system", "system","altitude")
+end
+
 map = f:field(DummyValue,"","")
 map.template = "freifunk/assistent/snippets/map"
 
@@ -92,6 +98,10 @@ function main.write(self, section, value)
     latval = tonumber(lat:formvalue(section))
     lonval = tonumber(lon:formvalue(section))
   end
+  local altval
+  if (alt:formvalue(section)) then
+    altval = tonumber(alt:formvalue(section))
+  end
 
   --SYSTEM CONFIG
   uci:foreach("system", "system",
@@ -106,6 +116,11 @@ function main.write(self, section, value)
       else
         uci:delete("system", s[".name"], "latitude")
         uci:delete("system", s[".name"], "longitude")
+      end
+      if altval then
+        uci:set("system", s[".name"], "altitude",string.format("%.15f", altval))
+      else
+        uci:delete("system", s[".name"], "altitude")
       end
       uci:set("system", s[".name"], "location",location:formvalue(section))
 
