@@ -33,7 +33,7 @@ function prepare()
     uci:save("ffwizard")
     uci:commit("ffwizard")
   end
-  if not uci:get("ffwizard","settings","runbefore") then
+  if not uci:get("ffwizard","settings","runbefore") and not uci:get("ffwizard", "settings", "passwordset") then
     luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/changePassword"))
   else
     luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/generalInfo"))
