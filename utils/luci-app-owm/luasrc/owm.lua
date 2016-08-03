@@ -39,6 +39,27 @@ local ipairs, os, pairs, next, type, tostring, tonumber, error, print =
 module "luci.owm"
 
 
+-- backported from LuCI 0.11 and adapted form berlin-stats
+--- Returns the system type (in a compatible way to LuCI 0.11)
+-- @return	String indicating this as an deprecated value
+--        	(instead of the Chipset-type)
+-- @return	String containing hardware model information
+--        	(trimmed to router-model only)
+function sysinfo_for_kathleen020()
+	local cpuinfo = nixio.fs.readfile("/proc/cpuinfo")
+
+	local system = 'system is deprecated'
+
+	local model = 
+		boardinfo['model'] or
+		cpuinfo:match("machine\t+: ([^\n]+)") or
+		cpuinfo:match("Hardware\t+: ([^\n]+)") or
+		nixio.uname().machine or
+		system
+
+        return system, model
+end
+
 function fetch_olsrd_config()
 	local jsonreq4 = ""
 	local jsonreq6 = ""
@@ -247,7 +268,7 @@ function get()
 	root.system = {
 		uptime = {sys.uptime()},
 		loadavg = {sysinfo.load[1] / 65536.0},
-		sysinfo = {sysinfo},
+		sysinfo = {sysinfo_for_kathleen020()},
 	}
 	root.hostname = sys.hostname() --owm
 
