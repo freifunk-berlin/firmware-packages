@@ -24,6 +24,7 @@ local status = require "luci.tools.status"
 local json = require "luci.json"
 local netm = require "luci.model.network"
 local sysinfo = luci.util.ubus("system", "info") or { }
+local boardinfo = luci.util.ubus("system", "board") or { }
 local table = require "table"
 local nixio = require "nixio"
 --local neightbl = require "neightbl"
@@ -251,7 +252,7 @@ function get()
 	root.hostname = sys.hostname() --owm
 
 
-	root.hardware = "unknown" --owm TODO
+	root.hardware = boardinfo['system'] --owm
 	
 
 	root.firmware = {
