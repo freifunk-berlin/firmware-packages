@@ -1,7 +1,6 @@
 local uci = require "luci.model.uci".cursor()
 local fs = require "nixio.fs"
 local tools = require "luci.tools.freifunk.assistent.tools"
-local html = require "luci.http"
 
 f = SimpleForm("ffvpn","","")
 f.submit = "Next"
@@ -14,7 +13,12 @@ css.template = "freifunk/assistent/snippets/css"
 vpninfo = f:field(DummyValue, "apinfo", "")
 vpninfo.template = "freifunk/assistent/snippets/vpninfo"
 
-if fs.access("/etc/openvpn/freifunk_client.crt") and html.formvalue("reupload", true) ~= "1" then
+if luci.http.formvalue("reupload", true) == "1" then
+  fs.unlink("/etc/openvpn/freifunk_client.crt")
+  fs.unlink("/etc/openvpn/freifunk_client.key")
+  luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/sharedInternet"))
+end
+if fs.access("/etc/openvpn/freifunk_client.crt") then
   vpncertreupload = f:field(DummyValue, "reupload", "")
   vpncertreupload.template = "freifunk/assistent/snippets/vpncertreupload"
 else
