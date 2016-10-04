@@ -9,7 +9,7 @@ guard() {
   OPTION=$1
 
   [ ! -f $CFG_FILE ] && touch $CFG_FILE && uci set $CFG.$NAME=$SECTION
-  [ "$(uci get $CFG.$NAME.$OPTION)" == "1" ] && exit 0
+  [ "$(uci -q get $CFG.$NAME.$OPTION)" == "1" ] && exit 0
   uci set $CFG.$NAME.$OPTION=1
   uci commit $CFG
 }
