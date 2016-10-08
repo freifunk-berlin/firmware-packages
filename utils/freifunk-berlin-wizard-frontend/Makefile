@@ -21,7 +21,7 @@ define Package/freifunk-berlin-wizard-frontend
   SUBMENU:=Freifunk
   TITLE:=Freifunk Berlin configuration wizard
   URL:=http://berlin.freifunk.net
-  DEPENDS+= +uhttpd
+  DEPENDS+= +uhttpd +freifunk-berlin-wizard-backend
 endef
 
 define Package/freifunk-berlin-wizard-frontend/description
