@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# if called from ubus
+FROM_UBUS=
+
+log_ffwizard() {
+	if [ -z "$FROM_UBUS" ] ; then
+		logger -s -t ffwizard_load "$@"
+	else
+		logger -t ffwizard_load "$@"
+	fi
+}
+
+if [ "$1" = "-u" ] ; then
+	FROM_UBUS=1
+	shift
+fi
+
+if [ -z "$1" ] ; then
+	log_ffwizard "No file given"
+	exit 1
+fi
+
+export CONFIG_JSON="$(cat $1)"
+CONFIG_DIR="/etc/ffwizard.d"
+
+[ -d $CONFIG_DIR ] || return 0
+
+FILES="$(ls $CONFIG_DIR | sort)"
+[ -z "$FILES" ] && return 0
+
+for file in $FILES; do
+    log_ffwizard "processing $file"
+    "$CONFIG_DIR/$file"
+done
+
