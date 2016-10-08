@@ -1,0 +1,47 @@
+#!/bin/sh
+# Copyright (C) 2016 OpenWrt.org
+
+. /lib/functions.sh
+. /usr/share/libubox/jshn.sh
+
+case "$1" in
+	list)
+		json_init
+
+		json_add_object "load"
+		json_add_object "config"
+		json_close_object
+		json_close_object
+
+		json_dump
+	;;
+	call)
+		case "$2" in
+			load)
+				local json
+				local tmpfile
+
+				# parse
+				read json
+				echo "$json" > /tmp/debug
+				json_init
+				json_load "$json"
+				if ! json_is_a config object ; then
+					echo '{ "status": "failed", description: "config does not exists or is not type object"}'
+					exit 0
+				fi
+
+				# save config to /tmp/
+				tmpfile=$(mktemp /tmp/ffwizard_XXXXXX)
+				echo "$json" > $tmpfile
+				FFWIZARD=$(ffwizard_load -u $tmpfile)
+				RET=$?
+				if [ $RET -ne 0 ] ; then
+					echo "{ \"status\": \"failed\", \"description\": \"ffwizard failed ret $RET. Error message: $FFWIZARD\"}"
+					exit 0
+				fi
+				echo '{ "status": "success", description: "everything parsed" }'
+			;;
+		esac
+	;;
+esac

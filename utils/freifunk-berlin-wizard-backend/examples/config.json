@@ -1,0 +1,56 @@
+{ "config": {
+  "router": {
+    "passwordHash": "$1$InRJgW3u$AUzNCKbr1YhUf6yNfjoyE.",
+    "name": "wurstrouter"
+  },
+  "contact": {
+    "name": "André Wurstwasser",
+    "email": "doener@pumpe.net"
+  },
+  "location": {
+    "lat": "52.538525899999996",
+    "lng": "13.3853186",
+    "street": "Feldstraße 10",
+    "postalCode": "13355",
+    "city": "Berlin"
+  },
+  "internet": {
+    "share": true,
+    "vpn": {
+      "crt": "",
+      "key": "",
+      "cacrt": "",
+      "config": ""
+    }
+  },
+  "ip": {
+    "v6Prefix": "2001:bf7:c4ff:3300::/56",
+    "v4MeshIps": {
+      "radio0": "10.31.133.41",
+      "radio1": "10.31.133.42",
+      "lan": "10.31.133.43"
+    },
+    "distribute": true,
+    "v4DhcpPrefix": "10.31.134.32/28"
+  },
+  "wifi": {
+    "radio0": {
+      "channel": 36,
+      "ap": {
+        "ssid": "berlin.freifunk.net"
+      },
+      "mesh": {
+        "mode": "adhoc",
+        "ssid": "intern-ch36-bat5.freifunk.net",
+        "bssid": "12:36:ca:ff:ee:ba:be",
+        "meshId": "freifunk",
+        "batman": {
+          "vlan": 5
+        }
+      }
+    },
+    "radio1": {
+    }
+  }
+}
+}
