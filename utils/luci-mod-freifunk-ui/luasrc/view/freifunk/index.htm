@@ -20,8 +20,14 @@ local ipkg = require "luci.model.ipkg"
 -- e.g. ipkg.installed or checkpasswd
 local webAppRoot = http.getenv("PATH_INFO") == nil
 local notRunBefore = not uci.get("ffwizard", "settings", "runbefore")
-local notPasswordSet = not uci.get("ffwizard", "settings", "passwordset")
+local notPasswordSet = true
 local wizardInstalled = fs.access("/usr/lib/lua/luci/controller/assistent/assistent.lua")
+
+if wizardInstalled then
+	local fftools = require "luci.tools.freifunk.assistent.tools"
+	notPasswordSet = not fftools.hasRootPass()
+end
+
 if (webAppRoot and notRunBefore and wizardInstalled) then
 	local url = luci.dispatcher.build_url("admin/freifunk/assistent")
 	if (notPasswordSet) then

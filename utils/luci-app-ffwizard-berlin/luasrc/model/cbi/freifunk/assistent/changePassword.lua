@@ -34,11 +34,6 @@ function f.handle(self, state, data)
   if state == FORM_VALID then
     if data.pw1 and data.pw2 then
       local stat = luci.sys.user.setpasswd("root", data.pw1) == 0
-      if stat then
-        uci:set("ffwizard", "settings", "passwordset", "true")
-        uci:save("ffwizard")
-        uci:commit("ffwizard")
-      end
     end
     data.pw1 = nil
     data.pw2 = nil
