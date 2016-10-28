@@ -76,6 +76,22 @@ function firewall_find_zone(name)
 end
 
 
+-- checks if root-password has been set via CGI has_root-pass 
+function hasRootPass()
+	logger ("checking for root-password ...")
+
+	local isPasswordSet = true
+	local f = io.popen("wget http://localhost/cgi-bin/has_root-pass -q -O -")
+	local ret = f:read("*a")
+	if ret == "password_is_set:no" then
+		logger ("root-password not set")
+		isPasswordSet = false
+	end
+	f:close()
+	return isPasswordSet
+end
+
+
 -- Helpers --
 -- Removes a listentry, handles real and pseduo lists transparently
 function remove_list_entry(value, entry)
