@@ -7,6 +7,7 @@ local fs = require "nixio.fs"
 
 local olsr = require "luci.tools.freifunk.assistent.olsr"
 local firewall = require "luci.tools.freifunk.assistent.firewall"
+local fftools = require "luci.tools.freifunk.assistent.tools"
 
 module ("luci.controller.assistent.assistent", package.seeall)
 
@@ -33,7 +34,7 @@ function prepare()
     uci:save("ffwizard")
     uci:commit("ffwizard")
   end
-  if not uci:get("ffwizard","settings","runbefore") and not uci:get("ffwizard", "settings", "passwordset") then
+  if not uci:get("ffwizard","settings","runbefore") and not fftools.hasRootPass() then
     luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/changePassword"))
   else
     luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/generalInfo"))
