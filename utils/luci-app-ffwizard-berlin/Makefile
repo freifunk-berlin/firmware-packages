@@ -48,6 +48,8 @@ define Package/luci-app-ffwizard-berlin/install
 	$(CP) ./htdocs/* $(1)/www
 	$(INSTALL_DIR) $(1)/etc
 	$(CP) ./root/etc/* $(1)/etc
+	$(INSTALL_DIR) $(1)/www/cgi-bin
+	$(CP) ./root/www/cgi-bin/* $(1)/www/cgi-bin/
 endef
 
 $(eval $(call BuildPackage,luci-app-ffwizard-berlin))
