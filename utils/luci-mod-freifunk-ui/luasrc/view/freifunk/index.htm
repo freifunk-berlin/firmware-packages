@@ -16,14 +16,17 @@ local disp = require "luci.dispatcher"
 local ipkg = require "luci.model.ipkg"
 
 -- only redirect if assistent is installed and no root password is set
--- we use isfile because the view is run as root and we can't use e.g.
--- ipkg.installed or checkpasswd
+-- we use isfile because the view is not run as root and we can't use
+-- e.g. ipkg.installed or checkpasswd
 local webAppRoot = http.getenv("PATH_INFO") == nil
 local notRunBefore = not uci.get("ffwizard", "settings", "runbefore")
+local notPasswordSet = not uci.get("ffwizard", "settings", "passwordset")
 local wizardInstalled = fs.access("/usr/lib/lua/luci/controller/assistent/assistent.lua")
 if (webAppRoot and notRunBefore and wizardInstalled) then
 	local url = luci.dispatcher.build_url("admin/freifunk/assistent")
-	url = url .. "?luci_username=root&luci_password="
+	if (notPasswordSet) then
+		url = url .. "?luci_username=root&luci_password="
+	end
 	http.redirect(url)
 end
 %>
