@@ -216,6 +216,11 @@ delete_system_latlon() {
   uci commit system
 }
 
+fix_olsrd6_watchdog_file() {
+  log "fix olsrd6 watchdog file"
+  uci set $(uci show olsrd6|grep "/var/run/olsrd.watchdog"|cut -d '=' -f 1)=/var/run/olsrd6.watchdog
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -245,6 +250,7 @@ migrate () {
     change_olsrd_dygw_ping
     fix_dhcp_start_limit
     delete_system_latlon
+    fix_olsrd6_watchdog_file
   fi
 
   # overwrite version with the new version

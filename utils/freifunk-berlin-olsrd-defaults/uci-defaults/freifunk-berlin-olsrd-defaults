@@ -110,7 +110,7 @@ uci set olsrd6.$PLUGIN.ipv6only=true
 # add watchdog plugin
 PLUGIN="$(uci add olsrd6 LoadPlugin)"
 uci set olsrd6.$PLUGIN.library=olsrd_watchdog.so.0.1
-uci set olsrd6.$PLUGIN.file=/var/run/olsrd.watchdog
+uci set olsrd6.$PLUGIN.file=/var/run/olsrd6.watchdog
 uci set olsrd6.$PLUGIN.interval=30
 
 # set olsrd defaults
