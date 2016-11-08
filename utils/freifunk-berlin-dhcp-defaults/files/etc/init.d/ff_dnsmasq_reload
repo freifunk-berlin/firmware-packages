@@ -2,13 +2,19 @@
 
 START=88
 
+# This triggers rereading dnsmasq config in case
+# /tmp/hosts/olsr has changed which is used by the
+# olsrd_nameservice plugin.
+
 boot() {
 	test -f /etc/crontabs/root || touch /etc/crontabs/root
 
-	grep -q 'killall -HUP dnsmasq' /etc/crontabs/root || {
-		echo "*/5 * * * *	killall -HUP dnsmasq" >> /etc/crontabs/root
-	}
+	touch /tmp/dnsmasq.stamp
 
-	/etc/init.d/cron restart &
+	CHECK_DNSMASQ="[ /tmp/hosts/olsr -nt /tmp/dnsmasq.stamp ] && touch /tmp/dnsmasq.stamp && killall -HUP dnsmasq"
+	grep -q -F "$CHECK_DNSMASQ" /etc/crontabs/root || {
+		echo "*/5 * * * *	$CHECK_DNSMASQ" >> /etc/crontabs/root
+		/etc/init.d/cron restart &
+	}
 }
 
