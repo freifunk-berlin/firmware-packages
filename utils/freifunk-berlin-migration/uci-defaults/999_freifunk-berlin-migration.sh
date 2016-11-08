@@ -216,6 +216,13 @@ delete_system_latlon() {
   uci commit system
 }
 
+update_berlin_owm_api() {
+  if [ "$(uci get freifunk.community.name)" = "berlin" ]; then
+    log "updating Berlin OWM API URL"
+    uci set freifunk.community.owm_api="http://util.berlin.freifunk.net"
+  fi
+}
+
 fix_olsrd6_watchdog_file() {
   log "fix olsrd6 watchdog file"
   uci set $(uci show olsrd6|grep "/var/run/olsrd.watchdog"|cut -d '=' -f 1)=/var/run/olsrd6.watchdog
@@ -242,6 +249,7 @@ migrate () {
   fi
 
   if semverLT ${OLD_VERSION} "0.2.0"; then
+    update_berlin_owm_api
     update_collectd_ping
     fix_qos_interface
     remove_dhcp_interface_lan
