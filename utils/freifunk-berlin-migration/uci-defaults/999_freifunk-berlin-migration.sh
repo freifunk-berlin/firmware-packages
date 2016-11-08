@@ -226,6 +226,10 @@ update_berlin_owm_api() {
 fix_olsrd6_watchdog_file() {
   log "fix olsrd6 watchdog file"
   uci set $(uci show olsrd6|grep "/var/run/olsrd.watchdog"|cut -d '=' -f 1)=/var/run/olsrd6.watchdog
+
+quieten_dnsmasq() {
+  log "quieten dnsmasq"
+  uci set dhcp.@dnsmasq[0].quietdhcp=1
 }
 
 migrate () {
@@ -259,6 +263,7 @@ migrate () {
     fix_dhcp_start_limit
     delete_system_latlon
     fix_olsrd6_watchdog_file
+    quieten_dnsmasq
   fi
 
   # overwrite version with the new version
