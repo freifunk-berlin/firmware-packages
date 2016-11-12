@@ -286,7 +286,7 @@ function get()
 	}
 
 
-	local email2owm = uci:get_first("freifunk", "owm", "email2owm")
+	local email2owm = uci:get_first("freifunk", "owm", "submit_email")
 	if not email2owm then
 		email2owm = '0'
 	end
