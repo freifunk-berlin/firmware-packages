@@ -3,7 +3,8 @@
 		"description": "Access controls for Freifunk wizard",
 		"read": {
 			"ubus": {
-				"ffwizard": [ "*" ]
+				"ffwizard": [ "*" ],
+				"iwinfo": [ "*" ]
 			}
 		},
 		"write": {
