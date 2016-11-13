@@ -34,12 +34,12 @@ define Build/Compile
 endef
 
 define Package/freifunk-berlin-wizard-backend/install
-	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/ffwizard.d $(1)/etc/ffwizard
-	$(INSTALL_BIN) files/etc/ffwizard.d/10-system.sh $(1)/etc/ffwizard.d/
+	$(INSTALL_DIR) $(1)/usr/sbin $(1)/usr/lib/ffwizard.d
+	$(INSTALL_BIN) files/usr/lib/ffwizard.d/10-system.sh $(1)/usr/lib/ffwizard.d/
 	$(INSTALL_BIN) files/sbin/ffwizard_load $(1)/usr/sbin/
 
 	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
-	$(INSTALL_BIN) files/usr/share/rpcd/acl.d/ffwizard.json $(1)/usr/share/rpcd/acl.d/ffwizard.json
+	$(INSTALL_BIN) files/usr/share/rpcd/acl.d/ffwizard.json $(1)/usr/share/rpcd/acl.d/
 
 	$(INSTALL_DIR) $(1)/usr/libexec/rpcd
 	$(INSTALL_BIN) files/rpcd/ffwizard $(1)/usr/libexec/rpcd/ffwizard
