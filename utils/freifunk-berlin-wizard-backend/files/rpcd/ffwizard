@@ -23,24 +23,27 @@ case "$1" in
 
 				# parse
 				read json
-				echo "$json" > /tmp/debug
 				json_init
 				json_load "$json"
+
 				if ! json_is_a config object ; then
-					echo '{ "status": "failed", description: "config does not exists or is not type object"}'
+					echo '{ "status": "failed", "description": "config does not exists or is not type object"}'
 					exit 0
 				fi
 
+				# TODO: extract "config" value and save this in tmpfile
+
 				# save config to /tmp/
 				tmpfile=$(mktemp /tmp/ffwizard_XXXXXX)
-				echo "$json" > $tmpfile
+				json_dump > $tmpfile
+
 				FFWIZARD=$(ffwizard_load -u $tmpfile)
 				RET=$?
 				if [ $RET -ne 0 ] ; then
 					echo "{ \"status\": \"failed\", \"description\": \"ffwizard failed ret $RET. Error message: $FFWIZARD\"}"
 					exit 0
 				fi
-				echo '{ "status": "success", description: "everything parsed" }'
+				echo '{ "status": "success", "description": "everything parsed" }'
 			;;
 		esac
 	;;
