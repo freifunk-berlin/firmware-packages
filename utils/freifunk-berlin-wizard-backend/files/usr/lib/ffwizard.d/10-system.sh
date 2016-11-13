@@ -11,6 +11,14 @@ setup_system() {
 	json_init
 	json_load "$CONFIG_JSON" || exit 1
 	json_select config
+	json_select router
+
+	# password
+	# TODO: use a passwordHash that is generated in the frontend
+	local password
+	if json_get_var password password; then
+		(echo "$password"; sleep 1; echo "$password") | passwd
+	fi
 
 	# hostname
 	local hostname
@@ -51,4 +59,3 @@ setup_system() {
 }
 
 setup_system
-
