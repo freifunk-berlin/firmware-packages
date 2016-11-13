@@ -1,11 +1,11 @@
 {
 	"ffwizard": {
 		"description": "Access controls for Freifunk wizard",
-    "read": {
-      "ubus": {
-        "ffwizard": [ "*" ]
-      }
-    },
+		"read": {
+			"ubus": {
+				"ffwizard": [ "*" ]
+			}
+		},
 		"write": {
 			"ubus": {
 				"ffwizard": [ "*" ]
