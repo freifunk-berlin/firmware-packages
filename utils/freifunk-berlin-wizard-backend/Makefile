@@ -38,6 +38,9 @@ define Package/freifunk-berlin-wizard-backend/install
 	$(INSTALL_BIN) files/etc/ffwizard.d/10-system.sh $(1)/etc/ffwizard.d/
 	$(INSTALL_BIN) files/sbin/ffwizard_load $(1)/usr/sbin/
 
+	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
+	$(INSTALL_BIN) files/usr/share/rpcd/acl.d/ffwizard.json $(1)/usr/share/rpcd/acl.d/ffwizard.json
+
 	$(INSTALL_DIR) $(1)/usr/libexec/rpcd
 	$(INSTALL_BIN) files/rpcd/ffwizard $(1)/usr/libexec/rpcd/ffwizard
 endef
