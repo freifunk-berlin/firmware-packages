@@ -22,7 +22,7 @@ if [ -z "$1" ] ; then
 fi
 
 export CONFIG_JSON="$(cat $1)"
-CONFIG_DIR="/etc/ffwizard.d"
+CONFIG_DIR="/usr/lib/ffwizard.d/"
 
 [ -d $CONFIG_DIR ] || return 0
 
@@ -33,4 +33,3 @@ for file in $FILES; do
     log_ffwizard "processing $file"
     "$CONFIG_DIR/$file"
 done
-
