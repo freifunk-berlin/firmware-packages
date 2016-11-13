@@ -11,6 +11,7 @@ setup_system() {
 	json_init
 	json_load "$CONFIG_JSON" || exit 1
 	json_select config
+
 	json_select router
 
 	# password
@@ -18,6 +19,7 @@ setup_system() {
 	local password
 	if json_get_var password password; then
 		(echo "$password"; sleep 1; echo "$password") | passwd
+		log_system "Password updated."
 	fi
 
 	# hostname
@@ -31,6 +33,9 @@ setup_system() {
 		log_system "No valid Hostname! Set rand Hostname $hostname"
 		uci -q set "system.@system[-1].hostname=$hostname"
 	fi
+
+	json_select ..
+	json_select location
 
 	# Set Timezone
 	uci -q set 'system.@system[-1].zonename="Europe/Berlin'
@@ -47,12 +52,12 @@ setup_system() {
 
 	# Set Geo Location
 	local latitude
-	if json_get_var latitude latitude; then
+	if json_get_var lat latitude; then
 		uci -q set "system.@system[-1].latitude=$latitude"
 	fi
 
 	local longitude
-	if json_get_var longitude longitude; then
+	if json_get_var lng longitude; then
 		uci -q set "system.@system[-1].longitude=$longitude"
 	fi
 	uci commit system

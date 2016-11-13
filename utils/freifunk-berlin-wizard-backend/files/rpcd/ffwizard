@@ -8,7 +8,7 @@ case "$1" in
 	list)
 		json_init
 
-		json_add_object "load"
+		json_add_object "apply"
 		json_add_object "config"
 		json_close_object
 		json_close_object
@@ -17,7 +17,7 @@ case "$1" in
 	;;
 	call)
 		case "$2" in
-			load)
+			apply)
 				local json
 				local tmpfile
 
@@ -37,13 +37,13 @@ case "$1" in
 				tmpfile=$(mktemp /tmp/ffwizard_XXXXXX)
 				json_dump > $tmpfile
 
-				FFWIZARD=$(ffwizard_load -u $tmpfile)
+				FFWIZARD=$(ffwizard_apply -u $tmpfile)
 				RET=$?
 				if [ $RET -ne 0 ] ; then
-					echo "{ \"status\": \"failed\", \"description\": \"ffwizard failed ret $RET. Error message: $FFWIZARD\"}"
+					echo "{ \"status\": \"failed\", \"description\": \"ffwizard failed (return code $RET, error message: $FFWIZARD)\"}"
 					exit 0
 				fi
-				echo '{ "status": "success", "description": "everything parsed" }'
+				echo '{ "status": "success", "description": "config has been applied" }'
 			;;
 		esac
 	;;
