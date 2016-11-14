@@ -4,10 +4,11 @@ log_ffwizard() {
 	logger -s -t ffwizard_ffwizard "$@"
 }
 
-
 setup_ffwizard() {
   touch /etc/config/ffwizard
-  uci add ffwizard ffwizard > /dev/null
+
+  # add ffwizard section if not present
+  uci -q get ffwizard.@ffwizard[-1] || uci add ffwizard ffwizard > /dev/null
 
   local lan_ifname=$(uci -q get "ffwizard.@ffwizard[-1].lan_ifname")
   if [ -z "$lan_ifname" ]; then
