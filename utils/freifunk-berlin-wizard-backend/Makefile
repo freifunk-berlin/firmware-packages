@@ -35,7 +35,7 @@ endef
 
 define Package/freifunk-berlin-wizard-backend/install
 	$(INSTALL_DIR) $(1)/usr/sbin $(1)/usr/lib/ffwizard.d
-	$(INSTALL_BIN) files/usr/lib/ffwizard.d/10-system.sh $(1)/usr/lib/ffwizard.d/
+	$(INSTALL_BIN) files/usr/lib/ffwizard.d/* $(1)/usr/lib/ffwizard.d/
 	$(INSTALL_BIN) files/sbin/ffwizard_apply $(1)/usr/sbin/
 
 	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
