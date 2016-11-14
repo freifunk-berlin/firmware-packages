@@ -60,6 +60,7 @@ setup_system() {
 	if json_get_var lng longitude; then
 		uci -q set "system.@system[-1].longitude=$longitude"
 	fi
+
 	uci commit system
 }
 
