@@ -103,6 +103,44 @@ setup_network() {
     uci set "network.dhcp.proto=dhcp"
   fi
 
+	local idx
+
+	# remove wireless interfaces
+	idx=0
+	while uci -q delete "network.wireless${idx}" > /dev/null; do
+		idx=$((idx+1))
+	done
+	idx=0
+	while uci -q delete "network.wireless${idx}bat" > /dev/null; do
+		idx=$((idx+1))
+	done
+
+	json_select v4
+	# add wireless interfaces
+	idx=0
+	while uci -q get "wireless.radio${idx}" > /dev/null; do
+		# add olsr mesh interface
+		uci set "network.wireless${idx}=interface"
+		uci set "network.wireless${idx}.proto=static"
+		uci set "network.wireless${idx}.ip6assign=64"
+		local v4Addr
+		json_get_var v4Addr "radio${idx}"
+		if [ -z "$v4Addr" ]; then
+			log_network "no v4 ip found for radio${idx}"
+			exit 1
+		fi
+		uci set "network.wireless${idx}.ipaddr=$v4Addr/32"
+
+		# add batman mesh interface
+		uci set "network.wireless${idx}bat=interface"
+		uci set "network.wireless${idx}bat.proto=batadv"
+		uci set "network.wireless${idx}bat.ifname=@wireless${idx}"
+		uci set "network.wireless${idx}bat.mesh=bat0"
+
+		idx=$((idx+1))
+	done
+	json_select ..
+
   uci commit network
 }
 
