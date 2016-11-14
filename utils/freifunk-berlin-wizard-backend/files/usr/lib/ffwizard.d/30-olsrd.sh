@@ -14,6 +14,13 @@ setup_olsrd() {
 
 	json_select ip
 
+  # add routing tables
+  tables="/etc/iproute2/rt_tables"
+  test -d /etc/iproute2/ || mkdir -p /etc/iproute2/
+  grep -q "111 olsr" $tables || echo "111 olsr" >> $tables
+  grep -q "112 olsr-default" $tables || echo "112 olsr-default" >> $tables
+  grep -q "113 olsr-tunnel" $tables || echo "113 olsr-tunnel" >> $tables
+
   # reset olsrd config
   uci import olsrd <<EOF
 EOF
