@@ -104,6 +104,15 @@ EOF
     uci set olsrd.$INTERFACE.ignore=0
   fi
 
+  # add wireless interfaces
+  local idx=0
+  while uci -q get "wireless.radio${idx}" > /dev/null; do
+    INTERFACE="$(uci add olsrd Interface)"
+    uci set olsrd.$INTERFACE.interface="wireless${idx}"
+    uci set olsrd.$INTERFACE.ignore=0
+    idx=$((idx+1))
+  done
+
   # add hna if distribute is true
   local distribute;
   json_get_var distribute distribute
