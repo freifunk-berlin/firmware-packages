@@ -8,7 +8,7 @@ setup_ffwizard() {
   touch /etc/config/ffwizard
 
   # add ffwizard section if not present
-  uci -q get ffwizard.@ffwizard[-1] || uci add ffwizard ffwizard > /dev/null
+  (uci -q get ffwizard.@ffwizard[-1] || uci add ffwizard ffwizard) > /dev/null
 
   local lan_ifname=$(uci -q get "ffwizard.@ffwizard[-1].lan_ifname")
   if [ -z "$lan_ifname" ]; then
