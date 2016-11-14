@@ -39,6 +39,9 @@ setup_network() {
     uci set "network.loopback.ip6prefix=$v6Prefix"
   fi
 
+  # dns
+  uci set network.loopback.dns="85.214.20.141 213.73.91.35 194.150.168.168 2001:4ce8::53 2001:910:800::12"
+
   # lan interface (used for mesh or disabled if meshLan is true)
   uci -q delete network.lan
   uci -q delete network.lanbat
