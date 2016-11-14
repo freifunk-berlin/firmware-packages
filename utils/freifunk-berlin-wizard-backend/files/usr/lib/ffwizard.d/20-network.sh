@@ -25,14 +25,11 @@ setup_network() {
   local meshLan
   json_get_var meshLan meshLan
 
-  # get lan ifname and mac
-  local lanIfname="$(uci get network.lan.ifname)"
-  if [ -z "$lanIfname" ]; then
-    log_network "could not determine lan ifname."
-    exit 1
-  fi
+  # get lan ifname
+  local lanIfname="$(uci get ffwizard.@ffwizard[-1].lan_ifname)"
+
   # required for dhcp interface on wdr4300
-  local lanMacaddr="$(uci -q get network.lan.macaddr)"
+  local lanMacaddr="$(uci -q get ffwizard.@ffwizard[-1].lan_macaddr)"
 
   # v6 prefix
   local v6Prefix
@@ -46,11 +43,11 @@ setup_network() {
   uci -q delete network.lan
   uci -q delete network.lanbat
 
-  uci set "network.lan=interface"
-  uci set "network.lan.ifname=$lanIfname"
-  uci set "network.lan.macaddr=$lanMacaddr"
   if [ "$meshLan" == "1" ]; then
+    uci set "network.lan=interface"
     uci set "network.lan.proto=static"
+    uci set "network.lan.ifname=$lanIfname"
+    uci set "network.lan.macaddr=$lanMacaddr"
     uci set "network.lan.ip6assign=64"
     uci set "network.lan.mtu=1532"
 
@@ -67,12 +64,9 @@ setup_network() {
 
     uci set "network.lanbat=interface"
     uci set "network.lanbat.proto=batadv"
-    #uci set "network.lanbat.ifname=@lan"
+    uci set "network.lanbat.ifname=@lan"
     uci set "network.lanbat.mesh=bat0"
     uci set "network.lanbat.mtu=1532"
-  else
-    uci set "network.lan.proto=none"
-    uci set "network.lan.enabled=0"
   fi
 
   # dhcp interface (bridge with lanIfname if meshLan is false)
