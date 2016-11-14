@@ -29,11 +29,12 @@ EOF
   uci set olsrd.$OLSRD.SmartGateway=yes
   uci set olsrd.$OLSRD.SmartGatewayThreshold=50
   uci set olsrd.$OLSRD.Pollrate=0.025
-  uci set olsrd.$OLSRD.RtTable=111
-  uci set olsrd.$OLSRD.RtTableDefault=112
-  uci set olsrd.$OLSRD.RtTableTunnel=113
-  uci set olsrd.$OLSRD.RtTableTunnelPriority=100000
-  uci set olsrd.$OLSRD.RtTableDefaultOlsrPriority=20000
+  # TODO: re-enable when policy routing is back in a sane form
+  #uci set olsrd.$OLSRD.RtTable=111
+  #uci set olsrd.$OLSRD.RtTableDefault=112
+  #uci set olsrd.$OLSRD.RtTableTunnel=113
+  #uci set olsrd.$OLSRD.RtTableTunnelPriority=100000
+  #uci set olsrd.$OLSRD.RtTableDefaultOlsrPriority=20000
 
   # set InterfaceDefaults parameters
   INTERFACES="$(uci add olsrd InterfaceDefaults)"
@@ -111,7 +112,6 @@ EOF
     uci set "olsrd.$HNA.netaddr=$NETWORK"
     uci set "olsrd.$HNA.netmask=$NETMASK"
   fi
-
 
   uci commit olsrd
 }
