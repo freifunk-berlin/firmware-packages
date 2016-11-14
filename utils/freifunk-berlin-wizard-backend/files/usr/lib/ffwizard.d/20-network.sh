@@ -6,6 +6,14 @@ log_network() {
 	logger -s -t ffwizard_network "$@"
 }
 
+v4_get_subnet_first_ip() {
+  eval "$(ipcalc.sh $1)"
+  local OCTET_4="${NETWORK##*.}"
+	local OCTET_1_3="${NETWORK%.*}"
+	OCTET_4="$((OCTET_4 + 1))"
+	echo "$OCTET_1_3.$OCTET_4/$PREFIX"
+}
+
 setup_network() {
 	local cfg=$1
 	json_init
@@ -90,10 +98,10 @@ setup_network() {
       log_network "v4ClientSubnet missing."
       exit 1
     fi
-    eval "$(ipcalc.sh $v4ClientSubnet)"
+    local v4ClientSubnetFirst=$(v4_get_subnet_first_ip $v4ClientSubnet)
     uci set "network.dhcp.proto=static"
     uci set "network.dhcp.ip6assign=64"
-    uci set "network.dhcp.ipaddr=$IP/$PREFIX"
+    uci set "network.dhcp.ipaddr=$v4ClientSubnetFirst"
   else
     uci set "network.dhcp.proto=dhcp"
   fi
