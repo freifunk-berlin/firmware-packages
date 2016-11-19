@@ -83,8 +83,15 @@ EOF
   uci set firewall.zone_freifunk.forward=REJECT
   uci set firewall.zone_freifunk.name=freifunk
   uci set firewall.zone_freifunk.output=ACCEPT
-  # TODO: add wireless networks
-  uci set firewall.zone_freifunk.network="tunl0 dhcp ffvpn lan"
+
+	networks="tunl0 dhcp ffvpn lan"
+	# add wireless networks
+	idx=0
+  while uci -q get "wireless.radio${idx}" > /dev/null; do
+		networks="${networks} wireless${idx}"
+		idx=$((idx+1))
+	done
+  uci set firewall.zone_freifunk.network="${networks}"
   uci set firewall.zone_freifunk.device=tnl_+
 
   FORWARDING="$(uci add firewall forwarding)"
