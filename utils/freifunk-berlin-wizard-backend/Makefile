@@ -14,7 +14,7 @@ define Package/freifunk-berlin-wizard-backend
 	TITLE:=Freifunk Berlin configuration backend
 	URL:=http://berlin.freifunk.net
   MENU:=1
-  DEPENDS:=+uhttpd +uhttpd-mod-ubus \
+  DEPENDS:=+uhttpd +uhttpd-mod-ubus +jsonfilter \
   +rpcd +rpcd-mod-file +rpcd-mod-iwinfo +rpcd-mod-rpcsys +iwinfo \
   @IPV6
 endef
