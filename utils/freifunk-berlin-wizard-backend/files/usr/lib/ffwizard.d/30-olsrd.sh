@@ -10,7 +10,6 @@ setup_olsrd() {
 	local cfg=$1
 	json_init
 	json_load "$CONFIG_JSON" || exit 1
-	json_select config
 
 	json_select ip
 
