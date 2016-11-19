@@ -12,6 +12,7 @@ setup_wireless() {
   # reset wifi config
 	rm -f /etc/config/wireless
   wifi config
+	iw reg set DE
 
   # remove wifi-ifaces
   local idx=0
@@ -22,12 +23,12 @@ setup_wireless() {
   # loop over radios
   idx=0
   while uci -q get "wireless.radio${idx}" > /dev/null; do
-    log_wireless "setting up radio${idx}/wlan${idx}"
+    log_wireless "setting up radio${idx}"
 
     local device="radio$idx"
 
     uci set wireless.$device.disabled=0
-    uci set wireless.$device.country=DE
+		uci set wireless.$device.country=DE
     # TODO: read from config
     uci set wireless.$device.distance=1000
 
@@ -36,16 +37,16 @@ setup_wireless() {
   	local hw_b=0
   	local hw_g=0
   	local hw_n=0
-  	local info_data=$(ubus call iwinfo info '{ "device": "wlan'$idx'" }' 2>/dev/null)
+  	local info_data=$(ubus call iwinfo info '{ "device": "radio'$idx'" }' 2>/dev/null)
   	if [ -z "$info_data" ]; then
-  		log_wireless "No iwinfo data for wlan$idx"
+  		log_wireless "No iwinfo data for radio$idx"
   		return 1
   	fi
   	json_load "$info_data"
   	json_select hwmodes
   	json_get_values hw_res
   	if [ -z "$hw_res" ]; then
-  		log_wireless "No iwinfo hwmodes for wlan$idx"
+  		log_wireless "No iwinfo hwmodes for radio$idx"
   		return 1
   	fi
   	for i in $hw_res ; do
@@ -64,9 +65,9 @@ setup_wireless() {
     # get valid channel list
     local channels
     local channel
-    local chan_data=$(ubus call iwinfo freqlist '{ "device": "wlan'$idx'" }' 2>/dev/null)
+    local chan_data=$(ubus call iwinfo freqlist '{ "device": "radio'$idx'" }' 2>/dev/null)
     if [ -z "$chan_data" ]; then
-      log_wireless "No iwinfo freqlist for wlan$idx"
+      log_wireless "No iwinfo freqlist for radio$idx"
       return 1
     fi
     json_load "$chan_data"
