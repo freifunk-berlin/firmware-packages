@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-uhttpd-defaults
 PKG_VERSION:=0.0.1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -14,6 +14,7 @@ define Package/freifunk-berlin-uhttpd-defaults
   TITLE:=Freifunk Berlin uhttpd default configuration
   URL:=http://github.com/freifunk-berlin/packages_berlin
   DEPENDS+= +uhttpd +freifunk-berlin-lib-guard
+  PKGARCH:=all
 endef
 
 define Package/freifunk-berlin-uhttpd-defaults/description

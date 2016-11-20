@@ -4,7 +4,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ffwizard-berlin
 PKG_VERSION:=0.0.4
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -17,6 +17,7 @@ define Package/luci-app-ffwizard-berlin
   TITLE:=Freifunk Berlin configuration wizard
   URL:=http://berlin.freifunk.net
   DEPENDS+= +luci-base +luci-mod-admin-full +freifunk-policyrouting +freifunk-berlin-openvpn-files
+  PKGARCH:=all
 endef
 
 define Package/luci-app-ffwizard-berlin/description

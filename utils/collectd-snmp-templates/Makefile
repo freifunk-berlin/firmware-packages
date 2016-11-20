@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=collectd-snmp-templates
 PKG_VERSION:=0.0.1
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 
 UBIQUITI_MIBS_REL=ubnt-mibs_20160803.zip
 
@@ -23,6 +23,7 @@ define Package/collectd-snmp-templates
   TITLE:=Templates to gather statistics from different SNMP-nodes
   URL:=http://github.com/freifunk-berlin/packages_berlin
   DEPENDS+= +collectd-mod-snmp +snmp-mibs
+  PKGARCH:=all
 endef
 
 define Package/collectd-snmp-templates/description

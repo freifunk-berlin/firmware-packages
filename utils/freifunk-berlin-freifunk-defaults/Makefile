@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-freifunk-defaults
 PKG_VERSION:=0.0.1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -13,6 +13,7 @@ define Package/freifunk-berlin-freifunk-defaults
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin freifunk default configuration
   URL:=http://github.com/freifunk-berlin/packages_berlin
+  PKGARCH:=all
 endef
 
 define Package/freifunk-berlin-freifunk-defaults/description
