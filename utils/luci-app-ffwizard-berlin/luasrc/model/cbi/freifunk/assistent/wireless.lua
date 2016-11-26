@@ -354,7 +354,7 @@ function getchannel(device)
   end
   if (freqlist[1].mhz > 5179 and freqlist[1].mhz < 5701) then
     --this is 5 Ghz
-    r_channel = tonumber(uci:get(community, "wifi_devicei_5", "channel")) or 36
+    r_channel = tonumber(uci:get(community, "wifi_device_5", "channel")) or 36
   end
   tools.logger("channel for device "..device.." is "..tostring(r_channel))
   return r_channel
