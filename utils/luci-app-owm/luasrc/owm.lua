@@ -18,7 +18,6 @@ local string = require "string"
 local sys = require "luci.sys"
 local uci = require "luci.model.uci".cursor_state()
 local util = require "luci.util"
-local version = require "luci.version"
 local webadmin = require "luci.tools.webadmin"
 local status = require "luci.tools.status"
 local json = require "luci.json"
@@ -33,6 +32,8 @@ local ip = require "luci.ip"
 
 local ipairs, os, pairs, next, type, tostring, tonumber, error, print =
 	ipairs, os, pairs, next, type, tostring, tonumber, error, print
+
+local dofile, _G = dofile, _G
 
 --- LuCI OWM-Library
 -- @cstyle	instance
@@ -58,6 +59,37 @@ function sysinfo_for_kathleen020()
 		system
 
         return system, model
+end
+
+-- inspired by luci.version
+--- Returns the system version info build from /etc/openwrt_release
+--- switch from luci.version which always includes
+--- the revision in the "distversion" field and gives empty "distname"
+-- @ return	the releasename 
+--         	(DISTRIB_ID + DISTRIB_CODENAME + DISTRIB_RELEASE)
+-- @ return	the releaserevision
+--         	(DISTRIB_REVISION)
+function get_version()
+	local distname = ""
+	local distrev = ""
+	local version = {}
+
+	dofile("/etc/openwrt_release")
+	if _G.DISTRIB_ID then
+		distname = _G.DISTRIB_ID .. " "
+	end
+	if _G.DISTRIB_CODENAME then
+		distname = distname .. _G.DISTRIB_CODENAME .. " "
+	end
+	if _G.DISTRIB_RELEASE then
+		distname = distname .. _G.DISTRIB_RELEASE
+	end
+	if _G.DISTRIB_REVISION then
+		distrev = _G.DISTRIB_REVISION
+	end
+	version['distname'] = distname
+	version['distrevision'] = distrev
+	return version
 end
 
 function fetch_olsrd_config()
@@ -248,6 +280,7 @@ function get()
 	local _ubus = bus.connect()
 	local _ubusclicache = { }
 	local position = get_position()
+	local version = get_version()
 --	local _, object
 --	for _, object in ipairs(_ubus:objects()) do
 --		local _ubusclicache = object:match("^clicache%.(.+)")
@@ -282,7 +315,7 @@ function get()
 	--	distname=version.distname,
 		name=version.distname, --owm
 	--	distversion=version.distversion,
-		revision=version.distversion --owm
+		revision=version.distrevision --owm
 	}
 
 	root.freifunk = {}
