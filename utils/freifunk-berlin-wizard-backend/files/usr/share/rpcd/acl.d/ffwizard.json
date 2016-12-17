@@ -4,6 +4,8 @@
 		"read": {
 			"ubus": {
 				"ffwizard": [ "*" ],
+				"system": ["*"],
+				"network": ["*"],
 				"iwinfo": [ "*" ]
 			}
 		},
