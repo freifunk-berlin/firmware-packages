@@ -5,7 +5,7 @@
 			"ubus": {
 				"ffwizard": [ "*" ],
 				"system": [ "*" ],
-				"network": [ "*" ],
+				"network.wireless": [ "*" ],
 				"iwinfo": [ "*" ]
 			}
 		},
