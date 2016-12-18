@@ -10,6 +10,8 @@ case "$1" in
 
 		json_add_object "neighbors"
 		json_close_object
+		json_add_object "links"
+		json_close_object
 
 		json_dump
 	;;
@@ -18,6 +20,11 @@ case "$1" in
 			neighbors)
 				json_init
 				json_load "$(echo '/neighbors' | nc ::1 9090)"
+				json_dump
+			;;
+			links)
+				json_init
+				json_load "$(echo '/links' | nc ::1 9090)"
 				json_dump
 			;;
 		esac
