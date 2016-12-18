@@ -45,7 +45,7 @@ define Package/freifunk-berlin-wizard-backend/install
 	$(INSTALL_BIN) files/usr/share/rpcd/acl.d/ffwizard.json $(1)/usr/share/rpcd/acl.d/
 
 	$(INSTALL_DIR) $(1)/usr/libexec/rpcd
-	$(INSTALL_BIN) files/rpcd/ffwizard $(1)/usr/libexec/rpcd/ffwizard
+	$(INSTALL_BIN) files/rpcd/* $(1)/usr/libexec/rpcd/
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-wizard-backend))
