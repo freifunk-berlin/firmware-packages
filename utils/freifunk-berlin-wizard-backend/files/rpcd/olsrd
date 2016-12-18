@@ -1,0 +1,25 @@
+#!/bin/sh
+# Copyright (C) 2016 OpenWrt.org
+
+. /lib/functions.sh
+. /usr/share/libubox/jshn.sh
+
+case "$1" in
+	list)
+		json_init
+
+		json_add_object "neighbors"
+		json_close_object
+
+		json_dump
+	;;
+	call)
+		case "$2" in
+			neighbors)
+				json_init
+				json_load "$(echo '/neighbors' | nc ::1 9090)"
+				json_dump
+			;;
+		esac
+	;;
+esac

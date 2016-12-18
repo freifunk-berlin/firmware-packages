@@ -14,5 +14,13 @@
 				"ffwizard": [ "*" ]
 			}
 		}
+	},
+	"unauthenticated": {
+		"description": "Access some controls without login",
+		"read": {
+			"ubus": {
+				"olsrd": [ "*"]
+			}
+		}
 	}
 }
