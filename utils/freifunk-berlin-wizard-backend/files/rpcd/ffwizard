@@ -44,6 +44,8 @@ case "$1" in
 				echo '{ "status": "success", "description": "config has been applied" }'
 
 				echo $config > /etc/ffwizard.config.json
+
+				reboot
 			;;
 		esac
 	;;
