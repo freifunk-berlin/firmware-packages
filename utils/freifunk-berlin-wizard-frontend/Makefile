@@ -8,7 +8,7 @@ PKG_MAINTAINER:=André Gaul <andre@gaul.io>
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/freifunk-berlin/firmware-wizard-frontend.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE_VERSION:=24311ebd2e5e42c4cee5146cad08ac26adeac399
+PKG_SOURCE_VERSION:=b3c1ff405175aef4bcaedc05437f0420bbea0982
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.gz
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_SOURCE_SUBDIR)
@@ -36,6 +36,7 @@ define Package/freifunk-berlin-wizard-frontend/install
 	$(CP) $(PKG_BUILD_DIR)/assets $(1)/www/wizard/
 	$(CP) $(PKG_BUILD_DIR)/index.css $(1)/www/wizard/
 	$(CP) $(PKG_BUILD_DIR)/index.html $(1)/www/wizard/
+	$(CP) $(PKG_BUILD_DIR)/status.html $(1)/www/wizard/
 	$(CP) $(PKG_BUILD_DIR)/index.js $(1)/www/wizard/
 	$(CP) $(PKG_BUILD_DIR)/nls $(1)/www/wizard/
 	$(CP) $(PKG_BUILD_DIR)/shared $(1)/www/wizard/
