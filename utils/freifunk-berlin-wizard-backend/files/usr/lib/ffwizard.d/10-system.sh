@@ -14,10 +14,9 @@ setup_system() {
 	json_select router
 
 	# password
-	# TODO: use a passwordHash that is generated in the frontend
-	local password
-	if json_get_var password password; then
-		(echo "$password"; sleep 1; echo "$password") | passwd
+	local passwordHash
+	if json_get_var passwordHash passwordHash; then
+		sed -i -e "s/^root:[^:]*:/root:${passwordHash}:/" /etc/shadow
 		log_system "Password updated."
 	fi
 
