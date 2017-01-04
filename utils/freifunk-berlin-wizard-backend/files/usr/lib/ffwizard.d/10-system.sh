@@ -16,7 +16,8 @@ setup_system() {
 	# password
 	local passwordHash
 	if json_get_var passwordHash passwordHash; then
-		sed -i -e "s/^root:[^:]*:/root:${passwordHash}:/" /etc/shadow
+		# do NOT use / as a delimiter here
+		sed -i -e "s,^root:[^:]*:,root:${passwordHash}:," /etc/shadow
 		log_system "Password updated."
 	fi
 
