@@ -1,7 +1,6 @@
 local sys = require "luci.sys"
 local util = require "luci.util"
 local uci = require "luci.model.uci".cursor()
-local sharenet = uci:get("ffwizard","settings","sharenet")
 
 module("luci.tools.freifunk.assistent.tools", package.seeall)
 
