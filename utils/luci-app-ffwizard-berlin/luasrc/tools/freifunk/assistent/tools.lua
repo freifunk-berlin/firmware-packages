@@ -31,17 +31,6 @@ function firewall_zone_add_interface(name, interface)
 end
 
 
--- Adds masq src net to zone
-function firewall_zone_add_masq_src(name, src)
-	local cursor = uci.cursor()
-	local zone = firewall_find_zone(name)
-	local old = cursor:get("firewall", zone, "masq_src") or {}
-	table.insert(old,src)
-	cursor:set_list("firewall", zone, "masq_src", old)
-	cursor:save("firewall")
-end
-
-
 -- Removes interface from zone
 function firewall_zone_remove_interface(name, interface)
 	local cursor = uci.cursor()
