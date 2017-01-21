@@ -1,0 +1,43 @@
+#!/bin/sh
+
+. /lib/functions.sh
+. /lib/functions/network.sh
+
+config_load ffwizard
+local sharenet
+config_get sharenet settings sharenet
+
+[ "$sharenet" = 1 ] || exit
+
+[ "$INTERFACE" = ffvpn ] && [ "$ACTION" = ifup ] && logger -t ff-userlog "VPN03 connection has been established"
+[ "$INTERFACE" = ffvpn ] && [ "$ACTION" = ifdown ] && logger -t ff-userlog "VPN03 connection went down"
+
+[ "$INTERFACE" = wan ] || exit
+
+local uci_vpn_enabled
+config_get uci_vpn_enabled ffvpn enabled
+
+if [ "$ACTION" = ifup ]; then
+  logger -t ff-userlog "WAN interface is up"
+  if [ "$uci_vpn_enabled" = 1 ]; then
+    logger -t ff-vpn-hotplug "Starting VPN03 on WAN interface"
+    # Make sure OpenVPN connects only through WAN: set "local" option with WAN IP
+    local wanip
+    network_get_ipaddr wanip "wan"
+# ToDo: check if we need something like thsi for IpSec
+    #uci set openvpn.ffvpn.local=$wanip
+    #uci commit openvpn
+    ipsec up vpn03
+    exit
+  fi
+fi
+
+if [ "$ACTION" = ifdown ]; then
+  logger -t ff-userlog "WAN interface went down"
+    if [ "$uci_vpn_enabled" = 1 ]; then
+      logger -t ff-vpn-hotplug "Stopping VPN03"
+      ipsec down vpn03
+    exit
+  fi
+fi
+
