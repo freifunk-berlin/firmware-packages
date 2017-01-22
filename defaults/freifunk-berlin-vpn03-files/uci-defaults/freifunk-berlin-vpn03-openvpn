@@ -1,7 +1,7 @@
 #!/bin/sh
 
 . /lib/functions/guard.sh
-guard "vpn03_openvpn"
+guard "vpn03-openvpn"
 
 uci set openvpn.ffvpn=openvpn
 uci set openvpn.ffvpn.enabled=0

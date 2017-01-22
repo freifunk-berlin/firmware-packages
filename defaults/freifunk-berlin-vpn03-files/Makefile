@@ -21,10 +21,6 @@ define Package/freifunk-berlin-vpn03-files/default
   PKGARCH:=all
 endef
 
-define Package/freifunk-berlin-vpn03-files/description
-  Freifunk Berlin VPN03 files
-endef
-
 define Package/freifunk-berlin-vpn03-openvpn-files
   $(call Package/freifunk-berlin-vpn03-files/default)
   TITLE:=Freifunk Berlin VPN03 files (OpenVPN)
@@ -62,9 +58,9 @@ endef
 
 define Package/freifunk-berlin-vpn03-openvpn-files/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
+	$(CP) ./uci-defaults/freifunk-berlin-vpn03-openvpn $(1)/etc/uci-defaults
 	$(INSTALL_DIR) $(1)/etc/openvpn
-	$(CP) ./openvpn/freifunk-ca.crt $(1)/etc/openvpn
+	$(CP) ./files/freifunk-ca.crt $(1)/etc/openvpn
 endef
 
 define Package/freifunk-berlin-vpn03-ipsec-files/install
