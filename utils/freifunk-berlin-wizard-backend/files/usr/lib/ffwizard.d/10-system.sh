@@ -21,6 +21,17 @@ setup_system() {
 		log_system "Password updated."
 	fi
 
+	# ssh keys
+	# reset
+	> /etc/dropbear/authorized_keys
+	# add
+	local sshkey
+	local idx=0
+	while sshkey=$(jsonfilter -s "${CONFIG_JSON}" -e "@.router.sshkeys[${idx}]"); do
+		echo $sshkey >> /etc/dropbear/authorized_keys
+		idx=$((idx+1))
+	done
+
 	# hostname
 	local hostname
 	local rand
