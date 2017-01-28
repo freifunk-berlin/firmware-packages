@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-wizard-backend
-PKG_VERSION:=0.0.0
+PKG_VERSION:=1.0.0~beta.1
 PKG_RELEASE:=1
 PKG_MAINTAINER:=André Gaul <andre@gaul.io>
 
