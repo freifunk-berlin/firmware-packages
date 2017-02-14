@@ -71,11 +71,11 @@ function main.write(self, section, value)
   })
 
   fs.move(
-    "/lib/uci/upload/cbid.ffvpn.1.cert",
+    "/etc/luci-uploads/cbid.ffvpn.1.cert",
     "/etc/openvpn/freifunk_client.crt"
   )
   fs.move(
-    "/lib/uci/upload/cbid.ffvpn.1.key",
+    "/etc/luci-uploads/cbid.ffvpn.1.key",
     "/etc/openvpn/freifunk_client.key"
   )
 
