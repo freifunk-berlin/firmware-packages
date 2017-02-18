@@ -27,7 +27,7 @@ EOF
   uci set olsrd2.$LOG.stderr=true
 
   TELNET="$(uci add olsrd2 telnet)"
-  uci set olsrd2.$TELNET.port=2009
+  uci set olsrd2.$TELNET.port=2010
 
   DOMAIN="$(uci add olsrd2 domain)"
   uci set olsrd2.$DOMAIN.table=200
