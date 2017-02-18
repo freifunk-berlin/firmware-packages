@@ -17,7 +17,7 @@ config_foreach is_dnsmasq collectd_exec_input
 cat >>/etc/config/luci_statistics <<EOF
 config collectd_exec_input
         option cmdline '/etc/collectd/dnsmasq.sh'
-        option cmduser 'dnsmasq'
-        option cmdgroup 'dnsmasq'
+        option cmduser 'nobody'
+        option cmdgroup 'nogroup'
 
 EOF
