@@ -22,7 +22,7 @@ EOF
   ZONE="$(uci add firewall zone)"
   uci set firewall.$ZONE.name=wan
   uci set firewall.$ZONE.masq=1
-  uci set firewall.$ZONE.network=wan
+  uci set firewall.$ZONE.network="wan wan6"
   uci set firewall.$ZONE.forward=REJECT
   uci set firewall.$ZONE.output=ACCEPT
   uci set firewall.$ZONE.local_restrict=1
