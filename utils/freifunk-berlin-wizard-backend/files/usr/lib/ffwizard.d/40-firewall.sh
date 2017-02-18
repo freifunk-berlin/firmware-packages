@@ -84,13 +84,13 @@ EOF
   uci set firewall.zone_freifunk.name=freifunk
   uci set firewall.zone_freifunk.output=ACCEPT
 
-	networks="tunl0 dhcp ffvpn lan"
-	# add wireless networks
-	idx=0
+  networks="tunl0 dhcp ffvpn lan"
+  # add wireless networks
+  idx=0
   while uci -q get "wireless.radio${idx}" > /dev/null; do
-		networks="${networks} wireless${idx}"
-		idx=$((idx+1))
-	done
+    networks="${networks} wireless${idx}"
+    idx=$((idx+1))
+  done
   uci set firewall.zone_freifunk.network="${networks}"
   uci set firewall.zone_freifunk.device=tnl_+
 
@@ -133,6 +133,43 @@ EOF
   FORWARDING="$(uci add firewall forwarding)"
   uci set firewall.$FORWARDING.dest=freifunk
   uci set firewall.$FORWARDING.src=wan
+
+  # prevent traffic from freifunk to private networks via wan
+  RULE="$(uci add firewall rule)"
+  uci set firewall.$RULE.name=Disallow-wan-v4-private-a
+  uci set firewall.$RULE.src=freifunk
+  uci set firewall.$RULE.dest=wan
+  uci set firewall.$RULE.family=ipv4
+  uci set firewall.$RULE.dest_ip="10.0.0.0/8"
+  uci set firewall.$RULE.target=REJECT
+  uci set firewall.$RULE.proto=all
+
+  RULE="$(uci add firewall rule)"
+  uci set firewall.$RULE.name=Disallow-wan-v4-private-b
+  uci set firewall.$RULE.src=freifunk
+  uci set firewall.$RULE.dest=wan
+  uci set firewall.$RULE.family=ipv4
+  uci set firewall.$RULE.dest_ip="172.16.0.0/12"
+  uci set firewall.$RULE.target=REJECT
+  uci set firewall.$RULE.proto=all
+
+  RULE="$(uci add firewall rule)"
+  uci set firewall.$RULE.name=Disallow-wan-v4-private-c
+  uci set firewall.$RULE.src=freifunk
+  uci set firewall.$RULE.dest=wan
+  uci set firewall.$RULE.family=ipv4
+  uci set firewall.$RULE.dest_ip="192.168.0.0/16"
+  uci set firewall.$RULE.target=REJECT
+  uci set firewall.$RULE.proto=all
+
+  RULE="$(uci add firewall rule)"
+  uci set firewall.$RULE.name=Disallow-wan-v6-ula
+  uci set firewall.$RULE.src=freifunk
+  uci set firewall.$RULE.dest=wan
+  uci set firewall.$RULE.family=ipv6
+  uci set firewall.$RULE.dest_ip="fd00::/8"
+  uci set firewall.$RULE.target=REJECT
+  uci set firewall.$RULE.proto=all
 
   uci commit firewall
 
