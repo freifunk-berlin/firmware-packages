@@ -58,16 +58,16 @@ EOF
   # add txtinfo plugin - needed for collectd-mod-txtinfo
   PLUGIN="$(uci add olsrd LoadPlugin)"
   uci set olsrd.$PLUGIN.accept=0.0.0.0
-  uci set olsrd.$PLUGIN.library=olsrd_txtinfo.so.0.1
+  uci set olsrd.$PLUGIN.library=olsrd_txtinfo
   uci set olsrd.$PLUGIN.port=2006
 
   # add arprefresh plugin
   PLUGIN="$(uci add olsrd LoadPlugin)"
-  uci set olsrd.$PLUGIN.library=olsrd_arprefresh.so.0.1
+  uci set olsrd.$PLUGIN.library=olsrd_arprefresh
 
   # add nameservice plugin
   PLUGIN="$(uci add olsrd LoadPlugin)"
-  uci set olsrd.$PLUGIN.library=olsrd_nameservice.so.0.3
+  uci set olsrd.$PLUGIN.library=olsrd_nameservice
   uci set olsrd.$PLUGIN.suffix=.olsr
   uci set olsrd.$PLUGIN.hosts_file=/tmp/hosts/olsr
   uci set olsrd.$PLUGIN.latlon_file=/var/run/latlon.js
@@ -76,18 +76,18 @@ EOF
   # add jsoninfo plugin
   PLUGIN="$(uci add olsrd LoadPlugin)"
   uci set olsrd.$PLUGIN.accept=0.0.0.0
-  uci set olsrd.$PLUGIN.library=olsrd_jsoninfo.so.0.0
+  uci set olsrd.$PLUGIN.library=olsrd_jsoninfo
   uci set olsrd.$PLUGIN.ignore=0
 
   # add watchdog plugin
   PLUGIN="$(uci add olsrd LoadPlugin)"
-  uci set olsrd.$PLUGIN.library=olsrd_watchdog.so.0.1
+  uci set olsrd.$PLUGIN.library=olsrd_watchdog
   uci set olsrd.$PLUGIN.file=/var/run/olsrd.watchdog
   uci set olsrd.$PLUGIN.interval=30
 
   # add dyngw plain plugin - it is ipv4 only
   PLUGIN="$(uci add olsrd LoadPlugin)"
-  uci set olsrd.$PLUGIN.library=olsrd_dyn_gw.so.0.5
+  uci set olsrd.$PLUGIN.library=olsrd_dyn_gw
   uci add_list olsrd.$PLUGIN.Ping=85.214.20.141     # dns.digitalcourage.de
   uci add_list olsrd.$PLUGIN.Ping=213.73.91.35      # dnscache.ccc.berlin.de
   uci add_list olsrd.$PLUGIN.Ping=194.150.168.168   # dns.as250.net
