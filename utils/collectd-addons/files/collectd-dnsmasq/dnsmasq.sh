@@ -1,6 +1,6 @@
 #!/bin/sh
 
-logger -p collectd-dnsmasq-addon "started"
+logger -t collectd-dnsmasq-addon "started"
 
 HOSTNAME="${COLLECTD_HOSTNAME:-$(uci get system.\@system[0].hostname)}"
 INTERVAL="${COLLECTD_INTERVAL:-60}"
