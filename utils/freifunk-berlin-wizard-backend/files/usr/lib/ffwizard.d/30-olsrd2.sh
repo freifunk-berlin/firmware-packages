@@ -1,7 +1,7 @@
 #!/bin/sh
 
 log_olsrd2() {
-	logger -s -t ffwizard_olsrd2 "$@"
+  logger -s -t ffwizard_olsrd2 "$@"
 }
 
 setup_olsrd2() {

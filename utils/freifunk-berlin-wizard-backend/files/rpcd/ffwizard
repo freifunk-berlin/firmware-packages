@@ -5,48 +5,48 @@
 . /usr/share/libubox/jshn.sh
 
 case "$1" in
-	list)
-		json_init
+  list)
+    json_init
 
-		json_add_object "apply"
-		json_add_object "config"
-		json_close_object
-		json_close_object
+    json_add_object "apply"
+    json_add_object "config"
+    json_close_object
+    json_close_object
 
-		json_dump
-	;;
-	call)
-		case "$2" in
-			apply)
-				local json
-				local tmpfile
+    json_dump
+  ;;
+  call)
+    case "$2" in
+      apply)
+        local json
+        local tmpfile
 
-				# parse
-				read json
+        # parse
+        read json
 
-				if [ $(jsonfilter -s "${json}" -t '@.config') != "object" ] ; then
-					echo '{ "status": "failed", "description": "config does not exists or is not type object"}'
-					exit 0
-				fi
+        if [ $(jsonfilter -s "${json}" -t '@.config') != "object" ] ; then
+          echo '{ "status": "failed", "description": "config does not exists or is not type object"}'
+          exit 0
+        fi
 
-				# extract "config" value and save this in tmpfile
-				config=$(jsonfilter -s "${json}" -e '@.config')
-				tmpfile=$(mktemp /tmp/ffwizard_XXXXXX)
-				echo $config > $tmpfile
+        # extract "config" value and save this in tmpfile
+        config=$(jsonfilter -s "${json}" -e '@.config')
+        tmpfile=$(mktemp /tmp/ffwizard_XXXXXX)
+        echo $config > $tmpfile
 
-				# run wizard script with config file
-				FFWIZARD=$(ffwizard_apply -u $tmpfile)
-				RET=$?
-				if [ $RET -ne 0 ] ; then
-					echo "{ \"status\": \"failed\", \"description\": \"ffwizard failed (return code $RET, error message: $FFWIZARD)\"}"
-					exit 0
-				fi
-				echo '{ "status": "success", "description": "config has been applied" }'
+        # run wizard script with config file
+        FFWIZARD=$(ffwizard_apply -u $tmpfile)
+        RET=$?
+        if [ $RET -ne 0 ] ; then
+          echo "{ \"status\": \"failed\", \"description\": \"ffwizard failed (return code $RET, error message: $FFWIZARD)\"}"
+          exit 0
+        fi
+        echo '{ "status": "success", "description": "config has been applied" }'
 
-				echo $config > /etc/ffwizard.config.json
+        echo $config > /etc/ffwizard.config.json
 
-				reboot
-			;;
-		esac
-	;;
+        reboot
+      ;;
+    esac
+  ;;
 esac

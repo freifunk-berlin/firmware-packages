@@ -3,16 +3,16 @@
 . /usr/share/libubox/jshn.sh
 
 log_wireless() {
-	logger -s -t ffwizard_wireless "$@"
+  logger -s -t ffwizard_wireless "$@"
 }
 
 setup_wireless() {
-	local cfg=$1
+  local cfg=$1
 
   # reset wifi config
-	rm -f /etc/config/wireless
+  rm -f /etc/config/wireless
   wifi config
-	iw reg set DE
+  iw reg set DE
 
   # remove wifi-ifaces
   local idx=0
@@ -28,39 +28,39 @@ setup_wireless() {
     local device="radio$idx"
 
     uci set wireless.$device.disabled=0
-		uci set wireless.$device.country=DE
+    uci set wireless.$device.country=DE
     # TODO: read from config
     uci set wireless.$device.distance=1000
 
     # get valid hwmods
-  	local hw_a=0
-  	local hw_b=0
-  	local hw_g=0
-  	local hw_n=0
-  	local info_data=$(ubus call iwinfo info '{ "device": "radio'$idx'" }' 2>/dev/null)
-  	if [ -z "$info_data" ]; then
-  		log_wireless "No iwinfo data for radio$idx"
-  		return 1
-  	fi
-  	json_load "$info_data"
-  	json_select hwmodes
-  	json_get_values hw_res
-  	if [ -z "$hw_res" ]; then
-  		log_wireless "No iwinfo hwmodes for radio$idx"
-  		return 1
-  	fi
-  	for i in $hw_res ; do
-  		case $i in
-  			a) hw_a=1 ;;
-  			b) hw_b=1 ;;
-  			g) hw_g=1 ;;
-  			n) hw_n=1 ;;
-  		esac
-  	done
-  	[ "$hw_a" == 1 ] && log_wireless "HWmode a"
-  	[ "$hw_b" == 1 ] && log_wireless "HWmode b"
-  	[ "$hw_g" == 1 ] && log_wireless "HWmode g"
-  	[ "$hw_n" == 1 ] && log_wireless "HWmode n"
+    local hw_a=0
+    local hw_b=0
+    local hw_g=0
+    local hw_n=0
+    local info_data=$(ubus call iwinfo info '{ "device": "radio'$idx'" }' 2>/dev/null)
+    if [ -z "$info_data" ]; then
+      log_wireless "No iwinfo data for radio$idx"
+      return 1
+    fi
+    json_load "$info_data"
+    json_select hwmodes
+    json_get_values hw_res
+    if [ -z "$hw_res" ]; then
+      log_wireless "No iwinfo hwmodes for radio$idx"
+      return 1
+    fi
+    for i in $hw_res ; do
+      case $i in
+        a) hw_a=1 ;;
+        b) hw_b=1 ;;
+        g) hw_g=1 ;;
+        n) hw_n=1 ;;
+      esac
+    done
+    [ "$hw_a" == 1 ] && log_wireless "HWmode a"
+    [ "$hw_b" == 1 ] && log_wireless "HWmode b"
+    [ "$hw_g" == 1 ] && log_wireless "HWmode g"
+    [ "$hw_n" == 1 ] && log_wireless "HWmode n"
 
     # get valid channel list
     local channels
@@ -127,15 +127,15 @@ setup_wireless() {
     # adhoc bssid
     local bssid
     if [ $channel -gt 0 -a $channel -lt 10 ] ; then
-    	bssid=$channel"2:CA:FF:EE:BA:BE"
+      bssid=$channel"2:CA:FF:EE:BA:BE"
     elif [ $channel -eq 10 ] ; then
-    	bssid="02:CA:FF:EE:BA:BE"
+      bssid="02:CA:FF:EE:BA:BE"
     elif [ $channel -gt 10 -a $channel -lt 15 ] ; then
-    	bssid=$(printf "%X" "$channel")"2:CA:FF:EE:BA:BE"
+      bssid=$(printf "%X" "$channel")"2:CA:FF:EE:BA:BE"
     elif [ $channel -gt 35 -a $channel -lt 100 ] ; then
-    	bssid="02:"$channel":CA:FF:EE:EE"
+      bssid="02:"$channel":CA:FF:EE:EE"
     elif [ $channel -gt 99 -a $channel -lt 199 ] ; then
-    	bssid="12:"$(printf "%02d" "$(expr $channel - 100)")":CA:FF:EE:EE"
+      bssid="12:"$(printf "%02d" "$(expr $channel - 100)")":CA:FF:EE:EE"
     fi
 
     local iface
@@ -163,7 +163,7 @@ setup_wireless() {
     idx=$((idx+1))
   done
 
-	uci commit wireless
+  uci commit wireless
 }
 
 setup_wireless

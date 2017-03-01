@@ -3,7 +3,7 @@
 . /usr/share/libubox/jshn.sh
 
 log_firewall() {
-	logger -s -t ffwizard_firewall "$@"
+  logger -s -t ffwizard_firewall "$@"
 }
 
 setup_firewall() {

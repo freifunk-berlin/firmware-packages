@@ -1,7 +1,7 @@
 #!/bin/sh
 
 log_ffwizard() {
-	logger -s -t ffwizard_ffwizard "$@"
+  logger -s -t ffwizard_ffwizard "$@"
 }
 
 setup_ffwizard() {
