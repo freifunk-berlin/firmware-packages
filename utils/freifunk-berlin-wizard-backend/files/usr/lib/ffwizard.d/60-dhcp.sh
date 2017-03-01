@@ -3,15 +3,15 @@
 . /usr/share/libubox/jshn.sh
 
 log_dhcp() {
-	logger -s -t ffwizard_dhcp "$@"
+  logger -s -t ffwizard_dhcp "$@"
 }
 
 setup_dhcp() {
-	local cfg=$1
-	json_init
-	json_load "$CONFIG_JSON" || exit 1
+  local cfg=$1
+  json_init
+  json_load "$CONFIG_JSON" || exit 1
 
-	json_select ip
+  json_select ip
 
   # ignore lan interface
   uci -q delete "dhcp.lan"

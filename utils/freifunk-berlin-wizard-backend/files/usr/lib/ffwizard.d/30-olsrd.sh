@@ -3,15 +3,15 @@
 . /usr/share/libubox/jshn.sh
 
 log_olsrd() {
-	logger -s -t ffwizard_olsrd "$@"
+  logger -s -t ffwizard_olsrd "$@"
 }
 
 setup_olsrd() {
-	local cfg=$1
-	json_init
-	json_load "$CONFIG_JSON" || exit 1
+  local cfg=$1
+  json_init
+  json_load "$CONFIG_JSON" || exit 1
 
-	json_select ip
+  json_select ip
 
   # add routing tables
   tables="/etc/iproute2/rt_tables"
