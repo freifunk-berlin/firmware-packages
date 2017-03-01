@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-wizard-frontend
 PKG_VERSION_BASE:=1.0.0
-PKG_VERSION_SUFFIX:=beta.1
+PKG_VERSION_SUFFIX:=beta.2
 PKG_VERSION:=$(PKG_VERSION_BASE)~$(PKG_VERSION_SUFFIX)
 PKG_RELEASE:=1
 PKG_MAINTAINER:=André Gaul <andre@gaul.io>
@@ -40,7 +40,7 @@ define Package/freifunk-berlin-wizard-frontend/install
 	$(CP) $(PKG_BUILD_DIR)/assets/*.png $(1)/www/assets/
 
 	$(INSTALL_DIR) $(1)/www/img
-	$(CP) $(PKG_BUILD_DIR)/img/*.png $(1)/www/img/
+	$(CP) $(PKG_BUILD_DIR)/img/* $(1)/www/img/
 
 	$(CP) $(PKG_BUILD_DIR)/index.css $(1)/www/
 	$(CP) $(PKG_BUILD_DIR)/index.html $(1)/www/
