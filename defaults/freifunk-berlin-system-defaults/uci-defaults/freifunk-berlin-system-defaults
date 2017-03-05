@@ -1,0 +1,11 @@
+#!/bin/sh
+
+#. /lib/functions/guard.sh
+#guard "system"
+
+# change default hostname
+if [ $(uci get system.@system[0].hostname) = LEDE ]; then
+  uci set system.@system[0].hostname=gib-mir-einen-namen
+fi
+
+uci commit system
