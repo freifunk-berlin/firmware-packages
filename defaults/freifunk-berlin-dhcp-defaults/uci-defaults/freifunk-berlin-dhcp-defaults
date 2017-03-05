@@ -17,4 +17,8 @@ uci set dhcp.frei_funk_ipv6=domain
 uci set dhcp.frei_funk_ipv6.name=frei.funk
 uci set dhcp.frei_funk_ipv6.ip=$router_ula
 
+# done send default-route to clients to prevent them sending pakets
+# to, we can't forward now
+uci add_list dhcp.lan.dhcp_option='3'
+
 uci commit dhcp
