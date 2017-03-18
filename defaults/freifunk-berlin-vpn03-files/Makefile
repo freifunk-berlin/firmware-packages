@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-vpn03-files
 PKG_VERSION:=0.0.4
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -43,6 +43,10 @@ endef
 
 define Package/freifunk-berlin-vpn03-ipsec-files/description
   Freifunk VPN03 files for IpSec-tunnels
+endef
+
+define Package/freifunk-berlin-vpn03-ipsec-files/conffiles
+/etc/ipsec.conf
 endef
 
 define Build/Prepare
