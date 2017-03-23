@@ -263,6 +263,9 @@ migrate () {
     fix_dhcp_start_limit
     delete_system_latlon
     fix_olsrd6_watchdog_file
+  fi
+
+  if semverLT ${OLD_VERSION} "0.3.0"; then
     quieten_dnsmasq
   fi
 
