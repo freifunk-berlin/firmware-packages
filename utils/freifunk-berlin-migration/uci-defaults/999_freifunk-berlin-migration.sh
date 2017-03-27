@@ -226,6 +226,7 @@ update_berlin_owm_api() {
 fix_olsrd6_watchdog_file() {
   log "fix olsrd6 watchdog file"
   uci set $(uci show olsrd6|grep "/var/run/olsrd.watchdog"|cut -d '=' -f 1)=/var/run/olsrd6.watchdog
+}
 
 quieten_dnsmasq() {
   log "quieten dnsmasq"
