@@ -233,6 +233,14 @@ quieten_dnsmasq() {
   uci set dhcp.@dnsmasq[0].quietdhcp=1
 }
 
+vpn03_udp4() {
+  log "set VPN03 to UDPv4 only"
+  uci delete openvpn.ffvpn.remote
+  uci add_list openvpn.ffvpn.remote='vpn03.berlin.freifunk.net 1194'
+  uci add_list openvpn.ffvpn.remote='vpn03-backup.berlin.freifunk.net 1194'
+  uci set openvpn.ffvpn.proto=udp4
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -268,6 +276,7 @@ migrate () {
 
   if semverLT ${OLD_VERSION} "0.3.0"; then
     quieten_dnsmasq
+    vpn03_udp4
   fi
 
   # overwrite version with the new version
