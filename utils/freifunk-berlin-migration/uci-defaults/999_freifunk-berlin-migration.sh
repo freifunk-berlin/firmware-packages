@@ -161,7 +161,6 @@ sgw_rules_to_fw3() {
 
 remove_dhcp_interface_lan() {
   uci -q delete dhcp.lan
-  uci commit dhcp
 }
 
 change_olsrd_dygw_ping() {
@@ -174,7 +173,6 @@ change_olsrd_dygw_ping() {
       uci add_list olsrd.$config.Ping=85.214.20.141     # dns.digitalcourage.de
       uci add_list olsrd.$config.Ping=213.73.91.35      # dnscache.ccc.berlin.de
       uci add_list olsrd.$config.Ping=194.150.168.168   # dns.as250.net
-      uci commit
       return 1
     fi
   }
@@ -213,7 +211,6 @@ fix_dhcp_start_limit() {
 delete_system_latlon() {
   log "removing obsolete uci-setting system.system.latlon"
   uci -q delete system.@system[0].latlon
-  uci commit system
 }
 
 update_berlin_owm_api() {
