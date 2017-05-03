@@ -47,6 +47,7 @@ endef
 
 define Package/freifunk-berlin-vpn03-ipsec-files/conffiles
 /etc/ipsec.conf
+/etc/ipsec.d/ipsec.vpn03.conf
 endef
 
 define Build/Prepare
@@ -69,8 +70,8 @@ endef
 define Package/freifunk-berlin-vpn03-ipsec-files/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/freifunk-berlin-vpn03-ipsec $(1)/etc/uci-defaults
-	$(INSTALL_DIR) $(1)/etc/
-	$(CP) ./ipsec/ipsec.conf $(1)/etc/ipsec.conf
+	$(INSTALL_DIR) $(1)/etc/ipsec.d
+	$(CP) ./ipsec/vpn03-ipsec.conf $(1)/etc/ipsec.d/ipsec.vpn03.conf
 	$(INSTALL_DIR) $(1)/lib/freifunk
 	$(CP) ./ipsec/vti.sh $(1)/lib/freifunk/ffvpn-ipsec-vti.sh
 	$(INSTALL_DIR) $(1)/etc/ipsec.d/cacerts
@@ -79,6 +80,13 @@ define Package/freifunk-berlin-vpn03-ipsec-files/install
 	$(CP) ./ipsec/60-vpn03_ipsec $(1)/etc/hotplug.d/iface
 	$(INSTALL_DIR) $(1)/etc/strongswan.d
 	$(CP) ./ipsec/vpn03-strongswan.conf $(1)/etc/strongswan.d/
+endef
+
+# add vpn03-config to main ipsec.conf
+define Package/freifunk-berlin-vpn03-ipsec-files/postinst
+#!/bin/sh
+grep -q "include /etc/ipsec.d/ipsec.vpn03.conf" /etc/ipsec.conf || \
+  echo "include /etc/ipsec.d/ipsec.vpn03.conf" >>/etc/ipsec.conf
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-vpn03-openvpn-files))
