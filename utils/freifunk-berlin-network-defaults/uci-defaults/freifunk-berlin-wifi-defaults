@@ -1,0 +1,9 @@
+#!/bin/sh
+
+. /lib/functions/guard.sh
+guard "wifi"
+
+# disable 802.11b rates by default
+uci set wireless.radio0.legacy=0
+
+uci commit wireless
