@@ -51,7 +51,7 @@ function sysinfo_for_kathleen020()
 
 	local system = 'system is deprecated'
 
-	local model = 
+	local model =
 		boardinfo['model'] or
 		cpuinfo:match("machine\t+: ([^\n]+)") or
 		cpuinfo:match("Hardware\t+: ([^\n]+)") or
@@ -65,7 +65,7 @@ end
 --- Returns the system version info build from /etc/openwrt_release
 --- switch from luci.version which always includes
 --- the revision in the "distversion" field and gives empty "distname"
--- @ return	the releasename 
+-- @ return	the releasename
 --         	(DISTRIB_ID + DISTRIB_CODENAME + DISTRIB_RELEASE)
 -- @ return	the releaserevision
 --         	(DISTRIB_REVISION)
@@ -135,7 +135,7 @@ function fetch_olsrd_links()
 			hostname = nixio.getnameinfo(v['remoteIP'], "inet")
 			if hostname then
 				links[i]['destNodeId'] = string.gsub(hostname, "mid..", "") --owm destNodeId
-			end 
+			end
 		end
 		data = links
 	end
@@ -248,7 +248,7 @@ function fetch_olsrd()
 	local olsrconfig = fetch_olsrd_config()
 	data['ipv4Config'] = olsrconfig['ipv4Config']
 	data['ipv6Config'] = olsrconfig['ipv6Config']
-	
+
 	return data
 end
 
@@ -288,7 +288,7 @@ function get()
 --	end
 	for _, dev in ipairs(devices) do
 		for _, net in ipairs(dev:get_wifinets()) do
-			assoclist[#assoclist+1] = {} 
+			assoclist[#assoclist+1] = {}
 			assoclist[#assoclist]['ifname'] = net.iwdata.ifname
 			assoclist[#assoclist]['network'] = net.iwdata.network
 			assoclist[#assoclist]['device'] = net.iwdata.device
@@ -307,7 +307,7 @@ function get()
 
 
 	root.hardware = boardinfo['system'] --owm
-	
+
 
 	root.firmware = {
 	--	luciname=version.luciname,
@@ -454,7 +454,7 @@ function get()
 		if vif.macaddr then
 			root.interfaces[#root.interfaces]['macaddr'] = showmac(vif.macaddr)
 		end
-		
+
 		wireless_add = {}
 		for i,v in ipairs(interfaces) do
 			if v['network'] == name then
@@ -477,17 +477,17 @@ function get()
 --[[
 	local dr4 = sys.net.defaultroute()
 	local dr6 = sys.net.defaultroute6()
-	
+
 	if dr6 then
-		def6 = { 
+		def6 = {
 		gateway = dr6.nexthop:string(),
 		dest = dr6.dest:string(),
 		dev = dr6.device,
 		metr = dr6.metric }
-	end   
+	end
 
 	if dr4 then
-		def4 = { 
+		def4 = {
 		gateway = dr4.gateway:string(),
 		dest = dr4.dest:string(),
 		dev = dr4.device,
@@ -611,9 +611,8 @@ function get()
 	root.olsr = fetch_olsrd()
 
 	root.script = 'luci-app-owm'
-	
+
 	root.api_rev = '1.0'
 
 	return root
 end
-
