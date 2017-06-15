@@ -26,7 +26,6 @@ local sysinfo = luci.util.ubus("system", "info") or { }
 local boardinfo = luci.util.ubus("system", "board") or { }
 local table = require "table"
 local nixio = require "nixio"
---local neightbl = require "neightbl"
 local ip = require "luci.ip"
 
 
@@ -100,7 +99,6 @@ function fetch_olsrd_config()
 	if IpVersion == "4" or IpVersion == "6and4" then
 		local jsonreq4 = util.exec("echo /config | nc 127.0.0.1 9090 2>/dev/null") or {}
 		local jsondata4 = json.decode(jsonreq4) or {}
-		--print("fetch_olsrd_config v4 "..(jsondata4['config'] and "1" or "err"))
 		if jsondata4['config'] then
 			data['ipv4Config'] = jsondata4['config']
 		end
@@ -108,7 +106,6 @@ function fetch_olsrd_config()
 	if IpVersion == "6" or IpVersion == "6and4" then
 		local jsonreq6 = util.exec("echo /config | nc ::1 9090 2>/dev/null") or {}
 		local jsondata6 = json.decode(jsonreq6) or {}
-		--print("fetch_olsrd_config v6 "..(jsondata6['config'] and "1" or "err"))
 		if jsondata6['config'] then
 			data['ipv6Config'] = jsondata6['config']
 		end
@@ -124,7 +121,6 @@ function fetch_olsrd_links()
 	if IpVersion == "4" or IpVersion == "6and4" then
 		local jsonreq4 = util.exec("echo /links | nc 127.0.0.1 9090 2>/dev/null") or {}
 		local jsondata4 = json.decode(jsonreq4) or {}
-		--print("fetch_olsrd_links v4 "..(jsondata4['links'] and #jsondata4['links'] or "err"))
 		local links = {}
 		if jsondata4['links'] then
 			links = jsondata4['links']
@@ -197,7 +193,6 @@ function fetch_olsrd_neighbors(interfaces)
 	if IpVersion == "6" or IpVersion == "6and4" then
 		local jsonreq6 = util.exec("echo /links | nc ::1 9090 2>/dev/null") or {}
 		local jsondata6 = json.decode(jsonreq6) or {}
-		--print("fetch_olsrd_neighbors v6 "..(jsondata6['links'] and #jsondata6['links'] or "err"))
 		local links = {}
 		if jsondata6['links'] then
 			links = jsondata6['links']
@@ -281,11 +276,6 @@ function get()
 	local _ubusclicache = { }
 	local position = get_position()
 	local version = get_version()
---	local _, object
---	for _, object in ipairs(_ubus:objects()) do
---		local _ubusclicache = object:match("^clicache%.(.+)")
---		print(_ubusclicache)
---	end
 	for _, dev in ipairs(devices) do
 		for _, net in ipairs(dev:get_wifinets()) do
 			assoclist[#assoclist+1] = {}
@@ -473,41 +463,6 @@ function get()
 		end
 		root.interfaces[#root.interfaces].wifi = wireless_add
 	end)
-
---[[
-	local dr4 = sys.net.defaultroute()
-	local dr6 = sys.net.defaultroute6()
-
-	if dr6 then
-		def6 = {
-		gateway = dr6.nexthop:string(),
-		dest = dr6.dest:string(),
-		dev = dr6.device,
-		metr = dr6.metric }
-	end
-
-	if dr4 then
-		def4 = {
-		gateway = dr4.gateway:string(),
-		dest = dr4.dest:string(),
-		dev = dr4.device,
-		metr = dr4.metric }
-	else
-		local dr = sys.exec("ip r s t olsr-default")
-		if dr then
-			local dest, gateway, dev, metr = dr:match("^(%w+) via (%d+.%d+.%d+.%d+) dev (%w+) +metric (%d+)")
-			def4 = {
-				dest = dest,
-				gateway = gateway,
-				dev = dev,
-				metr = metr
-			}
-		end
-	end
-
-	root.ipv4defaultGateway = def4
-	root.ipv6defaultGateway = def6
---]]
 
 	local neighbors = fetch_olsrd_neighbors(root.interfaces)
 	local arptable = sys.net.arptable() or {}
