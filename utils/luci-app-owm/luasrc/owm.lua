@@ -407,8 +407,8 @@ function get()
 		root.interfaces[#root.interfaces].name = name --owm
 		root.interfaces[#root.interfaces].ifname = vif.ifname --owm
 		root.interfaces[#root.interfaces].ipv4Addresses = {vif.ipaddr} --owm
+		local ipv6Addresses = {}
 		if device and device:ip6addrs() then
-			local ipv6Addresses = {}
 			for _, a in ipairs(device:ip6addrs()) do
 				table.insert(ipv6Addresses, a:string())
 			end
