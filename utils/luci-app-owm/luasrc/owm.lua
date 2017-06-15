@@ -120,7 +120,7 @@ function fetch_olsrd_links()
 		for i,v in ipairs(links) do
 			links[i]['sourceAddr'] = v['localIP'] --owm sourceAddr
 			links[i]['destAddr'] = v['remoteIP'] --owm destAddr
-			hostname = nixio.getnameinfo(v['remoteIP'], "inet")
+			local hostname = nixio.getnameinfo(v['remoteIP'], "inet")
 			if hostname then
 				links[i]['destNodeId'] = string.gsub(hostname, "mid..", "") --owm destNodeId
 			end
@@ -138,7 +138,7 @@ function fetch_olsrd_links()
 		for i,v in ipairs(links) do
 			links[i]['sourceAddr'] = v['localIP']
 			links[i]['destAddr'] = v['remoteIP']
-			hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
+			local hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
 			if hostname then
 				links[i]['destNodeId'] = string.gsub(hostname, "mid..", "") --owm destNodeId
 			end
@@ -370,7 +370,7 @@ function get()
 				end
 			end
 		end
-		assoclist_if = {}
+		local assoclist_if = {}
 		for _, v in ipairs(assoclist) do
 			if v.network == interfaces[#interfaces]['network'] and v.list then
 				for assocmac, assot in pairs(v.list) do
@@ -435,7 +435,7 @@ function get()
 			root.interfaces[#root.interfaces]['macaddr'] = showmac(vif.macaddr)
 		end
 
-		wireless_add = {}
+		local wireless_add = {}
 		for i,v in ipairs(interfaces) do
 			if v['network'] == name then
 				root.interfaces[#root.interfaces].physicalType = 'wifi' --owm
