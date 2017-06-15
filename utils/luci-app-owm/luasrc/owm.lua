@@ -458,39 +458,7 @@ function get()
 	local arptable = sys.net.arptable() or {}
 	if #root.interfaces ~= 0 then
 		for idx,iface in ipairs(root.interfaces) do
-			local t = {}
-			if iface['ifname'] and neightbl then
-				t = neightbl.get(iface['ifname']) or {}
-				local neightbl_get
-				for ip,mac in pairs(t) do
-					if not mac then
-						os.execute("ping6 -q -c1 -w1 -I"..iface['ifname'].." "..ip.." 2&>1 >/dev/null")
-						neightbl_get = true
-					end
-				end
-				if neightbl_get then
-					t = neightbl.get(iface['ifname']) or {}
-				end
-			end
 			local neigh_mac = {}
-			for ip,mac in pairs(t) do
-				if mac and not string.find(mac, "33:33:") then
-					mac = showmac(mac)
-					if not neigh_mac[mac] then
-						neigh_mac[mac] = {}
-						neigh_mac[mac]['ip6'] = {}
-					elseif not neigh_mac[mac]['ip6'] then
-						neigh_mac[mac]['ip6'] = {}
-					end
-					neigh_mac[mac]['ip6'][#neigh_mac[mac]['ip6']+1] = ip
-					for i, neigh in ipairs(neighbors) do
-						if neigh['destAddr6'] == ip then
-							neighbors[i]['mac'] = mac
-							neighbors[i]['ifname'] = iface['ifname']
-						end
-					end
-				end
-			end
 			for _, arpt in ipairs(arptable) do
 				local mac = showmac(arpt['HW address']:lower())
 				local ip = arpt['IP address']
