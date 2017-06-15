@@ -187,8 +187,8 @@ function fetch_olsrd_neighbors(interfaces)
 		if jsondata6['links'] then
 			links = jsondata6['links']
 		end
-		for _,v in ipairs(links) do
-			local hostname = nixio.getnameinfo(v['remoteIP'], "inet6")
+		for _, link in ipairs(links) do
+			local hostname = nixio.getnameinfo(link['remoteIP'], "inet6")
 			if hostname then
 				hostname = string.gsub(hostname, "mid..", "")
 				local index = 0
@@ -201,14 +201,14 @@ function fetch_olsrd_neighbors(interfaces)
 					index = #data+1
 					data[index] = {}
 					data[index]['id'] = string.gsub(hostname, "mid..", "") --owm
-					data[index]['quality'] = v['linkQuality'] --owm
+					data[index]['quality'] = link['linkQuality'] --owm
 					if #interfaces ~= 0 then
 						for _,iface in ipairs(interfaces) do
 							local name = iface['.name']
 							local net = netm:get_network(name)
 							local device = net and net:get_interface()
 							if device and device:ip6addrs() then
-								local_ip = ip.IPv6(v.localIP)
+								local local_ip = ip.IPv6(link.localIP)
 								for _, a in ipairs(device:ip6addrs()) do
 									if a:host() == local_ip:host() then
 										data[index]['interface'] = name
@@ -218,9 +218,9 @@ function fetch_olsrd_neighbors(interfaces)
 						end
 					end
 				end
-				data[index]['sourceAddr6'] = v['localIP'] --owm
-				data[index]['destAddr6'] = v['remoteIP'] --owm
-				data[index]['olsr_ipv6'] = v
+				data[index]['sourceAddr6'] = link['localIP'] --owm
+				data[index]['destAddr6'] = link['remoteIP'] --owm
+				data[index]['olsr_ipv6'] = link
 			end
 		end
 	end
