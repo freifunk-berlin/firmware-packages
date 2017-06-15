@@ -88,8 +88,6 @@ function get_version()
 end
 
 function fetch_olsrd_config()
-	local jsonreq4 = ""
-	local jsonreq6 = ""
 	local data = {}
 	local IpVersion = uci:get_first("olsrd", "olsrd","IpVersion")
 	if IpVersion == "4" or IpVersion == "6and4" then
@@ -110,8 +108,6 @@ function fetch_olsrd_config()
 end
 
 function fetch_olsrd_links()
-	local jsonreq4 = ""
-	local jsonreq6 = ""
 	local data = {}
 	local IpVersion = uci:get_first("olsrd", "olsrd","IpVersion")
 	if IpVersion == "4" or IpVersion == "6and4" then
@@ -153,8 +149,6 @@ function fetch_olsrd_links()
 end
 
 function fetch_olsrd_neighbors(interfaces)
-	local jsonreq4 = ""
-	local jsonreq6 = ""
 	local data = {}
 	local IpVersion = uci:get_first("olsrd", "olsrd","IpVersion")
 	if IpVersion == "4" or IpVersion == "6and4" then
