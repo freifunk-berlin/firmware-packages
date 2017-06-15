@@ -26,9 +26,7 @@ local table = require "table"
 local nixio = require "nixio"
 local ip = require "luci.ip"
 
-
-local ipairs, os, pairs, next, type, tostring, tonumber, error, print =
-	ipairs, os, pairs, next, type, tostring, tonumber, error, print
+local ipairs, os, pairs, tonumber = ipairs, os, pairs, tonumber
 
 local dofile, _G = dofile, _G
 
