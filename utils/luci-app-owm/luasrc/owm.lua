@@ -355,7 +355,6 @@ function get()
 		interfaces[#interfaces]['password'] = nil
 		local iwinfo = sys.wifi.getiwinfo(s.ifname)
 		if iwinfo then
-			local _, f
 			for _, f in ipairs({
 			"channel", "txpower", "bitrate", "signal", "noise",
 			"quality", "quality_max", "mode", "ssid", "bssid", "encryption", "ifname"
