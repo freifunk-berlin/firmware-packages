@@ -281,18 +281,12 @@ function get()
 		loadavg = {sysinfo.load[1] / 65536.0},
 		sysinfo = {sysinfo_for_kathleen020()},
 	}
+
 	root.hostname = sys.hostname() --owm
-
-
 	root.hardware = boardinfo['system'] --owm
 
-
 	root.firmware = {
-	--	luciname=version.luciname,
-	--	luciversion=version.luciversion,
-	--	distname=version.distname,
 		name=version.distname, --owm
-	--	distversion=version.distversion,
 		revision=version.distrevision --owm
 	}
 
