@@ -371,14 +371,14 @@ function get()
 			end
 		end
 		interfaces[#interfaces]['assoclist'] = assoclist_if
-		for ii,vv in ipairs(devices) do
-			if s['device'] == vv.name then
-				interfaces[#interfaces]['wirelessdevice'] = vv
+		for _, device in ipairs(devices) do
+			if s['device'] == device.name then
+				interfaces[#interfaces]['wirelessdevice'] = device
 			end
 		end
-		for ii,vv in ipairs(antennas) do
-			if s['device'] == vv.name then
-				interfaces[#interfaces]['wirelessdevice']['antenna'] = vv --owm
+		for _, antenna in ipairs(antennas) do
+			if s['device'] == antenna.name then
+				interfaces[#interfaces]['wirelessdevice']['antenna'] = antenna --owm
 			end
 		end
 	end)
