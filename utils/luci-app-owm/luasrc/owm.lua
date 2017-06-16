@@ -427,19 +427,19 @@ function get()
 		end
 
 		local wireless_add = {}
-		for i,v in ipairs(interfaces) do
-			if v['network'] == name then
+		for _, interface in ipairs(interfaces) do
+			if interface['network'] == name then
 				root.interfaces[#root.interfaces].physicalType = 'wifi' --owm
-				root.interfaces[#root.interfaces].mode = v.mode
-				root.interfaces[#root.interfaces].encryption = v.encryption
+				root.interfaces[#root.interfaces].mode = interface.mode
+				root.interfaces[#root.interfaces].encryption = interface.encryption
 				root.interfaces[#root.interfaces].access = 'free'
 				root.interfaces[#root.interfaces].accessNote = "everyone is welcome!"
-				root.interfaces[#root.interfaces].channel = v.wirelessdevice.channel
-				root.interfaces[#root.interfaces].txpower = v.wirelessdevice.txpower
-				root.interfaces[#root.interfaces].bssid = v.bssid
-				root.interfaces[#root.interfaces].ssid = v.ssid
-				root.interfaces[#root.interfaces].antenna = v.wirelessdevice.antenna
-				wireless_add[#wireless_add+1] = v --owm
+				root.interfaces[#root.interfaces].channel = interface.wirelessdevice.channel
+				root.interfaces[#root.interfaces].txpower = interface.wirelessdevice.txpower
+				root.interfaces[#root.interfaces].bssid = interface.bssid
+				root.interfaces[#root.interfaces].ssid = interface.ssid
+				root.interfaces[#root.interfaces].antenna = interface.wirelessdevice.antenna
+				wireless_add[#wireless_add+1] = interface --owm
 			end
 		end
 		root.interfaces[#root.interfaces].wifi = wireless_add
