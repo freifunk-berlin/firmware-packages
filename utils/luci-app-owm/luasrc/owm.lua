@@ -306,7 +306,7 @@ function get()
 	root.latitude = position["latitude"] --owm
 	root.longitude = position["longitude"] --owm
 
-	local devices = {}
+	devices = {}
 	uci:foreach("wireless", "wifi-device",function(s)
 		devices[#devices+1] = s
 		devices[#devices]['name'] = s['.name']
