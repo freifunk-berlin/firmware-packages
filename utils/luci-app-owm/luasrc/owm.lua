@@ -262,8 +262,6 @@ function get()
 	local ntm = netm.init()
 	local devices  = ntm:get_wifidevs()
 	local assoclist = {}
-	local _ubus = bus.connect()
-	local _ubusclicache = { }
 	local position = get_position()
 	local version = get_version()
 	for _, dev in ipairs(devices) do
