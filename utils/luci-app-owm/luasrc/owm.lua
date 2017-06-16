@@ -452,7 +452,7 @@ function get()
 			local neigh_mac = {}
 			for _, arpt in ipairs(arptable) do
 				local mac = showmac(arpt['HW address']:lower())
-				local ip = arpt['IP address']
+				local ip_addr = arpt['IP address']
 				if iface['ifname'] == arpt['Device'] then
 					if not neigh_mac[mac] then
 						neigh_mac[mac] = {}
@@ -460,9 +460,9 @@ function get()
 					elseif not neigh_mac[mac]['ip4'] then
 						neigh_mac[mac]['ip4'] = {}
 					end
-					neigh_mac[mac]['ip4'][#neigh_mac[mac]['ip4']+1] = ip
+					neigh_mac[mac]['ip4'][#neigh_mac[mac]['ip4']+1] = ip_addr
 					for i, neigh in ipairs(neighbors) do
-						if neigh['destAddr4'] == ip then
+						if neigh['destAddr4'] == ip_addr then
 							neighbors[i]['mac'] = mac
 							neighbors[i]['ifname'] = iface['ifname']
 						end
@@ -484,8 +484,8 @@ function get()
 						end
 						neigh_mac[mac]['wifi'] = assot
 						for i, neigh in ipairs(neighbors) do
-							for j, ip in ipairs(neigh_mac[mac]['ip4']) do
-								if neigh['destAddr4'] == ip then
+							for _, ip_addr in ipairs(neigh_mac[mac]['ip4']) do
+								if neigh['destAddr4'] == ip_addr then
 									neighbors[i]['mac'] = mac
 									neighbors[i]['ifname'] = iface['ifname']
 									neighbors[i]['wifi'] = assot
@@ -493,8 +493,8 @@ function get()
 									neighbors[i]['noise'] = assot.noise
 								end
 							end
-							for j, ip in ipairs(neigh_mac[mac]['ip6']) do
-								if neigh['destAddr6'] == ip then
+							for _, ip_addr in ipairs(neigh_mac[mac]['ip6']) do
+								if neigh['destAddr6'] == ip_addr then
 									neighbors[i]['mac'] = mac
 									neighbors[i]['ifname'] = iface['ifname']
 									neighbors[i]['wifi'] = assot
