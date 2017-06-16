@@ -265,10 +265,10 @@ function get()
 	for _, dev in ipairs(devices) do
 		for _, net in ipairs(dev:get_wifinets()) do
 			assoclist[#assoclist+1] = {}
-			assoclist[#assoclist]['ifname'] = net.iwdata.ifname
-			assoclist[#assoclist]['network'] = net.iwdata.network
-			assoclist[#assoclist]['device'] = net.iwdata.device
-			assoclist[#assoclist]['list'] = net.iwinfo.assoclist
+			assoclist[#assoclist]['ifname'] = net:ifname()
+			assoclist[#assoclist]['network'] = net:shortname()
+			assoclist[#assoclist]['device'] = dev:name()
+			assoclist[#assoclist]['list'] = net:assoclist()
 		end
 	end
 	root.type = 'node' --owm
