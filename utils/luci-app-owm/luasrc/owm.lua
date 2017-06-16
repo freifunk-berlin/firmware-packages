@@ -27,13 +27,11 @@ local nixio = require "nixio"
 local ip = require "luci.ip"
 
 local ipairs, pairs, tonumber = ipairs, pairs, tonumber
-
 local dofile, _G = dofile, _G
 
 --- LuCI OWM-Library
 -- @cstyle	instance
 module "luci.owm"
-
 
 -- backported from LuCI 0.11 and adapted form berlin-stats
 --- Returns the system type (in a compatible way to LuCI 0.11)
@@ -511,11 +509,8 @@ function get()
 	end
 
 	root.links = neighbors
-
 	root.olsr = fetch_olsrd()
-
 	root.script = 'luci-app-owm'
-
 	root.api_rev = '1.0'
 
 	return root
