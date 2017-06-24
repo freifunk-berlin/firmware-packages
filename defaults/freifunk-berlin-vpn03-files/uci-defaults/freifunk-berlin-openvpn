@@ -1,7 +1,7 @@
 #!/bin/sh
 
 . /lib/functions/guard.sh
-guard "openvpn"
+guard "vpn03_openvpn"
 
 uci delete openvpn.custom_config
 uci delete openvpn.sample_server
