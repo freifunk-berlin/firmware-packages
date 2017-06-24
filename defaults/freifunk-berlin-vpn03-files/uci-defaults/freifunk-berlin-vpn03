@@ -3,9 +3,6 @@
 . /lib/functions/guard.sh
 guard "vpn03_openvpn"
 
-uci delete openvpn.custom_config
-uci delete openvpn.sample_server
-uci delete openvpn.sample_client
 uci set openvpn.ffvpn=openvpn
 uci set openvpn.ffvpn.enabled=0
 uci set openvpn.ffvpn.client=1
@@ -28,8 +25,3 @@ uci set openvpn.ffvpn.status="/var/log/openvpn-status-ffvpn.log"
 uci set openvpn.ffvpn.up="/lib/freifunk/ffvpn-up.sh"
 uci set openvpn.ffvpn.route_nopull=1
 uci commit openvpn
-
-uci set network.ffvpn=interface
-uci set network.ffvpn.ifname=ffvpn
-uci set network.ffvpn.proto=none
-uci commit network
