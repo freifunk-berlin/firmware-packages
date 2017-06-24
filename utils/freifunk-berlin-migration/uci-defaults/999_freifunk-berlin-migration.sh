@@ -3,6 +3,7 @@
 source /lib/functions.sh
 source /lib/functions/semver.sh
 source /etc/openwrt_release
+source /lib/functions/guard.sh
 
 # possible cases: 
 # 1) firstboot with kathleen --> uci system.version not defined
@@ -242,6 +243,12 @@ set_ipversion_olsrd6() {
   uci set olsrd6.@olsrd[0].IpVersion=6
 }
 
+r1_0_0_vpn03_splitconfig() {
+  log "changing guard-entry for VPN03 from openvpn to vpn03-openvpn (config-split for VPN03)"
+  guard_rename openvpn vpn03_openvpn # to guard the current settings of package "freifunk-berlin-vpn03-files"
+  guard openvpn # to guard the current settings of package "freifunk-berlin-openvpn-files"
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -282,6 +289,7 @@ migrate () {
 
   if semverLT ${OLD_VERSION} "1.0.0"; then
     set_ipversion_olsrd6
+    r1_0_0_vpn03_splitconfig
   fi
 
   # overwrite version with the new version
