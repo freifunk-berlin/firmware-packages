@@ -115,6 +115,7 @@ uci set olsrd6.$PLUGIN.interval=30
 
 # set olsrd defaults
 OLSRD="$(uci add olsrd6 olsrd)"
+uci set olsrd6.$OLSRD.IpVersion=6
 uci set olsrd6.$OLSRD.FIBMetric=flat
 uci set olsrd6.$OLSRD.AllowNoInt=yes
 uci set olsrd6.$OLSRD.TcRedundancy=2
