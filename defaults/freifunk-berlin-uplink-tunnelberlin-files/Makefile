@@ -3,7 +3,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-uplink-tunnelberlin-files
 PKG_VERSION:=0.0.1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -15,6 +15,7 @@ define Package/freifunk-berlin-uplink-tunnelberlin-files
   TITLE:=Freifunk Berlin Networktunnel files
   URL:=http://github.com/freifunk-berlin/packages_berlin
   DEPENDS+= +openvpn-crypto +freifunk-berlin-openvpn-files +freifunk-berlin-lib-guard
+  PROVIDES:=freifunk-berlin-uplink
   PKGARCH:=all
 endef
 
