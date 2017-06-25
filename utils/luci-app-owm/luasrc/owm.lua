@@ -281,6 +281,10 @@ function get()
 	local _ubusclicache = { }
 	local position = get_position()
 	local version = get_version()
+--[[
+disabled this section as of incompatible luci-code
+see https://github.com/freifunk-berlin/firmware/issues/435
+
 --	local _, object
 --	for _, object in ipairs(_ubus:objects()) do
 --		local _ubusclicache = object:match("^clicache%.(.+)")
@@ -295,6 +299,7 @@ function get()
 			assoclist[#assoclist]['list'] = net.iwinfo.assoclist
 		end
 	end
+]]--
 	root.type = 'node' --owm
 	root.updateInterval = 3600 --owm one hour
 
