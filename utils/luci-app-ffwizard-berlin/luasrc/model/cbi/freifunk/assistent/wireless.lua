@@ -145,6 +145,7 @@ function main.write(self, section, value)
       devconfig.doth = calcdoth(devconfig.channel)
       devconfig.htmode = "HT20"
       devconfig.chanlist = calcchanlist(devconfig.channel)
+      devconfig.disabled = "0"
       uci:tset("wireless", device, devconfig)
 
       --WIRELESS CONFIG ad-hoc
