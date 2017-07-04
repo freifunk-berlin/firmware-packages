@@ -30,8 +30,8 @@ function configureQOS()
 
     uci:delete("qos","wan")
     uci:delete("qos","lan")
-    uci:delete("qos","ffvpn")
-    uci:section("qos", 'interface', "ffvpn", {
+    uci:delete("qos","ffuplink")
+    uci:section("qos", 'interface', "ffuplink", {
       enabled = "1",
       classgroup = "Default",
       upload = up,

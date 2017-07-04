@@ -84,12 +84,12 @@ uci set firewall.zone_freifunk.network=tunl0
 uci set firewall.zone_freifunk.device=tnl_+
 
 # add named zone section for the VPN-uplink
-uci set firewall.zone_ffvpn=zone
-uci set firewall.zone_ffvpn.name=ffvpn
-uci set firewall.zone_ffvpn.input=REJECT
-uci set firewall.zone_ffvpn.forward=ACCEPT
-uci set firewall.zone_ffvpn.output=ACCEPT
-uci set firewall.zone_ffvpn.network=ffvpn
+uci set firewall.zone_ffuplink=zone
+uci set firewall.zone_ffuplink.name=ffuplink
+uci set firewall.zone_ffuplink.input=REJECT
+uci set firewall.zone_ffuplink.forward=ACCEPT
+uci set firewall.zone_ffuplink.output=ACCEPT
+uci set firewall.zone_ffuplink.network=ffuplink
 
 FORWARDING="$(uci add firewall forwarding)"
 uci set firewall.$FORWARDING.dest=freifunk
@@ -131,8 +131,8 @@ FORWARDING="$(uci add firewall forwarding)"
 uci set firewall.$FORWARDING.dest=freifunk
 uci set firewall.$FORWARDING.src=wan
 
-uci set firewall.fwd_ff_ffvpn=forwarding
-uci set firewall.fwd_ff_ffvpn.src=freifunk
-uci set firewall.fwd_ff_ffvpn.dest=ffvpn
+uci set firewall.fwd_ff_ffuplink=forwarding
+uci set firewall.fwd_ff_ffuplink.src=freifunk
+uci set firewall.fwd_ff_ffuplink.dest=ffuplink
 
 uci commit firewall
