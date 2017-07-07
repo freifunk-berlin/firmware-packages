@@ -113,7 +113,6 @@ function commit()
 
   if (sharenet == "1") then
     sys.init.enable("qos")
-    sys.exec('grep wan /etc/crontabs/root >/dev/null || echo "0 6 * * * ifup wan" >> /etc/crontabs/root')
   end
 
   if ipkg.installed("luci-app-statistics") == true then
