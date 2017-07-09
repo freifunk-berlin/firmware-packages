@@ -25,15 +25,15 @@ EOF
   uci set olsrd.$OLSRD.TcRedundancy=2
   uci set olsrd.$OLSRD.NatThreshold=0.75
   uci set olsrd.$OLSRD.LinkQualityAlgorithm=etx_ff
-  uci set olsrd.$OLSRD.SmartGateway=yes
-  uci set olsrd.$OLSRD.SmartGatewayThreshold=50
+  # uci set olsrd.$OLSRD.SmartGateway=yes
+  # uci set olsrd.$OLSRD.SmartGatewayThreshold=50
   uci set olsrd.$OLSRD.Pollrate=0.025
   uci set olsrd.$OLSRD.RtTable=50
   uci set olsrd.$OLSRD.RtTableDefault=70
   # TODO: re-enable when policy routing is back in a sane form
-  #uci set olsrd.$OLSRD.RtTableTunnel=600
-  #uci set olsrd.$OLSRD.RtTableTunnelPriority=100000
-  #uci set olsrd.$OLSRD.RtTableDefaultOlsrPriority=20000
+  # uci set olsrd.$OLSRD.RtTableTunnel=70
+  # uci set olsrd.$OLSRD.RtTableTunnelPriority=100000
+  # uci set olsrd.$OLSRD.RtTableDefaultOlsrPriority=20000
 
   # set InterfaceDefaults parameters
   INTERFACES="$(uci add olsrd InterfaceDefaults)"
@@ -80,6 +80,8 @@ EOF
   # add dyngw plain plugin - it is ipv4 only
   PLUGIN="$(uci add olsrd LoadPlugin)"
   uci set olsrd.$PLUGIN.library=olsrd_dyn_gw
+  uci set olsrd.$PLUGIN.PingCmd='ping -c 1 -q -I eth1 %s'
+  uci set olsrd.$PLUGIN.PingInterval=30
   uci add_list olsrd.$PLUGIN.Ping=85.214.20.141     # dns.digitalcourage.de
   uci add_list olsrd.$PLUGIN.Ping=213.73.91.35      # dnscache.ccc.berlin.de
   uci add_list olsrd.$PLUGIN.Ping=194.150.168.168   # dns.as250.net

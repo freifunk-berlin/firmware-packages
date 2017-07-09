@@ -49,7 +49,8 @@ setup_policy_routing() {
   done
 
   # main table (local interfaces)
-  setup_policy_routing_rule priority=1100 lookup=main
+  # TODO: see default route (below)
+  # setup_policy_routing_rule priority=1100 lookup=main
 
   # freifunk main (local interfaces) and olsr tables
   setup_policy_routing_rule priority=1200 lookup=ff-main
@@ -69,7 +70,10 @@ setup_policy_routing() {
   fi
 
   # default route (wan)
-  setup_policy_routing_rule priority=1400 lookup=default
+  # note (André): this should be main-default but olsr looks in /proc/net/route /o\
+  # TODO: fix olsr (or get rid of it)
+  setup_policy_routing_rule priority=1400 lookup=main
+  setup_policy_routing_rule priority=1400 lookup=main-default
 
   # freifunk default routes
   setup_policy_routing_rule priority=1500 lookup=ff-olsr2-default
@@ -93,6 +97,7 @@ setup_network() {
   setup_rt_table 60 ff-vpn-default
   setup_rt_table 70 ff-olsr-default
   setup_rt_table 71 ff-olsr2-default
+  setup_rt_table 80 main-default
 
   json_select ip
 
@@ -118,6 +123,11 @@ setup_network() {
 
   # dns
   uci set network.loopback.dns="85.214.20.141 213.73.91.35 194.150.168.168 2001:4ce8::53 2001:910:800::12"
+
+  # set table for wan
+  # TODO: re-enable when olsr is fixed for non-default routing tables
+  # uci set "network.wan.ip4table=main-default"
+  # uci set "network.wan.ip6table=main-default"
 
   # lan interface (used for mesh or disabled if meshLan is true)
   uci -q delete network.lan
