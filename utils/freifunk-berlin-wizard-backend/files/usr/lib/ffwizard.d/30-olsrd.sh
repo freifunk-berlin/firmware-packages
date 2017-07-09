@@ -13,13 +13,6 @@ setup_olsrd() {
 
   json_select ip
 
-  # add routing tables
-  tables="/etc/iproute2/rt_tables"
-  test -d /etc/iproute2/ || mkdir -p /etc/iproute2/
-  grep -q "111 olsr" $tables || echo "111 olsr" >> $tables
-  grep -q "112 olsr-default" $tables || echo "112 olsr-default" >> $tables
-  grep -q "113 olsr-tunnel" $tables || echo "113 olsr-tunnel" >> $tables
-
   # reset olsrd config
   uci import olsrd <<EOF
 EOF
@@ -35,10 +28,10 @@ EOF
   uci set olsrd.$OLSRD.SmartGateway=yes
   uci set olsrd.$OLSRD.SmartGatewayThreshold=50
   uci set olsrd.$OLSRD.Pollrate=0.025
+  uci set olsrd.$OLSRD.RtTable=400
+  uci set olsrd.$OLSRD.RtTableDefault=600
   # TODO: re-enable when policy routing is back in a sane form
-  #uci set olsrd.$OLSRD.RtTable=111
-  #uci set olsrd.$OLSRD.RtTableDefault=112
-  #uci set olsrd.$OLSRD.RtTableTunnel=113
+  #uci set olsrd.$OLSRD.RtTableTunnel=600
   #uci set olsrd.$OLSRD.RtTableTunnelPriority=100000
   #uci set olsrd.$OLSRD.RtTableDefaultOlsrPriority=20000
 
@@ -53,7 +46,6 @@ EOF
   uci set olsrd.$INTERFACES.MidInterval=25.0
   uci set olsrd.$INTERFACES.HelloInterval=3.0
   uci set olsrd.$INTERFACES.HnaInterval=10.0
-
 
   # add txtinfo plugin - needed for collectd-mod-txtinfo
   PLUGIN="$(uci add olsrd LoadPlugin)"

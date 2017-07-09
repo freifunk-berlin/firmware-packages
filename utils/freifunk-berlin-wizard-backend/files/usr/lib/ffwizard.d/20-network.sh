@@ -14,10 +14,26 @@ v4_get_subnet_first_ip() {
   echo "$OCTET_1_3.$OCTET_4/$PREFIX"
 }
 
+setup_rt_table() {
+  local id="$1"
+  local name="$2"
+  tables="/etc/iproute2/rt_tables"
+  test -d /etc/iproute2/ || mkdir -p /etc/iproute2/
+  grep -q "$id $name" $tables || echo "$id $name" >> $tables
+}
+
 setup_network() {
   local cfg=$1
   json_init
   json_load "$CONFIG_JSON" || exit 1
+
+  # add routing tables
+  setup_rt_table 300 ff-main
+  setup_rt_table 400 ff-olsr
+  setup_rt_table 410 ff-olsr2
+  setup_rt_table 500 ff-vpn-default
+  setup_rt_table 600 ff-olsr-default
+  setup_rt_table 610 ff-olsr2-default
 
   json_select ip
 
@@ -52,6 +68,8 @@ setup_network() {
     uci set "network.lan.macaddr=$lanMacaddr"
     uci set "network.lan.ip6assign=64"
     uci set "network.lan.mtu=1532"
+    uci set "network.lan.ip4table=ff-main"
+    uci set "network.lan.ip6table=ff-main"
 
     json_select v4
     local v4Lan
@@ -69,12 +87,16 @@ setup_network() {
     uci set "network.lanbat.ifname=@lan"
     uci set "network.lanbat.mesh=bat0"
     uci set "network.lanbat.mtu=1532"
+    uci set "network.lanbat.ip4table=ff-main"
+    uci set "network.lanbat.ip6table=ff-main"
   fi
 
   # dhcp interface (bridge with lanIfname if meshLan is false)
   uci -q delete network.dhcp
   uci set "network.dhcp=interface"
   uci set "network.dhcp.type=bridge"
+  uci set "network.dhcp.ip4table=ff-main"
+  uci set "network.dhcp.ip6table=ff-main"
 
   local dhcpIfnames="bat0"
   if [ "$meshLan" != "1" ]; then
@@ -121,6 +143,8 @@ setup_network() {
     # add olsr mesh interface
     uci set "network.wireless${idx}=interface"
     uci set "network.wireless${idx}.proto=static"
+    uci set "network.wireless${idx}.ip4table=ff-main"
+    uci set "network.wireless${idx}.ip6table=ff-main"
     uci set "network.wireless${idx}.ip6assign=64"
     local v4Addr
     json_get_var v4Addr "radio${idx}"
@@ -135,6 +159,8 @@ setup_network() {
     uci set "network.wireless${idx}bat.proto=batadv"
     uci set "network.wireless${idx}bat.ifname=@wireless${idx}"
     uci set "network.wireless${idx}bat.mesh=bat0"
+    uci set "network.wireless${idx}bat.ip4table=ff-main"
+    uci set "network.wireless${idx}bat.ip6table=ff-main"
 
     idx=$((idx+1))
   done
