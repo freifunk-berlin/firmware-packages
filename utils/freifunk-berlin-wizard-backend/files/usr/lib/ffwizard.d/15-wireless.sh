@@ -98,8 +98,10 @@ setup_wireless() {
     log_wireless "Channel $channel"
     uci set "wireless.$device.channel=$channel"
 
-    if [ "$hw_n" == "1" ]; then
-      [ $hw_g == 1 ] && uci set wireless.$device.noscan=1
+    if [ $hw_n == 1 ]; then
+      # avoid adhoc interfaces that do not come up
+      # see https://dev.openwrt.org/ticket/18268
+      uci set wireless.$device.noscan=1
       [ $hw_a == 1 ] && uci set wireless.$device.doth=0
 
       # get ht mode
