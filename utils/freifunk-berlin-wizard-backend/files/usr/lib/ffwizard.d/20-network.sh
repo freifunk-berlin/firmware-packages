@@ -74,7 +74,7 @@ setup_policy_routing() {
 
   # stop journey for freifunk traffic
   for interface in $ffInterfaces; do
-    setup_policy_routing_rule priority=1600 in=$interface action=unreachable
+    setup_policy_routing_rule priority=30000 in=$interface action=unreachable
   done
 }
 
@@ -84,12 +84,12 @@ setup_network() {
   json_load "$CONFIG_JSON" || exit 1
 
   # add routing tables
-  setup_rt_table 300 ff-main
-  setup_rt_table 400 ff-olsr
-  setup_rt_table 410 ff-olsr2
-  setup_rt_table 500 ff-vpn-default
-  setup_rt_table 600 ff-olsr-default
-  setup_rt_table 610 ff-olsr2-default
+  setup_rt_table 42 ff-main
+  setup_rt_table 50 ff-olsr
+  setup_rt_table 51 ff-olsr2
+  setup_rt_table 60 ff-vpn-default
+  setup_rt_table 70 ff-olsr-default
+  setup_rt_table 71 ff-olsr2-default
 
   json_select ip
 

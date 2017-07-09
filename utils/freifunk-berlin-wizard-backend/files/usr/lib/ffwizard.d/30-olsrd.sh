@@ -34,8 +34,8 @@ EOF
   uci set olsrd.$OLSRD.SmartGateway=yes
   uci set olsrd.$OLSRD.SmartGatewayThreshold=50
   uci set olsrd.$OLSRD.Pollrate=0.025
-  uci set olsrd.$OLSRD.RtTable=400
-  uci set olsrd.$OLSRD.RtTableDefault=600
+  uci set olsrd.$OLSRD.RtTable=50
+  uci set olsrd.$OLSRD.RtTableDefault=70
   # TODO: re-enable when policy routing is back in a sane form
   #uci set olsrd.$OLSRD.RtTableTunnel=600
   #uci set olsrd.$OLSRD.RtTableTunnelPriority=100000

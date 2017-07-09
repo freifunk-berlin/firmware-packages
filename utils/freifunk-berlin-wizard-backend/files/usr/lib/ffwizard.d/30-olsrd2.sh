@@ -25,7 +25,7 @@ EOF
   uci set olsrd2.$TELNET.port=2010
 
   DOMAIN="$(uci add olsrd2 domain)"
-  uci set olsrd2.$DOMAIN.table=ff-olsr2
+  uci set olsrd2.$DOMAIN.table=51
 
   # add lan interface if meshLan is true
   local meshLan=$(echo $CONFIG_JSON | jsonfilter -e '@.ip.meshLan')
