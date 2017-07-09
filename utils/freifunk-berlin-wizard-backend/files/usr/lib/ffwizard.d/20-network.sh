@@ -22,6 +22,60 @@ setup_rt_table() {
   grep -q "$id $name" $tables || echo "$id $name" >> $tables
 }
 
+setup_policy_routing_rule() {
+  local options="$@"
+  RULE="$(uci add network rule)"
+  for option in $options; do
+    uci set network.$RULE.$option
+  done
+
+  RULE6="$(uci add network rule6)"
+  for option in $options; do
+    uci set network.$RULE6.$option
+  done
+}
+
+setup_policy_routing() {
+  ffInterfaces="$1"
+
+  # remove all rules
+  while uci -q delete "network.@rule[0]" > /dev/null; do :; done
+  while uci -q delete "network.@rule6[0]" > /dev/null; do :; done
+
+  # skip main table for freifunk traffic
+  for interface in $ffInterfaces; do
+    setup_policy_routing_rule priority=1000 in=$interface goto=1200
+  done
+
+  # main table (local interfaces)
+  setup_policy_routing_rule priority=1100 lookup=main
+
+  # freifunk main (local interfaces) and olsr tables
+  setup_policy_routing_rule priority=1200 lookup=ff-main
+  setup_policy_routing_rule priority=1210 lookup=ff-olsr2
+  setup_policy_routing_rule priority=1211 lookup=ff-olsr
+
+  # freifunk vpn default route
+  for interface in $ffInterfaces; do
+    setup_policy_routing_rule priority=1300 in=$interface lookup=ff-vpn-default
+  done
+
+  # skip default route (wan) for traffic
+  for interface in $ffInterfaces; do
+    setup_policy_routing_rule priority=1310 in=$interface goto=1500
+  done
+
+  # default route (wan)
+  setup_policy_routing_rule priority=1400 lookup=default
+
+  # freifunk default routes
+  setup_policy_routing_rule priority=1500 lookup=ff-olsr2-default
+  setup_policy_routing_rule priority=1500 lookup=ff-olsr-default
+
+  # stop journey for freifunk traffic
+  setup_policy_routing_rule priority=1600 action=unreachable
+}
+
 setup_network() {
   local cfg=$1
   json_init
@@ -39,6 +93,9 @@ setup_network() {
 
   local meshLan
   json_get_var meshLan meshLan
+
+  # collect freifunk interfaces
+  local ffInterfaces=""
 
   # get lan ifname
   local lanIfname="$(uci get ffwizard.@ffwizard[-1].lan_ifname)"
@@ -62,6 +119,8 @@ setup_network() {
   uci -q delete network.lanbat
 
   if [ "$meshLan" == "1" ]; then
+    ffInterfaces="${ffInterfaces} lan lanbat"
+
     uci set "network.lan=interface"
     uci set "network.lan.proto=static"
     uci set "network.lan.ifname=$lanIfname"
@@ -92,6 +151,8 @@ setup_network() {
   fi
 
   # dhcp interface (bridge with lanIfname if meshLan is false)
+  ffInterfaces="${ffInterfaces} dhcp"
+
   uci -q delete network.dhcp
   uci set "network.dhcp=interface"
   uci set "network.dhcp.type=bridge"
@@ -140,6 +201,8 @@ setup_network() {
   # add wireless interfaces
   idx=0
   while uci -q get "wireless.radio${idx}" > /dev/null; do
+    ffInterfaces="${ffInterfaces} wireless${idx} wireless${idx}"
+
     # add olsr mesh interface
     uci set "network.wireless${idx}=interface"
     uci set "network.wireless${idx}.proto=static"
@@ -165,6 +228,8 @@ setup_network() {
     idx=$((idx+1))
   done
   json_select ..
+
+  setup_policy_routing "${ffInterfaces}"
 
   uci commit network
 }
