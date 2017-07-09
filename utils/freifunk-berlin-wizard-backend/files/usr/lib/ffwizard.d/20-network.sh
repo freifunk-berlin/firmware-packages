@@ -37,6 +37,7 @@ setup_policy_routing_rule() {
 
 setup_policy_routing() {
   ffInterfaces="$1"
+  vpnEnabled="$2"
 
   # remove all rules
   while uci -q delete "network.@rule[0]" > /dev/null; do :; done
@@ -61,9 +62,11 @@ setup_policy_routing() {
   done
 
   # skip default route (wan) for traffic
-  for interface in $ffInterfaces; do
-    setup_policy_routing_rule priority=1310 in=$interface goto=1500
-  done
+  if [ $vpnEnabled == 1 ]; then
+    for interface in $ffInterfaces; do
+      setup_policy_routing_rule priority=1310 in=$interface goto=1500
+    done
+  fi
 
   # default route (wan)
   setup_policy_routing_rule priority=1400 lookup=default
@@ -231,7 +234,9 @@ setup_network() {
   done
   json_select ..
 
-  setup_policy_routing "${ffInterfaces}"
+  # TODO: get this from config
+  local vpnEnabled=0
+  setup_policy_routing "${ffInterfaces}" $vpnEnabled
 
   uci commit network
 }
