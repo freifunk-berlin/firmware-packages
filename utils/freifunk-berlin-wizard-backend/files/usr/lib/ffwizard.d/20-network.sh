@@ -73,7 +73,9 @@ setup_policy_routing() {
   setup_policy_routing_rule priority=1500 lookup=ff-olsr-default
 
   # stop journey for freifunk traffic
-  setup_policy_routing_rule priority=1600 action=unreachable
+  for interface in $ffInterfaces; do
+    setup_policy_routing_rule priority=1600 in=$interface action=unreachable
+  done
 }
 
 setup_network() {
@@ -119,7 +121,7 @@ setup_network() {
   uci -q delete network.lanbat
 
   if [ "$meshLan" == "1" ]; then
-    ffInterfaces="${ffInterfaces} lan lanbat"
+    ffInterfaces="${ffInterfaces} lan"
 
     uci set "network.lan=interface"
     uci set "network.lan.proto=static"
@@ -201,7 +203,7 @@ setup_network() {
   # add wireless interfaces
   idx=0
   while uci -q get "wireless.radio${idx}" > /dev/null; do
-    ffInterfaces="${ffInterfaces} wireless${idx} wireless${idx}"
+    ffInterfaces="${ffInterfaces} wireless${idx}"
 
     # add olsr mesh interface
     uci set "network.wireless${idx}=interface"
