@@ -7,11 +7,6 @@ log_olsrd2() {
 setup_olsrd2() {
   /etc/init.d/olsrd2 enable
 
-  # add routing tables
-  tables="/etc/iproute2/rt_tables"
-  test -d /etc/iproute2/ || mkdir -p /etc/iproute2/
-  grep -q "200 olsr2" $tables || echo "200 olsr2" >> $tables
-
   # reset olsrd2 config
   uci import olsrd2 <<EOF
 EOF
@@ -30,7 +25,7 @@ EOF
   uci set olsrd2.$TELNET.port=2010
 
   DOMAIN="$(uci add olsrd2 domain)"
-  uci set olsrd2.$DOMAIN.table=200
+  uci set olsrd2.$DOMAIN.table=51
 
   # add lan interface if meshLan is true
   local meshLan=$(echo $CONFIG_JSON | jsonfilter -e '@.ip.meshLan')
