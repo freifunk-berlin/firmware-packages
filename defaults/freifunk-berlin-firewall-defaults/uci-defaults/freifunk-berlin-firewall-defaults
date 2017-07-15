@@ -72,7 +72,7 @@ uci set firewall.$RULE.target=ACCEPT
 INCLUDE="$(uci add firewall include)"
 uci set firewall.$INCLUDE.path=/etc/firewall.user
 
-uci commit
+uci commit firewall
 
 # add named freifunk zone section
 uci set firewall.zone_freifunk=zone
@@ -123,4 +123,4 @@ FORWARDING="$(uci add firewall forwarding)"
 uci set firewall.$FORWARDING.dest=freifunk
 uci set firewall.$FORWARDING.src=wan
 
-uci commit
+uci commit firewall
