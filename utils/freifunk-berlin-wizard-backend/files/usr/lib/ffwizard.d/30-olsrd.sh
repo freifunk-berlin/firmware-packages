@@ -52,6 +52,7 @@ EOF
   uci set olsrd.$PLUGIN.accept=0.0.0.0
   uci set olsrd.$PLUGIN.library=olsrd_txtinfo
   uci set olsrd.$PLUGIN.port=2006
+  uci set olsrd.$PLUGIN.httpheaders=true
 
   # add arprefresh plugin
   PLUGIN="$(uci add olsrd LoadPlugin)"
@@ -70,6 +71,7 @@ EOF
   uci set olsrd.$PLUGIN.accept=0.0.0.0
   uci set olsrd.$PLUGIN.library=olsrd_jsoninfo
   uci set olsrd.$PLUGIN.ignore=0
+  uci set olsrd.$PLUGIN.httpheaders=true
 
   # add watchdog plugin
   PLUGIN="$(uci add olsrd LoadPlugin)"
