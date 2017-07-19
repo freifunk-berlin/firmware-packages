@@ -11,7 +11,8 @@
 		},
 		"write": {
 			"ubus": {
-				"ffwizard": [ "*" ]
+				"ffwizard": [ "*" ],
+				"system": [ "*" ]
 			}
 		}
 	},
@@ -20,7 +21,8 @@
 		"read": {
 			"ubus": {
 				"olsrd": [ "*" ],
-				"system": [ "board" ]
+				"system": [ "board",
+					"info" ]
 			}
 		}
 	}
