@@ -3,7 +3,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-openvpn-files
-PKG_VERSION:=0.0.5
+PKG_VERSION:=0.0.6
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
@@ -40,6 +40,8 @@ define Package/freifunk-berlin-openvpn-files/install
 	$(CP) ./openvpn/ffvpn-up.sh $(1)/lib/freifunk
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
 	$(CP) ./openvpn/60-ffopenvpn $(1)/etc/hotplug.d/iface
+	$(INSTALL_DIR) $(1)/etc/config
+	$(CP) ./files/ffberlin-uplink $(1)/etc/config
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-openvpn-files))
