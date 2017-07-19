@@ -10,27 +10,28 @@ f.reset = false
 css = f:field(DummyValue, "css", "")
 css.template = "freifunk/assistent/snippets/css"
 
-vpninfo = f:field(DummyValue, "vpninfo", "")
-vpninfo.template = "freifunk/assistent/snippets/vpninfo"
+if uci.get("ffberlin-uplink", "uplink", "auth") == "x509" then
+  vpninfo = f:field(DummyValue, "vpninfo", "")
+  vpninfo.template = "freifunk/assistent/snippets/vpninfo"
+  if luci.http.formvalue("reupload", true) == "1" then
+    fs.unlink("/etc/openvpn/ffuplink.crt")
+    fs.unlink("/etc/openvpn/ffuplink.key")
+    luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/sharedInternet"))
+  end
+  if fs.access("/etc/openvpn/ffuplink.crt") then
+    vpncertreupload = f:field(DummyValue, "reupload", "")
+    vpncertreupload.template = "freifunk/assistent/snippets/vpncertreupload"
+  else
+    local cert = f:field(FileUpload, "cert", translate("Local Certificate"),"ffuplink.crt")
+    cert.default="/etc/openvpn/ffuplink.crt"
+    cert.rmempty = false
+    cert.optional = false
 
-if luci.http.formvalue("reupload", true) == "1" then
-  fs.unlink("/etc/openvpn/ffuplink.crt")
-  fs.unlink("/etc/openvpn/ffuplink.key")
-  luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/sharedInternet"))
-end
-if fs.access("/etc/openvpn/ffuplink.crt") then
-  vpncertreupload = f:field(DummyValue, "reupload", "")
-  vpncertreupload.template = "freifunk/assistent/snippets/vpncertreupload"
-else
-  local cert = f:field(FileUpload, "cert", translate("Local Certificate"),"ffuplink.crt")
-  cert.default="/etc/openvpn/ffuplink.crt"
-  cert.rmempty = false
-  cert.optional = false
-
-  local key = f:field(FileUpload, "key", translate("Local Key"),"ffuplink.key")
-  key.default="/etc/openvpn/ffuplink.key"
-  key.rmempty = false
-  key.optional = false
+    local key = f:field(FileUpload, "key", translate("Local Key"),"ffuplink.key")
+    key.default="/etc/openvpn/ffuplink.key"
+    key.rmempty = false
+    key.optional = false
+  end
 end
 
 shareBandwidth = f:field(DummyValue, "shareBandwidthfo", "")
