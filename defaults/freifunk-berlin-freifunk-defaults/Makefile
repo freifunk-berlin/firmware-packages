@@ -33,7 +33,6 @@ endef
 define Package/freifunk-berlin-freifunk-defaults/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
-	$(CP) ./files/* $(1)/
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-freifunk-defaults))
