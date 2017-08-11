@@ -10,7 +10,7 @@ f.reset = false
 css = f:field(DummyValue, "css", "")
 css.template = "freifunk/assistent/snippets/css"
 
-vpninfo = f:field(DummyValue, "apinfo", "")
+vpninfo = f:field(DummyValue, "vpninfo", "")
 vpninfo.template = "freifunk/assistent/snippets/vpninfo"
 
 if luci.http.formvalue("reupload", true) == "1" then
