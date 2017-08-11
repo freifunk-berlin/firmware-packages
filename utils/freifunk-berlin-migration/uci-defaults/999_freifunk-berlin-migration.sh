@@ -238,6 +238,10 @@ vpn03_udp4() {
   uci set openvpn.ffvpn.proto=udp4
 }
 
+set_ipversion_olsrd6() {
+  uci set olsrd6.@olsrd[0].IpVersion=6
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -274,6 +278,10 @@ migrate () {
   if semverLT ${OLD_VERSION} "0.3.0"; then
     quieten_dnsmasq
     vpn03_udp4
+  fi
+
+  if semverLT ${OLD_VERSION} "1.0.0"; then
+    set_ipversion_olsrd6
   fi
 
   # overwrite version with the new version
