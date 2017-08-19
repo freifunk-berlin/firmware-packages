@@ -6,6 +6,32 @@ log_tunnels() {
   logger -s -t ffwizard_tunnels "$@"
 }
 
+get_openvpn_option() {
+  local configFilename=$1
+  local option=$2
+
+  # TODO
+}
+
+remove_openvpn_option() {
+  local configFilename=$1
+  local option=$2
+
+  # remove line in config
+  sed -i -e "/^${option} /d" $configFilename
+}
+
+replace_openvpn_option() {
+  local configFilename=$1
+  local option=$2
+  local value=$3
+
+  remove_openvpn_option "$configFilename" "$option"
+
+  # append new option
+  echo "${option} $value" >> $configFilename
+}
+
 setup_openvpn() {
   local name=$1
   local tunnelConfig=$2
@@ -37,12 +63,15 @@ setup_openvpn() {
     # save file
     echo $files | jsonfilter -e "@.${option}" | base64 -d > $filename
 
-    # remove line in config
-    sed -i -e "/^${option} /d" $configFilename
-
-    # append new option
-    echo "${option} $filename" >> $configFilename
+    replace_openvpn_option "$configFilename" "$option" "$filename"
   done
+
+  # remove some options
+  for option in log log-append; do
+    remove_openvpn_option "$configFilename" "$option"
+  done
+
+  # TODO: add a couple of options
 }
 
 setup_tunnel() {
