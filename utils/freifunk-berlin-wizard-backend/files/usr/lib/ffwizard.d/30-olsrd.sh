@@ -1,6 +1,7 @@
 #!/bin/sh
 
 . /usr/share/libubox/jshn.sh
+. /lib/functions/network.sh
 
 log_olsrd() {
   logger -s -t ffwizard_olsrd "$@"
@@ -79,15 +80,25 @@ EOF
   uci set olsrd.$PLUGIN.file=/var/run/olsrd.watchdog
   uci set olsrd.$PLUGIN.interval=30
 
-  # add dyngw plain plugin - it is ipv4 only
-  PLUGIN="$(uci add olsrd LoadPlugin)"
-  uci set olsrd.$PLUGIN.library=olsrd_dyn_gw
-  uci set olsrd.$PLUGIN.PingCmd='ping -c 1 -q -I eth1 %s'
-  uci set olsrd.$PLUGIN.PingInterval=30
-  uci add_list olsrd.$PLUGIN.Ping=85.214.20.141     # dns.digitalcourage.de
-  uci add_list olsrd.$PLUGIN.Ping=213.73.91.35      # dnscache.ccc.berlin.de
-  uci add_list olsrd.$PLUGIN.Ping=194.150.168.168   # dns.as250.net
-  uci set olsrd.$PLUGIN.ignore=0
+  # add dyngw plain plugin if internet shared (note: the plugin is ipv4 only)
+  local shareInternet=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.share')
+  if [ "$shareInternet" == "true" ]; then
+    # use internet_tun (with tunnel) or wan device name (without tunnel)
+    local tunnel=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.tunnel')
+    local uplinkDev="internet_tun"
+    if [ -z "$tunnel" ]; then
+      network_get_physdev uplinkDev wan
+    fi
+
+    PLUGIN="$(uci add olsrd LoadPlugin)"
+    uci set olsrd.$PLUGIN.library=olsrd_dyn_gw
+    uci set olsrd.$PLUGIN.PingCmd="ping -c 1 -q -I $uplinkDev %s"
+    uci set olsrd.$PLUGIN.PingInterval=30
+    uci add_list olsrd.$PLUGIN.Ping=85.214.20.141     # dns.digitalcourage.de
+    uci add_list olsrd.$PLUGIN.Ping=213.73.91.35      # dnscache.ccc.berlin.de
+    uci add_list olsrd.$PLUGIN.Ping=194.150.168.168   # dns.as250.net
+    uci set olsrd.$PLUGIN.ignore=0
+  fi
 
   # add lan interface if meshLan is true
   local meshLan
