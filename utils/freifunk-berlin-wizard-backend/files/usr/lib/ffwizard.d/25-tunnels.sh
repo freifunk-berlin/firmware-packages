@@ -10,7 +10,14 @@ get_openvpn_option() {
   local configFilename=$1
   local option=$2
 
-  # TODO
+  # get matching line
+  local match=$(grep -m 1 "^${option} " $configFilename)
+
+  # strip option
+  match="${match#$option }"
+
+  # strip comment
+  echo "${match%%#*}"
 }
 
 remove_openvpn_option() {
@@ -71,7 +78,28 @@ setup_openvpn() {
     remove_openvpn_option "$configFilename" "$option"
   done
 
-  # TODO: add a couple of options
+  # detect dev-type from dev if not provided
+  local devType=$(get_openvpn_option "$configFilename" dev-type)
+  if [ -z "$devType" ]; then
+    local dev=$(get_openvpn_option "$configFilename" dev)
+    if [ -z "${dev##tun*}" ]; then
+      devType="tun"
+    else
+      devType="tap"
+    fi
+    replace_openvpn_option "$configFilename" dev-type "$devType"
+  fi
+
+  # set dev name
+  replace_openvpn_option "$configFilename" dev "${name}_tunnel"
+
+  # set status file
+  replace_openvpn_option "$configFilename" status "/var/run/openvpn.${name}.status"
+
+  # create uci config
+  uci set "openvpn.${name}=openvpn"
+  uci set "openvpn.${name}.enabled=1"
+  uci set "openvpn.${name}.config=${configFilename}"
 }
 
 setup_tunnel() {
@@ -90,6 +118,10 @@ setup_tunnel() {
 }
 
 setup_tunnels() {
+  # reset openvpn config
+  uci import openvpn <<EOF
+EOF
+
   # internet tunnel
   local internetTunnelConfig=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.tunnel')
   if [ ! -z "$internetTunnelConfig" ]; then
@@ -97,6 +129,8 @@ setup_tunnels() {
   fi
 
   # TODO: mesh tunnel
+
+  uci commit openvpn
 }
 
 setup_tunnels
