@@ -96,6 +96,11 @@ setup_openvpn() {
   # set status file
   replace_openvpn_option "$configFilename" status "/var/run/openvpn.${name}.status"
 
+  # we have to handle routes ourselves because openvpn doesn't support other routing tables
+  replace_openvpn_option "$configFilename" route-noexec ""
+  replace_openvpn_option "$configFilename" route-up "\"/usr/lib/ffwizard-openvpn/up.sh ${name}\""
+  replace_openvpn_option "$configFilename" script-security 2
+
   # create uci config
   uci set "openvpn.${name}=openvpn"
   uci set "openvpn.${name}.enabled=1"

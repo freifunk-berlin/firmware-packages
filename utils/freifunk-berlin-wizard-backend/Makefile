@@ -37,7 +37,8 @@ define Package/freifunk-berlin-wizard-backend/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) files/etc/uci-defaults/* $(1)/etc/uci-defaults
 
-	$(INSTALL_DIR) $(1)/usr/sbin $(1)/usr/lib/ffwizard.d
+	$(INSTALL_DIR) $(1)/usr/sbin $(1)/usr/lib/ffwizard.d $(1)/usr/lib/ffwizard-openvpn
+	$(INSTALL_BIN) files/usr/lib/ffwizard-openvpn/* $(1)/usr/lib/ffwizard-openvpn/
 	$(INSTALL_BIN) files/usr/lib/ffwizard.d/* $(1)/usr/lib/ffwizard.d/
 	$(INSTALL_BIN) files/sbin/ffwizard_apply $(1)/usr/sbin/
 
