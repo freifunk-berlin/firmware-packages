@@ -257,6 +257,7 @@ setup_network() {
   local internetTunnel=0
   if [ ! -z "$internetTunnelConfig" ]; then
     internetTunnel=1
+    ffInterfaces="${ffInterfaces} internet_tunnel"
 
     uci set "network.internet_tunnel=interface"
     uci set "network.internet_tunnel.ifname=internet_tunnel"
@@ -266,6 +267,8 @@ setup_network() {
   # mesh tunnel enabled?
   local meshTunnelConfig=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.meshTunnel')
   if [ ! -z "$meshTunnelConfig" ]; then
+    ffInterfaces="${ffInterfaces} mesh_tunnel"
+
     uci set "network.mesh_tunnel=interface"
     uci set "network.mesh_tunnel.ifname=mesh_tunnel"
     uci set "network.mesh_tunnel.proto=none"

@@ -25,7 +25,7 @@ remove_openvpn_option() {
   local option=$2
 
   # remove line in config
-  sed -i -e "/^${option} /d" $configFilename
+  sed -i -e "/^${option}\( *\| .*\)\$/d" $configFilename
 }
 
 replace_openvpn_option() {
