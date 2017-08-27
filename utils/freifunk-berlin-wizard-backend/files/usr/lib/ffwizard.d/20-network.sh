@@ -257,6 +257,14 @@ setup_network() {
     uci set "network.internet_tunnel.proto=none"
   fi
 
+  # mesh tunnel enabled?
+  local meshTunnelConfig=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.meshTunnel')
+  if [ ! -z "$meshTunnelConfig" ]; then
+    uci set "network.mesh_tunnel=interface"
+    uci set "network.mesh_tunnel.ifname=mesh_tunnel"
+    uci set "network.mesh_tunnel.proto=none"
+  fi
+
   setup_policy_routing "${ffInterfaces}" $internetTunnel
 
   uci commit network

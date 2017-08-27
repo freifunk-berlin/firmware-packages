@@ -84,7 +84,7 @@ EOF
   uci set firewall.zone_freifunk.name=freifunk
   uci set firewall.zone_freifunk.output=ACCEPT
 
-  networks="tunl0 dhcp internet_tunnel lan"
+  networks="tunl0 dhcp internet_tunnel mesh_tunnel lan"
   # add wireless networks
   idx=0
   while uci -q get "wireless.radio${idx}" > /dev/null; do

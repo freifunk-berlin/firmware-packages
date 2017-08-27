@@ -119,6 +119,15 @@ EOF
     idx=$((idx+1))
   done
 
+  # mesh tunnel enabled?
+  local meshTunnelConfig=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.meshTunnel')
+  if [ ! -z "$meshTunnelConfig" ]; then
+    INTERFACE="$(uci add olsrd Interface)"
+    uci set olsrd.$INTERFACE.interface=mesh_tunnel
+    uci set olsrd.$INTERFACE.Mode=ether
+    uci set olsrd.$INTERFACE.ignore=0
+  fi
+
   # add hna if distribute is true
   local distribute;
   json_get_var distribute distribute
