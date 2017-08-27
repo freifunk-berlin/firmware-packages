@@ -12,6 +12,11 @@ log_openvpn() {
   table=ff-${name}-tunnel
   dev=${name}_tunnel
 
+  # make sure we can still reach the vpn server
+  if [ ! -z "$route_net_gateway" ] && [ ! -z "$trusted_ip" ]; then
+    ip route add "${trusted_ip}/32" via $route_net_gateway
+  fi
+
   if [ ! -z "$ifconfig_local" ] && [ ! -z "$ifconfig_netmask" ]; then
     eval $(ipcalc.sh "$ifconfig_local" "$ifconfig_netmask")
     net="$NETWORK/$PREFIX"
