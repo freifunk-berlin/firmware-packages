@@ -43,6 +43,9 @@ setup_policy_routing() {
   while uci -q delete "network.@rule[0]" > /dev/null; do :; done
   while uci -q delete "network.@rule6[0]" > /dev/null; do :; done
 
+  # send tunnel packets to main-default
+  setup_policy_routing_rule mark=0x42 priority=500 goto=1400
+
   # skip main table for freifunk traffic
   for interface in $ffInterfaces; do
     setup_policy_routing_rule priority=1000 in=$interface goto=1200
@@ -75,6 +78,9 @@ setup_policy_routing() {
   # TODO: fix olsr (or get rid of it)
   setup_policy_routing_rule priority=1400 lookup=main
   setup_policy_routing_rule priority=1400 lookup=main-default
+
+  # tunnel packets stop here
+  setup_policy_routing_rule mark=0x42 priority=1401 action=unreachable
 
   # freifunk default routes
   setup_policy_routing_rule priority=1500 lookup=ff-olsr2-default
