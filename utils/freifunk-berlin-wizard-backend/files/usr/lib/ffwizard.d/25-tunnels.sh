@@ -128,12 +128,16 @@ setup_tunnels() {
 EOF
 
   # internet tunnel
-  local internetTunnelConfig=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.tunnel')
+  local internetTunnelConfig=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.internetTunnel')
   if [ ! -z "$internetTunnelConfig" ]; then
     setup_tunnel "internet" "$internetTunnelConfig"
   fi
 
-  # TODO: mesh tunnel
+  # mesh tunnel
+  local meshTunnelConfig=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.meshTunnel')
+  if [ ! -z "$meshTunnelConfig" ]; then
+    setup_tunnel "mesh" "$meshTunnelConfig"
+  fi
 
   uci commit openvpn
 }

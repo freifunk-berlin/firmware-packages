@@ -247,7 +247,7 @@ setup_network() {
   json_select ..
 
   # internet tunnel enabled?
-  local internetTunnelConfig=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.tunnel')
+  local internetTunnelConfig=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.internetTunnel')
   local internetTunnel=0
   if [ ! -z "$internetTunnelConfig" ]; then
     internetTunnel=1
