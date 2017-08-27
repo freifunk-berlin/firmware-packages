@@ -22,7 +22,7 @@ EOF
   ZONE="$(uci add firewall zone)"
   uci set firewall.$ZONE.name=wan
   uci set firewall.$ZONE.masq=1
-  uci set firewall.$ZONE.network="wan wan6"
+  uci set firewall.$ZONE.network="wan wan6 internet_tunnel"
   uci set firewall.$ZONE.forward=REJECT
   uci set firewall.$ZONE.output=ACCEPT
   uci set firewall.$ZONE.local_restrict=1
@@ -84,7 +84,7 @@ EOF
   uci set firewall.zone_freifunk.name=freifunk
   uci set firewall.zone_freifunk.output=ACCEPT
 
-  networks="tunl0 dhcp internet_tunnel mesh_tunnel lan"
+  networks="tunl0 dhcp mesh_tunnel lan"
   # add wireless networks
   idx=0
   while uci -q get "wireless.radio${idx}" > /dev/null; do
