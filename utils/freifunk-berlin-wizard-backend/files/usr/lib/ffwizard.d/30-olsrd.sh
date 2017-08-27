@@ -83,9 +83,9 @@ EOF
   # add dyngw plain plugin if internet shared (note: the plugin is ipv4 only)
   local shareInternet=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.share')
   if [ "$shareInternet" == "true" ]; then
-    # use internet_tun (with tunnel) or wan device name (without tunnel)
+    # use internet_tunnel (with tunnel) or wan device name (without tunnel)
     local tunnel=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.internetTunnel')
-    local uplinkDev="internet_tun"
+    local uplinkDev="internet_tunnel"
     if [ -z "$tunnel" ]; then
       network_get_physdev uplinkDev wan
     fi
