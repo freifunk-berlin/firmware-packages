@@ -44,7 +44,7 @@ setup_policy_routing() {
   while uci -q delete "network.@rule6[0]" > /dev/null; do :; done
 
   # send tunnel packets to main-default
-  setup_policy_routing_rule mark=0x42 priority=500 goto=1400
+  setup_policy_routing_rule mark=1 priority=500 goto=1400
 
   # skip main table for freifunk traffic
   for interface in $ffInterfaces; do
@@ -80,7 +80,7 @@ setup_policy_routing() {
   setup_policy_routing_rule priority=1400 lookup=main-default
 
   # tunnel packets stop here
-  setup_policy_routing_rule mark=0x42 priority=1401 action=unreachable
+  setup_policy_routing_rule mark=1 priority=1401 action=unreachable
 
   # freifunk default routes
   setup_policy_routing_rule priority=1500 lookup=ff-olsr2-default

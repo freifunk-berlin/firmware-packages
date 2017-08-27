@@ -74,7 +74,7 @@ setup_openvpn() {
   done
 
   # remove some options
-  for option in log log-append route-nopull; do
+  for option in log log-append route-nopull up; do
     remove_openvpn_option "$configFilename" "$option"
   done
 
@@ -97,7 +97,7 @@ setup_openvpn() {
   replace_openvpn_option "$configFilename" status "/var/run/openvpn.${name}.status"
 
   # set mark (for matching in policyrouting)
-  replace_openvpn_option "$configFilename" mark 0x42
+  replace_openvpn_option "$configFilename" mark 1
 
   # we have to handle routes ourselves because openvpn doesn't support other routing tables
   replace_openvpn_option "$configFilename" route-noexec ""
