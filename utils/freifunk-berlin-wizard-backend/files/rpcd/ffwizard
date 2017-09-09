@@ -14,7 +14,7 @@ case "$1" in
     json_add_object "config"
     json_close_object
     json_close_object
-    json_add_object "config"
+    json_add_object "getConfig"
     json_close_object
 
     json_dump
@@ -51,12 +51,12 @@ case "$1" in
 
         reboot
       ;;
-      config)
+      getConfig)
         if [ ! -f $CONFIG_FILE_PATH ]; then
 	  echo '{}'
 	  exit 0
         fi
-	echo `cat $CONFIG_FILE_PATH`
+	cat $CONFIG_FILE_PATH
 	exit 0
       ;;
     esac
