@@ -4,6 +4,8 @@
 . /lib/functions.sh
 . /usr/share/libubox/jshn.sh
 
+CONFIG_FILE_PATH="/etc/ffwizard.config.json"
+
 case "$1" in
   list)
     json_init
@@ -11,6 +13,8 @@ case "$1" in
     json_add_object "apply"
     json_add_object "config"
     json_close_object
+    json_close_object
+    json_add_object "config"
     json_close_object
 
     json_dump
@@ -43,9 +47,17 @@ case "$1" in
         fi
         echo '{ "status": "success", "description": "config has been applied" }'
 
-        echo $config > /etc/ffwizard.config.json
+        echo $config > $CONFIG_FILE_PATH
 
         reboot
+      ;;
+      config)
+        if [ ! -f $CONFIG_FILE_PATH ]; then
+	  echo '{}'
+	  exit 0
+        fi
+	echo `cat $CONFIG_FILE_PATH`
+	exit 0
       ;;
     esac
   ;;
