@@ -1,0 +1,92 @@
+#!/bin/sh
+
+# example curl:
+# curl -H 'Authorization: UBUS_SESSION' -H 'Content-Type: application/octet-stream' --data-binary @filename.bin http://x.x.x.x/cgi-bin/files?filename=/tmp/firmware.bin
+
+set -eu
+
+url_decode() {
+  # + to %20
+  local str=${*//+/%20}
+  # replace % with " \x" (and thus split at %)
+  for substr in ${str//%/ \\x}; do
+    printf "%b%s" "${substr:0:4}" "${substr:4}"
+  done
+}
+ 
+get_query_string_value() {
+  local query_string="$1"
+  local wanted_key="$2"
+  # split at &
+  for substr in ${query_string//&/ }; do
+    local key=$(url_decode "${substr%=*}")
+    if [ "$wanted_key" == "$key" ]; then
+      local value=$(url_decode "${substr#*=}")
+      echo $value
+      return 0
+    fi
+  done
+}
+
+send_header() {
+  echo -ne "$1: $2\r\n"
+}
+
+send_response() {
+  local status="$1"
+  local reason="$2"
+  local body="$3"
+  if [ -z "$body" ]; then
+    body="${status} ${reason}"
+  fi
+
+  # send response (status line will be sent by server based on Status header)
+  send_header Status "${status} ${reason}"
+  send_header Content-Type text/plain
+  echo -ne "\r\n"
+  echo -ne "$body"
+  exit 0
+}
+
+# check HTTP method
+if ! [ "$REQUEST_METHOD" == "POST" ]; then
+  send_response 405 "Method Not Allowed" "Method Not Allowed: use POST"
+fi
+
+# authentication with ubus session in Authorization header
+if [ -z "$HTTP_AUTHORIZATION" ]; then
+  send_response 401 Unauthorized "Authentication failed: ubus session id missing in Authorization header"
+fi
+
+# check authentication with ubus session
+if ! auth_json=$(ubus call session access "{\"ubus_rpc_session\": \"${HTTP_AUTHORIZATION}\", \"scope\": \"ubus\", \"object\": \"file\", \"function\": \"write\"}"); then
+  send_response 401 Unauthorized "Authentication failed: ubus session invalid"
+fi
+
+# get access field from json
+if ! access=$(echo "${auth_json}" | jsonfilter -e "@.access"); then
+  send_response 500 "Internal Server Error" "Internal server error: ubus session could not be verified"
+fi
+
+# check authorization
+if ! [ "$access" == "true" ]; then
+  send_response 403 Forbidden "Authorization failed: ubus session not valid for this action"
+fi
+
+# test content-type
+if [ -z "$CONTENT_TYPE" ] || ! [ "$CONTENT_TYPE" == "application/octet-stream" ]; then
+  send_response 400 "Bad Request" "Content-Type must be application/octet-stream"
+fi
+
+# get filename
+FILENAME=$(get_query_string_value "$QUERY_STRING" "filename")
+if [ -z "$FILENAME" ]; then
+  send_response 400 "Bad Request" "filename missing in query string"
+fi
+
+# read from stdin and write to file
+if ! cat > $FILENAME; then
+  send_response 500 "Internal Server Error" "File could not be written"
+fi
+
+send_response 200 OK "file $FILENAME written"
