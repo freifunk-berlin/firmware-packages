@@ -53,6 +53,8 @@ EOF
     idx=$((idx+1))
   done
 
+  # TODO: uplink (wan/internet_tunnel) and mesh_tunnel
+
   uci commit olsrd2
 }
 

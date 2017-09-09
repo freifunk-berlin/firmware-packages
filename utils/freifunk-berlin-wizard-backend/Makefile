@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-wizard-backend
-PKG_VERSION:=1.0.0~beta.2
+PKG_VERSION:=1.0.0~beta.3
 PKG_RELEASE:=1
 PKG_MAINTAINER:=André Gaul <andre@gaul.io>
 
@@ -37,7 +37,8 @@ define Package/freifunk-berlin-wizard-backend/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) files/etc/uci-defaults/* $(1)/etc/uci-defaults
 
-	$(INSTALL_DIR) $(1)/usr/sbin $(1)/usr/lib/ffwizard.d
+	$(INSTALL_DIR) $(1)/usr/sbin $(1)/usr/lib/ffwizard.d $(1)/usr/lib/ffwizard-openvpn
+	$(INSTALL_BIN) files/usr/lib/ffwizard-openvpn/* $(1)/usr/lib/ffwizard-openvpn/
 	$(INSTALL_BIN) files/usr/lib/ffwizard.d/* $(1)/usr/lib/ffwizard.d/
 	$(INSTALL_BIN) files/sbin/ffwizard_apply $(1)/usr/sbin/
 

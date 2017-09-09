@@ -37,11 +37,14 @@ setup_policy_routing_rule() {
 
 setup_policy_routing() {
   ffInterfaces="$1"
-  vpnEnabled="$2"
+  internetTunnel="$2"
 
   # remove all rules
   while uci -q delete "network.@rule[0]" > /dev/null; do :; done
   while uci -q delete "network.@rule6[0]" > /dev/null; do :; done
+
+  # send tunnel packets to main-default
+  setup_policy_routing_rule mark=1 priority=500 goto=1400
 
   # skip main table for freifunk traffic
   for interface in $ffInterfaces; do
@@ -56,14 +59,15 @@ setup_policy_routing() {
   setup_policy_routing_rule priority=1200 lookup=ff-main
   setup_policy_routing_rule priority=1210 lookup=ff-olsr2
   setup_policy_routing_rule priority=1211 lookup=ff-olsr
+  setup_policy_routing_rule priority=1212 lookup=ff-mesh-tunnel
 
   # freifunk vpn default route
   for interface in $ffInterfaces; do
-    setup_policy_routing_rule priority=1300 in=$interface lookup=ff-vpn-default
+    setup_policy_routing_rule priority=1300 in=$interface lookup=ff-internet-tunnel
   done
 
   # skip default route (wan) for traffic
-  if [ $vpnEnabled == 1 ]; then
+  if [ $internetTunnel == 1 ]; then
     for interface in $ffInterfaces; do
       setup_policy_routing_rule priority=1310 in=$interface goto=1500
     done
@@ -74,6 +78,9 @@ setup_policy_routing() {
   # TODO: fix olsr (or get rid of it)
   setup_policy_routing_rule priority=1400 lookup=main
   setup_policy_routing_rule priority=1400 lookup=main-default
+
+  # tunnel packets stop here
+  setup_policy_routing_rule mark=1 priority=1401 action=unreachable
 
   # freifunk default routes
   setup_policy_routing_rule priority=1500 lookup=ff-olsr2-default
@@ -94,7 +101,8 @@ setup_network() {
   setup_rt_table 42 ff-main
   setup_rt_table 50 ff-olsr
   setup_rt_table 51 ff-olsr2
-  setup_rt_table 60 ff-vpn-default
+  setup_rt_table 52 ff-mesh-tunnel
+  setup_rt_table 60 ff-internet-tunnel
   setup_rt_table 70 ff-olsr-default
   setup_rt_table 71 ff-olsr2-default
   setup_rt_table 80 main-default
@@ -244,9 +252,29 @@ setup_network() {
   done
   json_select ..
 
-  # TODO: get this from config
-  local vpnEnabled=0
-  setup_policy_routing "${ffInterfaces}" $vpnEnabled
+  # internet tunnel enabled?
+  local internetTunnelConfig=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.internetTunnel')
+  local internetTunnel=0
+  if [ ! -z "$internetTunnelConfig" ]; then
+    internetTunnel=1
+    ffInterfaces="${ffInterfaces} internet_tunnel"
+
+    uci set "network.internet_tunnel=interface"
+    uci set "network.internet_tunnel.ifname=internet_tunnel"
+    uci set "network.internet_tunnel.proto=none"
+  fi
+
+  # mesh tunnel enabled?
+  local meshTunnelConfig=$(echo $CONFIG_JSON | jsonfilter -e '@.internet.meshTunnel')
+  if [ ! -z "$meshTunnelConfig" ]; then
+    ffInterfaces="${ffInterfaces} mesh_tunnel"
+
+    uci set "network.mesh_tunnel=interface"
+    uci set "network.mesh_tunnel.ifname=mesh_tunnel"
+    uci set "network.mesh_tunnel.proto=none"
+  fi
+
+  setup_policy_routing "${ffInterfaces}" $internetTunnel
 
   uci commit network
 }
