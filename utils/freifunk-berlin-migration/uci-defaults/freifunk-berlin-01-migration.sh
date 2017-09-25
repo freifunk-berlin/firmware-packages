@@ -253,6 +253,24 @@ r1_0_0_no_wan_restart() {
   crontab -l | grep -v "^0 6 \* \* \* ifup wan$" | crontab -
 }
 
+r1_0_0_firewallzone_vpn() {
+  log "adding firewall-zone for VPN"
+  uci set firewall.zone_ffvpn=zone
+  uci set firewall.zone_ffvpn.name=ffvpn
+  uci set firewall.zone_ffvpn.input=REJECT
+  uci set firewall.zone_ffvpn.forward=ACCEPT
+  uci set firewall.zone_ffvpn.output=ACCEPT
+  uci set firewall.zone_ffvpn.network=ffvpn
+  # remove ffvpn from zone freifunk
+  ffzone_new=$(uci get firewall.zone_freifunk.network|sed -e "s/ ffvpn//g")
+  log " zone freifunk has now interfaces: ${ffzone_new}"
+  uci set firewall.zone_freifunk.network="${ffzone_new}"
+  log " setting up forwarding for ffvpn"
+  uci set firewall.fwd_ff_ffvpn=forwarding
+  uci set firewall.fwd_ff_ffvpn.src=freifunk
+  uci set firewall.fwd_ff_ffvpn.dest=ffvpn
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -295,6 +313,7 @@ migrate () {
     set_ipversion_olsrd6
     r1_0_0_vpn03_splitconfig
     r1_0_0_no_wan_restart
+    r1_0_0_firewallzone_vpn
   fi
 
   # overwrite version with the new version
