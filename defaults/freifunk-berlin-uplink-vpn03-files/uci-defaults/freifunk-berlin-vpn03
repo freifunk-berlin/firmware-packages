@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# always set correct masquerading, regardless of guard
+uci set firewall.zone_ffvpn.masq=0
+uci commit firewall
+
 . /lib/functions/guard.sh
 guard "vpn03_openvpn"
 
