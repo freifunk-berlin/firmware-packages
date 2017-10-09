@@ -49,8 +49,8 @@ function commit()
 
   local community = "profile_"..uci:get("freifunk","community","name")
 
-  --change hostname to mesh ip if it is still Openwrt-something
-  if (not uci:get_first("system","system","hostname") or string.sub(uci:get_first("system","system","hostname"),1,string.len("OpenWrt"))=="OpenWrt") then
+  --change hostname to mesh ip if it is still the default (Openwrt-something, LEDE, e.g.)
+  if string.sub(uci:get_first("system","system","hostname"),1,string.len("gib-mir-einen-namen"))=="gib-mir-einen-namen" then
     local dhcpmesh = uci:get("ffwizard","settings","dhcpmesh")
     dhcpmesh = ip.IPv4(dhcpmesh):minhost()
     uci:foreach("system", "system",
