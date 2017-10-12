@@ -1,13 +1,12 @@
 #!/bin/sh
 
-. /lib/functions/guard.sh
-guard "openvpn"
-
-uci delete openvpn.custom_config
-uci delete openvpn.sample_server
-uci delete openvpn.sample_client
+uci -q delete openvpn.custom_config
+uci -q delete openvpn.sample_server
+uci -q delete openvpn.sample_client
 uci commit openvpn
 
+# reconfigure ffuplink interface
+uci -q delete network.ffuplink
 uci set network.ffuplink=interface
 uci set network.ffuplink.ifname=ffuplink
 uci set network.ffuplink.proto=none
