@@ -306,10 +306,10 @@ migrate () {
 
   if semverLT ${OLD_VERSION} "0.3.0"; then
     quieten_dnsmasq
-    vpn03_udp4
   fi
 
   if semverLT ${OLD_VERSION} "1.0.0"; then
+    vpn03_udp4
     set_ipversion_olsrd6
     r1_0_0_vpn03_splitconfig
     r1_0_0_no_wan_restart
