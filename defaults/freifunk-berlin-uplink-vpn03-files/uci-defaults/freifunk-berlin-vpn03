@@ -1,31 +1,31 @@
 #!/bin/sh
 
 # always set correct masquerading, regardless of guard
-uci set firewall.zone_ffvpn.masq=0
+uci set firewall.zone_ffuplink.masq=0
 uci commit firewall
 
 . /lib/functions/guard.sh
 guard "vpn03_openvpn"
 
-uci set openvpn.ffvpn=openvpn
-uci set openvpn.ffvpn.enabled=0
-uci set openvpn.ffvpn.client=1
-uci set openvpn.ffvpn.proto=udp4
-uci set openvpn.ffvpn.dev=ffvpn
-uci set openvpn.ffvpn.dev_type=tun
-uci set openvpn.ffvpn.persist_key=1
-uci set openvpn.ffvpn.keepalive="10 60"
-uci set openvpn.ffvpn.ns_cert_type=server
-uci set openvpn.ffvpn.comp_lzo="no"
-uci set openvpn.ffvpn.script_security=2
-uci set openvpn.ffvpn.cipher="none"
-uci set openvpn.ffvpn.mssfix=1300
-uci add_list openvpn.ffvpn.remote="vpn03.berlin.freifunk.net 1194"
-uci add_list openvpn.ffvpn.remote="vpn03-backup.berlin.freifunk.net 1194"
-uci set openvpn.ffvpn.ca="/etc/openvpn/freifunk-ca.crt"
-uci set openvpn.ffvpn.cert="/etc/openvpn/freifunk_client.crt"
-uci set openvpn.ffvpn.key="/etc/openvpn/freifunk_client.key"
-uci set openvpn.ffvpn.status="/var/log/openvpn-status-ffvpn.log"
-uci set openvpn.ffvpn.up="/lib/freifunk/ffvpn-up.sh"
-uci set openvpn.ffvpn.route_nopull=1
+uci set openvpn.ffuplink=openvpn
+uci set openvpn.ffuplink.enabled=0
+uci set openvpn.ffuplink.client=1
+uci set openvpn.ffuplink.proto=udp4
+uci set openvpn.ffuplink.dev=ffuplink
+uci set openvpn.ffuplink.dev_type=tun
+uci set openvpn.ffuplink.persist_key=1
+uci set openvpn.ffuplink.keepalive="10 60"
+uci set openvpn.ffuplink.ns_cert_type=server
+uci set openvpn.ffuplink.comp_lzo="no"
+uci set openvpn.ffuplink.script_security=2
+uci set openvpn.ffuplink.cipher="none"
+uci set openvpn.ffuplink.mssfix=1300
+uci add_list openvpn.ffuplink.remote="vpn03.berlin.freifunk.net 1194"
+uci add_list openvpn.ffuplink.remote="vpn03-backup.berlin.freifunk.net 1194"
+uci set openvpn.ffuplink.ca="/etc/openvpn/freifunk-ca.crt"
+uci set openvpn.ffuplink.cert="/etc/openvpn/ffuplink.crt"
+uci set openvpn.ffuplink.key="/etc/openvpn/ffuplink.key"
+uci set openvpn.ffuplink.status="/var/log/openvpn-status-ffuplink.log"
+uci set openvpn.ffuplink.up="/lib/freifunk/ffvpn-up.sh"
+uci set openvpn.ffuplink.route_nopull=1
 uci commit openvpn

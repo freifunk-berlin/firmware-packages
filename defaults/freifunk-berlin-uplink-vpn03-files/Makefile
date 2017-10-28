@@ -2,8 +2,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-uplink-vpn03-files
-PKG_VERSION:=0.0.3
-PKG_RELEASE:=4
+PKG_VERSION:=0.0.4
+PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 

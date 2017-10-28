@@ -39,7 +39,7 @@ uci set luci_statistics.collectd_ping.Hosts=ping.berlin.freifunk.net
 
 # mod interface
 uci set luci_statistics.collectd_interface=statistics
-uci set luci_statistics.collectd_interface.Interfaces=ffvpn
+uci set luci_statistics.collectd_interface.Interfaces=ffuplink
 uci set luci_statistics.collectd_interface.enable=1
 
 # mod load

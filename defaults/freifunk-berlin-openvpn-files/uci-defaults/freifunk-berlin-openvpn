@@ -8,7 +8,7 @@ uci delete openvpn.sample_server
 uci delete openvpn.sample_client
 uci commit openvpn
 
-uci set network.ffvpn=interface
-uci set network.ffvpn.ifname=ffvpn
-uci set network.ffvpn.proto=none
+uci set network.ffuplink=interface
+uci set network.ffuplink.ifname=ffuplink
+uci set network.ffuplink.proto=none
 uci commit network
