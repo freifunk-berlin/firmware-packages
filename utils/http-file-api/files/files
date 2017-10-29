@@ -13,7 +13,7 @@ url_decode() {
     printf "%b%s" "${substr:0:4}" "${substr:4}"
   done
 }
- 
+
 get_query_string_value() {
   local query_string="$1"
   local wanted_key="$2"
@@ -85,7 +85,8 @@ if [ -z "$FILENAME" ]; then
 fi
 
 # read from stdin and write to file
-if ! cat > $FILENAME; then
+if ! cat > "$FILENAME"; then
+  rm -f "$FILENAME"
   send_response 500 "Internal Server Error" "File could not be written"
 fi
 
