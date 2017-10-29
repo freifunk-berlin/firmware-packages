@@ -17,6 +17,12 @@ EOF
   uci set olsrd2.$GLOBAL.pidfile=/var/run/olsrd2.pid
   uci set olsrd2.$GLOBAL.lockfile=/var/lock/olsrd2
 
+  OLSRV2="$(uci add olsrd2 olsrv2)"
+  local v6Prefix=$(echo $CONFIG_JSON | jsonfilter -e '@.ip.v6Prefix')
+  if [ -n "$v6Prefix" ]; then
+    uci set "olsrd2.$OLSRV2.lan=$v6Prefix"
+  fi
+
   LOG="$(uci add olsrd2 log)"
   uci set olsrd2.$LOG.syslog=true
   uci set olsrd2.$LOG.stderr=true
