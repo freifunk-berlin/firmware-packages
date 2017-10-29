@@ -26,7 +26,7 @@ endef
 define Build/Compile
 endef
 
-define Package/freifunk-berlin-wizard-backend/install
+define Package/http-file-api/install
 	$(INSTALL_DIR) $(1)/www/cgi-bin
 	$(INSTALL_BIN) files/files $(1)/www/cgi-bin/
 endef
