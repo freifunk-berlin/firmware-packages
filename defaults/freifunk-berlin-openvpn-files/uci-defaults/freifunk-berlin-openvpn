@@ -6,6 +6,7 @@ uci -q delete openvpn.sample_client
 uci commit openvpn
 
 # reconfigure ffuplink interface
+uci -q delete network.ffuplink_dev
 uci -q delete network.ffuplink
 uci set network.ffuplink=interface
 uci set network.ffuplink.ifname=ffuplink

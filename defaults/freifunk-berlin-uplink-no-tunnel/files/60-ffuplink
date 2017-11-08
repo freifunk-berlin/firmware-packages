@@ -35,10 +35,10 @@ if [ "$ACTION" = ifup ]; then
     # Make sure OpenVPN connects only through WAN: set "local" option with WAN IP
     local wanip
     network_get_ipaddr wanip "wan"
-    ip link add ffuplink type veth peer name ffuplink_wan
-    brctl addif br-wan ffuplink_wan
-    ip link set up ffuplink_wan
-    ifup ffuplink
+#    ip link add ffuplink type veth peer name ffuplink_wan
+#    brctl addif br-wan ffuplink_wan
+#    ip link set up ffuplink_wan
+#    ifup ffuplink
     exit
   fi
 fi
