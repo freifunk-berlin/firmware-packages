@@ -14,7 +14,7 @@ if [ "$INTERFACE" = ffuplink ]; then
     local gateway
     logger -t ff-userlog "ffuplink connection will be established"
     network_get_gateway gateway wan
-    ip route add default via ${gateway} dev ffuplink table olsr-tunnel
+    ip route add default via ${gateway} dev ffuplink table ffuplink
     logger -t ff-userlog "ffuplink connection has been established"
   fi
   if [ "$ACTION" = ifdown ]; then
