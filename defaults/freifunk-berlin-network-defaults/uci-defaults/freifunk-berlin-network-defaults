@@ -20,13 +20,4 @@ uci set network.tunl0=interface
 uci set network.tunl0.ifname=tunl0
 uci set network.tunl0.proto=none
 
-uci set network.dhcp_ffuplink_ipv4=rule
-uci set network.dhcp_ffuplink_ipv4.lookup=ffuplink
-uci set network.dhcp_ffuplink_ipv4.priority=19990
-uci set network.dhcp_ffuplink_ipv4.in=dhcp
-uci set network.wlan0adhoc_ffuplink_ipv4=rule
-uci set network.wlan0adhoc_ffuplink_ipv4.lookup=ffuplink
-uci set network.wlan0adhoc_ffuplink_ipv4.priority=19990
-uci set network.wlan0adhoc_ffuplink_ipv4.in=wireless0
-
 uci commit network
