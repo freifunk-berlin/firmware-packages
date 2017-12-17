@@ -18,6 +18,12 @@ config_get zones pr zones
 
 if [ "$ACTION" = ifup ]; then
   logger -t ff-userlog "ffuplink interface is up"
+  logger -t ff-userlog "creating ffuplink ip-rules"
+  ifaces=$(uci -q get firewall.zone_freifunk.network) 
+  for iface in $ifaces; do
+    network_get_physdev netdev $iface
+    ip rule add prio 19990 iif $netdev lookup ffuplink
+  done
   logger -t ff-userlog "prohibiting traffic to net on ffuplink-interface"
   network_get_subnet uplink_net ffuplink
   eval $(/bin/ipcalc.sh $uplink_net)
@@ -31,4 +37,8 @@ fi
 if [ "$ACTION" = ifdown ]; then
   logger -t ff-userlog "ffuplink interface going down"
   ip route flush table ffuplink
+  while true; do
+    ip rule show | grep "^19990:" || break
+    ip rule del prio 19990
+  done
 fi
