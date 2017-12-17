@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-network-defaults
 PKG_VERSION:=0.0.4
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -34,6 +34,8 @@ endef
 define Package/freifunk-berlin-network-defaults/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
+	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
+	$(CP) ./hotplug.d/iface/* $(1)/etc/hotplug.d/iface/
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-network-defaults))
