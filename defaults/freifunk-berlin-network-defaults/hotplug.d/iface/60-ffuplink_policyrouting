@@ -28,9 +28,6 @@ if [ "$ACTION" = ifup ]; then
   network_get_subnet uplink_net ffuplink
   eval $(/bin/ipcalc.sh $uplink_net)
   ip route add prohibit $NETWORK/$PREFIX table ffuplink
-  logger -t ff-userlog "setting defaultroute via ffuplink-interface for interfaces of zone $zones"
-  network_get_gateway gw ffuplink
-  ip route add default via $gw dev ffuplink table ffuplink
   logger -t ff-userlog "ffuplink-interface is setup"
 fi
 
