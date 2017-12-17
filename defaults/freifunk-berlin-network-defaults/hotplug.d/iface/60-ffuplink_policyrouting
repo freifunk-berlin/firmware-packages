@@ -1,0 +1,34 @@
+#!/bin/sh
+
+. /lib/functions.sh
+. /lib/functions/network.sh
+
+[ "$INTERFACE" = ffuplink ] || exit
+
+config_load ffwizard
+config_get sharenet settings sharenet
+[ "$sharenet" = 1 ] || exit
+
+config_load freifunk-policyrouting
+config_get pr_enable pr enable
+config_get fallback pr fallback
+config_get strict pr strict
+config_get zones pr zones
+[ "$pr_enable" = 1 ] || exit
+
+if [ "$ACTION" = ifup ]; then
+  logger -t ff-userlog "ffuplink interface is up"
+  logger -t ff-userlog "prohibiting traffic to net on ffuplink-interface"
+  network_get_subnet uplink_net ffuplink
+  eval $(/bin/ipcalc.sh $uplink_net)
+  ip route add prohibit $NETWORK/$PREFIX table ffuplink
+  logger -t ff-userlog "setting defaultroute via ffuplink-interface for interfaces of zone $zones"
+  network_get_gateway gw ffuplink
+  ip route add default via $gw dev ffuplink table ffuplink
+  logger -t ff-userlog "ffuplink-interface is setup"
+fi
+
+if [ "$ACTION" = ifdown ]; then
+  logger -t ff-userlog "ffuplink interface going down"
+  ip route flush table ffuplink
+fi
