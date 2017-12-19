@@ -41,11 +41,11 @@ if [ "$ACTION" = ifdown ]; then
   logger -t ff-userlog "ffuplink interface going down"
   ip route flush table ffuplink
   while true; do
-    ip rule show | grep "^19990:" || break
+    ip rule show | grep -q "^19990:" || break
     ip rule del prio 19990
   done
   while true; do
-    ip rule show | grep "^19989:" || break
+    ip rule show | grep -q "^19989:" || break
     ip rule del prio 19989
   done
 fi
