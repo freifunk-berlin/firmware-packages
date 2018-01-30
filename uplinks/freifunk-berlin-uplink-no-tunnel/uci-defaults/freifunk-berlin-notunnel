@@ -1,7 +1,5 @@
 #!/bin/sh
 
-uci set network.ffuplink.ffberlin_uplinktype=direct
-
 # always set correct masquerading, regardless of guard
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
