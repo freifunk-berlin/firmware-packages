@@ -10,6 +10,23 @@ f.reset = false
 css = f:field(DummyValue, "css", "")
 css.template = "freifunk/assistent/snippets/css"
 
+shareBandwidth = f:field(DummyValue, "shareBandwidthfo", "")
+shareBandwidth.template = "freifunk/assistent/snippets/shareBandwidth"
+
+local usersBandwidthDown = f:field(Value, "usersBandwidthDown", "Download-Bandbreite in Mbit/s")
+usersBandwidthDown.datatype = "float"
+usersBandwidthDown.rmempty = false
+function usersBandwidthDown.cfgvalue(self, section)
+  return uci:get("ffwizard", "settings", "usersBandwidthDown")
+end
+
+local usersBandwidthUp = f:field(Value, "usersBandwidthUp", "Upload-Bandbreite in Mbit/s")
+usersBandwidthUp.datatype = "float"
+usersBandwidthUp.rmempty = false
+function usersBandwidthUp.cfgvalue(self, section)
+  return uci:get("ffwizard", "settings", "usersBandwidthUp")
+end
+
 if uci.get("ffberlin-uplink", "uplink", "auth") == "x509" then
   vpninfo = f:field(DummyValue, "vpninfo", "")
   vpninfo.template = "freifunk/assistent/snippets/vpninfo"
@@ -32,23 +49,6 @@ if uci.get("ffberlin-uplink", "uplink", "auth") == "x509" then
     key.rmempty = false
     key.optional = false
   end
-end
-
-shareBandwidth = f:field(DummyValue, "shareBandwidthfo", "")
-shareBandwidth.template = "freifunk/assistent/snippets/shareBandwidth"
-
-local usersBandwidthDown = f:field(Value, "usersBandwidthDown", "Download-Bandbreite in Mbit/s")
-usersBandwidthDown.datatype = "float"
-usersBandwidthDown.rmempty = false
-function usersBandwidthDown.cfgvalue(self, section)
-  return uci:get("ffwizard", "settings", "usersBandwidthDown")
-end
-
-local usersBandwidthUp = f:field(Value, "usersBandwidthUp", "Upload-Bandbreite in Mbit/s")
-usersBandwidthUp.datatype = "float"
-usersBandwidthUp.rmempty = false
-function usersBandwidthUp.cfgvalue(self, section)
-  return uci:get("ffwizard", "settings", "usersBandwidthUp")
 end
 
 main = f:field(DummyValue, "openvpnconfig", "", "")
