@@ -46,7 +46,7 @@ uci:foreach("wireless", "wifi-device",
       return uci:get("ffwizard", "settings", "meship_" .. device)
     end
     function meship.validate(self, value)
-      local x = ip.IPv4(value)
+      local x = ip.IPv4(value or "")
       return ( x and x:is4()) and x:string() or ""
     end
     wifi_tbl[device]["meship"] = meship
@@ -73,7 +73,7 @@ if vap == "1" then
     return uci:get("ffwizard","settings", "dhcpmesh")
   end
   function dhcpmesh.validate(self, value)
-    local x = ip.IPv4(value)
+    local x = ip.IPv4(value or "")
     return ( x and x:minhost() and x:prefix() < 32) and x:string() or ""
   end
 end
