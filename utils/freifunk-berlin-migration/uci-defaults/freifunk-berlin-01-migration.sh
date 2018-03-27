@@ -15,8 +15,8 @@ OLD_VERSION=$(uci -q get system.@system[0].version)
 VERSION=${DISTRIB_RELEASE%%-*}
 
 log() {
-  logger -s -t freifunk-berlin-migration $@
-  echo >>/root/migrate.log $@
+  logger -s -t freifunk-berlin-migration "$@"
+  echo >>/root/migrate.log "$@"
 }
 
 if [ "Freifunk Berlin" = "${DISTRIB_ID}" ]; then
