@@ -281,6 +281,17 @@ r1_0_0_change_to_ffuplink() {
       return 1
     fi
   }
+  remove_routingpolicy() {
+    local config=$1
+    case "$config" in
+      olsr_*_ffvpn_ipv4*) 
+        log "  network.$config"
+        uci delete network.$config
+        ;;
+      *) ;;
+    esac
+  }
+
   log "changing interface ffvpn to ffuplink"
   log " setting wan as bridge"
   uci set network.wan.type=bridge
@@ -304,6 +315,10 @@ r1_0_0_change_to_ffuplink() {
   reset_cb
   config_load olsrd
   config_foreach change_olsrd_dygw_ping_iface LoadPlugin
+  log " removing deprecated IP-rules"
+  reset_cb
+  config_load network
+  config_foreach remove_routingpolicy rule
 }
 
 migrate () {
