@@ -4,12 +4,17 @@
 # taken from https://github.com/openwrt-mirror/openwrt/blob/95f36ebcd774a8e93ad2a1331f45d1a9da4fe8ff/target/linux/ar71xx/base-files/etc/uci-defaults/02_network#L83
 #
 # who is calling me?
-if [ $1 == "wizard" ]
-  then
-    wizard=1 
-  else
-    wizard=0
-fi
+echo 'case'
+case $1 in 
+	wizard)
+		commit=0;
+	manual)
+		commit=1;
+	show)
+		commit=0;;
+	*)
+		echo usage: $0 manual or $0 show && exit 0;;
+esac
 
 # should this script run?
 if [ "$(uci get ffwizard.settings.sharenet 2> /dev/null)" == "0" ]; then
@@ -32,6 +37,8 @@ fi
 # ucidef_set_interface_loopback
 # which board are we running on, what will we change?
 board=$(ar71xx_board_name)
+
+echo $board
 
 case "$board" in
 #all0315n |\
@@ -544,10 +551,13 @@ case "$board" in
 esac
 
 # shall I commit changes? Yes, when called by hand.
-if [ $wizard == "0" ]
-  then
-    uci commit network 
+if [ $commit == "1" ];  then
+	echo 'uci commit network';
+	uci commit network;
+	/etc/init.d/network restart
+	else 
+	echo 'uci dont commit qos'
+	
 fi
-
 
 exit 0
