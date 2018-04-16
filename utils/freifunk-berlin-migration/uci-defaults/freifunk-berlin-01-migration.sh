@@ -321,6 +321,23 @@ r1_0_0_change_to_ffuplink() {
   config_foreach remove_routingpolicy rule
 }
 
+r1_0_0_update_preliminary_glinet_names() {
+  case `uci get system.led_wlan.sysfs` in
+    "gl_ar150:wlan")
+      log "correcting system.led_wlan.sysfs for GLinet AR150"
+      uci set system.led_wlan.sysfs="gl-ar150:wlan"
+      ;;
+    "gl_ar300:wlan")
+      log "correcting system.led_wlan.sysfs for GLinet AR300"
+      uci set system.led_wlan.sysfs="gl-ar300:wlan"
+      ;;
+    "domino:blue:wlan")
+      log "correcting system.led_wlan.sysfs for GLinet Domino"
+      uci set system.led_wlan.sysfs="gl-domino:blue:wlan"
+      ;;
+  esac
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -365,6 +382,7 @@ migrate () {
     r1_0_0_no_wan_restart
     r1_0_0_firewallzone_uplink
     r1_0_0_change_to_ffuplink
+    r1_0_0_update_preliminary_glinet_names
   fi
 
   # overwrite version with the new version
