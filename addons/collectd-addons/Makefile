@@ -8,10 +8,10 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=collectd-addons
-PKG_VERSION:=0.0.2
-PKG_RELEASE:=2
+PKG_VERSION:=0.0.3
+PKG_RELEASE:=1
 
-UBIQUITI_MIBS_REL=ubnt-mibs_20160803.zip
+UBIQUITI_MIBS_REL=ubnt-mibs_20171003.zip
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -45,9 +45,9 @@ define Package/collectd-dnsmasq-addon/description
 endef
 
 define Download/ubnt_mibs
-	URL_FILE:=UBNT-MIBs.zip
-	URL:=https://help.ubnt.com/hc/en-us/article_attachments/203306028/
-	MD5SUM:=92087a11d75a94c7cfdb81f730642614
+	URL_FILE:=ubnt-mib.zip
+	URL:=https://www.ubnt.com/downloads/firmwares/airos-ubnt-mib/
+	MD5SUM:=7e7dff89b99e51336c09c4e4dad53287
 	FILE:=$(UBIQUITI_MIBS_REL)
 endef
 
