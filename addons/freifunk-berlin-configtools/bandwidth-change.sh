@@ -58,7 +58,10 @@ if [ $commit == "1" ];  then
 	echo 'uci commit qos';
 	uci set qos.ffuplink.download=$desiredqosdown;
 	uci set qos.ffuplink.upload=$desiredqosup;
+	uci set ffwizard.settings.usersBandwidthDown=$desiredqosdown;
+	uci set ffwizard.settings.usersBandwidthUp=$desiredqosup;
 	uci commit qos.ffuplink;
+	uci commit ffwizard.settings;
 	/etc/init.d/olsrd restart
 	else 
 	echo 'uci dont commit qos'
