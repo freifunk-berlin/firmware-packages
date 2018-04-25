@@ -372,7 +372,7 @@ migrate () {
     r1_0_1_olsrd_dygw_ping
   fi
 
-# overwrite version with the new version
+  # overwrite version with the new version
   log "Setting new system version to ${VERSION}."
   uci set system.@system[0].version=${VERSION}
 
