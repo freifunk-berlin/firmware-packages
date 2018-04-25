@@ -306,6 +306,22 @@ r1_0_0_change_to_ffuplink() {
   config_foreach change_olsrd_dygw_ping_iface LoadPlugin
 }
 
+r1_0_1_olsrd_dygw_ping() {
+  olsrd_dygw_ping() {
+    local config=$1
+    local lib=''
+    config_get lib $config library
+    if [ -z "${lib##olsrd_dyn_gw.so*}" ]; then
+      uci del_list olsrd.$config.Ping=213.73.91.35      # dnscache.ccc.berlin.de
+      # uci add_list olsrd.$config.Ping=WW.XX.YY.ZZ
+      return 1
+    fi
+  }
+  reset_cb
+  config_load olsrd
+  config_foreach olsrd_dygw_ping LoadPlugin
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -352,7 +368,11 @@ migrate () {
     r1_0_0_change_to_ffuplink
   fi
 
-  # overwrite version with the new version
+  if semverLT ${OLD_VERSION} "1.0.1"; then
+    r1_0_1_olsrd_dygw_ping
+  fi
+
+# overwrite version with the new version
   log "Setting new system version to ${VERSION}."
   uci set system.@system[0].version=${VERSION}
 
