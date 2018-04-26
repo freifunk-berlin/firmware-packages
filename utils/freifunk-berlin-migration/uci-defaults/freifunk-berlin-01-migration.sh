@@ -246,7 +246,6 @@ set_ipversion_olsrd6() {
 r1_0_0_vpn03_splitconfig() {
   log "changing guard-entry for VPN03 from openvpn to vpn03-openvpn (config-split for VPN03)"
   guard_rename openvpn vpn03_openvpn # to guard the current settings of package "freifunk-berlin-vpn03-files"
-  guard openvpn # to guard the current settings of package "freifunk-berlin-openvpn-files"
 }
 
 r1_0_0_no_wan_restart() {
