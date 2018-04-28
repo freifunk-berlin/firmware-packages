@@ -19,7 +19,7 @@ local ipkg = require "luci.model.ipkg"
 -- we use isfile because the view is not run as root and we can't use
 -- e.g. ipkg.installed or checkpasswd
 local webAppRoot = http.getenv("PATH_INFO") == nil
-local notRunBefore = not uci.get("ffwizard", "settings", "runbefore")
+local notRunBefore = not uci:get("ffwizard", "settings", "runbefore")
 local notPasswordSet = true
 local wizardInstalled = fs.access("/usr/lib/lua/luci/controller/assistent/assistent.lua")
 

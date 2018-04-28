@@ -27,7 +27,7 @@ function usersBandwidthUp.cfgvalue(self, section)
   return uci:get("ffwizard", "settings", "usersBandwidthUp")
 end
 
-if uci.get("ffberlin-uplink", "uplink", "auth") == "x509" then
+if uci:get("ffberlin-uplink", "uplink", "auth") == "x509" then
   vpninfo = f:field(DummyValue, "vpninfo", "")
   vpninfo.template = "freifunk/assistent/snippets/vpninfo"
   if luci.http.formvalue("reupload", true) == "1" then
