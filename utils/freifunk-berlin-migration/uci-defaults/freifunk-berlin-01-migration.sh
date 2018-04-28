@@ -337,6 +337,15 @@ r1_0_0_update_preliminary_glinet_names() {
   esac
 }
 
+r1_0_0_upstream() {
+  grep -q "^kernel.core_pattern=" /etc/sysctl.conf || echo >>/etc/sysctl.conf "kernel.core_pattern=/tmp/%e.%t.%p.%s.core"
+  sed -i '/^net.ipv4.tcp_ecn=0/d' /etc/sysctl.conf
+  grep -q "^128" /etc/iproute2/rt_tables || echo >>/etc/iproute2/rt_tables "128	prelocal"
+  cp /rom/etc/inittab /etc/inittab
+  cp /rom/etc/profile /etc/profile
+  cp /rom/etc/hosts /etc/hosts
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -382,6 +391,7 @@ migrate () {
     r1_0_0_firewallzone_uplink
     r1_0_0_change_to_ffuplink
     r1_0_0_update_preliminary_glinet_names
+    r1_0_0_upstream
   fi
 
   # overwrite version with the new version
