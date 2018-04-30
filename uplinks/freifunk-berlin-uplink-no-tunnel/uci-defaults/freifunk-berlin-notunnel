@@ -1,5 +1,12 @@
 #!/bin/sh
 
+create_interface() {
+  uci set network.ffuplink=interface
+  uci set network.ffuplink.ifname=ffuplink
+  uci set network.ffuplink.proto=dhcp
+  uci set network.ffuplink.default_type="no-tunnel"
+}
+
 # always set correct masquerading, regardless of guard
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
@@ -12,11 +19,12 @@ uci set network.ffuplink_dev.peer_name=ffuplink_wan
 # add ffuplink_dev to br-wan
 uci set network.wan.ifname="$(uci get network.wan.ifname) ffuplink_wan"
 
-prev_uplinktype=$(uci -q get network.ffuplink.default_type
-if ( -z $(prev_uplinktype) ); then
+uci -q get network.ffuplink >/dev/null || create_interface
+prev_uplinktype=$(uci -q get network.ffuplink.default_type)
+if [ ${#prev_uplinktype} == 0 ]; then
   uci set network.ffuplink.default_type="no-tunnel"
-elif ( ! $(prev_uplinktype)="no-tunnel" ); then
-  uci set network.ffuplink.default_type="changed - $(prev_uplinktype), no-tunnel"
+elif [ ${prev_uplinktype} != "no-tunnel" ]; then
+  uci set network.ffuplink.default_type="changed - ${prev_uplinktype}, no-tunnel"
 fi
 
 uci commit network
@@ -24,8 +32,5 @@ uci commit network
 . /lib/functions/guard.sh
 guard "notunnel"
 
-uci delete network.ffuplink
-uci set network.ffuplink=interface
-uci set network.ffuplink.ifname=ffuplink
-uci set network.ffuplink.proto=dhcp
-uci commit network
+#uci delete network.ffuplink
+#uci commit network

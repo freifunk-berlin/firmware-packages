@@ -4,11 +4,11 @@
 uci set firewall.zone_ffuplink.masq=0
 uci commit firewall
 
-prev_uplinktype=$(uci -q get network.ffuplink.default_type
-if ( -z $(prev_uplinktype) ); then
+prev_uplinktype=$(uci -q get network.ffuplink.default_type)
+if [ ${#prev_uplinktype} == 0 ]; then
   uci set network.ffuplink.default_type="vpn03_openvpn"
-elif ( ! $(prev_uplinktype)="vpn03_openvpn" ); then
-  uci set network.ffuplink.default_type="changed - $(prev_uplinktype), vpn03_openvpn"
+elif [ ${prev_uplinktype} != "vpn03_openvpn" ]; then
+  uci set network.ffuplink.default_type="changed - ${prev_uplinktype}, vpn03_openvpn"
 fi
 uci commit network.ffuplink
 
