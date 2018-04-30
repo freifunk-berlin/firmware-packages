@@ -4,6 +4,9 @@
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
 
+uci set network.ffuplink.default_type="tunnelberlin_openvpn"
+uci commit network.ffuplink
+
 . /lib/functions/guard.sh
 guard "tunnelberlin_openvpn"
 

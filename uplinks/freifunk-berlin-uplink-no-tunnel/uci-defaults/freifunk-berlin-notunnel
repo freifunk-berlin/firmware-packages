@@ -4,6 +4,9 @@
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
 
+uci set network.ffuplink.default_type="no-tunnel"
+uci commit network.ffuplink
+
 uci delete network.ffuplink_dev
 uci set network.ffuplink_dev=device
 uci set network.ffuplink_dev.type=veth
