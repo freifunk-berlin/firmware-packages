@@ -347,6 +347,36 @@ r1_0_0_upstream() {
   cp /rom/etc/hosts /etc/hosts
 }
 
+r1_0_0_set_uplinktype() {
+  log "storing used uplink-type"
+  log " migrating from Kathleen-release, assuming VPN03 as uplink-preset"
+  echo "" | uci import ffberlin-uplink
+  uci set ffberlin-uplink.preset=settings
+  uci set ffberlin-uplink.preset.current="vpn03_openvpn"
+}
+
+r1_0_1_set_uplinktype() {
+  uci >/dev/null -q get ffberlin-uplink.preset && return 0
+
+  log "storing used uplink-type for Hedy"
+  uci set ffberlin-uplink.preset=settings
+  uci set ffberlin-uplink.preset.current="unknown"
+  if [ "$(uci -q get network.ffuplink_dev.type)" = "veth" ]; then
+    uci set ffberlin-uplink.preset.current="no-tunnel"
+  else
+    case "$(uci -q get openvpn.ffuplink.remote)" in
+      \'vpn03.berlin.freifunk.net*)
+        uci set ffberlin-uplink.preset.current="vpn03_openvpn"
+        ;;
+      \'tunnel-gw.berlin.freifunk.net*)
+        uci set ffberlin-uplink.preset.current="tunnelberlin_openvpn"
+        ;;
+    esac
+    fi
+  log " type set to $(uci get ffberlin-uplink.preset.current)"
+}
+
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -393,6 +423,11 @@ migrate () {
     r1_0_0_change_to_ffuplink
     r1_0_0_update_preliminary_glinet_names
     r1_0_0_upstream
+    r1_0_0_set_uplinktype
+  fi
+
+  if semverLT ${OLD_VERSION} "1.0.1"; then
+    r1_0_1_set_uplinktype
   fi
 
   # overwrite version with the new version
