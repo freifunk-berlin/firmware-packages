@@ -4,9 +4,6 @@
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
 
-uci set network.ffuplink.default_type="no-tunnel"
-uci commit network.ffuplink
-
 uci delete network.ffuplink_dev
 uci set network.ffuplink_dev=device
 uci set network.ffuplink_dev.type=veth
@@ -14,6 +11,14 @@ uci set network.ffuplink_dev.name=ffuplink
 uci set network.ffuplink_dev.peer_name=ffuplink_wan
 # add ffuplink_dev to br-wan
 uci set network.wan.ifname="$(uci get network.wan.ifname) ffuplink_wan"
+
+prev_uplinktype=$(uci -q get network.ffuplink.default_type
+if ( -z $(prev_uplinktype) ); then
+  uci set network.ffuplink.default_type="no-tunnel"
+elif ( ! $(prev_uplinktype)="no-tunnel" ); then
+  uci set network.ffuplink.default_type="changed - $(prev_uplinktype), no-tunnel"
+fi
+
 uci commit network
 
 . /lib/functions/guard.sh

@@ -4,7 +4,12 @@
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
 
-uci set network.ffuplink.default_type="tunnelberlin_openvpn"
+prev_uplinktype=$(uci -q get network.ffuplink.default_type
+if ( -z $(prev_uplinktype) ); then
+  uci set network.ffuplink.default_type="tunnelberlin_openvpn"
+elif ( ! $(prev_uplinktype)="tunnelberlin_openvpn" ); then
+  uci set network.ffuplink.default_type="changed - $(prev_uplinktype), tunnelberlin_openvpn"
+fi
 uci commit network.ffuplink
 
 . /lib/functions/guard.sh
