@@ -4,6 +4,9 @@
 uci set firewall.zone_ffuplink.masq=0
 uci commit firewall
 
+uci set network.ffuplink.default_type="vpn03_openvpn"
+uci commit network.ffuplink
+
 . /lib/functions/guard.sh
 guard "vpn03_openvpn"
 
