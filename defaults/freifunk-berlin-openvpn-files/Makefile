@@ -40,8 +40,6 @@ define Package/freifunk-berlin-openvpn-files/install
 	$(CP) ./openvpn/ffvpn-up.sh $(1)/lib/freifunk
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
 	$(CP) ./openvpn/60-ffopenvpn $(1)/etc/hotplug.d/iface
-	$(INSTALL_DIR) $(1)/etc/config
-	$(CP) ./files/ffberlin-uplink $(1)/etc/config
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-openvpn-files))

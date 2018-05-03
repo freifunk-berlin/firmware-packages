@@ -1,15 +1,20 @@
 #!/bin/sh
 
-create_interface() {
-  uci set network.ffuplink=interface
-  uci set network.ffuplink.ifname=ffuplink
-  uci set network.ffuplink.proto=dhcp
-  uci set network.ffuplink.default_type="no-tunnel"
-}
+# set set auth-type required for this uplink-type, e.g. for freifunk-wizard
+uci set ffberlin-uplink.uplink=settings
+uci set ffberlin-uplink.uplink.auth=none
 
 # always set correct masquerading, regardless of guard
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
+
+uci -q get ffberlin-uplink.preset=settings || uci set ffberlin-uplink.preset=settings
+uci >/dev/null -q get ffberlin-uplink.preset.current || uci -q set ffberlin-uplink.preset.current="no-tunnel"
+if [[ $(uci get ffberlin-uplink.preset.current) != 'no-tunnel' ]]; then
+  uci rename ffberlin-uplink.preset.current=previous
+  uci set ffberlin-uplink.preset.current='no-tunnel'
+fi
+uci commit ffberlin-uplink
 
 uci delete network.ffuplink_dev
 uci set network.ffuplink_dev=device
@@ -18,19 +23,13 @@ uci set network.ffuplink_dev.name=ffuplink
 uci set network.ffuplink_dev.peer_name=ffuplink_wan
 # add ffuplink_dev to br-wan
 uci set network.wan.ifname="$(uci get network.wan.ifname) ffuplink_wan"
-
-uci -q get network.ffuplink >/dev/null || create_interface
-prev_uplinktype=$(uci -q get network.ffuplink.default_type)
-if [ ${#prev_uplinktype} == 0 ]; then
-  uci set network.ffuplink.default_type="no-tunnel"
-elif [ ${prev_uplinktype} != "no-tunnel" ]; then
-  uci set network.ffuplink.default_type="changed - ${prev_uplinktype}, no-tunnel"
-fi
-
-uci commit network
+uci commit network.ffuplink_dev
 
 . /lib/functions/guard.sh
 guard "notunnel"
 
-#uci delete network.ffuplink
-#uci commit network
+uci delete network.ffuplink
+uci set network.ffuplink=interface
+uci set network.ffuplink.ifname=ffuplink
+uci set network.ffuplink.proto=dhcp
+uci commit network
