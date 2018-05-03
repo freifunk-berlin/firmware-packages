@@ -40,8 +40,6 @@ define Package/$(PKG_NAME)/install
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
 	$(CP) ./files/60-ffuplink $(1)/etc/hotplug.d/iface
-	$(INSTALL_DIR) $(1)/etc/config
-	$(CP) ./files/ffberlin-uplink $(1)/etc/config
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
