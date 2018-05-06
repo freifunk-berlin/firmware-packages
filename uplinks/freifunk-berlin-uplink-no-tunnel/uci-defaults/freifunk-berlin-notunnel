@@ -16,6 +16,9 @@ if [[ $(uci get ffberlin-uplink.preset.current) != 'no-tunnel' ]]; then
 fi
 uci commit ffberlin-uplink
 
+. /lib/functions/guard.sh
+guard "notunnel"
+
 uci delete network.ffuplink_dev
 uci set network.ffuplink_dev=device
 uci set network.ffuplink_dev.type=veth
@@ -24,9 +27,6 @@ uci set network.ffuplink_dev.peer_name=ffuplink_wan
 # add ffuplink_dev to br-wan
 uci set network.wan.ifname="$(uci get network.wan.ifname) ffuplink_wan"
 uci commit network.ffuplink_dev
-
-. /lib/functions/guard.sh
-guard "notunnel"
 
 uci delete network.ffuplink
 uci set network.ffuplink=interface
