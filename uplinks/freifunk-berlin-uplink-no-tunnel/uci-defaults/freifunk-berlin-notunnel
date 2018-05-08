@@ -1,19 +1,21 @@
 #!/bin/sh
 
-# set set auth-type required for this uplink-type, e.g. for freifunk-wizard
-uci set ffberlin-uplink.uplink=settings
-uci set ffberlin-uplink.uplink.auth=none
-
 # always set correct masquerading, regardless of guard
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
 
-uci -q get ffberlin-uplink.preset=settings || uci set ffberlin-uplink.preset=settings
-uci >/dev/null -q get ffberlin-uplink.preset.current || uci -q set ffberlin-uplink.preset.current="no-tunnel"
-if [[ $(uci get ffberlin-uplink.preset.current) != 'no-tunnel' ]]; then
+# create ffberlin-uplink file an fill with basic settings
+uci -q get ffberlin-uplink || echo "" | uci import ffberlin-uplink
+uci >/dev/null -q get ffberlin-uplink.preset || uci set ffberlin-uplink.preset=settings
+uci >/dev/null -q get ffberlin-uplink.preset.current || uci set ffberlin-uplink.preset.current="no-tunnel"
+if [[ $(uci get ffberlin-uplink.preset.current) != "no-tunnel" ]]; then
   uci rename ffberlin-uplink.preset.current=previous
-  uci set ffberlin-uplink.preset.current='no-tunnel'
+  uci set ffberlin-uplink.preset.current="no-tunnel"
 fi
+# set set auth-type required for this uplink-type, e.g. for freifunk-wizard
+uci set ffberlin-uplink.uplink=settings
+uci set ffberlin-uplink.uplink.auth=none
+
 uci commit ffberlin-uplink
 
 . /lib/functions/guard.sh
