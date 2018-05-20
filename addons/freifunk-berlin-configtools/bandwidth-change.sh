@@ -3,6 +3,18 @@
 # Copyright (C) 2018 holger@freifunk-berlin
 # inspired by depricated https://github.com/freifunk-berlin/firmware-packages/commit/3a923a89e705da88bd44bb78d4ebfa6655b3960e
 #
+
+# display current settings:
+show_settings() {
+  echo 'current settings'
+  usersBandwidthDown=$(uci get ffwizard.settings.usersBandwidthDown)
+  usersBandwidthUp=$(uci get ffwizard.settings.usersBandwidthUp)
+  echo " userdown $(( $usersBandwidthDown * 1000))"
+  echo " userup   $(( $usersBandwidthUp * 1000))"
+  echo " qosdown  $(uci get qos.ffuplink.download)"
+  echo " qosup    $(uci get qos.ffuplink.upload)"
+}
+
 # who is calling me?
 echo 'case'
 case $1 in 
@@ -39,14 +51,9 @@ if [ -e /etc/config/olsrd ]; then
 	else 
 		echo 'file olsrd not found' && exit 1
 fi
-# display current settings:
-echo 'current settings'
-usersBandwidthDown=$(uci get ffwizard.settings.usersBandwidthDown)
-usersBandwidthUp=$(uci get ffwizard.settings.usersBandwidthUp)
-echo userdown $(( $usersBandwidthDown * 1000))
-echo userup   $(( $usersBandwidthUp * 1000))
-echo qosdown  $(uci get qos.ffuplink.download)
-echo qosup    $(uci get qos.ffuplink.upload)
+
+show_settings
+
 echo desiredqosdown $desiredqosdown
 echo desiredqosup $desiredqosup
 # change olsrd-settings
