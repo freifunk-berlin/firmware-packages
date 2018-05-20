@@ -15,26 +15,34 @@ show_settings() {
   echo " qosup    $(uci get qos.ffuplink.upload)"
 }
 
-# who is calling me?
-echo 'case'
-case $1 in 
-	wizard)
-		commit=0;
-		desiredqosdown=$2;
-		desiredqosup=$3;;
-	manual)
-		commit=1;
-		desiredqosdown=$2;
-		desiredqosup=$3;;
-	show)
-		commit=0;;
-	*)
-		echo usage: $0 manual desiredqosdown desiredqosup in Kbit\/s or $0 show && exit 0;;
-esac
+AUTOCOMMIT="yes"
+OPERATION="set"
 
-if ! [ $1 == "show" ]; then
-		[ -z "$2" ] && echo "value missing for desiredqos" && exit 1; 
-		[ -z "$3" ] && echo "value missing for desiredqos" && exit 1;
+while getopts "snu:d:" option; do
+        case "$option" in
+                d)
+                        DOWNSPEED="${OPTARG}"
+                        ;;
+                u)
+                        UPSPEED="${OPTARG}"
+                        ;;
+                n)
+                        AUTOCOMMIT="no"
+                        ;;
+                s)
+                        OPERATION="show"
+                        ;;
+                *)
+                        echo "Invalid argument '-$OPTARG'."
+                        exit 1
+                        ;;    
+        esac              
+done        
+shift $((OPTIND - 1))
+
+if [ ${OPERATION} == "set" ]; then
+		[ -z ${DOWNSPEED} ] && echo "value missing for desiredqos" && exit 1; 
+		[ -z ${UPSPEED} ] && echo "value missing for desiredqos" && exit 1;
 fi
 
 # should this script run?
@@ -54,23 +62,26 @@ fi
 
 show_settings
 
+desiredqosdown=${DOWNSPEED}
+desiredqosup=${UPSPEED}
+
 echo desiredqosdown $desiredqosdown
 echo desiredqosup $desiredqosup
 # change olsrd-settings
-if ! [ $1 == "show" ]; then
+if [ ${OPERATION} == "set" ]; then
 	sed -i -e "s/$(uci get qos.ffuplink.upload) $(uci get qos.ffuplink.download)/$desiredqosup $desiredqosdown/g" /etc/config/olsrd
 fi
-# shall I commit changes? Yes, when called by hand.
-if [ $commit == "1" ];  then
 	echo 'uci commit qos';
 	uci set qos.ffuplink.download=$desiredqosdown;
 	uci set qos.ffuplink.upload=$desiredqosup;
 	uci set ffwizard.settings.usersBandwidthDown=$desiredqosdown;
 	uci set ffwizard.settings.usersBandwidthUp=$desiredqosup;
+# shall I commit changes? Yes, when called by hand.
+if [ ${AUTOCOMMIT} == "yes" ];  then
 	uci commit qos.ffuplink;
 	uci commit ffwizard.settings;
 	/etc/init.d/olsrd restart
-	else 
+else 
 	echo 'uci dont commit qos'
 	
 fi
