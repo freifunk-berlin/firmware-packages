@@ -69,7 +69,7 @@ echo desiredqosdown $desiredqosdown
 echo desiredqosup $desiredqosup
 # change olsrd-settings
 if [ ${OPERATION} == "set" ]; then
-	sed -i -e "s/$(uci get qos.ffuplink.upload) $(uci get qos.ffuplink.download)/$desiredqosup $desiredqosdown/g" /etc/config/olsrd
+	uci set olsrd.@olsrd[0].SmartGatewaySpeed="${desiredqosup} ${desiredqosdown}"
 fi
 	echo 'uci commit qos';
 	uci set qos.ffuplink.download=$desiredqosdown;
