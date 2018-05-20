@@ -32,13 +32,6 @@ define Package/bbbdigger/description
   Freifunk Berlin configuration of tunneldigger to connect to and mesh with the Berlin Backbone
 endef
 
-define Download/ubnt_mibs
-	URL_FILE:=ubnt-mib.zip
-	URL:=https://www.ubnt.com/downloads/firmwares/airos-ubnt-mib/
-	MD5SUM:=7e7dff89b99e51336c09c4e4dad53287
-	FILE:=$(UBIQUITI_MIBS_REL)
-endef
-
 define Build/Prepare
 endef
 
