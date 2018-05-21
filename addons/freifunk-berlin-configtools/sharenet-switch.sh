@@ -1,19 +1,19 @@
 #!/bin/sh
 #
-# Copyright (C) 2011 OpenWrt.org
+# Copyright (C) 2018 holger@freifunk-berlin
 # taken from https://github.com/openwrt-mirror/openwrt/blob/95f36ebcd774a8e93ad2a1331f45d1a9da4fe8ff/target/linux/ar71xx/base-files/etc/uci-defaults/02_network#L83
 #
 # who is calling me?
 echo 'case'
 case $1 in 
-	wizard)
+	set)
 		commit=0;
-	manual)
+	commit)
 		commit=1;
 	show)
 		commit=0;;
 	*)
-		echo usage: $0 manual or $0 show && exit 0;;
+		echo usage: $0 set, $0 commit or $0 show && exit 0;;
 esac
 
 # should this script run?
