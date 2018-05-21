@@ -18,7 +18,7 @@ show_settings() {
 AUTOCOMMIT="yes"
 OPERATION="set"
 
-while getopts "snu:d:" option; do
+while getopts "snd:u:" option; do
         case "$option" in
                 d)
                         DOWNSPEED="${OPTARG}"
@@ -31,6 +31,7 @@ while getopts "snu:d:" option; do
                         ;;
                 s)
                         OPERATION="show"
+                        AUTOCOMMIT="no"
                         ;;
                 *)
                         echo "Invalid argument '-$OPTARG'."
@@ -41,8 +42,8 @@ done
 shift $((OPTIND - 1))
 
 if [ ${OPERATION} == "set" ]; then
-		[ -z ${DOWNSPEED} ] && echo "value missing for desiredqos" && exit 1; 
-		[ -z ${UPSPEED} ] && echo "value missing for desiredqos" && exit 1;
+		[ -z ${DOWNSPEED} ] && echo "value missing for desiredqosdown" && exit 1; 
+		[ -z ${UPSPEED} ] && echo "value missing for desiredqosup" && exit 1;
 fi
 
 # should this script run?
@@ -69,15 +70,18 @@ echo desiredqosdown $desiredqosdown
 echo desiredqosup $desiredqosup
 # change olsrd-settings
 if [ ${OPERATION} == "set" ]; then
-	uci set olsrd.@olsrd[0].SmartGatewaySpeed="${desiredqosup} ${desiredqosdown}"
-fi
-	echo 'uci commit qos';
+	uci set olsrd.@olsrd[0].SmartGatewaySpeed="${desiredqosup} ${desiredqosdown}";
 	uci set qos.ffuplink.download=$desiredqosdown;
 	uci set qos.ffuplink.upload=$desiredqosup;
-	uci set ffwizard.settings.usersBandwidthDown=$desiredqosdown;
-	uci set ffwizard.settings.usersBandwidthUp=$desiredqosup;
+	usersBandwidthDown=$(($desiredqosdown / 1000));
+	uci set ffwizard.settings.usersBandwidthDown=$usersBandwidthDown;
+	usersBandwidthUp=$(($desiredqosup / 1000));
+	uci set ffwizard.settings.usersBandwidthUp=$usersBandwidthUp
+fi
 # shall I commit changes? Yes, when called by hand.
 if [ ${AUTOCOMMIT} == "yes" ];  then
+	echo 'uci commit qos';
+	uci commit olsrd;
 	uci commit qos.ffuplink;
 	uci commit ffwizard.settings;
 	/etc/init.d/olsrd restart
