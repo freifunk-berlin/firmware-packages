@@ -106,6 +106,12 @@ case "$board" in
 #	ucidef_set_interface_wlan
 #	;;
 #
+'GL AR150')
+	echo $board found
+	;;
+'TP-Link CPE210 v1.1')
+	echo $board found
+	;;
 #cpe510)
 #	ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
 #	ucidef_add_switch "switch0" "1" "1"
