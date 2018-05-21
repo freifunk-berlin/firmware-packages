@@ -36,7 +36,8 @@ fi
 
 # ucidef_set_interface_loopback
 # which board are we running on, what will we change?
-board=$(ar71xx_board_name)
+# board=$(ar71xx_board_name) #is not sufficient for all boards
+board=$(ubus -v call system board | jsonfilter -e '$.model')
 
 echo $board
 
