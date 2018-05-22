@@ -345,6 +345,9 @@ r1_0_0_upstream() {
   cp /rom/etc/inittab /etc/inittab
   cp /rom/etc/profile /etc/profile
   cp /rom/etc/hosts /etc/hosts
+  log " checking for user dnsmasq"
+  group_exists "dnsmasq" || group_add "dnsmasq" "453"
+  user_exists "dnsmasq" || user_add "dnsmasq" "453" "453"
 }
 
 migrate () {
