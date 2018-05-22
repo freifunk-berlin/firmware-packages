@@ -80,3 +80,5 @@ uci set olsrd.@Interface[-1].Mode=ether
 #uci changes
 
 uci commit
+reload_config
+/etc/init.d/tunneldigger restart
