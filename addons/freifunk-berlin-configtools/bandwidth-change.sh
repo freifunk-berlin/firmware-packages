@@ -84,7 +84,7 @@ if [ ${AUTOCOMMIT} == "yes" ];  then
 	uci commit olsrd;
 	uci commit qos.ffuplink;
 	uci commit ffwizard.settings;
-	/etc/init.d/olsrd restart
+	reload_config
 else 
 	echo 'uci dont commit qos'
 	
