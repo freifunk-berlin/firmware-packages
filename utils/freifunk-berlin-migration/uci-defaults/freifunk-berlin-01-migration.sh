@@ -246,7 +246,6 @@ set_ipversion_olsrd6() {
 r1_0_0_vpn03_splitconfig() {
   log "changing guard-entry for VPN03 from openvpn to vpn03-openvpn (config-split for VPN03)"
   guard_rename openvpn vpn03_openvpn # to guard the current settings of package "freifunk-berlin-vpn03-files"
-  guard openvpn # to guard the current settings of package "freifunk-berlin-openvpn-files"
 }
 
 r1_0_0_no_wan_restart() {
@@ -281,6 +280,17 @@ r1_0_0_change_to_ffuplink() {
       return 1
     fi
   }
+  remove_routingpolicy() {
+    local config=$1
+    case "$config" in
+      olsr_*_ffvpn_ipv4*) 
+        log "  network.$config"
+        uci delete network.$config
+        ;;
+      *) ;;
+    esac
+  }
+
   log "changing interface ffvpn to ffuplink"
   log " setting wan as bridge"
   uci set network.wan.type=bridge
@@ -304,7 +314,68 @@ r1_0_0_change_to_ffuplink() {
   reset_cb
   config_load olsrd
   config_foreach change_olsrd_dygw_ping_iface LoadPlugin
+  log " removing deprecated IP-rules"
+  reset_cb
+  config_load network
+  config_foreach remove_routingpolicy rule
 }
+
+r1_0_0_update_preliminary_glinet_names() {
+  case `uci get system.led_wlan.sysfs` in
+    "gl_ar150:wlan")
+      log "correcting system.led_wlan.sysfs for GLinet AR150"
+      uci set system.led_wlan.sysfs="gl-ar150:wlan"
+      ;;
+    "gl_ar300:wlan")
+      log "correcting system.led_wlan.sysfs for GLinet AR300"
+      uci set system.led_wlan.sysfs="gl-ar300:wlan"
+      ;;
+    "domino:blue:wlan")
+      log "correcting system.led_wlan.sysfs for GLinet Domino"
+      uci set system.led_wlan.sysfs="gl-domino:blue:wlan"
+      ;;
+  esac
+}
+
+r1_0_0_upstream() {
+  log "applying upstream changes / sync with upstream"
+  grep -q "^kernel.core_pattern=" /etc/sysctl.conf || echo >>/etc/sysctl.conf "kernel.core_pattern=/tmp/%e.%t.%p.%s.core"
+  sed -i '/^net.ipv4.tcp_ecn=0/d' /etc/sysctl.conf
+  grep -q "^128" /etc/iproute2/rt_tables || echo >>/etc/iproute2/rt_tables "128	prelocal"
+  cp /rom/etc/inittab /etc/inittab
+  cp /rom/etc/profile /etc/profile
+  cp /rom/etc/hosts /etc/hosts
+}
+
+r1_0_0_set_uplinktype() {
+  log "storing used uplink-type"
+  log " migrating from Kathleen-release, assuming VPN03 as uplink-preset"
+  echo "" | uci import ffberlin-uplink
+  uci set ffberlin-uplink.preset=settings
+  uci set ffberlin-uplink.preset.current="vpn03_openvpn"
+}
+
+r1_0_1_set_uplinktype() {
+  uci >/dev/null -q get ffberlin-uplink.preset && return 0
+
+  log "storing used uplink-type for Hedy"
+  uci set ffberlin-uplink.preset=settings
+  uci set ffberlin-uplink.preset.current="unknown"
+  if [ "$(uci -q get network.ffuplink_dev.type)" = "veth" ]; then
+    uci set ffberlin-uplink.preset.current="no-tunnel"
+  else
+    case "$(uci -q get openvpn.ffuplink.remote)" in
+      \'vpn03.berlin.freifunk.net*)
+        uci set ffberlin-uplink.preset.current="vpn03_openvpn"
+        ;;
+      \'tunnel-gw.berlin.freifunk.net*)
+        uci set ffberlin-uplink.preset.current="tunnelberlin_openvpn"
+        ;;
+    esac
+    fi
+  log " type set to $(uci get ffberlin-uplink.preset.current)"
+}
+
 
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
@@ -350,6 +421,13 @@ migrate () {
     r1_0_0_no_wan_restart
     r1_0_0_firewallzone_uplink
     r1_0_0_change_to_ffuplink
+    r1_0_0_update_preliminary_glinet_names
+    r1_0_0_upstream
+    r1_0_0_set_uplinktype
+  fi
+
+  if semverLT ${OLD_VERSION} "1.0.1"; then
+    r1_0_1_set_uplinktype
   fi
 
   # overwrite version with the new version
