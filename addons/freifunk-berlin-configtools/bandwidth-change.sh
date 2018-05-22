@@ -15,23 +15,21 @@ show_settings() {
   echo " qosup    $(uci get qos.ffuplink.upload)"
 }
 
-AUTOCOMMIT="yes"
-OPERATION="set"
+AUTOCOMMIT="no"
+OPERATION="show"
 
-while getopts "snd:u:" option; do
+while getopts "cd:u:" option; do
         case "$option" in
                 d)
                         DOWNSPEED="${OPTARG}"
+                        OPERATION="set"
                         ;;
                 u)
                         UPSPEED="${OPTARG}"
+                        OPERATION="set"
                         ;;
-                n)
-                        AUTOCOMMIT="no"
-                        ;;
-                s)
-                        OPERATION="show"
-                        AUTOCOMMIT="no"
+                c)
+                        AUTOCOMMIT="yes"
                         ;;
                 *)
                         echo "Invalid argument '-$OPTARG'."
@@ -41,10 +39,10 @@ while getopts "snd:u:" option; do
 done        
 shift $((OPTIND - 1))
 
-if [ ${OPERATION} == "set" ]; then
-		[ -z ${DOWNSPEED} ] && echo "value missing for desiredqosdown" && exit 1; 
-		[ -z ${UPSPEED} ] && echo "value missing for desiredqosup" && exit 1;
-fi
+#if [ ${OPERATION} == "set" ]; then
+#		[ -z ${DOWNSPEED} ] && echo "value missing for desiredqosdown" && exit 1; 
+#		[ -z ${UPSPEED} ] && echo "value missing for desiredqosup" && exit 1;
+#fi
 
 # should this script run?
 if [ "$(uci get ffwizard.settings.sharenet 2> /dev/null)" == "0" ]; then
