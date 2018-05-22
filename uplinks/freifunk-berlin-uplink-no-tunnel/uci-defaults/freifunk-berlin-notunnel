@@ -34,6 +34,9 @@ uci delete network.ffuplink
 uci set network.ffuplink=interface
 uci set network.ffuplink.ifname=ffuplink
 uci set network.ffuplink.proto=dhcp
+# Put the resulting routing information from the dhcp request in the ffuplink table
+# instead of the default table.  This prevents the dhcp request for the ffuplink
+# interface from overwriting the routing table entries needed by br_wan.
 uci set network.ffuplink.ip4table=ffuplink
 uci set network.ffuplink.ip6table=ffuplink
 uci commit network
