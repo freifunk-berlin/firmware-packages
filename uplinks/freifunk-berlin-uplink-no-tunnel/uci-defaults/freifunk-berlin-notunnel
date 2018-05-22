@@ -20,4 +20,6 @@ uci delete network.ffuplink
 uci set network.ffuplink=interface
 uci set network.ffuplink.ifname=ffuplink
 uci set network.ffuplink.proto=dhcp
+uci set network.ffuplink.ip4table=ffuplink
+uci set network.ffuplink.ip6table=ffuplink
 uci commit network
