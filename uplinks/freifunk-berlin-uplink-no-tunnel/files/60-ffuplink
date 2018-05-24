@@ -11,10 +11,17 @@ config_get sharenet settings sharenet
 
 if [ "$INTERFACE" = ffuplink ]; then
   if [ "$ACTION" = ifup ]; then
-    local gateway
+#
+# The routing table assignment for ffuplink is now set in 
+# /etc/config/network with the ip{4|6}table options.  The
+# previously used script is here as comments for documentation 
+# purposes only.  
+# Logging has been left in place for obvious reasons.
+#
+#    local gateway
     logger -t ff-userlog "ffuplink connection will be established"
-    network_get_gateway gateway wan
-    ip route add default via ${gateway} dev ffuplink table ffuplink
+#    network_get_gateway gateway wan
+#    ip route add default via ${gateway} dev ffuplink table ffuplink
     logger -t ff-userlog "ffuplink connection has been established"
   fi
   if [ "$ACTION" = ifdown ]; then
@@ -31,14 +38,17 @@ fi
 if [ "$ACTION" = ifup ]; then
   logger -t ff-userlog "WAN interface is up"
   if [ "$sharenet" = 1 ]; then
-    logger -t ff-vpn-hotplug "configuring ffuplink on WAN interface"
-    # Make sure OpenVPN connects only through WAN: set "local" option with WAN IP
-    local wanip
-    network_get_ipaddr wanip "wan"
+    logger -t ff-userlog "configuring ffuplink on WAN interface"
+#
+# The no-tunnel version only needs to have the ffuplink device activated
+# and therefore the following commented out commands are not needed.
+#
+#    local wanip
+#    network_get_ipaddr wanip "wan"
 #    ip link add ffuplink type veth peer name ffuplink_wan
 #    brctl addif br-wan ffuplink_wan
 #    ip link set up ffuplink_wan
-#    ifup ffuplink
+    ifup ffuplink
     exit
   fi
 fi
