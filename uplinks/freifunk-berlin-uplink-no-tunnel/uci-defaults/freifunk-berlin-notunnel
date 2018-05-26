@@ -4,6 +4,23 @@
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
 
+# create ffberlin-uplink file an fill with basic settings
+uci -q get ffberlin-uplink || echo "" | uci import ffberlin-uplink
+uci >/dev/null -q get ffberlin-uplink.preset || uci set ffberlin-uplink.preset=settings
+uci >/dev/null -q get ffberlin-uplink.preset.current || uci set ffberlin-uplink.preset.current="no-tunnel"
+if [[ $(uci get ffberlin-uplink.preset.current) != "no-tunnel" ]]; then
+  uci rename ffberlin-uplink.preset.current=previous
+  uci set ffberlin-uplink.preset.current="no-tunnel"
+fi
+# set set auth-type required for this uplink-type, e.g. for freifunk-wizard
+uci set ffberlin-uplink.uplink=settings
+uci set ffberlin-uplink.uplink.auth=none
+
+uci commit ffberlin-uplink
+
+. /lib/functions/guard.sh
+guard "notunnel"
+
 uci delete network.ffuplink_dev
 uci set network.ffuplink_dev=device
 uci set network.ffuplink_dev.type=veth
@@ -11,10 +28,7 @@ uci set network.ffuplink_dev.name=ffuplink
 uci set network.ffuplink_dev.peer_name=ffuplink_wan
 # add ffuplink_dev to br-wan
 uci set network.wan.ifname="$(uci get network.wan.ifname) ffuplink_wan"
-uci commit network
-
-. /lib/functions/guard.sh
-guard "notunnel"
+uci commit network.ffuplink_dev
 
 uci delete network.ffuplink
 uci set network.ffuplink=interface
