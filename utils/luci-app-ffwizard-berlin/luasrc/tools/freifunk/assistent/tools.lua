@@ -72,7 +72,6 @@ function hasRootPass()
 	local f = io.popen("wget http://localhost/cgi-bin/has_root-pass -q -O -")
 	local ret = f:read("*a")
 	if ret == "password_is_set:no" then
-		logger ("root-password not set")
 		isPasswordSet = false
 	end
 	f:close()
