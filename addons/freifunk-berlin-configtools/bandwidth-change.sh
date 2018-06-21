@@ -3,7 +3,8 @@
 # Copyright (C) 2018 holger@freifunk-berlin
 # inspired by depricated https://github.com/freifunk-berlin/firmware-packages/commit/3a923a89e705da88bd44bb78d4ebfa6655b3960e
 #
-
+# we should check which tc is running, like opkg list-installed | grep simple-tc s.a. https://github.com/freifunk-berlin/firmware/issues/548
+# only tc is not helpful with grep
 # display current settings:
 show_settings() {
   echo 'current settings'
