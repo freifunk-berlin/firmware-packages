@@ -90,6 +90,7 @@ uci set firewall.zone_ffuplink.input=REJECT
 uci set firewall.zone_ffuplink.forward=ACCEPT
 uci set firewall.zone_ffuplink.output=ACCEPT
 uci set firewall.zone_ffuplink.network=ffuplink
+uci set firewall.zone_ffuplink.masq=1
 
 FORWARDING="$(uci add firewall forwarding)"
 uci set firewall.$FORWARDING.dest=freifunk
