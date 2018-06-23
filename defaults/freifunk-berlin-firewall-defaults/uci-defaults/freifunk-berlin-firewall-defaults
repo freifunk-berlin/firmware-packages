@@ -83,7 +83,7 @@ uci set firewall.zone_freifunk.output=ACCEPT
 uci set firewall.zone_freifunk.network=tunl0
 uci set firewall.zone_freifunk.device=tnl_+
 
-# add named zone section for the VPN-uplink
+# add named zone section for the uplink of client-traffic
 uci set firewall.zone_ffuplink=zone
 uci set firewall.zone_ffuplink.name=ffuplink
 uci set firewall.zone_ffuplink.input=REJECT
