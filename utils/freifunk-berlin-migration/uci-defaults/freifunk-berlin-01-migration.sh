@@ -379,6 +379,21 @@ r1_0_1_set_uplinktype() {
   log " type set to $(uci get ffberlin-uplink.preset.current)"
 }
 
+r1_1_0_change_olsrd_lib_num() {
+  log "remove suffix from olsrd plugins"
+  change_olsrd_lib_num_handle_config() {
+    local config=$1
+    local library=''
+    local librarywo=''
+    config_get library $config library
+    librarywo=$(echo ${library%%.*})
+    uci set olsrd.$config.library=$librarywo
+    log " changed $librarywo"
+  }
+  reset_cb
+  config_load olsrd
+  config_foreach change_olsrd_lib_num_handle_config LoadPlugin
+}
 
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
@@ -431,6 +446,10 @@ migrate () {
 
   if semverLT ${OLD_VERSION} "1.0.1"; then
     r1_0_1_set_uplinktype
+  fi
+
+  if semverLT ${OLD_VERSION} "1.1.0"; then
+    r1_1_0_change_olsrd_lib_num
   fi
 
   # overwrite version with the new version
