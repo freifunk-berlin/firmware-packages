@@ -383,16 +383,20 @@ r1_1_0_change_olsrd_lib_num() {
   log "remove suffix from olsrd plugins"
   change_olsrd_lib_num_handle_config() {
     local config=$1
+    local v6=$2
     local library=''
     local librarywo=''
     config_get library $config library
     librarywo=$(echo ${library%%.*})
-    uci set olsrd.$config.library=$librarywo
-    log " changed $librarywo"
+    uci set olsrd$v6.$config.library=$librarywo
+    log " changed olsrd$v6 $librarywo"
   }
   reset_cb
   config_load olsrd
   config_foreach change_olsrd_lib_num_handle_config LoadPlugin
+  config_load olsrd6
+  config_foreach change_olsrd_lib_num_handle_config LoadPlugin 6
+
 }
 
 migrate () {
