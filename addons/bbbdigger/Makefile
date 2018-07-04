@@ -1,0 +1,54 @@
+#
+# Copyright (C) 2016 Freifunk Berlin
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
+
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=bbbdigger
+PKG_VERSION:=0.0.1
+PKG_RELEASE:=0
+
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/bbbdigger/default
+  SECTION:=freifunk-berlin
+  CATEGORY:=freifunk-berlin
+  URL:=http://github.com/freifunk-berlin/packages_berlin
+  PKGARCH:=all
+endef
+
+define Package/bbbdigger
+  $(call Package/bbbdigger/default)
+  TITLE:=A Tunneldigger (l2tp) based VPN connection to mesh with the Berlin Backbone
+  DEPENDS:=+tunneldigger
+endef
+
+define Package/bbbdigger/description
+  Freifunk Berlin configuration of tunneldigger to connect to and mesh with the Berlin Backbone
+endef
+
+define Build/Prepare
+endef
+
+define Build/Configure
+endef
+
+define Build/Compile
+endef
+
+define Package/bbbdigger/install
+	$(INSTALL_DIR) $(1)/tmp
+	$(INSTALL_BIN) ./files/postinst.sh $(1)/tmp/bbbdigger_postinst.sh
+endef
+
+define Package/bbbdigger/postinst
+#!/bin/sh
+$${IPKG_INSTROOT}/tmp/bbbdigger_postinst.sh
+endef
+
+$(eval $(call BuildPackage,bbbdigger))
