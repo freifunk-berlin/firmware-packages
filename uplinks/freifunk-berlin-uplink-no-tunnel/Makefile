@@ -2,7 +2,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-uplink-notunnel-files
-PKG_VERSION:=0.0.6
+PKG_VERSION:=0.0.7
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
@@ -38,8 +38,6 @@ endef
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
-	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
-	$(CP) ./files/60-ffuplink $(1)/etc/hotplug.d/iface
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
