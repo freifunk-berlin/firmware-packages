@@ -380,6 +380,14 @@ r1_0_1_set_uplinktype() {
 }
 
 
+r1_0_2_notunnel_ffuplink_ipXtable() {
+  if [ "$(uci -q get ffberlin-uplink.preset.current)" = "no-tunnel" ]; then
+    log "update the ffuplink no-tunnel settings to use options ip4table and ip6table"
+    uci set network.ffuplink.ip4table="ffuplink"
+    uci set network.ffuplink.ip6table="ffuplink"
+  fi
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -431,6 +439,10 @@ migrate () {
 
   if semverLT ${OLD_VERSION} "1.0.1"; then
     r1_0_1_set_uplinktype
+  fi
+
+  if semverLT ${OLD_VERSION} "1.0.2"; then
+    r1_0_2_notunnel_ffuplink_ipXtable
   fi
 
   # overwrite version with the new version
