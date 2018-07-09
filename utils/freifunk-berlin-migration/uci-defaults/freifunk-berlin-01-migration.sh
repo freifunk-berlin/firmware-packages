@@ -399,6 +399,20 @@ r1_1_0_change_olsrd_lib_num() {
 
 }
 
+r1_1_0_notunnel_ffuplink() {
+  if [ "$(uci -q get ffberlin-uplink.preset.current)" = "no-tunnel" ]; then
+    log "update the ffuplink_dev to have a static macaddr if not already set"
+    local macaddr=$(uci -q get network.ffuplink_dev.macaddr)
+    if [ $? -eq 1 ]; then
+      # start with fe for ffuplink devices
+      macaddr="fe"
+      for byte in 2 3 4 5 6; do
+        macaddr=$macaddr`dd if=/dev/urandom bs=1 count=1 2> /dev/null | hexdump -e '1/1 ":%02x"'`
+      done
+    fi
+    uci set network.ffuplink_dev_macaddr=$macaddr
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -454,6 +468,7 @@ migrate () {
 
   if semverLT ${OLD_VERSION} "1.1.0"; then
     r1_1_0_change_olsrd_lib_num
+    r1_1_0_notunnel_ffuplink
   fi
 
   # overwrite version with the new version
