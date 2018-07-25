@@ -26,6 +26,13 @@ uci set network.ffuplink_dev=device
 uci set network.ffuplink_dev.type=veth
 uci set network.ffuplink_dev.name=ffuplink
 uci set network.ffuplink_dev.peer_name=ffuplink_wan
+# Create a static macaddr starting with "fe" for ffuplink devices
+macaddr="fe"
+for byte in 2 3 4 5 6; do
+  macaddr=$macaddr`dd if=/dev/urandom bs=1 count=1 2> /dev/null | hexdump -e '1/1 ":%02x"'`
+done
+uci set network.ffuplink_dev.macaddr=$macaddr
+
 # add ffuplink_dev to br-wan
 uci set network.wan.ifname="$(uci get network.wan.ifname) ffuplink_wan"
 uci commit network.ffuplink_dev
@@ -34,4 +41,9 @@ uci delete network.ffuplink
 uci set network.ffuplink=interface
 uci set network.ffuplink.ifname=ffuplink
 uci set network.ffuplink.proto=dhcp
+# Put the resulting routing information from the dhcp request in the ffuplink table
+# instead of the default table.  This prevents the dhcp request for the ffuplink
+# interface from overwriting the routing table entries needed by br_wan.
+uci set network.ffuplink.ip4table=ffuplink
+uci set network.ffuplink.ip6table=ffuplink
 uci commit network
