@@ -1,5 +1,7 @@
 #!/bin/sh
 
+. /lib/functions/system.sh
+
 # always set correct masquerading, regardless of guard
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
@@ -26,12 +28,9 @@ uci set network.ffuplink_dev=device
 uci set network.ffuplink_dev.type=veth
 uci set network.ffuplink_dev.name=ffuplink
 uci set network.ffuplink_dev.peer_name=ffuplink_wan
-# Create a static macaddr starting with "fe" for ffuplink devices
-macaddr="fe"
-for byte in 2 3 4 5 6; do
-  macaddr=$macaddr`dd if=/dev/urandom bs=1 count=1 2> /dev/null | hexdump -e '1/1 ":%02x"'`
-done
-uci set network.ffuplink_dev.macaddr=$macaddr
+# Create a static random macaddr for ffuplink device
+macaddr=$(macaddr_canonicalize `dd 2>/dev/null bs=1 count=6 </dev/urandom | hexdump -e '1/1 "%02x"'`)
+uci set network.ffuplink_dev.macaddr=$(macaddr_setbit_la $macaddr)
 
 # add ffuplink_dev to br-wan
 uci set network.wan.ifname="$(uci get network.wan.ifname) ffuplink_wan"
