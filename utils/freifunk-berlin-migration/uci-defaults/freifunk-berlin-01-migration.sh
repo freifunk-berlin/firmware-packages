@@ -410,7 +410,8 @@ r1_1_0_notunnel_ffuplink() {
         macaddr=$macaddr`dd if=/dev/urandom bs=1 count=1 2> /dev/null | hexdump -e '1/1 ":%02x"'`
       done
     fi
-    uci set network.ffuplink_dev_macaddr=$macaddr
+    uci set network.ffuplink_dev.macaddr=$macaddr
+  fi
 }
 
 r1_1_0_notunnel_ffuplink_ipXtable() {
