@@ -406,9 +406,9 @@ r1_1_0_notunnel_ffuplink() {
     local macaddr=$(uci -q get network.ffuplink_dev.macaddr)
     if [ $? -eq 1 ]; then
       # Create a static random macaddr for ffuplink device
-      macaddr=$(macaddr_canonicalize `dd 2>/dev/null bs=1 count=6 </dev/random | hexdump -e '1/1 "%02x"'`)
+      macaddr=$(macaddr_canonicalize `dd 2>/dev/null bs=1 count=6 </dev/urandom | hexdump -e '1/1 "%02x"'`)
+      uci set network.ffuplink_dev.macaddr=$(macaddr_setbit_la $macaddr)
     fi
-    uci set network.ffuplink_dev.macaddr=$macaddr
   fi
 }
 
