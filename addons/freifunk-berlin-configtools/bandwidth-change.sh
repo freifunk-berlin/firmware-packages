@@ -10,8 +10,8 @@ show_settings() {
   echo 'current settings'
   usersBandwidthDown=$(uci get ffwizard.settings.usersBandwidthDown)
   usersBandwidthUp=$(uci get ffwizard.settings.usersBandwidthUp)
-  echo " userdown $(( $usersBandwidthDown * 1000))"
-  echo " userup   $(( $usersBandwidthUp * 1000))"
+  echo " userdown $(( $usersBandwidthDown ))"
+  echo " userup   $(( $usersBandwidthUp ))"
   echo " qosdown  $(uci get qos.ffuplink.download)"
   echo " qosup    $(uci get qos.ffuplink.upload)"
 }
@@ -72,9 +72,9 @@ if [ ${OPERATION} == "set" ]; then
 	uci set olsrd.@olsrd[0].SmartGatewaySpeed="${desiredqosup} ${desiredqosdown}";
 	uci set qos.ffuplink.download=$desiredqosdown;
 	uci set qos.ffuplink.upload=$desiredqosup;
-	usersBandwidthDown=$(($desiredqosdown / 1000));
+	usersBandwidthDown=$(($desiredqosdown * 1000));
 	uci set ffwizard.settings.usersBandwidthDown=$usersBandwidthDown;
-	usersBandwidthUp=$(($desiredqosup / 1000));
+	usersBandwidthUp=$(($desiredqosup * 1000));
 	uci set ffwizard.settings.usersBandwidthUp=$usersBandwidthUp
 fi
 # shall I commit changes? Yes, when called by hand.
@@ -83,7 +83,7 @@ if [ ${AUTOCOMMIT} == "yes" ];  then
 	uci commit olsrd;
 	uci commit qos.ffuplink;
 	uci commit ffwizard.settings;
-	reload_config
+	reload_config # 2 missing entries?
 else 
 	echo 'uci dont commit qos'
 	
