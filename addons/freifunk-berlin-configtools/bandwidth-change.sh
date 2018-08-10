@@ -7,6 +7,7 @@
 # only tc is not helpful with grep
 # display current settings:
 show_settings() {
+  echo "usage $0 -c [commit] -d [down/MBit] -u [up/Mbit]"
   echo 'current settings'
   usersBandwidthDown=$(uci get ffwizard.settings.usersBandwidthDown)
   usersBandwidthUp=$(uci get ffwizard.settings.usersBandwidthUp)
