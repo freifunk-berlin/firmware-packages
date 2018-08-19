@@ -70,13 +70,13 @@ echo desiredqosdown $desiredqosdown
 echo desiredqosup $desiredqosup
 # change olsrd-settings
 if [ ${OPERATION} == "set" ]; then
-	uci set olsrd.@olsrd[0].SmartGatewaySpeed="${desiredqosup} ${desiredqosdown}";
-	uci set qos.ffuplink.download=$desiredqosdown;
-	uci set qos.ffuplink.upload=$desiredqosup;
-	usersBandwidthDown=$(($desiredqosdown * 1000));
-	uci set ffwizard.settings.usersBandwidthDown=$usersBandwidthDown;
-	usersBandwidthUp=$(($desiredqosup * 1000));
-	uci set ffwizard.settings.usersBandwidthUp=$usersBandwidthUp
+	qosolsrdown=$(($desiredqosdown * 1000));
+	qosolsrup=$(($desiredqosup * 1000));
+	uci set olsrd.@olsrd[0].SmartGatewaySpeed="${qosolsrup} ${qosolsrdown}";
+	uci set qos.ffuplink.download=$qosolsrdown;
+	uci set qos.ffuplink.upload=$qosolsrup;
+	uci set ffwizard.settings.usersBandwidthDown=$desiredqosdown;
+	uci set ffwizard.settings.usersBandwidthUp=$desiredqosup
 fi
 # shall I commit changes? Yes, when called by hand.
 if [ ${AUTOCOMMIT} == "yes" ];  then
