@@ -444,7 +444,7 @@ function get()
 	end)
 
 	local neighbors = fetch_olsrd_neighbors(root.interfaces)
-	local arptable = sys.net.arptable() or {}
+	local arptable = luci.ip.neighbors() or {}
 	if #root.interfaces ~= 0 then
 		for idx,iface in ipairs(root.interfaces) do
 			local neigh_mac = {}
