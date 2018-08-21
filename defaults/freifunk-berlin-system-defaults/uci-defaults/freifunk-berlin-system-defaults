@@ -4,7 +4,7 @@
 #guard "system"
 
 # change default hostname
-if [ $(uci get system.@system[0].hostname) = LEDE ]; then
+if [ $(uci get system.@system[0].hostname) = OpenWrt ]; then
   uci set system.@system[0].hostname=gib-mir-einen-namen
 fi
 
