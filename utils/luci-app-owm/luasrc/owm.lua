@@ -26,7 +26,7 @@ local table = require "table"
 local nixio = require "nixio"
 local ip = require "luci.ip"
 
-local ipairs, pairs, tonumber = ipairs, pairs, tonumber
+local ipairs, pairs, tonumber, tostring = ipairs, pairs, tonumber, tostring
 local dofile, _G = dofile, _G
 
 --- LuCI OWM-Library
@@ -449,9 +449,9 @@ function get()
 		for idx,iface in ipairs(root.interfaces) do
 			local neigh_mac = {}
 			for _, arpt in ipairs(arptable) do
-				local mac = showmac(arpt['HW address']:lower())
-				local ip_addr = arpt['IP address']
-				if iface['ifname'] == arpt['Device'] then
+				local mac = showmac(tostring(arpt['mac']):lower())
+				local ip_addr = tostring(arpt['dest'])
+				if iface['ifname'] == tostring(arpt['dev']) then
 					if not neigh_mac[mac] then
 						neigh_mac[mac] = {}
 						neigh_mac[mac]['ip4'] = {}
