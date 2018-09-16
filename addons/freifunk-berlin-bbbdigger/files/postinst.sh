@@ -49,21 +49,6 @@ uci set network.$IFACE=interface
 uci set network.$IFACE.proto=dhcp
 uci set network.$IFACE.ifname=$IFACE
 
-uci set network.olsr_tunnel_$IFACE_ipv4=rule
-uci set network.olsr_tunnel_$IFACE_ipv4.lookup=olsr-tunnel
-uci set network.olsr_tunnel_$IFACE_ipv4.priority=19999
-uci set network.olsr_tunnel_$IFACE_ipv4.in=$IFACE
-
-uci set network.olsr_default_$IFACE_ipv4=rule
-uci set network.olsr_default_$IFACE_ipv4.lookup=olsr-default
-uci set network.olsr_default_$IFACE_ipv4.priority=20000
-uci set network.olsr_default_$IFACE_ipv4.in=$IFACE
-
-uci set network.olsr_default_unreachable_$IFACE_ipv4=rule
-uci set network.olsr_default_unreachable_$IFACE_ipv4.action=unreachable
-uci set network.olsr_default_unreachable_$IFACE_ipv4.priority=20001
-uci set network.olsr_default_unreachable_$IFACE_ipv4.in=$IFACE
-
 # firewall setup (first remove from the zone and add it back)
 ZONE=$(echo $(uci show firewall.zone_freifunk.network | cut -d \' -f 2 | sed "s/${IFACE}//g"))
 ZONE="$ZONE $IFACE"
