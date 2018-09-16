@@ -420,6 +420,13 @@ r1_1_0_notunnel_ffuplink_ipXtable() {
   fi
 }
 
+r1_1_0_openvpn245() {
+  if [ "$(uci -q get ffberlin-uplink.preset.current | cut -d '_' -f 2" = "openvpn" ]; then
+    log "change openvpn configuration tu use the comress directive instead of comp-lzo"
+    uci delete openvpn.ffuplink.comp-lzo
+    uci set openvpn.ffuplink.compress="lzo"
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -477,6 +484,7 @@ migrate () {
     r1_1_0_change_olsrd_lib_num
     r1_1_0_notunnel_ffuplink
     r1_1_0_notunnel_ffuplink_ipXtable
+    r1_1_0_openvpn245
   fi
 
   # overwrite version with the new version
