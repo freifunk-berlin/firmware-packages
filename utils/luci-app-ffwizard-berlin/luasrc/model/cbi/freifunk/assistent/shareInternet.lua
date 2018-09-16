@@ -49,6 +49,18 @@ if uci:get("ffberlin-uplink", "uplink", "auth") == "x509" then
     key.rmempty = false
     key.optional = false
   end
+elseif uci:get("ffberlin-uplink", "uplink", "auth") == "userpass" then
+  vpninfo = f:field(DummyValue, "vpninfo", "")
+  vpninfo.template = "freifunk/assistent/snippets/vpninfo"
+  local username = f:field(Value, "username", translate("VPN username"))
+  username.default="vpn loginname"
+  usernane.rmempty = false
+  username.optional = false
+
+  local password = f:field(Value, "password", translate("VPN password"))
+  password.default="vpn password"
+  password.rmempty = false
+  password.optional = false
 end
 
 main = f:field(DummyValue, "openvpnconfig", "", "")
