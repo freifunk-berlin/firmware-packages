@@ -422,7 +422,7 @@ r1_1_0_notunnel_ffuplink_ipXtable() {
 
 r1_1_0_openvpn245() {
   if [ "$(uci -q get ffberlin-uplink.preset.current | cut -d '_' -f 2" = "openvpn" ]; then
-    log "change openvpn configuration tu use the comress directive instead of comp-lzo"
+    log "change openvpn configuration to use the compress directive instead of comp-lzo"
     uci delete openvpn.ffuplink.comp-lzo
     uci set openvpn.ffuplink.compress="lzo"
 }
