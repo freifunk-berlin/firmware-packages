@@ -3,18 +3,22 @@
 # Copyright (C) 2018 holger@freifunk-berlin
 # taken from https://github.com/openwrt-mirror/openwrt/blob/95f36ebcd774a8e93ad2a1331f45d1a9da4fe8ff/target/linux/ar71xx/base-files/etc/uci-defaults/02_network#L83
 #
-# who is calling me?
-echo 'case'
-case $1 in 
-	set)
-		commit=0;
-	commit)
-		commit=1;
-	show)
-		commit=0;;
-	*)
-		echo usage: $0 set, $0 commit or $0 show && exit 0;;
-esac
+# This script should set a wan-Port if u want to share ur internet-connection.
+# what shall I do?
+AUTOCOMMIT="no"
+
+while getopts "c" option; do
+        case "$option" in
+                c)
+                        AUTOCOMMIT="yes"
+                        ;;
+                *)
+                        echo "Invalid argument '-$OPTARG'."
+                        exit 1
+                        ;;    
+        esac              
+done        
+shift $((OPTIND - 1))
 
 # should this script run?
 if [ "$(uci get ffwizard.settings.sharenet 2> /dev/null)" == "0" ]; then
@@ -34,7 +38,6 @@ fi
 . /lib/functions/uci-defaults.sh 	# routines that set switch etc
 . /lib/ar71xx.sh 			# detect board name
 
-# ucidef_set_interface_loopback
 # which board are we running on, what will we change?
 # board=$(ar71xx_board_name) #is not sufficient for all boards
 board=$(ubus -v call system board | jsonfilter -e '$.model')
@@ -111,7 +114,14 @@ case "$board" in
 	;;
 'TP-Link CPE210 v1.1')
 	echo $board found
+	uci set network.@switch_vlan[0].ports='0t 4'
+	uci set network.@switch_vlan[1].ports='0t 5'
 	;;
+'Ubiquiti NanoStation M2')
+	echo $board found
+#	eth tauschen?
+	;;
+
 #cpe510)
 #	ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
 #	ucidef_add_switch "switch0" "1" "1"
@@ -516,41 +526,7 @@ case "$board" in
 #	ucidef_set_interfaces_lan_wan "eth0.1" "eth1"
 #	ucidef_add_switch "switch0" "1" "1"
 #	ucidef_add_switch_vlan "switch0" "1" "0 1 2 3 5t"
-#	# Blinkrate: 0=43ms; 1=84ms; 2=120ms; 3=170ms; 4=340ms; 5=670ms
-#	uci set network.@switch[-1].blinkrate='2'
-#
 #	ucidef_add_switch_port "switch0" "1"
-#	# Port 1 controls the GREEN configuration of LEDs for
-#	# the switch and the section does not correspond to a real
-#	# switch port.
-#	#
-#	# 0=LED off; 1=Collision/FDX; 2=Link/activity; 3=1000 Mb/s;
-#	# 4=100 Mb/s; 5=10 Mb/s; 6=1000 Mb/s+activity; 7=100 Mb/s+activity;
-#	# 8=10 Mb/s+activity; 9=10/100 Mb/s+activity; 10: Fiber;
-#	# 11: Fault; 12: Link/activity(tx); 13: Link/activity(rx);
-#	# 14: Link (master); 15: separate register
-#	uci set network.@switch_port[-1].led='6'
-#
-#	ucidef_add_switch_port "switch0" "2"
-#	# Port 2 controls the ORANGE configuration of LEDs for
-#	# the switch and the section does not correspond to a real
-#	# switch port.
-#	#
-#	# See the key above for switch port 1 for the meaning of the
-#	# 'led' setting below.
-#	uci set network.@switch_port[-1].led='9'
-#
-#	ucidef_add_switch_port "switch0" "5"
-#	# Port 5 controls the configuration of the WAN LED and the
-#	# section does not correspond to a real switch port.
-#	#
-#	# To toggle the use of green or orange LEDs for the WAN port,
-#	# see the LED setting for wndr3700:green:wan in /etc/config/system.
-#	#
-#	# See the key above for switch port 1 for the meaning of the
-#	# 'led' setting below.
-#	uci set network.@switch_port[-1].led='2'
-#	;;
 #
 #*)
 #	ucidef_set_interfaces_lan_wan "eth0" "eth1"
@@ -558,12 +534,12 @@ case "$board" in
 esac
 
 # shall I commit changes? Yes, when called by hand.
-if [ $commit == "1" ];  then
+if [ ${AUTOCOMMIT} == "yes" ];  then
 	echo 'uci commit network';
 	uci commit network;
 	/etc/init.d/network restart
 	else 
-	echo 'uci dont commit qos'
+	echo 'uci dont commit network'
 	
 fi
 
