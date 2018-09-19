@@ -21,6 +21,8 @@ while getopts "c" option; do
 done        
 shift $((OPTIND - 1))
 
+echo "usage $0 -c [commit]"
+
 # should this script run?
 if [ "$(uci get ffwizard.settings.sharenet 2> /dev/null)" == "0" ]; then
     echo 'dont share my internet' && exit 0
