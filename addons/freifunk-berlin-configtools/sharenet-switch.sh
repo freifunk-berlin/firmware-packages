@@ -4,6 +4,7 @@
 # taken from https://github.com/openwrt-mirror/openwrt/blob/95f36ebcd774a8e93ad2a1331f45d1a9da4fe8ff/target/linux/ar71xx/base-files/etc/uci-defaults/02_network#L83
 #
 # This script should set a wan-Port if u want to share ur internet-connection.
+# It should run after wizard did the necessary settings (sharenet = yes)
 # what shall I do?
 AUTOCOMMIT="no"
 
@@ -114,6 +115,7 @@ case "$board" in
 	;;
 'TP-Link CPE210 v1.1')
 	echo $board found
+#	should this be more sophisticated?
 	uci set network.@switch_vlan[0].ports='0t 4'
 	uci set network.@switch_vlan[1].ports='0t 5'
 	;;
