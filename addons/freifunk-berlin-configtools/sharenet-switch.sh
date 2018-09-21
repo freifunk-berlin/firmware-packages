@@ -121,10 +121,12 @@ case "$board" in
 	uci set network.@switch_vlan[0].ports='0t 4'
 	uci set network.@switch_vlan[1].ports='0t 5'
 	;;
-'Ubiquiti NanoStation M2')
+'Ubiquiti NanoStation M2' |\
+'Ubiquiti NanoStation loco M2')
 	echo $board found
 #	eth tauschen?
 	;;
+
 
 #cpe510)
 #	ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
