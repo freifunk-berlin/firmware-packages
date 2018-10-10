@@ -493,6 +493,7 @@ migrate () {
     r1_1_0_change_olsrd_lib_num
     r1_1_0_notunnel_ffuplink
     r1_1_0_notunnel_ffuplink_ipXtable
+    r1_1_0_olsrd_dygw_ping
   fi
 
   # overwrite version with the new version
