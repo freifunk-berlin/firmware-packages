@@ -14,6 +14,7 @@ TUNNEL_SERV='a.bbb-vpn.berlin.freifunk.net:8942 b.bbb-vpn.berlin.freifunk.net:89
 IFACE=bbbdigger
 
 # tunneldigger UUID (and MAC) generation, if there isn't one already
+# See the website https://www.itwissen.info/MAC-Adresse-MAC-address.html
 MAC=$(uci -q get network.${IFACE}_dev.macaddr)
 if [ $? -eq 1 ]; then
   # start with b6 for Berliner 6ackbone

@@ -406,6 +406,7 @@ r1_1_0_notunnel_ffuplink() {
     if [ $? -eq 1 ]; then
       # Create a static random macaddr for ffuplink device
       # start with fe for ffuplink devices
+      # See the website https://www.itwissen.info/MAC-Adresse-MAC-address.html
       macaddr="fe"
       for byte in 2 3 4 5 6; do
         macaddr=$macaddr`dd if=/dev/urandom bs=1 count=1 2> /dev/null | hexdump -e '1/1 ":%02x"'`
