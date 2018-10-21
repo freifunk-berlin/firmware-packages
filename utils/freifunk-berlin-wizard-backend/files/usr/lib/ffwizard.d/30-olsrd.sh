@@ -95,7 +95,7 @@ EOF
     uci set olsrd.$PLUGIN.PingCmd="ping -c 1 -q -I $uplinkDev %s"
     uci set olsrd.$PLUGIN.PingInterval=30
     uci add_list olsrd.$PLUGIN.Ping=85.214.20.141     # dns.digitalcourage.de
-    uci add_list olsrd.$PLUGIN.Ping=213.73.91.35      # dnscache.ccc.berlin.de
+    uci add_list olsrd.$PLUGIN.Ping=80.67.169.40      # www.fdn.fr/actions/dns
     uci add_list olsrd.$PLUGIN.Ping=194.150.168.168   # dns.as250.net
     uci set olsrd.$PLUGIN.ignore=0
   fi

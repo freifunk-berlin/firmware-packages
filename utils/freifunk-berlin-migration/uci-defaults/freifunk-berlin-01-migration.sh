@@ -420,6 +420,22 @@ r1_1_0_notunnel_ffuplink_ipXtable() {
   fi
 }
 
+r1_1_0_olsrd_dygw_ping() {
+  olsrd_dygw_ping() {
+    local config=$1
+    local lib=''
+    config_get lib $config library
+    if[ -z "${lib##olsrd_dyn_gw.so*}" ]; then
+      uci del_list olsrd.$config.Ping=213.73.91.35   # dnscache.ccc.berlin.de
+      uci add_list olsrd.$config.Ping=80.67.169.40   # www.fdn.fr/actions/dns
+      return 1
+    fi
+  }
+  reset_cb
+  config_load olsrd
+  config_foreach olsrd_dygw_ping LoadPlugin
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -477,6 +493,7 @@ migrate () {
     r1_1_0_change_olsrd_lib_num
     r1_1_0_notunnel_ffuplink
     r1_1_0_notunnel_ffuplink_ipXtable
+    r1_1_0_olsrd_dygw_ping
   fi
 
   # overwrite version with the new version

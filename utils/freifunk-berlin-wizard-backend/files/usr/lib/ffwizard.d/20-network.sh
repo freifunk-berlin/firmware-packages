@@ -130,7 +130,7 @@ setup_network() {
   fi
 
   # dns
-  uci set network.loopback.dns="85.214.20.141 213.73.91.35 194.150.168.168 2001:4ce8::53 2001:910:800::12"
+  uci set network.loopback.dns="85.214.20.141 80.67.169.40 194.150.168.168 2001:4ce8::53 2001:910:800::12"
 
   # set table for wan
   # TODO: re-enable when olsr is fixed for non-default routing tables

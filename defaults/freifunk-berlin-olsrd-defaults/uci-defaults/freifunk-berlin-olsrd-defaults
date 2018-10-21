@@ -41,7 +41,7 @@ uci set olsrd.$PLUGIN.interval=30
 PLUGIN="$(uci add olsrd LoadPlugin)"
 uci set olsrd.$PLUGIN.library=olsrd_dyn_gw
 uci add_list olsrd.$PLUGIN.Ping=85.214.20.141     # dns.digitalcourage.de
-uci add_list olsrd.$PLUGIN.Ping=213.73.91.35      # dnscache.ccc.berlin.de
+uci add_list olsrd.$PLUGIN.Ping=80.67.169.40      # www.fdn.fr/actions/dns
 uci add_list olsrd.$PLUGIN.Ping=194.150.168.168   # dns.as250.net
 uci set olsrd.$PLUGIN.ignore=0
 
