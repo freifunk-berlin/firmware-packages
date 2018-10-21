@@ -10,7 +10,7 @@
 
 . /lib/functions.sh
 
-TUNNEL_SERV='77.87.51.51:8942'
+TUNNEL_SERV='a.bbb-vpn.berlin.freifunk.net:8942 b.bbb-vpn.berlin.freifunk.net:8942'
 IFACE=bbbdigger
 
 # tunneldigger UUID (and MAC) generation, if there isn't one already
@@ -34,7 +34,9 @@ fi
 # tunneldigger setup
 uci set tunneldigger.$IFACE=broker
 uci -q delete tunneldigger.$IFACE.address
-uci add_list tunneldigger.$IFACE.address=$TUNNEL_SERV
+for srv in $TUNNEL_SERV; do
+  uci add_list tunneldigger.$IFACE.address=$srv
+done
 uci set tunneldigger.$IFACE.uuid=$UUID
 uci set tunneldigger.$IFACE.interface=$IFACE
 uci set tunneldigger.$IFACE.broker_selection=usage
