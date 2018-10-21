@@ -157,8 +157,9 @@ function main.write(self, section, value)
       ifconfig.network = calcnif(device)
       ifconfig.ifname = ifnameAdhoc
       ifconfig.mode = "adhoc"
-      ifconfig.ssid = uci:get(community, "ssidscheme", devconfig.channel)
-      ifconfig.bssid = uci:get(community, "bssidscheme", devconfig.channel)
+      -- uci:get needs a string as key so we convert to string with tostring()
+      ifconfig.ssid = uci:get(community, "ssidscheme", tostring(devconfig.channel))
+      ifconfig.bssid = uci:get(community, "bssidscheme", tostring(devconfig.channel))
       uci:section("wireless", "wifi-iface", nil, ifconfig)
       if statistics_installed then
         tools.statistics_interface_add("collectd_iwinfo", ifnameAdhoc)
