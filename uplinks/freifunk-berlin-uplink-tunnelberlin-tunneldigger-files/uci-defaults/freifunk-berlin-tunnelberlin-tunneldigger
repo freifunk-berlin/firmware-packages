@@ -54,6 +54,7 @@ done
 uci set tunneldigger.ffuplink.uuid=$UUID
 uci set tunneldigger.ffuplink.interface=ffuplink
 uci set tunneldigger.ffuplink.broker_selection=usage
+uci set tunneldigger.ffuplink.bind_interface=wan
 uci set tunneldigger.ffuplink.enabled=1
 uci commit tunneldigger
 
