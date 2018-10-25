@@ -2,8 +2,6 @@ local uci = require "luci.model.uci".cursor()
 local ip = require "luci.ip"
 local util = require "luci.util"
 local tools = require "luci.tools.freifunk.assistent.tools"
-local sys = require "luci.sys"
-local fs = require "nixio.fs"
 local ipkg = require "luci.model.ipkg"
 
 local olsr = require "luci.tools.freifunk.assistent.olsr"
