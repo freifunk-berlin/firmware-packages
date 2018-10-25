@@ -306,8 +306,6 @@ function calcdoth(channel)
 end
 
 function get_iwinfo(device)
-  -- luci.sys.getiwinfo() seems broken
-  -- call iwinfo directly (through libiwinfo-lua)
   local iwinfo = require "iwinfo"
   local backend = iwinfo.type(device)
   return iwinfo[backend]
@@ -327,9 +325,6 @@ function calchwmode(device)
 end
 
 function getchannel(device)
-  -- luci.sys.wifi.channels() is not exposed anymore
-  -- therefor use get_iwinfo()
-
   local iwinfo = get_iwinfo(device)
   local freqlist = iwinfo.freqlist(device)
 
