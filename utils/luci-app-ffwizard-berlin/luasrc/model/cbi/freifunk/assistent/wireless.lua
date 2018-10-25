@@ -51,7 +51,6 @@ uci:foreach("wireless", "wifi-device",
   end)
 
 -- VAP
-local community = "profile_"..uci:get("freifunk", "community", "name")
 local vap = uci:get_first(community, "community", "vap") or "1"
 if vap == "1" then
   ipinfo = f:field(DummyValue, "ipinfo", "")
@@ -326,7 +325,6 @@ function getchannel(device)
   local iwinfo = get_iwinfo(device)
   local freqlist = iwinfo.freqlist(device)
 
-  local community = "profile_"..uci:get("freifunk", "community", "name")
   local r_channel
   if (freqlist[1].mhz > 2411 and freqlist[1].mhz < 2484) then
     --this is 2.4 Ghz
