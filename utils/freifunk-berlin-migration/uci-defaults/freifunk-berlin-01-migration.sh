@@ -443,6 +443,7 @@ migrate () {
 
   if semverLT ${OLD_VERSION} "1.0.2"; then
     r1_1_0_notunnel_ffuplink_ipXtable
+    guard "ffberlin_uplink"
   fi
 
   # overwrite version with the new version
