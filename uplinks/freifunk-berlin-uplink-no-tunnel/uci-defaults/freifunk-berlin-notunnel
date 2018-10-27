@@ -4,10 +4,6 @@
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
 
-# create ffberlin-uplink file an fill with basic settings
-uci -q get ffberlin-uplink || echo "" | uci import ffberlin-uplink
-uci >/dev/null -q get ffberlin-uplink.preset || uci set ffberlin-uplink.preset=settings
-uci >/dev/null -q get ffberlin-uplink.preset.current || uci set ffberlin-uplink.preset.current="no-tunnel"
 if [[ $(uci get ffberlin-uplink.preset.current) != "no-tunnel" ]]; then
   uci rename ffberlin-uplink.preset.current=previous
   uci set ffberlin-uplink.preset.current="no-tunnel"
