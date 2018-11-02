@@ -12,6 +12,7 @@
 
 TUNNEL_SERV='a.bbb-vpn.berlin.freifunk.net:8942 b.bbb-vpn.berlin.freifunk.net:8942'
 IFACE=bbbdigger
+BIND=wan
 
 # tunneldigger UUID (and MAC) generation, if there isn't one already
 # See the website https://www.itwissen.info/MAC-Adresse-MAC-address.html
@@ -41,6 +42,7 @@ done
 uci set tunneldigger.$IFACE.uuid=$UUID
 uci set tunneldigger.$IFACE.interface=$IFACE
 uci set tunneldigger.$IFACE.broker_selection=usage
+uci set tunneldigger.$IFACE.bind_interface=$BIND
 uci set tunneldigger.$IFACE.enabled=1
 
 # network setup
