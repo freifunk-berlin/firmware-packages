@@ -119,11 +119,6 @@ uci set firewall.$RULE.proto=tcp
 uci set firewall.$RULE.target=ACCEPT
 uci set firewall.$RULE.src=freifunk
 
-ADVANCED="$(uci add firewall advanced)"
-uci set firewall.$ADVANCED.tcp_westwood=1
-uci set firewall.$ADVANCED.tcp_ecn=0
-uci set firewall.$ADVANCED.ip_conntrack_max=8192
-
 FORWARDING="$(uci add firewall forwarding)"
 uci set firewall.$FORWARDING.dest=wan
 uci set firewall.$FORWARDING.src=freifunk
