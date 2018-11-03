@@ -440,6 +440,17 @@ r1_1_0_olsrd_dygw_ping() {
   config_foreach olsrd_dygw_ping LoadPlugin
 }
 
+r1_1_0_update_dns_entry() {
+  network_interface_delete_dns() {
+    local config=${1}
+    uci -q del network.${config}.dns
+  }
+  reset_cb
+  config_load network
+  config_foreach network_interface_delete_dns Interface
+  uci set network.loopback.dns="$(uci get "profile_$(uci get freifunk.community.name).interface.dns")"
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -498,6 +509,7 @@ migrate () {
     r1_1_0_notunnel_ffuplink
     r1_1_0_notunnel_ffuplink_ipXtable
     r1_1_0_olsrd_dygw_ping
+    r1_1_0_update_dns_entry
   fi
 
   # overwrite version with the new version

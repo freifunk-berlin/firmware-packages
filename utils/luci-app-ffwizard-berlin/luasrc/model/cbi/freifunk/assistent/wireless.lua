@@ -154,6 +154,8 @@ function main.write(self, section, value)
       ifconfig.network = calcnif(device)
       ifconfig.ifname = ifnameAdhoc
       ifconfig.mode = "adhoc"
+      -- don't set the dns entry
+      ifconfig.dns = nil
       -- uci:get needs a string as key so we convert to string with tostring()
       ifconfig.ssid = uci:get(community, "ssidscheme", tostring(devconfig.channel))
       ifconfig.bssid = uci:get(community, "bssidscheme", tostring(devconfig.channel))
@@ -200,6 +202,12 @@ function main.write(self, section, value)
 
     end)
 
+  -- Set the dns entry on the loopback interface. We set it on the loopback
+  -- interface so we only have one entry for the whole network configuration.
+  local dns = uci:get(community, "interface", "dns")
+  if (dns) then
+    uci:set("network", "loopback", "dns", dns)
+  end
 
   local dhcpmeshnet = dhcpmesh:formvalue(section)
   dhcpmeshnet = ip.IPv4(dhcpmeshnet)
@@ -208,7 +216,6 @@ function main.write(self, section, value)
   if (dhcpmeshnet:prefix() < 32) then
     --NETWORK CONFIG bridge for wifi APs
     local prenetconfig =  {}
-    prenetconfig.dns=uci:get(community, "interface", "dns")
     prenetconfig.type="bridge"
     prenetconfig.proto="static"
     prenetconfig.ipaddr=dhcpmeshnet:minhost():string()
