@@ -59,7 +59,7 @@ end
 --- switch from luci.version which always includes
 --- the revision in the "distversion" field and gives empty "distname"
 -- @ return	the releasename
---         	(DISTRIB_ID + DISTRIB_CODENAME + DISTRIB_RELEASE)
+--         	(DISTRIB_ID + DISTRIB_RELEASE)
 -- @ return	the releaserevision
 --         	(DISTRIB_REVISION)
 function get_version()
@@ -70,9 +70,6 @@ function get_version()
 	dofile("/etc/openwrt_release")
 	if _G.DISTRIB_ID then
 		distname = _G.DISTRIB_ID .. " "
-	end
-	if _G.DISTRIB_CODENAME then
-		distname = distname .. _G.DISTRIB_CODENAME .. " "
 	end
 	if _G.DISTRIB_RELEASE then
 		distname = distname .. _G.DISTRIB_RELEASE
