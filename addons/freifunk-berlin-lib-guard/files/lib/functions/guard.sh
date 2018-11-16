@@ -25,3 +25,10 @@ guard_rename() {
   uci set $CFG.$NAME.$DEST=$cur_set
   uci commit $CFG
 }
+
+guard_delete() {
+  OPTION=$1
+
+  uci delete $CFG.$NAME.$OPTION
+  uci commit $CFG
+}
