@@ -36,6 +36,8 @@ define Package/freifunk-berlin-network-defaults/install
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
 	$(CP) ./hotplug.d/iface/* $(1)/etc/hotplug.d/iface/
+	$(INSTALL_DIR) $(1)/lib/functions
+	$(CP) ./lib/functions/* $(1)/lib/functions/
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-network-defaults))

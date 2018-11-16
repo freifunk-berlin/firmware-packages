@@ -1,5 +1,8 @@
 #!/bin/sh
 
+. /lib/functions/freifunk-berlin-network.sh 
+. /lib/functions/guard.sh
+
 # always set correct masquerading, regardless of guard
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
@@ -12,7 +15,6 @@ fi
 uci set ffberlin-uplink.uplink.auth=none
 uci commit ffberlin-uplink
 
-. /lib/functions/guard.sh
 guard "notunnel"
 
 uci delete network.ffuplink_dev
@@ -32,13 +34,6 @@ uci set network.ffuplink_dev.macaddr=$macaddr
 uci set network.wan.ifname="$(uci get network.wan.ifname) ffuplink_wan"
 uci commit network.ffuplink_dev
 
-uci delete network.ffuplink
-uci set network.ffuplink=interface
-uci set network.ffuplink.ifname=ffuplink
+create_ffuplink
 uci set network.ffuplink.proto=dhcp
-# Put the resulting routing information from the dhcp request in the ffuplink table
-# instead of the default table.  This prevents the dhcp request for the ffuplink
-# interface from overwriting the routing table entries needed by br_wan.
-uci set network.ffuplink.ip4table=ffuplink
-uci set network.ffuplink.ip6table=ffuplink
-uci commit network
+uci commit network.ffuplink
