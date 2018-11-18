@@ -2,7 +2,10 @@
 
 . $IPKG_INSTROOT/lib/functions/network.sh
 
-START=90
+# Comment out the START declaration to prevent the init file from
+# actually starting tunneldigger at startup.  Instead rely on the
+# hotplug scripts
+#START=90
 
 PIDPATH=/var/run
 tunnel_id=0
