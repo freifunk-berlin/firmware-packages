@@ -6,7 +6,7 @@ create_ffuplink() {
   curr=$(uci get ffberlin-uplink.preset.current)
 #  prev=$(uci get ffberlin-uplink.preset.previous)
 
-  uci delete network.ffuplink
+  uci -q delete network.ffuplink
   # create a very basic ffuplink interface
   uci set network.ffuplink=interface
   uci set network.ffuplink.ifname=ffuplink
