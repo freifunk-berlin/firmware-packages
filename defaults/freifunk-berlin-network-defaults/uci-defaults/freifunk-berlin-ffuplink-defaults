@@ -2,7 +2,7 @@
 
 . /lib/functions/freifunk-berlin-network.sh
 . /lib/functions/guard.sh
-guard "ffberlin-uplink"
+guard "ffberlin_uplink"
 
 # create ffberlin-uplink file an fill with basic settings
 uci import ffberlin-uplink <<EOF
