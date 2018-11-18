@@ -9,6 +9,13 @@ uci commit ffberlin-uplink.uplink
 uci -q delete openvpn.custom_config
 uci -q delete openvpn.sample_server
 uci -q delete openvpn.sample_client
+uci set openvpn.ffuplink=openvpn
+uci set openvpn.ffuplink.enabled=0
+uci set openvpn.ffuplink.client=1
+uci set openvpn.ffuplink.dev=ffuplink
+uci set openvpn.ffuplink.status="/var/log/openvpn-status-ffuplink.log"
+uci set openvpn.ffuplink.up="/lib/freifunk/ffvpn-up.sh"
+uci set openvpn.ffuplink.route_nopull=1
 uci commit openvpn
 
 # reconfigure ffuplink interface
