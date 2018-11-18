@@ -3,9 +3,8 @@
 . /lib/functions/guard.sh
 
 create_ffuplink() {
-  curr = $(uci get ffberlin-uplink.preset.current)
-  prev = $(uci get ffberlin-uplink.preset.previous)
-  #if [ $curr = 
+  curr=$(uci get ffberlin-uplink.preset.current)
+#  prev=$(uci get ffberlin-uplink.preset.previous)
 
   uci delete network.ffuplink
   # create a very basic ffuplink interface
