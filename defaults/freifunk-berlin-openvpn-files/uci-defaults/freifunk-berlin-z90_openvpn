@@ -1,5 +1,7 @@
 #!/bin/sh
 
+. /lib/functions/freifunk-berlin-network.sh
+
 # set set auth-type required for this uplink-type, e.g. for freifunk-wizard
 uci -q get ffberlin-uplink || echo "" | uci import ffberlin-uplink
 uci set ffberlin-uplink.uplink=settings
@@ -9,6 +11,7 @@ uci commit ffberlin-uplink.uplink
 uci -q delete openvpn.custom_config
 uci -q delete openvpn.sample_server
 uci -q delete openvpn.sample_client
+uci -q delete openvpn.ffuplink
 uci set openvpn.ffuplink=openvpn
 uci set openvpn.ffuplink.enabled=0
 uci set openvpn.ffuplink.client=1
@@ -20,8 +23,4 @@ uci commit openvpn
 
 # reconfigure ffuplink interface
 uci -q delete network.ffuplink_dev
-uci -q delete network.ffuplink
-uci set network.ffuplink=interface
-uci set network.ffuplink.ifname=ffuplink
-uci set network.ffuplink.proto=none
-uci commit network
+create_ffuplink
