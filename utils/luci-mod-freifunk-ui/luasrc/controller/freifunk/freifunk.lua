@@ -59,6 +59,7 @@ function index()
 	-- backend
 	assign({"mini", "freifunk"}, {"admin", "freifunk"}, _("Freifunk"), 5)
 	entry({"admin", "freifunk"}, alias("admin", "freifunk", "index"), _("Freifunk"), 5)
+	entry({"admin", "freifunk", "index"}, template("freifunk/adminindex"), _("Overview"), 1)
 
 	page        = node("admin", "freifunk")
 	page.target = template("freifunk/adminindex")

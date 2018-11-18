@@ -15,7 +15,7 @@ function index()
   if not nixio.fs.access("/usr/lib/lua/luci/controller/freifunk/freifunk.lua") then
     entry({"admin", "freifunk"}, firstchild(), "Freifunk", 5).dependent=false
   end
-  entry({"admin", "freifunk", "assistent"}, call("prepare"), "Freifunkassistent", 1).dependent=false
+  entry({"admin", "freifunk", "assistent"}, call("prepare"), "Freifunkassistent", 2).dependent=false
   entry({"admin", "freifunk", "assistent", "changePassword"}, form("freifunk/assistent/changePassword"), "",1)
   entry({"admin", "freifunk", "assistent", "generalInfo"}, form("freifunk/assistent/generalInfo"), "", 1)
   entry({"admin", "freifunk", "assistent", "decide"}, template("freifunk/assistent/decide"), "", 2)
