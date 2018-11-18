@@ -44,14 +44,4 @@ define Package/freifunk-berlin-tunneldigger/conffiles
 /etc/config/tunneldigger
 endef
 
-define Package/freifunk-berlin-tunneldigger/postinst
-#!/bin/sh
-# Do not enable the init script and rely on the hotplug script to
-# start and stop tunneldigger.  The init script is there to
-# make it easier for the user to run 
-#      /etc/init.d/tunneldigger {start|stop|restart}
-[ -z "$${IPKG_INSTROOT}" ] && /etc/init.d/tunneldigger disable
-exit 0
-endef
-
 $(eval $(call BuildPackage,freifunk-berlin-tunneldigger))
