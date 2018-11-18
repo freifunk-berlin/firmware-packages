@@ -55,7 +55,7 @@ function configureOLSR()
   end
 
   uci:save("olsrd")
-	uci:save("olsrd6")
+  uci:save("olsrd6")
 end
 
 
