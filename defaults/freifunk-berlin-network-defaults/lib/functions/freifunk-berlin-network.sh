@@ -15,7 +15,8 @@ create_ffuplink() {
   uci set network.ffuplink.ip6table=ffuplink
   # the following options need to be set by the individual uplink-package
   uci set network.ffuplink.proto=none
-  uci set network.ffuplink.disabled=1
+  # only disable interface on initial setup
+  [ $curr="undefined" ] && uci set network.ffuplink.disabled=1
   uci commit network.ffuplink
 
   guard_delete notunnel
