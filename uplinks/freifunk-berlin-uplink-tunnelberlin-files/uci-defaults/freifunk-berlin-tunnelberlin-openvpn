@@ -10,8 +10,10 @@ if [[ $(uci get ffberlin-uplink.preset.current) != "tunnelberlin_openvpn" ]]; th
   logger -t "ffuplink" "uplink-preset has been changed."
   uci rename ffberlin-uplink.preset.current=previous
   uci set ffberlin-uplink.preset.current="tunnelberlin_openvpn"
+  ffuplink_state=$(uci -q get openvpn.ffuplink.enabled)
   # call uci-default of package freifunk-berlin-openvpn-files again to recreate initial config
   /rom/etc/uci-defaults/freifunk-berlin-openvpn
+  uci set openvpn.ffuplink.enabled $ffuplink_state
 fi
 uci commit ffberlin-uplink
 
