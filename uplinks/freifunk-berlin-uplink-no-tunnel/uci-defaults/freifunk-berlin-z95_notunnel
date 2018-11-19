@@ -1,11 +1,18 @@
 #!/bin/sh
 
+. /lib/functions/freifunk-berlin-network.sh
+
 # always set correct masquerading, regardless of guard
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
 
 if [[ $(uci get ffberlin-uplink.preset.current) != "no-tunnel" ]]; then
-  uci rename ffberlin-uplink.preset.current=previous
+  # do not track preset when it was 'undefined', aka never configured
+  if [[ $(uci get ffberlin-uplink.preset.current) != 'undefined' ]]; then
+    logger -t "ffuplink" "uplink-preset has been changed."
+    uci rename ffberlin-uplink.preset.current=previous
+    create_ffuplink
+  fi
   uci set ffberlin-uplink.preset.current="no-tunnel"
 fi
 # set set auth-type required for this uplink-type, e.g. for freifunk-wizard
@@ -17,7 +24,7 @@ uci commit ffberlin-uplink
 . /lib/functions/guard.sh
 guard "notunnel"
 
-uci delete network.ffuplink_dev
+uci -q delete network.ffuplink_dev
 uci set network.ffuplink_dev=device
 uci set network.ffuplink_dev.type=veth
 uci set network.ffuplink_dev.name=ffuplink
@@ -33,14 +40,7 @@ uci set network.ffuplink_dev.macaddr=$macaddr
 # add ffuplink_dev to br-wan
 uci set network.wan.ifname="$(uci get network.wan.ifname) ffuplink_wan"
 uci commit network.ffuplink_dev
+uci commit network.wan
 
-uci delete network.ffuplink
-uci set network.ffuplink=interface
-uci set network.ffuplink.ifname=ffuplink
 uci set network.ffuplink.proto=dhcp
-# Put the resulting routing information from the dhcp request in the ffuplink table
-# instead of the default table.  This prevents the dhcp request for the ffuplink
-# interface from overwriting the routing table entries needed by br_wan.
-uci set network.ffuplink.ip4table=ffuplink
-uci set network.ffuplink.ip6table=ffuplink
-uci commit network
+uci commit network.ffuplink
