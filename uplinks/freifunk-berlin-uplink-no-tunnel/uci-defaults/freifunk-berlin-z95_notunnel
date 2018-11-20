@@ -1,6 +1,7 @@
 #!/bin/sh
 
 . /lib/functions/freifunk-berlin-network.sh
+. /lib/functions.sh
 
 # always set correct masquerading, regardless of guard
 uci set firewall.zone_ffuplink.masq=1
@@ -36,10 +37,11 @@ for byte in 2 3 4 5 6; do
   macaddr=$macaddr`dd if=/dev/urandom bs=1 count=1 2> /dev/null | hexdump -e '1/1 ":%02x"'`
 done
 uci set network.ffuplink_dev.macaddr=$macaddr
-
-# add ffuplink_dev to br-wan
-uci set network.wan.ifname="$(uci get network.wan.ifname) ffuplink_wan"
 uci commit network.ffuplink_dev
+
+# add ffuplink_dev to br-wan if not there
+ifnames=$(uci get network.wan.ifname)
+list_contains ifnames ffuplink_wan || uci set network.wan.ifname="${ifnames} ffuplink_wan"
 uci commit network.wan
 
 uci set network.ffuplink.proto=dhcp
