@@ -16,6 +16,10 @@ add_batman_iface() {
   DSTBRIDGE=$1
   
   ifnames="$(uci get network.${DSTBRIDGE}.ifname)"
-  list_contains ${ifnames} bat0 || uci set network.dhcp.ifname=${ifnames} bat0
+  list_contains ${ifnames} ${BATIF} || uci set network.${DSTBRIDGE}.ifname="${ifnames} ${BATIF}"
 }
 
+BATIF=bat0
+
+create_interface wireless0
+add_batman_iface dhcp
