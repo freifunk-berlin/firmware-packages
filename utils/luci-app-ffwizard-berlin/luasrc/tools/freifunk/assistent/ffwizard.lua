@@ -28,20 +28,20 @@ function configureQOS()
     local up = uci:get("ffwizard", "settings", "usersBandwidthUp") * 1000
     local down = uci:get("ffwizard", "settings", "usersBandwidthDown") * 1000
 
-    uci:delete("qos","wan")
-    uci:delete("qos","lan")
-    uci:delete("qos","ffuplink")
-    uci:section("qos", 'interface', "ffuplink", {
+    uci:delete("simple-tc","wan")
+    uci:delete("simple-tc","lan")
+    uci:delete("simple-tc","ffuplink")
+    uci:section("simple-tc", 'interface', "ffuplink", {
       enabled = "1",
-      classgroup = "Default",
-      upload = up,
-      download = down
+      ifname = "ffuplink",
+      limit_egress = up,
+      limit_ingress = down
     })
 
     local s = uci:get_first("olsrd", "olsrd")
     uci:set("olsrd", s, "SmartGatewaySpeed", up.." "..down)
     uci:set("olsrd", s, "SmartGatewayUplink", "both")
     uci:save("olsrd")
-    uci:save("qos")
+    uci:save("simple-tc")
   end
 end

@@ -104,16 +104,12 @@ function commit()
   uci:commit("freifunk")
   uci:commit("wireless")
   uci:commit("network")
-  uci:commit("qos")
+  uci:commit("simple-tc")
 
   sys.init.enable("olsrd")
   sys.init.enable("olsrd6")
   -- openvpn gets started by wan hotplug script
   sys.init.disable("openvpn")
-
-  if (sharenet == "1") then
-    sys.init.enable("qos")
-  end
 
   if ipkg.installed("luci-app-statistics") == true then
     local enableStats = uci:get("ffwizard", "settings", "enableStats") or "0"
@@ -141,7 +137,7 @@ function reset()
   uci:revert("freifunk")
   uci:revert("wireless")
   uci:revert("network")
-  uci:revert("qos")
+  uci:revert("simple-tc")
 
   if ipkg.installed("luci-app-statistics") == True then
     uci:revert("luci-app-statistics")
