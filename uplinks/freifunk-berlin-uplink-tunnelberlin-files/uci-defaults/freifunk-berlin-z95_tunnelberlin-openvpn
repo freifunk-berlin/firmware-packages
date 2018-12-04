@@ -6,10 +6,10 @@
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
 
-if [[ $(uci get ffberlin-uplink.preset.current) != "tunnelberlin_openvpn" ]]; then
+if [ $(uci get ffberlin-uplink.preset.current) != "tunnelberlin_openvpn" ]; then
   logger -t "ffuplink" "uplink-preset has been changed."
   # do not track preset when it was 'undefined', aka never configured
-  if [[ $(uci get ffberlin-uplink.preset.current) != 'undefined' ]]; then
+  if [ $(uci get ffberlin-uplink.preset.current) != 'undefined' ]; then
     uci rename ffberlin-uplink.preset.current=previous
   fi
   uci set ffberlin-uplink.preset.current="tunnelberlin_openvpn"

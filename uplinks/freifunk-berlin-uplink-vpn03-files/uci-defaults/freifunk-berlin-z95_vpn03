@@ -4,7 +4,7 @@
 uci set firewall.zone_ffuplink.masq=0
 uci commit firewall
 
-if [[ $(uci get ffberlin-uplink.preset.current) != "vpn03_openvpn" ]]; then
+if [ $(uci get ffberlin-uplink.preset.current) != "vpn03_openvpn" ]; then
   uci rename ffberlin-uplink.preset.current=previous
   uci set ffberlin-uplink.preset.current="vpn03_openvpn"
 fi

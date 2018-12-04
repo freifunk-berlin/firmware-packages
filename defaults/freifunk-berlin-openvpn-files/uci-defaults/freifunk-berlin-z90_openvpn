@@ -17,7 +17,7 @@ uci -q delete openvpn.sample_server
 uci -q delete openvpn.sample_client
 uci -q delete openvpn.ffuplink
 uci set openvpn.ffuplink=openvpn
-if [[ -z ${ffuplink_state} ]]; then
+if [ -z ${ffuplink_state} ]; then
   uci set openvpn.ffuplink.enabled=0
 else
   uci set openvpn.ffuplink.enabled=${ffuplink_state}
