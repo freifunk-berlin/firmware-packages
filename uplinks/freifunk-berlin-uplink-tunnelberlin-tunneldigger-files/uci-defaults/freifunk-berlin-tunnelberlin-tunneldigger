@@ -13,6 +13,9 @@ if [[ $(uci get ffberlin-uplink.preset.current) != '"tunnelberlin_tunneldigger"'
   uci rename ffberlin-uplink.preset.current=previous
   uci set ffberlin-uplink.preset.current="tunnelberlin_tunneldigger"
 fi
+# set set auth-type required for this uplink-type, e.g. for freifunk-wizard
+uci set ffberlin-uplink.uplink=settings
+uci set ffberlin-uplink.uplink.auth=none
 uci commit ffberlin-uplink
 
 . /lib/functions/guard.sh
