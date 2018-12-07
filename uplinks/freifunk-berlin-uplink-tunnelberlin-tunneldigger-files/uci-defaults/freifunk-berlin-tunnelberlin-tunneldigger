@@ -21,9 +21,13 @@ guard "tunnelberlin_tunneldigger"
 uci delete network.ffuplink_dev
 uci set network.ffuplink_dev=device
 uci set network.ffuplink_dev.name=ffuplink
-# Create a static random macaddr for ffuplink device
-macaddr=$(macaddr_canonicalize `dd 2>/dev/null bs=1 count=6 </dev/urandom | hexdump -e '1/1 "%02x"'`)
-uci set network.ffuplink_dev.macaddr=$(macaddr_setbit_la $macaddr)
+# Create a static macaddr starting with "fe" for ffuplink devices
+# See the website https://www.itwissen.info/MAC-Adresse-MAC-address.html
+macaddr="fe"
+for byte in 2 3 4 5 6; do
+  macaddr=$macaddr`dd if=/dev/urandom bs=1 count=1 2> /dev/null | hexdump -e '1/1 ":%02x"'`
+done
+uci set network.ffuplink_dev.macaddr=$macaddr
 
 uci delete network.ffuplink
 uci set network.ffuplink=interface
