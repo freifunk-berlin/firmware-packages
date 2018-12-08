@@ -451,6 +451,12 @@ r1_1_0_update_dns_entry() {
   uci set network.loopback.dns="$(uci get "profile_$(uci get freifunk.community.name).interface.dns")"
 }
 
+r1_1_0_update_uplink_notunnel_name() {
+  log "update name of uplink-preset notunnel"
+  [[ $(uci -q get ffberlin-uplink.preset.current) = "no-tunnel" ]] && uci set ffberlin-uplink.preset.current=notunnel
+  [[ $(uci -q get ffberlin-uplink.preset.previous) = "no-tunnel" ]] && uci set ffberlin-uplink.preset.previous=notunnel
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -510,6 +516,7 @@ migrate () {
     r1_1_0_notunnel_ffuplink_ipXtable
     r1_1_0_olsrd_dygw_ping
     r1_1_0_update_dns_entry
+    r1_1_0_update_uplink_notunnel_name
   fi
 
   # overwrite version with the new version
