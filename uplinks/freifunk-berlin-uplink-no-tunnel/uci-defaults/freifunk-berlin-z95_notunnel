@@ -1,5 +1,7 @@
 #!/bin/sh
 
+THIS_UPLINKNAME="notunnel"
+
 . /lib/functions/freifunk-berlin-network.sh 
 . /lib/functions/guard.sh
 
@@ -7,9 +9,15 @@
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
 
-if [ $(uci get ffberlin-uplink.preset.current) != "notunnel" ]; then
-  uci set ffberlin-uplink.preset.previous=$(uci get ffberlin-uplink.preset.current)
-  uci set ffberlin-uplink.preset.current="notunnel"
+current_preset=$(uci get ffberlin-uplink.preset.current)
+if [ ${current_preset} != ${THIS_UPLINKNAME} ]; then
+  # do not track preset when it was 'undefined', aka never configured
+  if [ ${current_preset} != "undefined" ]; then
+    logger -t "ffuplink" "uplink-preset has been changed."
+    uci set ffberlin-uplink.preset.previous=${current_preset}
+    create_ffuplink
+  fi
+  uci set ffberlin-uplink.preset.current=${THIS_UPLINKNAME}
 fi
 # set set auth-type required for this uplink-type, e.g. for freifunk-wizard
 uci set ffberlin-uplink.uplink.auth=none
@@ -17,7 +25,7 @@ uci commit ffberlin-uplink
 
 guard "notunnel"
 
-uci delete network.ffuplink_dev
+uci -q delete network.ffuplink_dev
 uci set network.ffuplink_dev=device
 uci set network.ffuplink_dev.type=veth
 uci set network.ffuplink_dev.name=ffuplink
@@ -34,6 +42,5 @@ uci set network.ffuplink_dev.macaddr=$macaddr
 uci set network.wan.ifname="$(uci get network.wan.ifname) ffuplink_wan"
 uci commit network.ffuplink_dev
 
-create_ffuplink
 uci set network.ffuplink.proto=dhcp
 uci commit network.ffuplink
