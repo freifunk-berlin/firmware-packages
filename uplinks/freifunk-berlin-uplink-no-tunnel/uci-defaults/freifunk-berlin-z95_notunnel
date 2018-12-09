@@ -11,6 +11,7 @@ if [[ $(uci get ffberlin-uplink.preset.current) != "no-tunnel" ]]; then
   if [[ $(uci get ffberlin-uplink.preset.current) != 'undefined' ]]; then
     logger -t "ffuplink" "uplink-preset has been changed."
     uci rename ffberlin-uplink.preset.current=previous
+    create_ffuplink
   fi
   uci set ffberlin-uplink.preset.current="no-tunnel"
 fi
@@ -23,7 +24,7 @@ uci commit ffberlin-uplink
 . /lib/functions/guard.sh
 guard "notunnel"
 
-uci delete network.ffuplink_dev
+uci -q delete network.ffuplink_dev
 uci set network.ffuplink_dev=device
 uci set network.ffuplink_dev.type=veth
 uci set network.ffuplink_dev.name=ffuplink
@@ -41,6 +42,5 @@ uci commit network.ffuplink_dev
 uci set network.wan.ifname="$(uci get network.wan.ifname) ffuplink_wan"
 uci commit network.wan
 
-create_ffuplink
 uci set network.ffuplink.proto=dhcp
 uci commit network.ffuplink
