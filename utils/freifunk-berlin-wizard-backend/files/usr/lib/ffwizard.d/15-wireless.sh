@@ -151,8 +151,7 @@ setup_wireless() {
     uci set wireless.$iface.bssid="${bssid}"
     uci set wireless.$iface.mcast_rate=6000
 
-
-    # add mesh interface
+    # add dhcp interface
     iface="$(uci add wireless wifi-iface)"
     uci set wireless.$iface.device="radio${idx}"
     uci set wireless.$iface.network=dhcp
@@ -160,7 +159,6 @@ setup_wireless() {
     uci set wireless.$iface.ifname="wlan${idx}-dhcp"
     uci set wireless.$iface.ssid="berlin.freifunk.net"
     uci set wireless.$iface.mcast_rate=6000
-
 
     idx=$((idx+1))
   done
