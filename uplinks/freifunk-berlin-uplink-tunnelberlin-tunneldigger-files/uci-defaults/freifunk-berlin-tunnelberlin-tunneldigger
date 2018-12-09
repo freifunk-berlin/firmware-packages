@@ -1,24 +1,33 @@
 #!/bin/sh
 
-. /lib/functions/system.sh
+THIS_UPLINKNAME="tunnelberlin_tunnneldigger"
+
+. /lib/functions/freifunk-berlin-network.sh
+. /lib/functions/guard.sh
 
 # always set correct masquerading, regardless of guard
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
 
-uci -q get ffberlin-uplink || echo "" | uci import ffberlin-uplink
-uci >/dev/null -q get ffberlin-uplink.preset || uci set ffberlin-uplink.preset=settings
-uci >/dev/null -q get ffberlin-uplink.preset.current || uci set ffberlin-uplink.preset.current="tunnelberlin_tunneldigger"
-if [[ $(uci get ffberlin-uplink.preset.current) != '"tunnelberlin_tunneldigger"' ]]; then
-  uci rename ffberlin-uplink.preset.current=previous
-  uci set ffberlin-uplink.preset.current="tunnelberlin_tunneldigger"
+current_preset=$(uci get ffberlin-uplink.preset.current)
+if [ ${current_preset} != ${THIS_UPLINKNAME} ]; then
+  if [ ${current_preset} != "undefined" ]; then
+      # when the uplink-preset has changed, recreate remember the preset we are coming from
+      # and prepare for reinit of the relevant settings via freifunk-berlin-ffuplink-defaults
+      # uci-defaults
+      guard_delete "ffberlin_uplink"
+      /rom/etc/uci-defaults/freifunk-berlin-ffuplink-defaults
+      uci set ffberlin-uplink.preset.previous=${current_preset}
+  fi
+  uci set ffberlin-uplink.preset.current=${THIS_UPLINKNAME}
+  uci commit ffberlin-uplink
 fi
 # set set auth-type required for this uplink-type, e.g. for freifunk-wizard
 uci set ffberlin-uplink.uplink=settings
 uci set ffberlin-uplink.uplink.auth=none
+
 uci commit ffberlin-uplink
 
-. /lib/functions/guard.sh
 guard "tunnelberlin_tunneldigger"
 
 uci delete network.ffuplink_dev
@@ -31,17 +40,11 @@ for byte in 2 3 4 5 6; do
   macaddr=$macaddr`dd if=/dev/urandom bs=1 count=1 2> /dev/null | hexdump -e '1/1 ":%02x"'`
 done
 uci set network.ffuplink_dev.macaddr=$macaddr
+uci commit network-ffuplink_dev
 
-uci delete network.ffuplink
-uci set network.ffuplink=interface
-uci set network.ffuplink.ifname=ffuplink
+create_ffuplink
 uci set network.ffuplink.proto=dhcp
-# Put the resulting routing information from the dhcp request in the ffuplink table
-# instead of the default table.  This prevents the dhcp request for the ffuplink
-# interface from overwriting the routing table entries needed by br_wan.
-uci set network.ffuplink.ip4table=ffuplink
-uci set network.ffuplink.ip6table=ffuplink
-uci commit network
+uci commit network.ffuplink
 
 # tunneldigger setup
 UUID=$(uci -q get tunneldigger.ffuplink.uuid)
