@@ -24,6 +24,18 @@ if [ ${current_preset} != ${THIS_UPLINKNAME} ]; then
 fi
 # set set auth-type required for this uplink-type, e.g. for freifunk-wizard
 uci set ffberlin-uplink.uplink.auth=none
+
+macaddr=$(uci -q get ffberlin-uplink.uplink.macaddr)
+if [[ -z $macaddr ]]; then
+  # Create a static macaddr starting with "fe" for ffuplink devices
+  # See the website https://www.itwissen.info/MAC-Adresse-MAC-address.html
+  macaddr="fe"
+  for byte in 2 3 4 5 6; do
+    macaddr=$macaddr`dd if=/dev/urandom bs=1 count=1 2> /dev/null | hexdump -e '1/1 ":%02x"'`
+  done
+  uci set ffberlin-uplink.uplink.macaddr=$macaddr
+fi
+
 uci commit ffberlin-uplink
 
 guard "tunnelberlin_tunneldigger"
@@ -31,12 +43,6 @@ guard "tunnelberlin_tunneldigger"
 uci delete network.ffuplink_dev
 uci set network.ffuplink_dev=device
 uci set network.ffuplink_dev.name=ffuplink
-# Create a static macaddr starting with "fe" for ffuplink devices
-# See the website https://www.itwissen.info/MAC-Adresse-MAC-address.html
-macaddr="fe"
-for byte in 2 3 4 5 6; do
-  macaddr=$macaddr`dd if=/dev/urandom bs=1 count=1 2> /dev/null | hexdump -e '1/1 ":%02x"'`
-done
 uci set network.ffuplink_dev.macaddr=$macaddr
 uci commit network.ffuplink_dev
 
