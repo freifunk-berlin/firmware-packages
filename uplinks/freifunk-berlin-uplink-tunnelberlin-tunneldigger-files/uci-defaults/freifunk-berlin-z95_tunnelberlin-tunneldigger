@@ -3,7 +3,7 @@
 THIS_UPLINKNAME="tunnelberlin_tunnneldigger"
 
 . /lib/functions/freifunk-berlin-network.sh
-. /lib/functions/guard.sh
+. /lib/functions.sh
 
 # always set correct masquerading, regardless of guard
 uci set firewall.zone_ffuplink.masq=1
@@ -15,12 +15,11 @@ if [ ${current_preset} != ${THIS_UPLINKNAME} ]; then
       # when the uplink-preset has changed, recreate remember the preset we are coming from
       # and prepare for reinit of the relevant settings via freifunk-berlin-ffuplink-defaults
       # uci-defaults
-      guard_delete "ffberlin_uplink"
-      /rom/etc/uci-defaults/freifunk-berlin-ffuplink-defaults
-      uci set ffberlin-uplink.preset.previous=${current_preset}
+      logger -t "ffuplink" "uplink-preset has been changed."
+      uci rename ffberlin-uplink.preset.current=previous
+      create_ffuplink
   fi
   uci set ffberlin-uplink.preset.current=${THIS_UPLINKNAME}
-  uci commit ffberlin-uplink
 fi
 # set set auth-type required for this uplink-type, e.g. for freifunk-wizard
 uci set ffberlin-uplink.uplink=settings
@@ -28,6 +27,7 @@ uci set ffberlin-uplink.uplink.auth=none
 
 uci commit ffberlin-uplink
 
+, /lib/functions/guard.sh
 guard "tunnelberlin_tunneldigger"
 
 uci delete network.ffuplink_dev
@@ -40,9 +40,8 @@ for byte in 2 3 4 5 6; do
   macaddr=$macaddr`dd if=/dev/urandom bs=1 count=1 2> /dev/null | hexdump -e '1/1 ":%02x"'`
 done
 uci set network.ffuplink_dev.macaddr=$macaddr
-uci commit network-ffuplink_dev
+uci commit network.ffuplink_dev
 
-create_ffuplink
 uci set network.ffuplink.proto=dhcp
 uci commit network.ffuplink
 
