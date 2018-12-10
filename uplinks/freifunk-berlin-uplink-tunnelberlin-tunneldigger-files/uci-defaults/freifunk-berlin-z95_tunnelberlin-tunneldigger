@@ -16,7 +16,7 @@ if [ ${current_preset} != ${THIS_UPLINKNAME} ]; then
       # and prepare for reinit of the relevant settings via freifunk-berlin-ffuplink-defaults
       # uci-defaults
       logger -t "ffuplink" "uplink-preset has been changed."
-      uci rename ffberlin-uplink.preset.current=previous
+      uci set ffberlin-uplink.preset.previous=$(uci get ffberlin-uplink.preset.current)
       create_ffuplink
   fi
   uci set ffberlin-uplink.preset.current=${THIS_UPLINKNAME}
