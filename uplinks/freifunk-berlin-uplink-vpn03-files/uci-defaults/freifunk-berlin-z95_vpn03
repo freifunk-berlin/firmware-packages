@@ -10,7 +10,7 @@ if [[ $(uci get ffberlin-uplink.preset.current) != "vpn03_openvpn" ]]; then
   # do not track preset when it was 'undefined', aka never configured
   if [[ $(uci get ffberlin-uplink.preset.current) != 'undefined' ]]; then
     logger -t "ffuplink" "uplink-preset has been changed."
-    uci rename ffberlin-uplink.preset.current=previous
+    uci set ffberlin-uplink.preset.previous=$(uci get ffberlin-uplink.preset.current)
   fi
   uci set ffberlin-uplink.preset.current="vpn03_openvpn"
   # call uci-default of package freifunk-berlin-openvpn-files again to recreate initial config
