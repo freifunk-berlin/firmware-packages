@@ -1,0 +1,34 @@
+#!/bin/sh
+
+. /lib/functions/freifunk-berlin-network.sh
+
+# in case we are called to recreate the instance-configuration we preserve 
+# the state of ffuplink and restore it later
+ffuplink_state=$(uci -q get openvpn.ffuplink.enabled)
+
+# set set auth-type required for this uplink-type, e.g. for freifunk-wizard
+uci -q get ffberlin-uplink || echo "" | uci import ffberlin-uplink
+uci set ffberlin-uplink.uplink=settings
+uci set ffberlin-uplink.uplink.auth=x509
+uci commit ffberlin-uplink.uplink
+
+uci -q delete openvpn.custom_config
+uci -q delete openvpn.sample_server
+uci -q delete openvpn.sample_client
+uci -q delete openvpn.ffuplink
+uci set openvpn.ffuplink=openvpn
+if [[ -z ${ffuplink_state} ]]; then
+  uci set openvpn.ffuplink.enabled=0
+else
+  uci set openvpn.ffuplink.enabled=${ffuplink_state}
+fi
+uci set openvpn.ffuplink.client=1
+uci set openvpn.ffuplink.dev=ffuplink
+uci set openvpn.ffuplink.status="/var/log/openvpn-status-ffuplink.log"
+uci set openvpn.ffuplink.up="/lib/freifunk/ffvpn-up.sh"
+uci set openvpn.ffuplink.route_nopull=1
+uci commit openvpn
+
+# reconfigure ffuplink interface
+uci -q delete network.ffuplink_dev
+create_ffuplink

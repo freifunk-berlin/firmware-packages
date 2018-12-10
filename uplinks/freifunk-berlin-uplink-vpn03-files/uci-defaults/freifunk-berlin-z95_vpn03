@@ -1,26 +1,26 @@
 #!/bin/sh
 
+. /lib/functions/guard.sh
+
 # always set correct masquerading, regardless of guard
 uci set firewall.zone_ffuplink.masq=0
 uci commit firewall
 
-uci -q get ffberlin-uplink || echo "" | uci import ffberlin-uplink
-uci >/dev/null -q get ffberlin-uplink.preset || uci set ffberlin-uplink.preset=settings
-uci >/dev/null -q get ffberlin-uplink.preset.current || uci set ffberlin-uplink.preset.current="vpn03_openvpn"
 if [[ $(uci get ffberlin-uplink.preset.current) != "vpn03_openvpn" ]]; then
-  uci rename ffberlin-uplink.preset.current=previous
+  # do not track preset when it was 'undefined', aka never configured
+  if [[ $(uci get ffberlin-uplink.preset.current) != 'undefined' ]]; then
+    logger -t "ffuplink" "uplink-preset has been changed."
+    uci rename ffberlin-uplink.preset.current=previous
+  fi
   uci set ffberlin-uplink.preset.current="vpn03_openvpn"
+  # call uci-default of package freifunk-berlin-openvpn-files again to recreate initial config
+  /rom/etc/uci-defaults/freifunk-berlin-z90_openvpn
 fi
 uci commit ffberlin-uplink
 
-. /lib/functions/guard.sh
 guard "vpn03_openvpn"
 
-uci set openvpn.ffuplink=openvpn
-uci set openvpn.ffuplink.enabled=0
-uci set openvpn.ffuplink.client=1
 uci set openvpn.ffuplink.proto=udp4
-uci set openvpn.ffuplink.dev=ffuplink
 uci set openvpn.ffuplink.dev_type=tun
 uci set openvpn.ffuplink.persist_key=1
 uci set openvpn.ffuplink.keepalive="10 60"
@@ -34,7 +34,4 @@ uci add_list openvpn.ffuplink.remote="vpn03-backup.berlin.freifunk.net 1194"
 uci set openvpn.ffuplink.ca="/etc/openvpn/freifunk-ca.crt"
 uci set openvpn.ffuplink.cert="/etc/openvpn/ffuplink.crt"
 uci set openvpn.ffuplink.key="/etc/openvpn/ffuplink.key"
-uci set openvpn.ffuplink.status="/var/log/openvpn-status-ffuplink.log"
-uci set openvpn.ffuplink.up="/lib/freifunk/ffvpn-up.sh"
-uci set openvpn.ffuplink.route_nopull=1
 uci commit openvpn
