@@ -21,3 +21,17 @@ create_ffuplink() {
   guard_delete tunnelberlin_tunneldigger
   guard_delete vpn03_openvpn
 }
+
+ffuplink_disable() {
+  local section=$(uci -q get ffberlin_uplink.ffuplink.disable_section)
+  local field=$(uci -q get ffberlin-uplink.ffuplink.disable_field)
+  local value=$(uci -q get ffberlin-uplink.ffuplnik.disable_value)
+
+  if [[ ! -z $section ]]; then
+    uci set ${section}.${field}=$value
+    uci -q delete ffberlin-uplink.ffuplink.disable_section
+    uci -q delete ffberlin-uplink.ffuplink.disable_field
+    uci -q delete ffberlin-uplink.ffuplink.disable_value
+    uci commit $section
+  fi
+}
