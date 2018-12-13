@@ -17,7 +17,7 @@ if [ ${current_preset} != ${THIS_UPLINKNAME} ]; then
   fi
   uci set ffberlin-uplink.preset.current=${THIS_UPLINKNAME}
   # call uci-default of package freifunk-berlin-openvpn-files again to recreate initial config
-  /rom/etc/uci-defaults/freifunk-berlin-z90_openvpn
+  sh /rom/etc/uci-defaults/freifunk-berlin-z90_openvpn
 fi
 uci commit ffberlin-uplink
 
