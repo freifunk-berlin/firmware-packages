@@ -1,8 +1,6 @@
 #!/bin/sh
 
 # set set auth-type required for this uplink-type, e.g. for freifunk-wizard
-uci -q get ffberlin-uplink || echo "" | uci import ffberlin-uplink
-uci set ffberlin-uplink.uplink=settings
 uci set ffberlin-uplink.uplink.auth=x509
 uci commit ffberlin-uplink.uplink
 
