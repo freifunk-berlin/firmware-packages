@@ -29,6 +29,6 @@ guard_rename() {
 guard_delete() {
   OPTION=$1
 
-  uci delete $CFG.$NAME.$OPTION
+  uci -q delete $CFG.$NAME.$OPTION || return 0
   uci commit $CFG
 }
