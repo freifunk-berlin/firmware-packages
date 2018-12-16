@@ -477,6 +477,14 @@ r1_1_0_update_uplink_notunnel_name() {
   [[ $(uci -q get ffberlin-uplink.preset.previous) = "no-tunnel" ]] && uci set ffberlin-uplink.preset.previous=notunnel
 }
 
+r1_1_0_firewall_remove_advanced() {
+  firewall_remove_advanced() {
+    uci -q delete firewall.$1
+  }
+  config_load firewall
+  config_foreach firewall_remove_advanced advanced
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -544,6 +552,7 @@ migrate () {
     r1_1_0_update_dns_entry
     r1_1_0_update_uplink_notunnel_name
     r1_1_0_remove_olsrd_garbage_collection
+    r1_1_0_remove_advanced_firewall
   fi
 
   # overwrite version with the new version
