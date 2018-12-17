@@ -3,8 +3,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-openvpn-files
-PKG_VERSION:=0.0.8
-PKG_RELEASE:=1
+PKG_VERSION:=0.0.9
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -15,7 +15,7 @@ define Package/freifunk-berlin-openvpn-files
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin openVPN files (commmon)
   URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+= +openvpn +freifunk-berlin-lib-guard
+  DEPENDS+= +openvpn +freifunk-berlin-lib-guard +freifunk-berlin-network-defaults
   PKGARCH:=all
 endef
 
