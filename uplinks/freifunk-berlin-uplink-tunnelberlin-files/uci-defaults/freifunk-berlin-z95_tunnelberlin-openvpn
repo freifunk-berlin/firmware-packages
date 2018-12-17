@@ -1,16 +1,23 @@
 #!/bin/sh
 
+. /lib/functions/guard.sh
+
 # always set correct masquerading, regardless of guard
 uci set firewall.zone_ffuplink.masq=1
 uci commit firewall
 
 if [[ $(uci get ffberlin-uplink.preset.current) != "tunnelberlin_openvpn" ]]; then
-  uci rename ffberlin-uplink.preset.current=previous
+  # do not track preset when it was 'undefined', aka never configured
+  if [[ $(uci get ffberlin-uplink.preset.current) != 'undefined' ]]; then
+    logger -t "ffuplink" "uplink-preset has been changed."
+    uci set ffberlin-uplink.preset.previous=$(uci get ffberlin-uplink.preset.current)
+  fi
   uci set ffberlin-uplink.preset.current="tunnelberlin_openvpn"
+  # call uci-default of package freifunk-berlin-openvpn-files again to recreate initial config
+  sh /rom/etc/uci-defaults/freifunk-berlin-z90_openvpn
 fi
 uci commit ffberlin-uplink
 
-. /lib/functions/guard.sh
 guard "tunnelberlin_openvpn"
 
 uci set openvpn.ffuplink.proto=udp4
