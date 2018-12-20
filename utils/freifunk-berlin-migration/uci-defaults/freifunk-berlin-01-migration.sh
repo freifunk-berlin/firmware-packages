@@ -406,6 +406,11 @@ r1_0_2_notunnel_macaddr() {
 }
 
 
+r1_0_2_update_dns_entry() {
+  log "updating DNS-servers for interface dhcp from profile"
+  uci set network.dhcp.dns="$(uci get "profile_$(uci get freifunk.community.name).interface.dns")"
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -462,6 +467,7 @@ migrate () {
   if semverLT ${OLD_VERSION} "1.0.2"; then
     r1_0_2_notunnel_ffuplink_ipXtable
     r1_0_2_notunnel_macaddr
+    r1_0_2_update_dns_entry
     guard "ffberlin_uplink"
   fi
 
