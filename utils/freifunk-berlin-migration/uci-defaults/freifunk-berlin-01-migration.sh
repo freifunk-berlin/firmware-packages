@@ -480,10 +480,6 @@ migrate () {
     guard "ffberlin_uplink"
   fi
 
-#  if semverLT ${OLD_VERSION} "1.1.0"; then
-#    r1_1_0_remove_olsrd_garbage_collection
-#  fi
-
   # overwrite version with the new version
   log "Setting new system version to ${VERSION}."
   uci set system.@system[0].version=${VERSION}
