@@ -405,10 +405,24 @@ r1_0_2_notunnel_macaddr() {
   fi
 }
 
-
 r1_0_2_update_dns_entry() {
   log "updating DNS-servers for interface dhcp from profile"
   uci set network.dhcp.dns="$(uci get "profile_$(uci get freifunk.community.name).interface.dns")"
+}
+
+r1_0_2_add_olsrd_garbage_collection() {
+  crontab -l | grep "rm -f /tmp/olsrd\*core"
+  if [ $? == 1 ]; then
+    log "adding garbage collection of core files from /tmp"
+    echo "23 4 * * *	rm -f /tmp/olsrd*core" >> /etc/crontabs/root
+    /etc/init.d/cron restart
+  fi
+}
+
+r1_1_0_remove_olsrd_garbage_collection() {
+  log "removing garbage collection of core files from /tmp"
+  crontab -l | grep -v "rm -f /tmp/olsrd\*core" | crontab -
+  /etc/init.d/cron restart
 }
 
 migrate () {
@@ -468,6 +482,7 @@ migrate () {
     r1_0_2_notunnel_ffuplink_ipXtable
     r1_0_2_notunnel_macaddr
     r1_0_2_update_dns_entry
+    r1_0_2_add_olsrd_garbage_collection
     guard "ffberlin_uplink"
   fi
 
