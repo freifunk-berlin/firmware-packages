@@ -14,7 +14,7 @@ define Package/$(PKG_NAME)
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin no tunnel files
   URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+=+freifunk-berlin-lib-guard +kmod-veth
+  DEPENDS+=+freifunk-berlin-lib-guard +kmod-veth +freifunk-berlin-network-defaults
   PROVIDES:=freifunk-berlin-uplink
   PKGARCH:=all
 endef

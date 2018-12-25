@@ -14,7 +14,7 @@ define Package/freifunk-berlin-uplink-tunnelberlin-tunneldigger-files
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin Networktunnel files
   URL:=http://github.com/freifunk-berlin/firmware-packages
-  DEPENDS+= +freifunk-berlin-lib-guard +freifunk-berlin-tunneldigger
+  DEPENDS+= +freifunk-berlin-lib-guard +freifunk-berlin-tunneldigger +freifunk-berlin-network-defaults
   PROVIDES:=freifunk-berlin-uplink
   PKGARCH:=all
 endef

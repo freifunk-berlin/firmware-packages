@@ -15,7 +15,7 @@ define Package/freifunk-berlin-openvpn-files
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin openVPN files (commmon)
   URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+= +openvpn +freifunk-berlin-lib-guard
+  DEPENDS+= +openvpn +freifunk-berlin-lib-guard +freifunk-berlin-network-defaults
   PKGARCH:=all
 endef
 
