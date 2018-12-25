@@ -13,7 +13,6 @@ uci commit ffberlin-uplink
 . /lib/functions/guard.sh
 guard "tunnelberlin_openvpn"
 
-uci set openvpn.ffuplink.enabled=0
 uci set openvpn.ffuplink.proto=udp4
 uci set openvpn.ffuplink.dev_type=tun
 uci set openvpn.ffuplink.persist_key=1
