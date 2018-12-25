@@ -9,6 +9,10 @@ uci commit ffberlin-uplink.uplink
 uci -q delete openvpn.custom_config
 uci -q delete openvpn.sample_server
 uci -q delete openvpn.sample_client
+# (re)create the openvpn-config for the ffuplink
+# we delete the current config, as this script will run after every
+# installation / upgrade. So we startover with a clean setup.
+uci -q delete openvpn.ffuplink
 uci set openvpn.ffuplink=openvpn
 uci set openvpn.ffuplink.client=1
 uci set openvpn.ffuplink.dev=ffuplink
