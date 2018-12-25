@@ -2,7 +2,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-uplink-tunnelberlin-tunneldigger-files
-PKG_VERSION:=0.0.5
+PKG_VERSION:=0.1.0
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
@@ -14,7 +14,7 @@ define Package/freifunk-berlin-uplink-tunnelberlin-tunneldigger-files
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin Networktunnel files
   URL:=http://github.com/freifunk-berlin/firmware-packages
-  DEPENDS+= +freifunk-berlin-lib-guard +freifunk-berlin-tunneldigger
+  DEPENDS+= +freifunk-berlin-lib-guard +freifunk-berlin-tunneldigger +freifunk-berlin-network-defaults
   PROVIDES:=freifunk-berlin-uplink
   PKGARCH:=all
 endef
