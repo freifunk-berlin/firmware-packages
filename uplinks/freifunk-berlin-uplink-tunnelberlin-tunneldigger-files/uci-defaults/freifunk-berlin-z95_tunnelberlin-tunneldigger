@@ -1,6 +1,6 @@
 #!/bin/sh
 
-THIS_UPLINKNAME="tunnelberlin_tunnneldigger"
+THIS_UPLINKNAME="tunnelberlin_tunneldigger"
 
 . /lib/functions/freifunk-berlin-network.sh
 . /lib/functions.sh
