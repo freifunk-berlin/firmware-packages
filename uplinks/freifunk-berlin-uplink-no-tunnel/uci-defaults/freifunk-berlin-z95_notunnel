@@ -46,4 +46,5 @@ list_contains ifnames ffuplink_wan || uci set network.wan.ifname="${ifnames} ffu
 uci commit network.wan
 
 uci set network.ffuplink.proto=dhcp
+uci set network.ffuplink.disabled=0
 uci commit network.ffuplink
