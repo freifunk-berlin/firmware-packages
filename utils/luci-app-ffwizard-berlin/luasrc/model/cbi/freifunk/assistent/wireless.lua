@@ -36,8 +36,16 @@ local wifi_tbl = {}
 uci:foreach("wireless", "wifi-device",
   function(section)
     local device = section[".name"]
+    local channel = tonumber(section["channel"])
+    local devicename
+    if ( channel <= 14 ) then
+      devicename = "2.4 Ghz Wifi ("..device:upper()..")"
+    else
+      devicename = "5 Ghz Wifi ("..device:upper()..")"
+    end
+    f:field(DummyValue, device:upper(), devicename)
     wifi_tbl[device] = {}
-    local meship = f:field(Value, "meship_" .. device, device:upper() .. " Mesh-IP", "")
+    local meship = f:field(Value, "meship_" .. device, "Mesh-IP", "")
     meship.rmempty = false
     meship.datatype = "ip4addr"
     function meship.cfgvalue(self, section)
@@ -48,6 +56,12 @@ uci:foreach("wireless", "wifi-device",
       return ( x and x:is4()) and x:string() or ""
     end
     wifi_tbl[device]["meship"] = meship
+
+    local meshmode = f:field(ListValue, "mode_" .. device, "Mesh Mode", "")
+    meshmode:value("80211s", "802.11s")
+    meshmode:value("adhoc", "Ad-Hoc (veraltet)")
+    wifi_tbl[device]["meshmode"] = meshmode
+
   end)
 
 -- VAP
@@ -145,26 +159,31 @@ function main.write(self, section, value)
       devconfig.chanlist = calcchanlist(devchannel)
       uci:tset("wireless", device, devconfig)
 
-      --WIRELESS CONFIG ad-hoc
+      --WIRELESS CONFIG mesh
+      local meshmode = wifi_tbl[device]["meshmode"]:formvalue(section)
       local pre = calcpre(devchannel)
-      local ifaceSection = (pre == 2) and "wifi_iface" or "wifi_iface_5"
+      local ifaceSection
+      if meshmode ~= "adhoc" then
+         ifaceSection = "wifi_iface_"..meshmode
+      else
+         ifaceSection = ((pre == 2) and "wifi_iface" or "wifi_iface_5")
+      end
       local ifconfig = tools.getMergedConfig(mergeList, "defaults", ifaceSection)
-      local ifnameAdhoc = calcifcfg(device).."-".."adhoc".."-"..tostring(pre)
+      local ifnameMesh = calcifcfg(device).."-"..ifconfig.mode.."-"..pre
       ifconfig.device = device
       ifconfig.network = calcnif(device)
-      ifconfig.ifname = ifnameAdhoc
-      ifconfig.mode = "adhoc"
-      -- don't set the dns entry
-      ifconfig.dns = nil
-      ifconfig.ssid = uci:get(community, "ssidscheme", devconfig.channel)
-      ifconfig.bssid = uci:get(community, "bssidscheme", devconfig.channel)
+      ifconfig.ifname = ifnameMesh
+      if meshmode == "adhoc" then
+        ifconfig.ssid = uci:get(community, "ssidscheme", devconfig.channel)
+        ifconfig.bssid = uci:get(community, "bssidscheme", devconfig.channel)
+      end
       uci:section("wireless", "wifi-iface", nil, ifconfig)
       if statistics_installed then
-        tools.statistics_interface_add("collectd_iwinfo", ifnameAdhoc)
-        tools.statistics_interface_add("collectd_interface", ifnameAdhoc)
+        tools.statistics_interface_add("collectd_iwinfo", ifnameMesh)
+        tools.statistics_interface_add("collectd_interface", ifnameMesh)
       end
 
-      --NETWORK CONFIG ad-hoc
+      --NETWORK CONFIG mesh
       local node_ip = wifi_tbl[device]["meship"]:formvalue(section)
       node_ip = ip.IPv4(node_ip)
       local prenetconfig = {}
