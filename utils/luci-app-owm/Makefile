@@ -27,7 +27,7 @@ endef
 
 define Package/luci-app-owm
   $(call Package/luci-app-owm/default)
-  DEPENDS:=+luci-lib-json +olsrd-mod-jsoninfo +luci-lib-luaneightbl
+  DEPENDS:=+luci-lib-json +olsrd-mod-jsoninfo +luci-mod-network
   TITLE:=Luci JSON Export for Open Wireless Map
 endef
 
