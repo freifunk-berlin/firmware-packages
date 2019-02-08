@@ -22,15 +22,14 @@ end
 
 
 function configureOLSR()
+	local mergeList = {"freifunk", community}
 	-- olsr 4
-	local olsrbase = uci:get_all("freifunk", "olsrd") or {}
-	util.update(olsrbase, uci:get_all(community, "olsrd") or {})
-	uci:tset("olsrd", "olsrd", olsrbase)
+	local olsrbase = tools.getMergedConfig(mergeList, "defaults", "olsrd")
+	tools.mergeInto("olsrd", "olsrd", olsrbase)
 
 	-- olsr 6
-	local olsr6base = uci:get_all("freifunk", "olsrd6") or {}
-	util.update(olsr6base, uci:get_all(community, "olsrd6") or {})
-	uci:tset("olsrd6", "olsrd", olsr6base)
+	local olsr6base = tools.getMergedConfig(mergeList, "defaults", "olsrd6")
+	tools.mergeInto("olsrd6", "olsrd", olsr6base)
 
 	-- set HNA for olsr6
 	local ula_prefix = uci:get("network","globals","ula_prefix")
@@ -45,14 +44,8 @@ function configureOLSR()
 	end
 
   -- olsr 4 interface defaults
-  local olsrifbase = uci:get_all("freifunk", "olsr_interface") or {}
-  util.update(olsrifbase, uci:get_all(community, "olsr_interface") or {})
-  local s = uci:get_first("olsrd", "InterfaceDefaults")
-  if (s) then
-    uci:tset("olsrd", s, olsrifbase)
-  else
-    uci:section("olsrd", "InterfaceDefaults", nil, olsrifbase)
-  end
+  local olsrifbase = tools.getMergedConfig(mergeList, "defaults", "olsr_interface")
+  tools.mergeInto("olsrd", "InterfaceDefaults", olsrifbase)
 
   uci:save("olsrd")
   uci:save("olsrd6")

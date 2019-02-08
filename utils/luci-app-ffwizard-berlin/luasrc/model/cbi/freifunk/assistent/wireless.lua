@@ -86,7 +86,7 @@ end
 function main.write(self, section, value)
   if (sharenet == "2") then
     --share internet was not enabled before, set to false now
-    uci:set("ffwizard", "settings", "sharenet", 0)
+    uci:set("ffwizard", "settings", "sharenet", "0")
     uci:save("ffwizard")
   end
 
@@ -101,6 +101,7 @@ function main.write(self, section, value)
   end
 
   local statistics_installed = ipkg.installed("luci-app-statistics") == true
+  local mergeList = {"freifunk", community}
   uci:foreach("wireless", "wifi-device",
     function(sec)
       local device = sec[".name"]
@@ -135,30 +136,28 @@ function main.write(self, section, value)
       --WIRELESS CONFIG device
       local hwmode = calchwmode(device)
       local deviceSection = (hwmode:find("a")) and "wifi_device_5" or "wifi_device"
-      local devconfig = uci:get_all("freifunk", deviceSection) or {}
-      util.update(devconfig, uci:get_all(community, deviceSection) or {})
-      devconfig.channel = getchannel(device)
+      local devconfig = tools.getMergedConfig(mergeList, "defaults", deviceSection)
+      local devchannel = getchannel(device)
+      devconfig.channel = tostring(devchannel)
       devconfig.hwmode = hwmode
-      devconfig.doth = calcdoth(devconfig.channel)
+      devconfig.doth = calcdoth(devchannel)
       devconfig.htmode = "HT20"
-      devconfig.chanlist = calcchanlist(devconfig.channel)
+      devconfig.chanlist = calcchanlist(devchannel)
       uci:tset("wireless", device, devconfig)
 
       --WIRELESS CONFIG ad-hoc
-      local pre = calcpre(devconfig.channel)
+      local pre = calcpre(devchannel)
       local ifaceSection = (pre == 2) and "wifi_iface" or "wifi_iface_5"
-      local ifconfig = uci:get_all("freifunk", ifaceSection) or {}
-      local ifnameAdhoc = calcifcfg(device).."-".."adhoc".."-"..pre
-      util.update(ifconfig, uci:get_all(community, ifaceSection) or {})
+      local ifconfig = tools.getMergedConfig(mergeList, "defaults", ifaceSection)
+      local ifnameAdhoc = calcifcfg(device).."-".."adhoc".."-"..tostring(pre)
       ifconfig.device = device
       ifconfig.network = calcnif(device)
       ifconfig.ifname = ifnameAdhoc
       ifconfig.mode = "adhoc"
       -- don't set the dns entry
       ifconfig.dns = nil
-      -- uci:get needs a string as key so we convert to string with tostring()
-      ifconfig.ssid = uci:get(community, "ssidscheme", tostring(devconfig.channel))
-      ifconfig.bssid = uci:get(community, "bssidscheme", tostring(devconfig.channel))
+      ifconfig.ssid = uci:get(community, "ssidscheme", devconfig.channel)
+      ifconfig.bssid = uci:get(community, "bssidscheme", devconfig.channel)
       uci:section("wireless", "wifi-iface", nil, ifconfig)
       if statistics_installed then
         tools.statistics_interface_add("collectd_iwinfo", ifnameAdhoc)
@@ -245,11 +244,10 @@ function main.write(self, section, value)
     uci:set("dhcp", "frei_funk", "ip", dhcpmeshnet:minhost():string())
 
     --DHCP CONFIG bridge for wifi APs
-    local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
-    util.update(dhcpbase, uci:get_all(community, "dhcp") or {})
+    local dhcpbase = tools.getMergedConfig(mergeList, "defaults", "dhcp")
     dhcpbase.interface = "dhcp"
-    dhcpbase.force = 1
-    dhcpbase.ignore = 0
+    dhcpbase.force = "1"
+    dhcpbase.ignore = "0"
     uci:section("dhcp", "dhcp", "dhcp", dhcpbase)
     uci:set_list("dhcp", "dhcp", "dhcp_option", "119,olsr")
     uci:set("dhcp", "dhcp", "dhcpv6", "server")
@@ -259,8 +257,8 @@ function main.write(self, section, value)
     -- first host address is used by the router
     -- limit is 2 ^ ( 32 - prefix) - 3
     -- do not assign broadcast address to dhcp clients
-    local start = 2
-    local limit = math.pow(2, 32 - dhcpmeshnet:prefix()) - 3
+    local start = "2"
+    local limit = tostring(math.pow(2, 32 - dhcpmeshnet:prefix()) - 3)
     uci:set("dhcp", "dhcp", "start", start)
     uci:set("dhcp", "dhcp", "limit", limit)
 
