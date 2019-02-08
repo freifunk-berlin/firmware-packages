@@ -1,6 +1,7 @@
 local uci = require "luci.model.uci".cursor()
 local sys = require "luci.sys"
 local fs = require "nixio.fs"
+local tools = require "luci.tools.freifunk.assistent.tools"
 
 f = SimpleForm("ffwizward", "", "")
 f.submit = "Next"
@@ -83,7 +84,11 @@ function main.write(self, section, value)
   uci:set("freifunk", "contact", "location",location:formvalue(section))
 
   local selectedCommunity = community:formvalue(section) or "Freifunk"
-  uci:tset("freifunk", "community", uci:get_all("profile_"..selectedCommunity, "profile"))
+  local mergeList= {"profile_"..selectedCommunity}
+  local profileData = tools.getMergedConfig(mergeList, "community", "profile")
+  for key, val in pairs(profileData) do
+    uci:set("freifunk", "community", key, val)
+  end
   uci:set("freifunk", "community", "name", selectedCommunity)
 
   local latval
