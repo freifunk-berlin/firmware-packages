@@ -89,7 +89,7 @@ end
 function main.write(self, section, value)
   if (sharenet == "2") then
     --share internet was not enabled before, set to false now
-    uci:set("ffwizard", "settings", "sharenet", 0)
+    uci:set("ffwizard", "settings", "sharenet", "0")
     uci:save("ffwizard")
   end
 
@@ -243,8 +243,8 @@ function main.write(self, section, value)
     local dhcpbase = uci:get_all("freifunk", "dhcp") or {}
     util.update(dhcpbase, uci:get_all(community, "dhcp") or {})
     dhcpbase.interface = "dhcp"
-    dhcpbase.force = 1
-    dhcpbase.ignore = 0
+    dhcpbase.force = "1"
+    dhcpbase.ignore = "0"
     uci:section("dhcp", "dhcp", "dhcp", dhcpbase)
     uci:set_list("dhcp", "dhcp", "dhcp_option", "119,olsr")
     uci:set("dhcp", "dhcp", "dhcpv6", "server")
@@ -254,8 +254,8 @@ function main.write(self, section, value)
     -- first host address is used by the router
     -- limit is 2 ^ ( 32 - prefix) - 3
     -- do not assign broadcast address to dhcp clients
-    local start = 2
-    local limit = math.pow(2, 32 - dhcpmeshnet:prefix()) - 3
+    local start = "2"
+    local limit = tostring(math.pow(2, 32 - dhcpmeshnet:prefix()) - 3)
     uci:set("dhcp", "dhcp", "start", start)
     uci:set("dhcp", "dhcp", "limit", limit)
 
