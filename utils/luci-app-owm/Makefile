@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-owm
-PKG_RELEASE:=0.4.17
+PKG_RELEASE:=0.4.18
 
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
@@ -21,7 +21,7 @@ define Package/luci-app-owm/default
   SECTION:=luci
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
-  URL:=https://github.com/freifunk/packages-pberg/
+  URL:=https://github.com/freifunk-berlin/firmware-packages
   PKGARCH:=all
 endef
 
