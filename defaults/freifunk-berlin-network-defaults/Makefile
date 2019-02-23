@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-network-defaults
-PKG_VERSION:=0.1.0
+PKG_VERSION:=0.2.0
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
@@ -13,7 +13,7 @@ define Package/freifunk-berlin-network-defaults
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin network default configuration
   URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+= +freifunk-berlin-lib-guard +iwinfo
+  DEPENDS+= +freifunk-berlin-lib-guard +iwinfo +pingcheck
   PKGARCH:=all
 endef
 
@@ -38,6 +38,10 @@ define Package/freifunk-berlin-network-defaults/install
 	$(CP) ./hotplug.d/iface/* $(1)/etc/hotplug.d/iface/
 	$(INSTALL_DIR) $(1)/lib/functions
 	$(CP) ./lib/functions/* $(1)/lib/functions/
+	$(INSTALL_DIR) $(1)/etc/pingcheck/online.d
+	$(CP) ./pingcheck/online.d/* $(1)/etc/pingcheck/online.d/
+	$(INSTALL_DIR) $(1)/etc/pingcheck/offline.d
+	$(CP) ./pingcheck/offline.d/* $(1)/etc/pingcheck/offline.d/
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-network-defaults))
