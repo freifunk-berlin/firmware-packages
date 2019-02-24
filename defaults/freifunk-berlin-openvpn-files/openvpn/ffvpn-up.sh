@@ -1,6 +1,10 @@
 #!/bin/sh
 
 . /lib/functions.sh
+
+echo >/tmp/ffvpn-up.log "new OpenVPN-uplink setup ..."
+[ -n $X509_0_CN ] && echo >/tmp/ffvpn-up.log "OpenVpn connection to peer: $X509_0_CN"                   
+
 if [ -z $route_net_gateway ] ; then
 	logger -p debug -t up-down-ffvpn "no route_net_gateway env var from openvpn!"
 	route_net_gateway=$(ip route show table main | grep default | cut -d ' ' -f 3)
@@ -54,6 +58,6 @@ remote="$5"
 			ip rule add pref 20001 iif "$dev" unreachable
 		fi
 	fi
-) >/tmp/ffvpn-up.log 2>&1 &
+) >>/tmp/ffvpn-up.log 2>&1 &
 
 exit 0
