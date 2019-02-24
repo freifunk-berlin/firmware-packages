@@ -60,6 +60,9 @@ uci:foreach("wireless", "wifi-device",
     local meshmode = f:field(ListValue, "mode_" .. device, "Mesh Mode", "")
     meshmode:value("80211s", "802.11s")
     meshmode:value("adhoc", "Ad-Hoc (veraltet)")
+    function meshmode.cfgvalue(self, section)
+      return uci:get("ffwizard", "settings", "meshmode_" .. device)
+    end
     wifi_tbl[device]["meshmode"] = meshmode
 
   end)
@@ -123,6 +126,9 @@ function main.write(self, section, value)
       -- store wizard data to fill fields if wizard is rerun
       uci:set("ffwizard", "settings",
         "meship_" .. device, wifi_tbl[device]["meship"]:formvalue(section)
+      )
+      uci:set("ffwizard", "settings",
+        "meshmode_" .. device, wifi_tbl[device]["meshmode"]:formvalue(section)
       )
 
       if (string.len(wifi_tbl[device]["meship"]:formvalue(section)) == 0) then
