@@ -3,7 +3,7 @@
 . /lib/functions.sh
 
 echo >/tmp/ffvpn-up.log "new OpenVPN-uplink setup ..."
-[ -n $X509_0_CN ] && echo >/tmp/ffvpn-up.log "OpenVpn connection to peer: $X509_0_CN"                   
+[ -n $X509_0_CN ] && echo >>/tmp/ffvpn-up.log "OpenVpn connection to peer: $X509_0_CN"                   
 
 if [ -z $route_net_gateway ] ; then
 	logger -p debug -t up-down-ffvpn "no route_net_gateway env var from openvpn!"
