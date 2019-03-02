@@ -9,4 +9,7 @@ guard "uhttpd"
 uci set uhttpd.px5g.commonname="Freifunk Berlin - $(dd if=/dev/urandom bs=4 count=1 | hexdump -e '1/1 "%02x"')"
 # do not force redirect to https
 uci set uhttpd.main.redirect_https=0
+# allow multiple concurrent requests caused by upstream commit
+# https://github.com/openwrt/openwrt/commit/c6aa9ff38870a30dbe6da17e4edad6039fe10ddf
+uci set uhttpd.main.max_requests=3
 uci commit
