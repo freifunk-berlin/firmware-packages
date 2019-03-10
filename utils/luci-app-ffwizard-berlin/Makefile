@@ -3,8 +3,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ffwizard-berlin
-PKG_VERSION:=0.0.14
-PKG_RELEASE:=2
+PKG_VERSION:=0.0.15
+PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -49,8 +49,8 @@ define Package/luci-app-ffwizard-berlin/install
 	$(CP) ./htdocs/* $(1)/www
 	$(INSTALL_DIR) $(1)/etc
 	$(CP) ./root/etc/* $(1)/etc
-	$(INSTALL_DIR) $(1)/www/cgi-bin
-	$(CP) ./root/www/cgi-bin/* $(1)/www/cgi-bin/
+	$(INSTALL_DIR) $(1)usr/libexec/rpcd
+	$(CP) ./root/usr/libexec/rpcd/* $(1)/usr/libexec/rpcd/
 endef
 
 $(eval $(call BuildPackage,luci-app-ffwizard-berlin))
