@@ -69,7 +69,7 @@ function hasRootPass()
 	logger ("checking for root-password ...")
 
 	local isPasswordSet = true
-	local f = io.popen("wget http://localhost/ubus -q -O - --post-data '{ \"jsonrpc\": \"2.0\", \"method\": \" call\", \"params\": [ \"00000000000000000000000000000000\", \"ffwizard-berlin\", \"has_root-pass\", {} ] }'")
+	local f = io.popen("wget http://localhost/ubus -q -O - --post-data '{ \"jsonrpc\": \"2.0\", \"method\": \"call\", \"params\": [ \"00000000000000000000000000000000\", \"ffwizard-berlin\", \"has_root-pass\", {} ] }'")
 	local ret = f:read("*a")
 	f:close()
 	logger(ret)
