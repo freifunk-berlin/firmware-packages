@@ -75,7 +75,7 @@ function hasRootPass()
 	logger(ret)
 	local jsonc = require "luci.jsonc"
 	
-	local content = jsonc.parse(ret))
+	local content = jsonc.parse(ret)
 
 	print(content.jsonrpc)
 	print(content.id)
