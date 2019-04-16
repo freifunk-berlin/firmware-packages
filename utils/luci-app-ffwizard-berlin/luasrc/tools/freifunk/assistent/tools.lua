@@ -73,6 +73,21 @@ function hasRootPass()
 	local ret = f:read("*a")
 	f:close()
 	logger(ret)
+	local jsonc = require "luci.jsonc"
+	
+	local content = jsonc.parse(ret))
+
+	print(content.jsonrpc)
+	print(content.id)
+	local result = content.result
+ 	for i,line in ipairs(result) do
+	      print(line)
+    	end
+	print("debug2")
+	
+	local test = result[2]
+	print(test.password_is_set)
+
 	if ret == "password_is_set:no" then
 		isPasswordSet = false
 	end
