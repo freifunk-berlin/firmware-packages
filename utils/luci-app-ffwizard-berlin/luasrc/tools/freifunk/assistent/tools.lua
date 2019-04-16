@@ -77,16 +77,16 @@ function hasRootPass()
 	
 	local content = jsonc.parse(ret)
 
-	print(content.jsonrpc) -- should be 2.0
-	print(tostring(content.id)) -- is nil, as per requests id?
+	logger(content.jsonrpc) -- should be 2.0
+	logger(tostring(content.id)) -- is nil, as per requests id?
 	local result = content.result
  	for i,line in ipairs(result) do
-	      print(tostring(line))
+	      logger(tostring(line))
     	end
-	print("debug2")
+	logger("debug2")
 	
 	local test = result[2]
-	print(test.password_is_set)
+	logger(test.password_is_set)
 
 	if test.password_is_set == "no" then
 		isPasswordSet = false
