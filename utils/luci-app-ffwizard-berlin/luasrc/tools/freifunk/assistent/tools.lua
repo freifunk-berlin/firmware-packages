@@ -78,7 +78,7 @@ function hasRootPass()
 	local content = jsonc.parse(ret)
 
 	print(content.jsonrpc) -- should be 2.0
-	print(content.tosting(id)) -- is nil, as per requests id?
+	print(tostring(content.id)) -- is nil, as per requests id?
 	local result = content.result
  	for i,line in ipairs(result) do
 	      print(tostring(line))
