@@ -88,7 +88,7 @@ function hasRootPass()
 	local test = result[2]
 	print(test.password_is_set)
 
-	if ret == "password_is_set:no" then
+	if test.password_is_set == "no" then
 		isPasswordSet = false
 	end
 	return isPasswordSet
