@@ -49,7 +49,7 @@ define Package/luci-app-ffwizard-berlin/install
 	$(CP) ./htdocs/* $(1)/www
 	$(INSTALL_DIR) $(1)/etc
 	$(CP) ./root/etc/* $(1)/etc
-	$(INSTALL_DIR) $(1)usr/libexec/rpcd
+	$(INSTALL_DIR) $(1)/usr/libexec/rpcd
 	$(CP) ./root/usr/libexec/rpcd/* $(1)/usr/libexec/rpcd/
 endef
 
