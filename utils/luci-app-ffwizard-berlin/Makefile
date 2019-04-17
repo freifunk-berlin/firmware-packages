@@ -45,8 +45,8 @@ define Package/luci-app-ffwizard-berlin/install
 	$(CP) $(PKG_BUILD_DIR)/luasrc/model/* $(1)/usr/lib/lua/luci/model
 	$(CP) $(PKG_BUILD_DIR)/luasrc/tools/* $(1)/usr/lib/lua/luci/tools
 	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view
-	$(INSTALL_DIR) $(1)/www
-	$(CP) ./htdocs/* $(1)/www
+	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d/
+	$(CP) ./root/usr/share/rpcd/acl.d/ffwizard-berlin.json/* $(1)/usr/share/rpcd/acl.d/ffwizard-berlin.json
 	$(INSTALL_DIR) $(1)/etc
 	$(CP) ./root/etc/* $(1)/etc
 	$(INSTALL_DIR) $(1)/usr/libexec/rpcd
