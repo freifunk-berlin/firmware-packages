@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-owm
-PKG_RELEASE:=0.4.19
+PKG_RELEASE:=0.5.0
 
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
@@ -37,7 +37,7 @@ endef
 
 define Package/luci-app-owm-cmd
   $(call Package/luci-app-owm/default)
-  DEPENDS:=luci-app-owm +luci-lib-httpclient
+  DEPENDS:=luci-app-owm +luci-lib-httpclient +micrond
   TITLE:=luci-app-owm-cmd - Commandline update tool
 endef
 
