@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-dhcp-defaults
-PKG_VERSION:=0.0.3
+PKG_VERSION:=0.0.4
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
@@ -13,7 +13,7 @@ define Package/freifunk-berlin-dhcp-defaults
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin dhcp default configuration
   URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+= +dnsmasq +freifunk-berlin-lib-guard
+  DEPENDS+= +dnsmasq +freifunk-berlin-lib-guard +micrond
   PKGARCH:=all
 endef
 
