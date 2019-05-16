@@ -11,7 +11,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/freifunk-berlin-autoupdate/default
   SECTION:=freifunk-berlin
   CATEGORY:=freifunk-berlin
-  URL:=http://github.com/freifunk-berlin/packages_berlin
+  URL:=https://github.com/Akira25/autoupdate
   PKGARCH:=all
 endef
 
