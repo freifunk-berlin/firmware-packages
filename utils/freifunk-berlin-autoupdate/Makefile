@@ -41,11 +41,11 @@ endef
 
 define Package/freifunk-berlin-autoupdate/install
 	$(INSTALL_DIR) $(1)/usr/bin
-        $(INSTALL_BIN) $(PKG_BUILD_DIR)/files/autoupdate $(1)/usr/bin/autoupdate
-        $(INSTALL_DIR) $(1)/etc/config
-        $(INSTALL_DATA) $(PKG_BUILD_DIR)/files/cfg_autoupdate $(1)/etc/config/autoupdate
-        $(INSTALL_DIR) $(1)/tmp
-        $(INSTALL_BIN) $(PKG_BUILD_DIR)/files/postinst.sh $(1)/tmp/freifunk-berlin-autoupdate_postinst.sh
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/autoupdate $(1)/usr/bin/autoupdate
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/files/cfg_autoupdate $(1)/etc/config/autoupdate
+	$(INSTALL_DIR) $(1)/tmp
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/files/postinst.sh $(1)/tmp/freifunk-berlin-autoupdate_postinst.sh
 endef
 
 define Package/freifunk-berlin-autoupdate/conffiles
