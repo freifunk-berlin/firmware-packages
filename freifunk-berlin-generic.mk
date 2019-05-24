@@ -15,4 +15,6 @@ else
 #$(info found luci.mk at $(LUCIMKFILE))
 endif
 
+LUCI_PKGURL:=http://berlin.freifunk.net
+
 include $(LUCIMKFILE)
