@@ -1,12 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-firewall-defaults
-PKG_VERSION:=0.0.6
-PKG_RELEASE:=1
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
-
-include $(INCLUDE_DIR)/package.mk
+include ../../freifunk-berlin-generic.mk
 
 define Package/freifunk-berlin-firewall-defaults
   SECTION:=freifunk-berlin
