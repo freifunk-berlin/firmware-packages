@@ -8,12 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-bbbdigger
-PKG_VERSION:=0.0.3
-PKG_RELEASE:=0
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
-
-include $(INCLUDE_DIR)/package.mk
+include ../../freifunk-berlin-generic.mk
 
 define Package/freifunk-berlin-bbbdigger/default
   SECTION:=freifunk-berlin
