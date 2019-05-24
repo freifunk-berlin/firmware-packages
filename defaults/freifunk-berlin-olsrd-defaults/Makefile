@@ -1,12 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-olsrd-defaults
-PKG_VERSION:=0.0.7
-PKG_RELEASE:=SAm0815.1
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
-
-include $(INCLUDE_DIR)/package.mk
+include ../../freifunk-berlin-generic.mk
 
 define Package/freifunk-berlin-olsrd-defaults
   SECTION:=freifunk-berlin
