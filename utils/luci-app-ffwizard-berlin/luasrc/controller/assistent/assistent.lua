@@ -28,12 +28,6 @@ function index()
 end
 
 function prepare()
-  if not fs.access("/etc/config/ffwizard") then
-    fs.writefile("/etc/config/ffwizard", "")
-    uci:set("ffwizard", "settings", "settings")
-    uci:save("ffwizard")
-    uci:commit("ffwizard")
-  end
   if not uci:get("ffwizard","settings","runbefore") and not fftools.hasRootPass() then
     luci.http.redirect(luci.dispatcher.build_url("admin/freifunk/assistent/changePassword"))
   else
