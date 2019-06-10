@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016 Freifunk Berlin
+# Copyright (C) 2019 Freifunk Berlin
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,10 +8,11 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=collectd-addons
-PKG_VERSION:=0.0.3
+PKG_VERSION:=0.0.4
 PKG_RELEASE:=1
 
 UBIQUITI_MIBS_REL=ubnt-mibs_20171003.zip
+MIKROTIK_MIBS_REL=mikrotik-mibs_20190410.mib
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -51,10 +52,18 @@ define Download/ubnt_mibs
 	FILE:=$(UBIQUITI_MIBS_REL)
 endef
 
+define Download/mikrotik_mibs
+	URL:=https://box.mikrotik.com/f/0d2bf2e84c434e7a9754/?dl=1
+	MD5SUM:=4dc9b44f9c1c90b813e77c602867afef
+	FILE:=$(MIKROTIK_MIBS_REL)
+endef
+
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	mkdir -p $(PKG_BUILD_DIR)/ubnt-mibs
 	unzip -j $(DL_DIR)/$(UBIQUITI_MIBS_REL) -d $(PKG_BUILD_DIR)/ubnt-mibs
+	mkdir -p $(PKG_BUILD_DIR)/mikrotik-mibs
+	cp $(DL_DIR)/$(MIKROTIK_MIBS_REL) $(PKG_BUILD_DIR)/mikrotik-mibs
 endef
 
 define Build/Configure
@@ -66,9 +75,11 @@ endef
 define Package/collectd-snmp-templates/install
 	$(INSTALL_DIR) $(1)/usr/share/snmp/mibs
 	$(CP) $(PKG_BUILD_DIR)/ubnt-mibs/* $(1)/usr/share/snmp/mibs
+	$(CP) $(PKG_BUILD_DIR)/mikrotik-mibs/* $(1)/usr/share/snmp/mibs
 	$(INSTALL_DIR) $(1)/etc/collectd/conf.d
+	$(CP) ./files/collectd-snmp/conf.d/* $(1)/etc/collectd/conf.d
 	$(INSTALL_DIR) $(1)/etc/collectd/conf.d-templates
-	$(CP) ./files/collectd-snmp/* $(1)/etc/collectd/conf.d-templates
+	$(CP) ./files/collectd-snmp/templates/* $(1)/etc/collectd/conf.d-templates
 	$(INSTALL_DIR) $(1)/lib/upgrade/keep.d
 	echo  >$(1)/lib/upgrade/keep.d/collectd-snmp "# by $(PKG_NAME)"
 	echo >>$(1)/lib/upgrade/keep.d/collectd-snmp "/etc/collectd/conf.d"
@@ -87,5 +98,6 @@ $${IPKG_INSTROOT}/tmp/collectd-dnsmasq-addon_postinst.sh
 endef
 
 $(eval $(call Download,ubnt_mibs))
+$(eval $(call Download,mikrotik_mibs))
 $(eval $(call BuildPackage,collectd-snmp-templates))
 $(eval $(call BuildPackage,collectd-dnsmasq-addon))
