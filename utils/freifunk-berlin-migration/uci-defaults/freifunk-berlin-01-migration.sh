@@ -432,6 +432,8 @@ r1_1_0_olsrd_dygw_ping() {
     if[ -z "${lib##olsrd_dyn_gw.so*}" ]; then
       uci del_list olsrd.$config.Ping=213.73.91.35   # dnscache.ccc.berlin.de
       uci add_list olsrd.$config.Ping=80.67.169.40   # www.fdn.fr/actions/dns
+      uci del_list olsrd.$config.Ping=85.214.20.141  # old digitalcourage
+      uci add_list olsrd.$config.Ping=46.182.19.48   # new digitalcourage
       return 1
     fi
   }
