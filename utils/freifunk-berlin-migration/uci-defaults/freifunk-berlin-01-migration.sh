@@ -400,7 +400,7 @@ r1_1_0_change_olsrd_lib_num() {
 }
 
 r1_1_0_notunnel_ffuplink() {
-  if [ "$(uci -q get ffberlin-uplink.preset.current)" = "no-tunnel" ]; then
+  if [ "$(uci -q get ffberlin-uplink.preset.current)" == "no-tunnel" ]; then
     log "update the ffuplink_dev to have a static macaddr if not already set"
     local macaddr=$(uci -q get network.ffuplink_dev.macaddr)
     if [ $? -eq 1 ]; then
@@ -417,7 +417,7 @@ r1_1_0_notunnel_ffuplink() {
 }
 
 r1_1_0_notunnel_ffuplink_ipXtable() {
-  if [ "$(uci -q get ffberlin-uplink.preset.current)" = "no-tunnel" ]; then
+  if [ "$(uci -q get ffberlin-uplink.preset.current)" == "no-tunnel" ]; then
     log "update the ffuplink no-tunnel settings to use options ip4table and ip6table"
     uci set network.ffuplink.ip4table="ffuplink"
     uci set network.ffuplink.ip6table="ffuplink"
@@ -429,7 +429,8 @@ r1_1_0_olsrd_dygw_ping() {
     local config=$1
     local lib=''
     config_get lib $config library
-    if[ -z "${lib##olsrd_dyn_gw.so*}" ]; then
+    local libname=${lib%%.*}
+    if [ $lib == "olsrd_dyn_gw" ]; then
       uci del_list olsrd.$config.Ping=213.73.91.35   # dnscache.ccc.berlin.de
       uci add_list olsrd.$config.Ping=80.67.169.40   # www.fdn.fr/actions/dns
       return 1
@@ -473,8 +474,11 @@ r1_1_0_update_dns_entry() {
 
 r1_1_0_update_uplink_notunnel_name() {
   log "update name of uplink-preset notunnel"
-  [[ $(uci -q get ffberlin-uplink.preset.current) = "no-tunnel" ]] && uci set ffberlin-uplink.preset.current=notunnel
-  [[ $(uci -q get ffberlin-uplink.preset.previous) = "no-tunnel" ]] && uci set ffberlin-uplink.preset.previous=notunnel
+  local result=$(uci -q get ffberlin-uplink.preset.current)
+  [[ $? -eq 0 ]] && [[ $result == "no-tunnel" ]] && uci set ffberlin-uplink.preset.current=notunnel
+  result=$(uci -q get ffberlin-uplink.preset.previous)
+  [[ $? -eq 0 ]] && [[ $result == "no-tunnel" ]] && uci set ffberlin-uplink.preset.previous=notunnel
+  log "update name of uplink-preset notunnel done"
 }
 
 r1_1_0_firewall_remove_advanced() {
@@ -552,7 +556,7 @@ migrate () {
     r1_1_0_update_dns_entry
     r1_1_0_update_uplink_notunnel_name
     r1_1_0_remove_olsrd_garbage_collection
-    r1_1_0_remove_advanced_firewall
+    r1_1_0_firewall_remove_advanced
   fi
 
   # overwrite version with the new version
