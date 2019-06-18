@@ -2,7 +2,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-uplink-notunnel-files
-PKG_VERSION:=0.2.0
+PKG_VERSION:=0.3.0
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
@@ -14,7 +14,7 @@ define Package/$(PKG_NAME)
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin no tunnel files
   URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+=+freifunk-berlin-lib-guard +kmod-veth +freifunk-berlin-network-defaults
+  DEPENDS+=+freifunk-berlin-lib-guard +kmod-veth +freifunk-berlin-network-defaults +pingcheck
   PROVIDES:=freifunk-berlin-uplink
   PKGARCH:=all
 endef
@@ -38,6 +38,10 @@ endef
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
+	$(INSTALL_DIR) $(1)/etc/pingcheck/online.d
+	$(CP) ./files/etc/pingcheck/online.d/* $(1)/etc/pingcheck/online.d
+	$(INSTALL_DIR) $(1)/etc/pingcheck/offline.d
+	$(CP) ./files/etc/pingcheck/offline.d/* $(1)/etc/pingcheck/offline.d
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
