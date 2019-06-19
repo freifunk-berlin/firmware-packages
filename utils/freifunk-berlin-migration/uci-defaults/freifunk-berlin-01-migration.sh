@@ -512,6 +512,52 @@ r1_1_0_firewall_remove_advanced() {
   config_foreach firewall_remove_advanced advanced
 }
 
+r1_1_0_convert_to_80211s() {
+  handle_wireless_80211s() {
+    local config=$1
+    local mode=''
+    local network=''
+    local device=''
+    local ifname=''
+    config_get mode $config mode
+    case $mode in
+      adhoc)
+        echo $config
+        echo $mode
+        config_get network $config network
+        config_get device $config device
+        config_get ifname $config ifname
+
+        GLOBAL=$(uci show freifunk.wifi_iface_80211s)
+        COMMUNITY=$(uci show profile_$(uci get freifunk.community.name).wifi_iface_80211s) 
+        uci delete wireless.$config
+        uci add wireless wifi-iface
+        uci set wireless.@wifi-iface[-1].network=${network}
+        uci set wireless.@wifi-iface[-1].device=${device}
+        uci set wireless.@wifi-iface[-1].ifname=$(echo $ifname | sed s/adhoc/mesh/g)
+        OLDIFS=$IFS
+        IFS=$'\n'
+        for i in $GLOBAL $COMMUNITY ; do
+          key=$(echo $i | cut -d = -f 1)
+          key=$(echo $key | cut -d . -f 3)
+          val=$(echo $i | cut -d = -f 2)
+          val=$(echo $val | sed s/\'//g)
+          if [ $val != "defaults" ] ; then
+            uci set wireless.@wifi-iface[-1].$key=${val}
+          fi
+        done
+        IFS=$OLDIFS
+        ;;
+      *) ;;
+    esac
+  }
+
+  log "Converting wireless mesh devices to 802.11s"
+  reset_cb
+  config_load wireless
+  config_foreach handle_wireless_80211s wifi-iface
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -583,6 +629,7 @@ migrate () {
     r1_1_0_update_uplink_notunnel_name
     r1_1_0_remove_olsrd_garbage_collection
     r1_1_0_firewall_remove_advanced
+    r1_1_0_convert_to_80211s
   fi
 
   # overwrite version with the new version
