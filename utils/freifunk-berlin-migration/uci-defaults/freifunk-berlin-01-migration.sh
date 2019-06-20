@@ -547,6 +547,9 @@ r1_1_0_convert_to_80211s() {
           fi
         done
         IFS=$OLDIFS
+
+	# set the ffwizard config settings
+	uci set ffwizard.settings.meshmode_${device}="mesh"
         ;;
       *) ;;
     esac
