@@ -550,6 +550,14 @@ r1_1_0_convert_to_80211s() {
         ;;
       *) ;;
     esac
+
+    # now change statistics
+    local buffer=''
+    for key in "interface" "iwinfo"; do
+      buffer=$(uci get luci_statistics.collectd_${key}.Interfaces)
+      buffer=$(echo $buffer | sed s/adhoc/mesh/g)
+      uci set luci_statistics.collectd_${key}.Interfaces="$buffer"
+    done
   }
 
   log "Converting wireless mesh devices to 802.11s"
