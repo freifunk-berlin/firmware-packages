@@ -1,8 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-dhcp-defaults
-PKG_VERSION:=0.0.4
-PKG_RELEASE:=1
+PKG_VERSION:=0.0.5
+PKG_RELEASE:=SAm0815.1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -34,7 +34,6 @@ endef
 define Package/freifunk-berlin-dhcp-defaults/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
-	$(CP) ./files/* $(1)/
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-dhcp-defaults))

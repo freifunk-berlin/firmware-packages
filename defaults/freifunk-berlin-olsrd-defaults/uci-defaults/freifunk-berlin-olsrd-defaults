@@ -24,6 +24,8 @@ uci set olsrd.$PLUGIN.suffix=.olsr
 uci set olsrd.$PLUGIN.hosts_file=/tmp/hosts/olsr
 uci set olsrd.$PLUGIN.latlon_file=/var/run/latlon.js
 uci set olsrd.$PLUGIN.services_file=/var/etc/services.olsr
+uci set olsrd.$PLUGIN.sighup_pid_file=/var/run/dnsmasq/dnsmasq.cfg01411c.pid
+uci set olsrd.$PLUGIN.filewrite_interval=60
 
 # add jsoninfo plugin
 PLUGIN="$(uci add olsrd LoadPlugin)"
@@ -99,6 +101,8 @@ uci set olsrd6.$PLUGIN.suffix=.olsr
 uci set olsrd6.$PLUGIN.hosts_file=/tmp/hosts/olsr.ipv6
 uci set olsrd6.$PLUGIN.latlon_file=/var/run/latlon.js.ipv6
 uci set olsrd6.$PLUGIN.services_file=/var/etc/services.olsr.ipv6
+uci set olsrd6.$PLUGIN.sighup_pid_file=/var/run/dnsmasq/dnsmasq.cfg01411c.pid
+uci set olsrd6.$PLUGIN.filewrite_interval=60
 
 # add jsoninfo plugin
 PLUGIN="$(uci add olsrd6 LoadPlugin)"
