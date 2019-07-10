@@ -1,7 +1,3 @@
-<%
-  luci.sys.reboot()
-%>
-
 <%+header%>
 
 <link href="/freifunk/assistent/assistent.css" rel="stylesheet" />
@@ -24,7 +20,14 @@
       sobald dein Router neugestartet hat.
     </p>
   </div>
+<%
+  local uci = require "uci".cursor()
+  if uci:get("system", "ffberlin", "devmode") == "1" then
+    print("<p>Das System ist im Entwickler-Modus und der automatische Neustart wird nicht ausgeführt.</p>")
+  else
+    luci.sys.reboot()
+  end
+%>
 </div>
 
 <%+footer%>
-

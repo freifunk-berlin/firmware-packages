@@ -95,16 +95,18 @@ function commit()
 
   tools.configureQOS()
 
-  uci:commit("dhcp")
-  uci:commit("olsrd")
-  uci:commit("olsrd6")
-  uci:commit("firewall")
-  uci:commit("system")
-  uci:commit("ffwizard")
-  uci:commit("freifunk")
-  uci:commit("wireless")
-  uci:commit("network")
-  uci:commit("qos")
+  if not uci:get("system", "ffberlin", "devmode") == "1" then
+    uci:commit("dhcp")
+    uci:commit("olsrd")
+    uci:commit("olsrd6")
+    uci:commit("firewall")
+    uci:commit("system")
+    uci:commit("ffwizard")
+    uci:commit("freifunk")
+    uci:commit("wireless")
+    uci:commit("network")
+    uci:commit("qos")
+  end
 
   sys.init.enable("olsrd")
   sys.init.enable("olsrd6")

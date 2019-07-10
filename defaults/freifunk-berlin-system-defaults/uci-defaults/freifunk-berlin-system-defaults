@@ -8,4 +8,7 @@ if [ $(uci get system.@system[0].hostname) = OpenWrt ]; then
   uci set system.@system[0].hostname=gib-mir-einen-namen
 fi
 
+uci set system.ffberlin=settings
+uci set system.ffberlin.devmode=1
+
 uci commit system
