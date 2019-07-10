@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# always set correct masquerading, regardless of guard
+uci set firewall.zone_ffuplink.masq=1
+uci commit firewall
+
+uci set ffberlin-uplink.uplink.auth=userpass
+uci commit ffberlin-uplink.uplink
+
+if [[ $(uci get ffberlin-uplink.preset.current) != '"ipredator_openvpn"' ]]; then
+  uci rename ffberlin-uplink.preset.current=previous
+  uci set ffberlin-uplink.preset.current="ipredator_openvpn"
+fi
+uci commit ffberlin-uplink
+
+. /lib/functions/guard.sh
+guard "ipredator_openvpn"
+
+uci set openvpn.ffuplink=openvpn
+uci set openvpn.ffuplink.enabled=0
+uci set openvpn.ffuplink.client=1
+uci set openvpn.ffuplink.dev=ffuplink
+uci set openvpn.ffuplink.proto=udp
+uci set openvpn.ffuplink.dev_type=tun
+uci set openvpn.ffuplink.persist_key=1
+uci set openvpn.ffuplink.keepalive="10 60"
+uci set openvpn.ffuplink.comp_lzo="yes"
+uci set openvpn.ffuplink.cipher="AES-256-CBC"
+uci set openvpn.ffuplink.mssfix=1300
+uci add_list openvpn.ffuplink.remote="pw.openvpn.ipredator.se 1194"
+uci set openvpn.ffuplink.ca="/etc/openvpn/IPredator.se.ca.crt"
+uci set openvpn.ffuplink.remote_cert_tls=server
+uci set openvpn.ffuplink.tls_version_min="1.2"
+uci set openvpn.ffuplink.tls_client=1
+uci set openvpn.ffuplink.status="/var/log/openvpn-status-ffuplink.log"
+uci set openvpn.ffuplink.up="/lib/freifunk/ffvpn-up.sh"
+uci set openvpn.ffuplink.script_security=2
+uci set openvpn.ffuplink.route_nopull=1
+uci commit openvpn
