@@ -41,6 +41,7 @@ uci set network.ffuplink_dev.macaddr=$macaddr
 uci commit network.ffuplink_dev
 
 uci set network.ffuplink.proto=dhcp
+uci set network.ffuplink.disabled=0
 uci commit network.ffuplink
 
 # tunneldigger setup

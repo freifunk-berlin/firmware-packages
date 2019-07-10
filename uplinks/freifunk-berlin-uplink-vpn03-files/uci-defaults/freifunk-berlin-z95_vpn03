@@ -39,3 +39,6 @@ uci set openvpn.ffuplink.ca="/etc/openvpn/freifunk-ca.crt"
 uci set openvpn.ffuplink.cert="/etc/openvpn/ffuplink.crt"
 uci set openvpn.ffuplink.key="/etc/openvpn/ffuplink.key"
 uci commit openvpn.ffuplink
+
+uci set network.ffuplink.disabled=0
+uci commit network.ffuplink
