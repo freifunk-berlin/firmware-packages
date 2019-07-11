@@ -53,7 +53,8 @@ define Download/ubnt_mibs
 endef
 
 define Download/mikrotik_mibs
-	URL:=https://box.mikrotik.com/f/0d2bf2e84c434e7a9754/?dl=1
+	URL:=https://box.mikrotik.com/f/0d2bf2e84c434e7a9754/
+	URL_FILE:=?dl=1
 	MD5SUM:=4dc9b44f9c1c90b813e77c602867afef
 	FILE:=$(MIKROTIK_MIBS_REL)
 endef
