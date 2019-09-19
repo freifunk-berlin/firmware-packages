@@ -1,0 +1,36 @@
+#nodefault 'web-wizard'
+nodefault 'freifunk-berlin-defaults'
+nodefault 'freifunk-berlin-ui'
+nodefault 'freifunk-berlin-utils'
+
+packages 'freifunk-berlin-defaults' \
+	freifunk-berlin-dhcp-defaults \
+	freifunk-berlin-freifunk-defaults \
+	freifunk-berlin-network-defaults \
+	freifunk-berlin-olsrd-defaults \
+	freifunk-berlin-statistics-defaults \
+	freifunk-berlin-system-defaults \
+	freifunk-berlin-uhttpd-defaults \
+	community-profiles
+
+packages 'freifunk-berlin-utils' \
+	mtr\
+	iperf \
+	tmux \
+	vnstat \
+	ethtool \
+	tcpdump
+
+packages 'freifunk-berlin-ui' \
+	uhttpd \
+	uhttpd-mod-ubus \
+	px5g-mbedtls
+
+packages 'freifunk-berlin-base' \
+	freifunk-berlin-defaults \
+	freifunk-berlin-utils
+
+packages 'freifunk-berlin-notunnel' \
+	freifunk-berlin-base \
+	freifunk-berlin-ui \
+	freifunk-berlin-uplink-notunnel-files
