@@ -14,7 +14,7 @@ packages 'freifunk-berlin-defaults' \
 	community-profiles
 
 packages 'freifunk-berlin-utils' \
-	mtr\
+	mtr \
 	iperf \
 	tmux \
 	vnstat \
