@@ -1,16 +1,21 @@
 #nodefault 'web-wizard'
 nodefault 'freifunk-berlin-defaults'
-nodefault 'freifunk-berlin-ui'
 nodefault 'freifunk-berlin-utils'
+nodefault 'freifunk-berlin-ui'
+nodefault 'freifunk-berlin-base'
+nodefault 'freifunk-berlin-notunnel'
+nodefault 'freifunk-berlin-mesh-olsr'
+nodefault 'freifunk-berlin-statistics-collectd'
+nodefault 'freifunk-berlin-mesh-bmx'
+nodefault 'freifunk-berlin-batman'
+nodefault 'freifunk-berlin-owm'
 
 packages 'freifunk-berlin-defaults' \
 	freifunk-berlin-dhcp-defaults \
 	freifunk-berlin-freifunk-defaults \
 	freifunk-berlin-network-defaults \
-	freifunk-berlin-olsrd-defaults \
 	freifunk-berlin-statistics-defaults \
 	freifunk-berlin-system-defaults \
-	freifunk-berlin-uhttpd-defaults \
 	community-profiles
 
 packages 'freifunk-berlin-utils' \
@@ -22,6 +27,7 @@ packages 'freifunk-berlin-utils' \
 	tcpdump
 
 packages 'freifunk-berlin-ui' \
+	freifunk-berlin-uhttpd-defaults \
 	uhttpd \
 	uhttpd-mod-ubus \
 	px5g-mbedtls
@@ -34,3 +40,45 @@ packages 'freifunk-berlin-notunnel' \
 	freifunk-berlin-base \
 	freifunk-berlin-ui \
 	freifunk-berlin-uplink-notunnel-files
+
+packages 'freifunk-berlin-mesh-olsr' \
+	freifunk-berlin-olsrd-defaults \
+	olsrd \
+	olsrd-mod-arprefresh \
+	olsrd-mod-dyn-gw \
+	olsrd-mod-jsoninfo \
+	olsrd-mod-txtinfo \
+	olsrd-mod-nameservice \
+	olsrd-mod-watchdog \
+	kmod-ipip
+
+packages 'freifunk-berlin-ui & freifunk-berlin-mesh-olsr' \
+	luci-app-olsr
+
+packages 'freifunk-berlin-statistics-collectd' \
+	luci-app-statistics \
+	collectd \
+	collectd-mod-interface \
+	collectd-mod-iwinfo \
+	collectd-mod-network \
+	collectd-mod-rrdtool \
+	collectd-mod-ping \
+	collectd-mod-uptime \
+	collectd-mod-memory
+
+packages 'freifunk-berlin-mesh-olsr & freifunk-berlin-statistics-collectd' \
+	collectd-mod-olsrd
+
+packages 'freifunk-berlin-mesh-bmx' \
+	luci-app-bmx7
+
+packages 'freifunk-berlin-batman' \
+	kmod-batman-adv \
+	alfred \
+	batctl
+
+packages 'freifunk-berlin-owm' \
+	luci-app-owm \
+	luci-app-owm-ant \
+	luci-app-owm-cmd \
+	luci-app-owm-gui
