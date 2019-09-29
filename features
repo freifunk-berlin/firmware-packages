@@ -82,3 +82,6 @@ packages 'freifunk-berlin-owm' \
 	luci-app-owm-ant \
 	luci-app-owm-cmd \
 	luci-app-owm-gui
+
+packages 'opkg & freifunk-berlin-ui' \
+	luci-app-opkg
