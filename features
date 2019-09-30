@@ -9,6 +9,7 @@ nodefault 'freifunk-berlin-statistics-collectd'
 nodefault 'freifunk-berlin-mesh-bmx'
 nodefault 'freifunk-berlin-batman'
 nodefault 'freifunk-berlin-owm'
+nodefault 'freifunk-berlin-image-wizard-notunnel'
 
 packages 'freifunk-berlin-defaults' \
 	freifunk-berlin-dhcp-defaults \
@@ -83,5 +84,10 @@ packages 'freifunk-berlin-owm' \
 	luci-app-owm-cmd \
 	luci-app-owm-gui
 
-packages 'opkg & freifunk-berlin-ui' \
-	luci-app-opkg
+nodefault 'freifunk-berlin-image-wizard-notunnel' \
+	freifunk-berlin-mesh-olsr \
+	freifunk-berlin-notunnel \
+	luci-app-opkg \
+	freifunk-berlin-owm \
+	freifunk-berlin-statistics-collectd \
+	freifunk-berlin-batman
