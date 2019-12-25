@@ -27,12 +27,7 @@ uci set ffberlin-uplink.uplink.auth=none
 
 macaddr=$(uci -q get ffberlin-uplink.uplink.macaddr)
 if [[ -z $macaddr ]]; then
-  # Create a static macaddr starting with "fe" for ffuplink devices
-  # See the website https://www.itwissen.info/MAC-Adresse-MAC-address.html
-  macaddr="fe"
-  for byte in 2 3 4 5 6; do
-    macaddr=$macaddr`dd if=/dev/urandom bs=1 count=1 2> /dev/null | hexdump -e '1/1 ":%02x"'`
-  done
+  macaddr=$(generate_random_mac_hex "fe")
   uci set ffberlin-uplink.uplink.macaddr=$macaddr
 fi
 
