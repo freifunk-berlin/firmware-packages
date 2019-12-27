@@ -19,14 +19,14 @@ define Package/freifunk-berlin-uplink-tunnelberlin-files/Default
   PKGARCH:=all
 endef
 
-define Package/freifunk-berlin-uplink-tunnelberlin-files
+define Package/freifunk-berlin-uplink-tunnelberlin-openvpn
 $(call Package/freifunk-berlin-uplink-tunnelberlin-files/Default)
   TITLE+= (OpenVPN)
   VARIANT:=openvpn
   DEPENDS+= +openvpn-crypto +freifunk-berlin-openvpn-files
 endef
 
-define Package/freifunk-berlin-uplink-tunnelberlin-tunneldigger-files
+define Package/freifunk-berlin-uplink-tunnelberlin-tunneldigger
 $(call Package/freifunk-berlin-uplink-tunnelberlin-files/Default)
   TITLE+= (Tunneldigger)
   VARIANT:=tunneldigger
@@ -38,7 +38,7 @@ define Package/freifunk-berlin-uplink-tunnelberlin-files/description
   upstream traffic to these community-internet-gateways
 endef
 
-define Package/freifunk-berlin-uplink-tunnelberlin-tunneldigger-files/description
+define Package/freifunk-berlin-uplink-tunnelberlin-tunneldigger/description
 $(call Package/freifunk-berlin-uplink-tunnelberlin-files/description)
   This variant uses the tunneldigger-protocol.
 endef
@@ -53,17 +53,17 @@ endef
 define Build/Compile
 endef
 
-define Package/freifunk-berlin-uplink-tunnelberlin-files/install
+define Package/freifunk-berlin-uplink-tunnelberlin-openvpn/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/freifunk-berlin-z95_tunnelberlin-openvpn $(1)/etc/uci-defaults
 	$(INSTALL_DIR) $(1)/etc/openvpn
 	$(CP) ./openvpn/tunnel-berlin-*.crt $(1)/etc/openvpn
 endef
 
-define Package/freifunk-berlin-uplink-tunnelberlin-tunneldigger-files/install
+define Package/freifunk-berlin-uplink-tunnelberlin-tunneldigger/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(CP) ./uci-defaults/freifunk-berlin-z95_tunnelberlin-tunneldigger $(1)/etc/uci-defaults
 endef
 
-$(eval $(call BuildPackage,freifunk-berlin-uplink-tunnelberlin-files))
-$(eval $(call BuildPackage,freifunk-berlin-uplink-tunnelberlin-tunneldigger-files))
+$(eval $(call BuildPackage,freifunk-berlin-uplink-tunnelberlin-openvpn))
+$(eval $(call BuildPackage,freifunk-berlin-uplink-tunnelberlin-tunneldigger))
