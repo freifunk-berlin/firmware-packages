@@ -43,7 +43,7 @@ fi
 
 # which board are we running on, what will we change?
 # board=$(ar71xx_board_name) #is not sufficient for all boards
-board=$(ubus -v call system board | jsonfilter -e '$.model')
+board=$(ubus call system board | jsonfilter -e '$.board_name')
 
 echo $board
 
@@ -112,17 +112,21 @@ case "$board" in
 #	ucidef_set_interface_wlan
 #	;;
 #
-'GL AR150')
+gl-ar150)
 	echo $board found
 	;;
-'TP-Link CPE210 v1.1')
+cpe210)
 	echo $board found
 #	should this be more sophisticated?
 	uci set network.@switch_vlan[0].ports='0t 4'
 	uci set network.@switch_vlan[1].ports='0t 5'
 	;;
-'Ubiquiti NanoStation M2' |\
-'Ubiquiti NanoStation loco M2')
+nanostation-m|\
+nanostation-m-xw)
+	echo $board found
+#	eth tauschen?
+	;;
+loco-m-xw)
 	echo $board found
 #	eth tauschen?
 	;;
