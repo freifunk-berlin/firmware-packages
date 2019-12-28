@@ -42,18 +42,23 @@ board=$(ubus call system board | jsonfilter -e '$.board_name')
 echo $board
 
 case "$board" in
-gl-ar150)
+gl-ar150|\
+glinet,gl-ar150)
 	echo $board found
 	;;
 cpe210|\
-cpe510)
+cpe510|\
+tplink,cpe210-v1|\
+tplink,cpe510-v1)
 	echo $board found
 #	should this be more sophisticated?
 	uci set network.@switch_vlan[0].ports='0t 4'
 	uci set network.@switch_vlan[1].ports='0t 5'
 	;;
 nanostation-m|\
-nanostation-m-xw)
+nanostation-m-xw|\
+ubnt,nanostation-m|\
+ubnt,nanostation-m-xw)
 	echo $board found
 #	eth tauschen?
 	;;
