@@ -41,9 +41,10 @@ else
 fi
 
 . /lib/functions/uci-defaults.sh 	# routines that set switch etc
+. /lib/functions.sh 
 
 # which board are we running on, what will we change?
-board=$(ubus call system board | jsonfilter -e '$.board_name')
+board=$(board_name)
 
 echo $board
 
