@@ -11,10 +11,9 @@ show_settings() {
   echo 'current settings'
   usersBandwidthDown=$(uci get ffwizard.settings.usersBandwidthDown)
   usersBandwidthUp=$(uci get ffwizard.settings.usersBandwidthUp)
-  echo " userdown $(( $usersBandwidthDown ))"
-  echo " userup   $(( $usersBandwidthUp ))"
-  echo " qosdown  $(uci get qos.ffuplink.download)"
-  echo " qosup    $(uci get qos.ffuplink.upload)"
+  echo " FFwizard          (up/down)  ${usersBandwidthUp}/${usersBandwidthDown}"
+  echo " QoS               (up/down)  $(uci get qos.ffuplink.upload)/$(uci get qos.ffuplink.download)"
+  echo " OLSR-SmartGateway (up/down)  $(uci get olsrd.@olsrd[0].SmartGatewaySpeed | tr " " "/")"
 }
 
 AUTOCOMMIT="no"
