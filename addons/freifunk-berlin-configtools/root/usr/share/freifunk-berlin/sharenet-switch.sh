@@ -23,15 +23,21 @@ shift $((OPTIND - 1))
 
 echo "usage $0 -c [commit]"
 
-# should this script run?
-if [ "$(uci get ffwizard.settings.sharenet 2> /dev/null)" == "0" ]; then
-    echo 'dont share my internet' && exit 0
+sharenet=$(uci -q get ffwizard.settings.sharenet)
+[ $? -ne 0 ] && {
+  echo 'sharenet value unknown'
+  exit 1
+}
+
+if [ "${sharenet}" = "0" ]; then
+    echo 'dont share my internet - set Freifunk-LAN to PoE-port'
+    POEPORT='dhcp'
+elif [ "${sharenet}" = "1" ]; then
+    echo 'share my internet - set WAN to PoE-port'
+    POEPORT='wan'
 else
-	if [ "$(uci get ffwizard.settings.sharenet 2> /dev/null)" == "1" ]; then
-    		echo 'share my internet'
-	else
-		echo 'sharenet value unknown' && exit 0
-	fi
+    echo 'sharenet has invalid value'
+    exit 2
 fi
 
 . /lib/functions/uci-defaults.sh 	# routines that set switch etc
