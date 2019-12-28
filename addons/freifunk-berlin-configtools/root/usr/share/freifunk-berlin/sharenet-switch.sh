@@ -66,6 +66,10 @@ loco-m-xw)
 	echo $board found
 #	eth tauschen?
 	;;
+rb-wapg-5hact2hnd)
+	echo $board found
+#	eth tauschen?
+	;;
 *)
 	echo "This board ($board) is not PoE powered"
 	;;
