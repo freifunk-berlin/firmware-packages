@@ -33,11 +33,7 @@ else
 		echo 'sharenet value unknown' && exit 0
 	fi
 fi
-# can we change a network file?
-[ -e /etc/config/network ] || echo 'file network not found' && exit 0
-#
-#touch /etc/config/network
-#
+
 . /lib/functions/uci-defaults.sh 	# routines that set switch etc
 . /lib/ar71xx.sh 			# detect board name
 
