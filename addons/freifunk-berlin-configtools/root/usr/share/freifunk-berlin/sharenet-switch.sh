@@ -35,10 +35,8 @@ else
 fi
 
 . /lib/functions/uci-defaults.sh 	# routines that set switch etc
-. /lib/ar71xx.sh 			# detect board name
 
 # which board are we running on, what will we change?
-# board=$(ar71xx_board_name) #is not sufficient for all boards
 board=$(ubus call system board | jsonfilter -e '$.board_name')
 
 echo $board
