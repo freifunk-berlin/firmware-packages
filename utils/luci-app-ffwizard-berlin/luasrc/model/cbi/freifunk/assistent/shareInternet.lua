@@ -65,6 +65,7 @@ function main.write(self, section, value)
   uci:set("ffwizard", "settings", "sharenet", 1)
   uci:set("ffwizard", "settings", "usersBandwidthUp", usersBandwidthUp:formvalue(section))
   uci:set("ffwizard", "settings", "usersBandwidthDown", usersBandwidthDown:formvalue(section))
+  uci:set("network", "ffuplink", "disabled", "0")
 
   uci:section("openvpn", "openvpn", "ffuplink", {
     --persist_tun='0',
@@ -82,6 +83,7 @@ function main.write(self, section, value)
 
   uci:save("openvpn")
   uci:save("ffwizard")
+  uci:save("network","ffuplink")
 
   -- I need to commit this here, don't know why I can not do this in apply changes
   uci:commit("openvpn")
