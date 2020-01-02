@@ -5,6 +5,8 @@ guard "dhcp"
 
 # quieten down dnsmasq a bit (do not log lease-mgmt)
 uci set dhcp.@dnsmasq[0].quietdhcp=1
+# enable DHCP-rapidcommit (RFC4039)
+uci set dhcp.@dnsmasq[0].rapidcommit=1
 
 # on IPv6-islands we also should give a default-route to the clients,
 # so they can also reach IPv6-neighbours. 
