@@ -193,10 +193,10 @@ function main.write(self, section, value)
       local node_ip = wifi_tbl[device]["meship"]:formvalue(section)
       node_ip = ip.IPv4(node_ip)
       local prenetconfig = {}
-      prenetconfig.proto = "static"
       prenetconfig.ipaddr = node_ip:host():string()
       prenetconfig.netmask = uci:get(community,'interface','netmask')
       prenetconfig.ip6assign = 64
+      prenetconfig.proto = "static"
       uci:section("network", "interface", calcnif(device), prenetconfig)
 
       --WIRELESS CONFIG ap
@@ -240,11 +240,11 @@ function main.write(self, section, value)
   if (dhcpmeshnet:prefix() < 32) then
     --NETWORK CONFIG bridge for wifi APs
     local prenetconfig =  {}
-    prenetconfig.type="bridge"
-    prenetconfig.proto="static"
     prenetconfig.ipaddr=dhcpmeshnet:minhost():string()
     prenetconfig.netmask=dhcpmeshnet:mask():string()
     prenetconfig.ip6assign="64"
+    prenetconfig.type="bridge"
+    prenetconfig.proto="static"
     -- use ifname from dhcp bridge on a consecutive run of assistent
     prenetconfig.ifname=uci:get("network", "lan", "ifname") or uci:get("network", "dhcp", "ifname")
 
