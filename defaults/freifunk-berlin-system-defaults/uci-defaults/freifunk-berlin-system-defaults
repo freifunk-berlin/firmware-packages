@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#. /lib/functions/guard.sh
+. /lib/functions/guard.sh
 
 # change default hostname
 if [ $(uci get system.@system[0].hostname) = OpenWrt ]; then
