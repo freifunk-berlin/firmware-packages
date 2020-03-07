@@ -77,7 +77,7 @@ packages 'freifunk-berlin-mesh-bmx' \
 packages 'freifunk-berlin-batman' \
 	kmod-batman-adv \
 	alfred \
-	batctl
+	batctl-default
 
 packages 'freifunk-berlin-owm' \
 	luci-app-owm \
