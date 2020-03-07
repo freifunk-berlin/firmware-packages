@@ -2,22 +2,21 @@
 nodefault 'freifunk-berlin-defaults'
 nodefault 'freifunk-berlin-utils'
 nodefault 'freifunk-berlin-ui'
-nodefault 'freifunk-berlin-base'
+nodefault 'freifunk-berlin-wizard'
 nodefault 'freifunk-berlin-notunnel'
 nodefault 'freifunk-berlin-mesh-olsr'
 nodefault 'freifunk-berlin-statistics-collectd'
 nodefault 'freifunk-berlin-mesh-bmx'
 nodefault 'freifunk-berlin-batman'
 nodefault 'freifunk-berlin-owm'
-nodefault 'freifunk-berlin-image-wizard-notunnel'
 
 packages 'freifunk-berlin-defaults' \
 	freifunk-berlin-dhcp-defaults \
+	freifunk-berlin-firewall-defaults \
 	freifunk-berlin-freifunk-defaults \
 	freifunk-berlin-network-defaults \
 	freifunk-berlin-statistics-defaults \
-	freifunk-berlin-system-defaults \
-	community-profiles
+	freifunk-berlin-system-defaults
 
 packages 'freifunk-berlin-utils' \
 	mtr \
@@ -31,16 +30,16 @@ packages 'freifunk-berlin-ui' \
 	freifunk-berlin-uhttpd-defaults \
 	uhttpd \
 	uhttpd-mod-ubus \
-	px5g-mbedtls
+	px5g-mbedtls \
+	luci-mod-admin-full \
+	luci-theme-bootstrap
 
-packages 'freifunk-berlin-base' \
-	freifunk-berlin-defaults \
-	freifunk-berlin-utils
+packages 'freifunk-berlin-wizard' \
+	luci-app-ffwizard-berlin \
+	freifunk-berlin-migration
 
-packages 'freifunk-berlin-notunnel' \
-	freifunk-berlin-base \
-	freifunk-berlin-ui \
-	freifunk-berlin-uplink-notunnel-files
+#packages 'uplink-notunnel' \
+#	freifunk-berlin-uplink-notunnel
 
 packages 'freifunk-berlin-mesh-olsr' \
 	freifunk-berlin-olsrd-defaults \
@@ -65,7 +64,8 @@ packages 'freifunk-berlin-statistics-collectd' \
 	collectd-mod-rrdtool \
 	collectd-mod-ping \
 	collectd-mod-uptime \
-	collectd-mod-memory
+	collectd-mod-memory \
+	freifunk-berlin-statistics-defaults
 
 packages 'freifunk-berlin-mesh-olsr & freifunk-berlin-statistics-collectd' \
 	collectd-mod-olsrd
@@ -84,10 +84,3 @@ packages 'freifunk-berlin-owm' \
 	luci-app-owm-cmd \
 	luci-app-owm-gui
 
-nodefault 'freifunk-berlin-image-wizard-notunnel' \
-	freifunk-berlin-mesh-olsr \
-	freifunk-berlin-notunnel \
-	luci-app-opkg \
-	freifunk-berlin-owm \
-	freifunk-berlin-statistics-collectd \
-	freifunk-berlin-batman
