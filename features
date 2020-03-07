@@ -54,7 +54,8 @@ packages 'freifunk-berlin-mesh-olsr' \
 	kmod-ipip
 
 packages 'freifunk-berlin-ui & freifunk-berlin-mesh-olsr' \
-	luci-app-olsr
+	luci-app-olsr \
+	luci-app-olsr-services
 
 packages 'freifunk-berlin-statistics-collectd' \
 	luci-app-statistics \
