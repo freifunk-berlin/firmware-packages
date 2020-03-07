@@ -27,6 +27,7 @@ packages 'freifunk-berlin-utils' \
 	tcpdump
 
 packages 'freifunk-berlin-ui' \
+	-luci-mod-failsafe \
 	freifunk-berlin-uhttpd-defaults \
 	uhttpd \
 	uhttpd-mod-ubus \
