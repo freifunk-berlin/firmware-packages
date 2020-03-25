@@ -92,6 +92,7 @@ case "$board" in
 gl-ar150|\
 glinet,gl-ar150)
 	echo $board found
+	swap_port_physical
 	;;
 cpe210|\
 cpe510|\
@@ -108,15 +109,18 @@ ubnt,nanostation-m|\
 ubnt,nanostation-m-xw)
 	echo $board found
 #	eth tauschen?
+	swap_port_physical
 	;;
 loco-m-xw|\
 ubnt,nanostation-loco-m)
 	echo $board found
 #	eth tauschen?
+	swap_port_interface
 	;;
 rb-wapg-5hact2hnd)
 	echo $board found
 #	eth tauschen?
+	swap_port_switch
 	;;
 *)
 	echo "This board ($board) is not PoE powered"
