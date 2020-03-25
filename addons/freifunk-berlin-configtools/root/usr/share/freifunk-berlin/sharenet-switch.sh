@@ -109,7 +109,8 @@ ubnt,nanostation-m-xw)
 	echo $board found
 #	eth tauschen?
 	;;
-loco-m-xw)
+loco-m-xw|\
+ubnt,nanostation-loco-m)
 	echo $board found
 #	eth tauschen?
 	;;
