@@ -74,7 +74,7 @@ uci set luci_statistics.collectd_uptime.enable=1
 
 # network - push data to monitor server
 NETWORK="$(uci add luci_statistics collectd_network_server)" 
-uci set luci_statistics.$NETWORK.host=77.87.48.12
+uci set luci_statistics.$NETWORK.host=monitor.berlin.freifunk.net
 uci set luci_statistics.collectd_network=statistics
 uci set luci_statistics.collectd_network.enable=1
 
