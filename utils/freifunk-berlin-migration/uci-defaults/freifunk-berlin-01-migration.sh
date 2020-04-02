@@ -491,6 +491,12 @@ r1_1_0_firewall_remove_advanced() {
   config_foreach firewall_remove_advanced advanced
 }
 
+all_monitor_server() {
+  local result=$(uci -q get luci_statistics.\@collectd_network_server\[0\].host)
+  if [ $? -eq 0 ] && [ $result == "77.87.48.12" ] && \
+    uci set luci_statistics.\@collectd_network_server\[0\].host=monitor.berlin.freifunk.net
+}
+
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
@@ -560,6 +566,9 @@ migrate () {
     r1_1_0_remove_olsrd_garbage_collection
     r1_1_0_firewall_remove_advanced
   fi
+
+  # updates for all versions of the firmware
+  all_monitor_server
 
   # overwrite version with the new version
   log "Setting new system version to ${VERSION}."
