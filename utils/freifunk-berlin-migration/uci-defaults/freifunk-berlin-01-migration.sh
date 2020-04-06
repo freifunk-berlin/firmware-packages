@@ -57,48 +57,6 @@ else
   exit 0
 fi
 
-update_openvpn_remote_config() {
-  # use dns instead of ips for vpn servers (introduced with 0.1.0)
-  log "Setting openvpn.ffvpn.remote to vpn03.berlin.freifunk.net"
-  uci delete openvpn.ffvpn.remote
-  uci add_list openvpn.ffvpn.remote='vpn03.berlin.freifunk.net 1194 udp'
-  uci add_list openvpn.ffvpn.remote='vpn03-backup.berlin.freifunk.net 1194 udp'
-}
-
-update_dhcp_lease_config() {
-  # set lease time to 5 minutes (introduced with 0.1.0)
-  local current_leasetime=$(uci get dhcp.dhcp.leasetime)
-  if [ "x${current_leasetime}" = "x" ]; then
-    log "Setting dhcp lease time to 5m"
-    uci set dhcp.dhcp.leasetime='5m'
-  fi
-}
-
-update_wireless_ht20_config() {
-  # set htmode to ht20 (introduced with 0.1.0)
-  log "Setting htmode to HT20 for radio0"
-  uci set wireless.radio0.htmode='HT20'
-  local radio1_present=$(uci get wireless.radio1.htmode)
-  # set htmode if radio1 is present
-  if [ "x${radio1_present}" != x ]; then
-    log "Setting htmode to HT20 for radio1."
-    uci set wireless.radio1.htmode='HT20'
-  fi
-}
-
-update_luci_statistics_config() {
-  # if users disabled stats with the wizard some settings need be corrected
-  # so they can enable stats later
-  log "remove luci_statistics.rrdtool.enable"
-  log "remove luci_statistics.collectd.enable"
-  uci delete luci_statistics.rrdtool.enable
-  uci delete luci_statistics.collectd.enable
-
-  # enable luci_statistics service
-  log "enable luci_statistics service"
-  /etc/init.d/luci_statistics enable
-}
-
 update_collectd_memory_leak_hotfix() {
   # Remove old hotfixes for collectd RAM issues on 32MB routers
   # see https://github.com/freifunk-berlin/firmware/issues/217
@@ -111,15 +69,6 @@ update_collectd_memory_leak_hotfix() {
   if [ "$(cat /proc/meminfo |grep MemTotal:|awk {'print $2'})" -lt "65536" ]; then
     uci set luci_statistics.collectd_ping.enable=0
     uci set luci_statistics.collectd_rrdtool.enable=0
-  fi
-}
-
-update_olsr_smart_gateway_threshold() {
-  # set SmartGatewayThreshold if not set
-  local threshold=$(uci get olsrd.@olsrd[0].SmartGatewayThreshold)
-  if [ "x${threshold}" = x ]; then
-    log "Setting SmartGatewayThreshold to 50."
-    uci set olsrd.@olsrd[0].SmartGatewayThreshold='50'
   fi
 }
 
@@ -224,11 +173,6 @@ update_berlin_owm_api() {
 fix_olsrd6_watchdog_file() {
   log "fix olsrd6 watchdog file"
   uci set $(uci show olsrd6|grep "/var/run/olsrd.watchdog"|cut -d '=' -f 1)=/var/run/olsrd6.watchdog
-}
-
-quieten_dnsmasq() {
-  log "quieten dnsmasq"
-  uci set dhcp.@dnsmasq[0].quietdhcp=1
 }
 
 vpn03_udp4() {
@@ -494,72 +438,16 @@ r1_1_0_firewall_remove_advanced() {
 migrate () {
   log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
-  if semverLT ${OLD_VERSION} "0.1.0"; then
-    update_openvpn_remote_config
-    update_dhcp_lease_config
-    update_wireless_ht20_config
-    update_luci_statistics_config
-    update_olsr_smart_gateway_threshold
-  fi
-
-  if semverLT ${OLD_VERSION} "0.1.1"; then
-    update_collectd_memory_leak_hotfix
-    fix_olsrd_txtinfo_port
-  fi
-
-  if semverLT ${OLD_VERSION} "0.1.2"; then
-    add_openvpn_mssfix
-  fi
-
-  if semverLT ${OLD_VERSION} "0.2.0"; then
-    update_berlin_owm_api
-    update_collectd_ping
-    fix_qos_interface
-    remove_dhcp_interface_lan
-    openvpn_ffvpn_hotplug
-    sgw_rules_to_fw3
-    change_olsrd_dygw_ping
-    fix_dhcp_start_limit
-    delete_system_latlon
-    fix_olsrd6_watchdog_file
-  fi
-
-  if semverLT ${OLD_VERSION} "0.3.0"; then
-    quieten_dnsmasq
-  fi
-
-  if semverLT ${OLD_VERSION} "1.0.0"; then
-    vpn03_udp4
-    set_ipversion_olsrd6
-    r1_0_0_vpn03_splitconfig
-    r1_0_0_no_wan_restart
-    r1_0_0_firewallzone_uplink
-    r1_0_0_change_to_ffuplink
-    r1_0_0_update_preliminary_glinet_names
-    r1_0_0_upstream
-    r1_0_0_set_uplinktype
-  fi
-
-  if semverLT ${OLD_VERSION} "1.0.1"; then
-    r1_0_1_set_uplinktype
-  fi
-
-  if semverLT ${OLD_VERSION} "1.0.2"; then
-    r1_1_0_notunnel_ffuplink_ipXtable
-    r1_1_0_notunnel_ffuplink
-    r1_0_2_update_dns_entry
-    r1_0_2_add_olsrd_garbage_collection
-    guard "ffberlin_uplink"
-  fi
-
-  if semverLT ${OLD_VERSION} "1.1.0"; then
-    r1_1_0_change_olsrd_lib_num
-    r1_1_0_olsrd_dygw_ping
-    r1_1_0_update_dns_entry
-    r1_1_0_update_uplink_notunnel_name
-    r1_1_0_remove_olsrd_garbage_collection
-    r1_1_0_firewall_remove_advanced
-  fi
+  # check for every migration task folder
+  for scriptdir in /usr/share/freifunk-berlin-migration/*; do
+    # only do mirgations for releases higher then the one we are come from
+    if semverLT ${OLD_VERSION} "${scriptdir}"; then
+      # run each script / task of the release-mirgation
+      for script in /usr/share/freifunk-berlin-migration/${scriptdir}; do
+        /bin/sh /usr/share/freifunk-berlin-migration/${scriptdir}/${script}
+      done
+    fi
+  done
 
   # overwrite version with the new version
   log "Setting new system version to ${VERSION}."

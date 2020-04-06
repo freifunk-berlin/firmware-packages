@@ -1,0 +1,5 @@
+#!/bin/sh
+
+log "quieten dnsmasq"
+uci set dhcp.@dnsmasq[0].quietdhcp=1
+
