@@ -14,6 +14,11 @@ TUNNEL_SERV='a.bbb-vpn.berlin.freifunk.net:8942 b.bbb-vpn.berlin.freifunk.net:89
 IFACE=bbbdigger
 BIND=wan
 
+#CONF for logging
+LOG_NAME='bbbdigger_install:'
+LOG_LEVEL=3
+
+
 # tunneldigger UUID (and MAC) generation, if there isn't one already
 # See the website https://www.itwissen.info/MAC-Adresse-MAC-address.html
 MAC=$(uci -q get network.${IFACE}_dev.macaddr)
@@ -62,7 +67,10 @@ uci set firewall.zone_freifunk.network="${ZONE}"
 # olsr setup (first remove it and add it again)
 SECTION=$(uci show olsrd | grep ${IFACE} | cut -d . -f 1-2)
 [ ! -z $SECTION ] && uci delete $SECTION
-uci add olsrd Interface
+RES=$(uci add olsrd Interface)
+if [ $? != 0 ]; then
+  logger -s -p $LOG_LEVEL $LOG_NAME 'creation of Interface $IFACE failed.'
+fi
 uci set olsrd.@Interface[-1].ignore=0
 uci set olsrd.@Interface[-1].interface=$IFACE
 uci set olsrd.@Interface[-1].Mode=ether
