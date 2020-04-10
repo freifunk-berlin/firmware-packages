@@ -6,6 +6,32 @@ require("luci.sys")
 require("nixio.fs")
 require("luci.httpclient")
 
+-- Print help text
+function print_help()
+	print("owm.lua - Tool for registering routers at openwifimap.net\n")
+	print("Options:\
+        -\-help|-h:\tprint this text\
+	\
+        -\-dry-run:\tcheck if owm.lua is working (does not paste any data).\
+	\t\tWith this option you can check for errors in your\
+	\t\tconfiguration and test the transmission of data to\
+	\t\tthe map.")
+	print("\nIf invoked without any options, this tool\
+will try to register your node at the community-map,\
+but will execute silently. To work correctly, this tool\
+will need at least the geo-location of the node (check\
+with -\-dry-run).\
+\
+To override the server used by this script, set freifunk.community.owm_api.\
+")
+end
+
+-- check for arguments
+if (#arg) > 0 and arg[1]~="--dry-run" then
+   print_help()
+   return
+end
+
 -- Init state session
 local uci = luci.model.uci.cursor_state()
 local owm = require "luci.owm"
