@@ -136,7 +136,7 @@ ubnt,nanostation-m|\
 ubnt,nanostation-m-xw)
 	echo $board found
 #	eth tauschen?
-	swap_port_physical
+	swap_port_physical eth0 eth1
 	;;
 loco-m-xw|\
 ubnt,nanostation-loco-m)
