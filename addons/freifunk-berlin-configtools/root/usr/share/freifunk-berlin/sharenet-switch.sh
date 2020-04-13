@@ -38,18 +38,8 @@ swap_port_switch() {
 swap_port_physical() {
   local port1=$1
   local port2=$2
-
-  is_interface_of() {
-    local result_ifname
-    local result_device
-    config_get result_ifname $1 ifname
-    config_get result_device $1 device # found on bridges (ifname is br-dhcp)
-    echo "checking interface $1"
-    echo " ifnames:$result_ifname"
-    echo " devices:$result_device"
-    list_contains "result_ifname" ${port1} && echo " found ${port1} on interface $1" 
-    list_contains "result_ifname" ${port2} && echo " found ${port2} on interface $1"
-  }
+  local port1_interfaces=""
+  local port2_interfaces=""
 
   interfaces_of_dev() {
     local device=$1
@@ -59,10 +49,9 @@ uci=require("uci")
 local ifaces = ""
 x=uci.cursor()
 x:foreach("network", "interface", function(s)
--- print(" testing interface:" .. tostring(s[".name"]))
--- print("  ifnames:" .. tostring(s["ifname"]))
+-- io.stderr:write(" testing interface:" .. tostring(s[".name"] .. "\n"))
  if (tostring(s["ifname"]) == "${device}") then
---  print("  matching  interface " .. tostring(s[".name"]))
+--  io.stderr:write("  fount ${device} on interface " .. tostring(s[".name"] .. "\n"))
   ifaces = ifaces .. " " .. s[".name"]
  end
 end)
@@ -70,16 +59,18 @@ print(ifaces)
 EOF
   }
 
-  local port1_interfaces=""
-  local port2_interfaces=""
   port1_interfaces=$(interfaces_of_dev ${port1})
   port2_interfaces=$(interfaces_of_dev ${port2})
 echo $port1 is interface of $port1_interfaces
 echo $port2 is interface of $port2_interfaces
-#  local interface
-#  config_load "network"
-#  config_foreach is_interface_of "interface"
-
+  for iface in ${port1_interfaces}; do
+    uciif=$(uci get network.${iface}.ifname)
+    uci set network.${iface}.ifname="$(echo $uciif | sed -e s/${port1}/${port2}/g)"
+  done
+  for iface in ${port2_interfaces}; do
+    uciif=$(uci get network.${iface}.ifname)
+    uci set network.${iface}.ifname="$(echo $uciif | sed -e s/${port2}/${port1}/g)"
+  done
 }
 
 # replaces the interface assigned to the pyhsical ports of the device
