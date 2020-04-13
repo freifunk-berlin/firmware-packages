@@ -50,7 +50,7 @@ local ifaces = ""
 x=uci.cursor()
 x:foreach("network", "interface", function(s)
 -- io.stderr:write(" testing interface:" .. tostring(s[".name"] .. "\n"))
- if (tostring(s["ifname"]) == "${device}") then
+ if string.find(s["ifname"], "${device}") then
 --  io.stderr:write("  fount ${device} on interface " .. tostring(s[".name"] .. "\n"))
   ifaces = ifaces .. " " .. s[".name"]
  end
