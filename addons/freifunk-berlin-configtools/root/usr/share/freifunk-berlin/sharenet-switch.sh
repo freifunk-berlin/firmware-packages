@@ -51,10 +51,35 @@ swap_port_physical() {
     list_contains "result_ifname" ${port2} && echo " found ${port2} on interface $1"
   }
 
+  interfaces_of_dev() {
+    local device=$1
+
+    lua <<EOF
+uci=require("uci")
+local ifaces = ""
+x=uci.cursor()
+x:foreach("network", "interface", function(s)
+-- print(" testing interface:" .. tostring(s[".name"]))
+-- print("  ifnames:" .. tostring(s["ifname"]))
+ if (tostring(s["ifname"]) == "${device}") then
+--  print("  matching  interface " .. tostring(s[".name"]))
+  ifaces = ifaces .. " " .. s[".name"]
+ end
+end)
+print(ifaces)
+EOF
+  }
+
   local port1_interfaces=""
-  local interface
-  config_load "network"
-  config_foreach is_interface_of "interface"
+  local port2_interfaces=""
+  port1_interfaces=$(interfaces_of_dev ${port1})
+  port2_interfaces=$(interfaces_of_dev ${port2})
+echo $port1 is interface of $port1_interfaces
+echo $port2 is interface of $port2_interfaces
+#  local interface
+#  config_load "network"
+#  config_foreach is_interface_of "interface"
+
 }
 
 # replaces the interface assigned to the pyhsical ports of the device

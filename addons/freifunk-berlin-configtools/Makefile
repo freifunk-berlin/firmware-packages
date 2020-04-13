@@ -20,6 +20,7 @@ define Package/freifunk-berlin-configtools
   TITLE:=Freifunk Berlin console configtools
   URL:=http://github.com/freifunk-berlin/packages_berlin
   PKGARCH:=all
+  DEPENDS:=+libuci-lua +lua
 endef
 
 define Package/freifunk-berlin-configtools/description
