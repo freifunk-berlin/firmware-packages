@@ -1,12 +1,22 @@
 #!/bin/sh
 
 . /lib/functions/guard.sh
+. /etc/openwrt_release
 
 # change default hostname
 if [ $(uci get system.@system[0].hostname) = OpenWrt ]; then
   uci set system.@system[0].hostname=gib-mir-einen-namen
   uci commit system
 fi
+
+# set system.was_development flag if running non-releasecode was detected
+SEMVER=$(echo ${DISTRIB_RELEASE%%-*} | \
+  grep -E "^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$")
+if [ -z ${SEMVER} ] && [ "$(uci -q get system.@system[0].was_development)" != "1" ]; then
+  uci set system.@system[0].was_development=1
+  uci commit system
+fi
+
 
 guard "system"
 
