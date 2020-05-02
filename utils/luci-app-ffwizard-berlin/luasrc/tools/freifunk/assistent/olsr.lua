@@ -1,7 +1,7 @@
 local util = require "luci.util"
 local uci = require "luci.model.uci".cursor()
 local ip = require "luci.ip"
-local tools = require "luci.tools.freifunk.assistent.tools"
+local tools = require "luci.tools.freifunk.freifunk-berlin"
 
 local sharenet = uci:get("ffwizard","settings","sharenet")
 local community = "profile_"..uci:get("freifunk", "community", "name")
