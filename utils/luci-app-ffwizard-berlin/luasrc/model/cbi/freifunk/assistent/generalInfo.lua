@@ -1,7 +1,7 @@
 local uci = require "luci.model.uci".cursor()
 local sys = require "luci.sys"
 local fs = require "nixio.fs"
-local tools = require "luci.tools.freifunk.assistent.tools"
+local tools = require "luci.tools.freifunk.freifunk-berlin"
 
 f = SimpleForm("ffwizward", "", "")
 f.submit = "Next"

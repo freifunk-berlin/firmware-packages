@@ -1,7 +1,8 @@
 local uci = require "luci.model.uci".cursor()
 local ip = require "luci.ip"
 local util = require "luci.util"
-local tools = require "luci.tools.freifunk.assistent.tools"
+local tools = require "luci.tools.freifunk.freifunk-berlin"
+local assistenttools = require "luci.tools.freifunk.assistent.tools"
 local ipkg = require "luci.model.ipkg"
 
 local olsr = require "luci.tools.freifunk.assistent.olsr"
@@ -151,7 +152,7 @@ function main.write(self, section, value)
       uci:section("olsrd6", "Interface", nil, olsrifbase6)
 
       --FIREWALL CONFIG device
-      tools.firewall_zone_add_interface("freifunk", calcnif(device))
+      assistenttools.firewall_zone_add_interface("freifunk", calcnif(device))
 
       --WIRELESS CONFIG device
       local hwmode = calchwmode(device)
@@ -185,8 +186,8 @@ function main.write(self, section, value)
       end
       uci:section("wireless", "wifi-iface", nil, ifconfig)
       if statistics_installed then
-        tools.statistics_interface_add("collectd_iwinfo", ifnameMesh)
-        tools.statistics_interface_add("collectd_interface", ifnameMesh)
+        assistenttools.statistics_interface_add("collectd_iwinfo", ifnameMesh)
+        assistenttools.statistics_interface_add("collectd_interface", ifnameMesh)
       end
 
       --NETWORK CONFIG mesh
@@ -211,7 +212,7 @@ function main.write(self, section, value)
           ssid=ssid:formvalue(section)
         })
         if statistics_installed then
-          tools.statistics_interface_add("collectd_iwinfo", ifnameAp)
+          assistenttools.statistics_interface_add("collectd_iwinfo", ifnameAp)
         end
       end
 
@@ -258,7 +259,7 @@ function main.write(self, section, value)
 
     -- add to statistics
     if statistics_installed then
-      tools.statistics_interface_add("collectd_interface", "br-dhcp")
+      assistenttools.statistics_interface_add("collectd_interface", "br-dhcp")
     end
 
     --NETWORK CONFIG remove lan bridge because ports a part of dhcp bridge now
@@ -364,7 +365,7 @@ function getchannel(device)
     --this is 5 Ghz
     r_channel = tonumber(uci:get(community, "wifi_device_5", "channel")) or 36
   end
-  tools.logger("channel for device "..device.." is "..tostring(r_channel))
+  assistenttools.logger("channel for device "..device.." is "..tostring(r_channel))
   return r_channel
 end
 
@@ -389,13 +390,13 @@ function calcifcfg(device)
 end
 
 function cleanup(device)
-  tools.wifi_delete_ifaces(device)
-  tools.wifi_delete_ifaces("wlan")
+  assistenttools.wifi_delete_ifaces(device)
+  assistenttools.wifi_delete_ifaces("wlan")
   uci:delete("network", device .. "dhcp")
   uci:delete("network", device)
   local nif = calcnif(device)
-  tools.firewall_zone_remove_interface("freifunk", device)
-  tools.firewall_zone_remove_interface("freifunk", nif)
+  assistenttools.firewall_zone_remove_interface("freifunk", device)
+  assistenttools.firewall_zone_remove_interface("freifunk", nif)
   uci:delete_all("luci_splash", "iface", {network=device.."dhcp", zone="freifunk"})
   uci:delete_all("luci_splash", "iface", {network=nif.."dhcp", zone="freifunk"})
   uci:delete("network", nif .. "dhcp")
