@@ -29,8 +29,24 @@ echo "usage $0 -c [commit]"
 # redefines the assignment of the VLANs of the switch ports
 # e.g. eth0.1: from switchport 4 to port 5 (TPLink CPE)
 swap_port_switch() {
-  echo "todo: implement swap_port_switch"
-  exit 200
+  local port1=$1
+  local port2=$2
+
+  is_interface_of() {
+    local result_ports
+    local result_vlan
+    config_get result_ports $1 ports
+    config_get result_vlan $1 vlan
+    echo "checking interface $1"
+    echo " vlan \"$result_vlan\" has ports \"$result_ports\""
+    list_contains "result_ports" ${port1} && echo " found ${port1} on switch_vlan $1"
+    list_contains "result_ports" ${port2} && echo " found ${port2} on switch_vlan $1"
+  }
+
+  local port1_interfaces=""
+  local interface
+  config_load "network"
+  config_foreach is_interface_of "switch_vlan"
 }
 
 # swaps the assignment of pyhsical ports of the device
