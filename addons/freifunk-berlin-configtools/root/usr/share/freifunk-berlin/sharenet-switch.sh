@@ -174,10 +174,8 @@ cpe210|\
 cpe510|\
 tplink,cpe210-v1|\
 tplink,cpe510-v1)
-	echo $board found
-#	should this be more sophisticated?
-	uci set network.@switch_vlan[0].ports='0t 4'
-	uci set network.@switch_vlan[1].ports='0t 5'
+	echo $board found; swapping switch ports
+	swap_port_switch 4 5
 	;;
 nanostation-m|\
 nanostation-m-xw|\
