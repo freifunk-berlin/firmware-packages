@@ -31,22 +31,55 @@ echo "usage $0 -c [commit]"
 swap_port_switch() {
   local port1=$1
   local port2=$2
+  local port_section=""
+  local port1_section
+  local port2_section
 
   is_interface_of() {
+    local port=$2
     local result_ports
     local result_vlan
+
     config_get result_ports $1 ports
     config_get result_vlan $1 vlan
     echo "checking interface $1"
     echo " vlan \"$result_vlan\" has ports \"$result_ports\""
-    list_contains "result_ports" ${port1} && echo " found ${port1} on switch_vlan $1"
-    list_contains "result_ports" ${port2} && echo " found ${port2} on switch_vlan $1"
+    _option_contains_ "${result_ports}" ${port} || { echo " -> not found"; port_section="$1 $port_section"; }
   }
 
-  local port1_interfaces=""
-  local interface
   config_load "network"
-  config_foreach is_interface_of "switch_vlan"
+  config_foreach is_interface_of "switch_vlan" $port1
+  port1_section=$port_section
+  port_section=""
+  config_foreach is_interface_of "switch_vlan" $port2
+  port2_section=$port_section
+  port_section=""
+
+  echo "---"
+  echo "found port $port1 in config-section \"$port1_section\""
+  echo "found port $port2 in config-section \"$port2_section\""
+  echo "---"
+
+  for section in $port1_section; do
+    local current_ports=$(uci get network.$section.ports)
+    local new_ports
+
+    echo "change section $section"
+    echo " current ports: $current_ports"
+    echo "  replacing $port1 with $port2"
+    new_ports=$(echo $current_ports | tr $port2 $port1)
+    uci set network.$section.ports="$new_ports"
+  done
+  for section in $port2_section; do
+    local current_ports=$(uci get network.$section.ports)
+    local new_ports
+                            
+    echo "change section $section"
+    echo " current ports: $current_ports"
+    echo "  replacing $port2 with $port3"
+    new_ports=$(echo $current_ports | tr $port1 $port2)
+    uci set network.$section.ports="$new_ports"
+  done                                                     
 }
 
 # swaps the assignment of pyhsical ports of the device
