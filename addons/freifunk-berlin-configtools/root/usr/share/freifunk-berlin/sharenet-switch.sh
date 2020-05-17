@@ -171,11 +171,14 @@ glinet,gl-ar150)
 	swap_port_physical
 	;;
 cpe210|\
-cpe510|\
+cpe510)
+	echo $board - found swapping switch ports
+	swap_port_switch 4 5
+	;;
 tplink,cpe210-v1|\
 tplink,cpe510-v1)
-	echo $board found; swapping switch ports
-	swap_port_switch 4 5
+	echo $board found - swapping LAN-ports
+	swap_port_physical eth0 eth1
 	;;
 nanostation-m|\
 nanostation-m-xw|\
