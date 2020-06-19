@@ -48,7 +48,9 @@ endef
 
 define Package/freifunk-berlin-bbbdigger/postinst
 #!/bin/sh
+[ -n "$$IPKG_INSTROOT" ] || {
 $${IPKG_INSTROOT}/tmp/freifunk-berlin-bbbdigger_postinst.sh
+}
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-bbbdigger))

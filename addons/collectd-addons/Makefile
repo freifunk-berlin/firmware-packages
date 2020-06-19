@@ -83,7 +83,9 @@ endef
 
 define Package/collectd-dnsmasq-addon/postinst
 #!/bin/sh
+[ -n "$$IPKG_INSTROOT" ] || {
 $${IPKG_INSTROOT}/tmp/collectd-dnsmasq-addon_postinst.sh
+}
 endef
 
 $(eval $(call Download,ubnt_mibs))
