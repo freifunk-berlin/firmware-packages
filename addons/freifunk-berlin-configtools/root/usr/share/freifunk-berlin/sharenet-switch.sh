@@ -76,7 +76,7 @@ swap_port_switch() {
                             
     echo "change section $section"
     echo " current ports: $current_ports"
-    echo "  replacing $port2 with $port3"
+    echo "  replacing $port2 with $port1"
     new_ports=$(echo $current_ports | tr $port1 $port2)
     uci set network.$section.ports="$new_ports"
   done                                                     
