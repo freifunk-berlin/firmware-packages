@@ -3,8 +3,10 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-openvpn-files
+PKG_SOURCE_DATE:=2019-05-25
+PKG_VERSION:=1
 
-include ../../freifunk-berlin-generic.mk
+include $(INCLUDE_DIR)/package.mk
 
 define Package/freifunk-berlin-openvpn-files
   SECTION:=freifunk-berlin

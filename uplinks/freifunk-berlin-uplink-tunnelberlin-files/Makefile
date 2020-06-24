@@ -2,8 +2,10 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-uplink-tunnelberlin-files
+PKG_SOURCE_DATE:=2019-12-28
+PKG_VERSION:=1
 
-include ../../freifunk-berlin-generic.mk
+include $(INCLUDE_DIR)/package.mk
 
 define Package/freifunk-berlin-uplink-tunnelberlin-files/Default
   SECTION:=freifunk-berlin

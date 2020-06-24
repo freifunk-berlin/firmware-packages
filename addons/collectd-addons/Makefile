@@ -8,7 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=collectd-addons
-PKG_VERSION:=0.0.3
+PKG_SOURCE_DATE:=2020-02-29
+PKG_VERSION:=1
 PKG_RELEASE:=1
 
 UBIQUITI_MIBS_REL=ubnt-mibs_20171003.zip

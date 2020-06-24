@@ -8,12 +8,10 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-owm
-PKG_RELEASE:=0.4.20
-
+PKG_SOURCE_DATE:=2019-04-12
+PKG_VERSION:=1
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
-
-
 
 include $(INCLUDE_DIR)/package.mk
 

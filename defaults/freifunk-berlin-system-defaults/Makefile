@@ -1,8 +1,10 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-system-defaults
+PKG_SOURCE_DATE:=2020-03-01
+PKG_VERSION:=1
 
-include ../../freifunk-berlin-generic.mk
+include $(INCLUDE_DIR)/package.mk
 
 define Package/freifunk-berlin-system-defaults
   SECTION:=freifunk-berlin

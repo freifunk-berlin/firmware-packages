@@ -12,6 +12,6 @@ LUCI_DEPENDS:=+luci-mod-admin-full +luci-lib-json +community-profiles +luci-lib-
 LUCI_PKGARCH:=all
 PKG_RELEASE:=3
 
-include ../../freifunk-berlin-generic.mk
+include ../../include-luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature

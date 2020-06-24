@@ -1,8 +1,9 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-migration
-PKG_VERSION:=0.6.2
-PKG_RELEASE:=2
+PKG_SOURCE_DATE:=2019-06-19
+PKG_VERSION:=1
+PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
