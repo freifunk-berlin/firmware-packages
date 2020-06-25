@@ -15,10 +15,10 @@ community.rmempty = false
 
 local profile
 for profile in fs.glob(profiles) do
-	local name = uci:get_first(profile, "community", "name") or "?"
-	community:value(string.gsub(profile, "/etc/config/profile_", ""), name)
+	local n = string.gsub(profile, "/etc/config/profile_", "")
+	local name = uci:get_first("profile_"..n, "community", "name") or "?"
+	community:value(n, name)
 end
-
 
 n = Map("system", translate("Basic system settings"))
 function n.on_after_commit(self)
