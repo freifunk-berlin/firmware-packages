@@ -8,9 +8,9 @@
 include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=Freifunk Public and Admin LuCI UI
-LUCI_DEPENDS:=+luci-mod-admin-full +luci-lib-json +community-profiles +luci-lib-ipkg
+LUCI_DEPENDS:=+luci-mod-admin-full +luci-lib-json +community-profiles +luci-lib-ipkg +luci-compat
 LUCI_PKGARCH:=all
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 
 include ../../freifunk-berlin-generic.mk
 
