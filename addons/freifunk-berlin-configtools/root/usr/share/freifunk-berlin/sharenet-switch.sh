@@ -34,7 +34,6 @@ _option_contains_() {
   local item
 
   for item in ${list}; do
-    echo "  _option_contains()_ : $item / $value / $list"
     [[ "${item}" = "${value}" ]] && return 0
   done
   return 1
