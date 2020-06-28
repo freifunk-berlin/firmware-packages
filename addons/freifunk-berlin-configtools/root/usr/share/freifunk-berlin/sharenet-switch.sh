@@ -26,6 +26,20 @@ shift $((OPTIND - 1))
 
 echo "usage $0 -c [commit]"
 
+# checks if a list (result of a uci query; space-separated string) contains a given value
+_option_contains_() {
+  local value=$2
+  local list=$1
+
+  local item
+
+  for item in ${list}; do
+    echo "  _option_contains()_ : $item / $value / $list"
+    [[ "${item}" = "${value}" ]] && return 0
+  done
+  return 1
+}
+
 # redefines the assignment of the VLANs of the switch ports
 # e.g. eth0.1: from switchport 4 to port 5 (TPLink CPE)
 swap_port_switch() {
