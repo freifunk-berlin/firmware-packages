@@ -3,6 +3,8 @@ name: Check PRs for conflict
 on:
   push:
     branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   triage:
