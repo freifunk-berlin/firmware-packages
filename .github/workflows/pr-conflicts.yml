@@ -3,6 +3,9 @@ name: Check PRs for conflict
 on:
   push:
     branches: [ master ]
+  pull_request:
+    types: [ opened, synchronize, ready_for_review, reopened]
+    branches: [ master ]
 
 jobs:
   triage:
