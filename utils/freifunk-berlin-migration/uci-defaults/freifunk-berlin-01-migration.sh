@@ -5,6 +5,11 @@ source /lib/functions/semver.sh
 source /etc/openwrt_release
 source /lib/functions/guard.sh
 
+if [ $( uci -q get system.@system[0].was_development) = "1" ]; then
+  echo "Non released code was ran on system. skipping migration ..."
+  exit 0
+fi
+
 # possible cases: 
 # 1) firstboot with kathleen --> uci system.version not defined
 # 2) upgrade from kathleen --> uci system.version defined
