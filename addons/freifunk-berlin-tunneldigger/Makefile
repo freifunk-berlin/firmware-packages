@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-tunneldigger
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=git://github.com/wlanslovenija/tunneldigger.git
@@ -14,7 +14,7 @@ include $(INCLUDE_DIR)/cmake.mk
 define Package/freifunk-berlin-tunneldigger
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+libnl-tiny +kmod-l2tp +kmod-l2tp-ip +kmod-l2tp-eth +librt +libpthread
+  DEPENDS:=+libnl-tiny +kmod-l2tp +kmod-l2tp-eth +librt +libpthread
   TITLE:=L2TPv3 tunnel broker client
   PROVIDES:=tunneldigger
 endef
