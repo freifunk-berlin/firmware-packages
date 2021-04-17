@@ -8,6 +8,4 @@ PKG_RELEASE:=5
 
 include ../../freifunk-berlin-generic.mk
 
-#  URL:=http://berlin.freifunk.net
-
 # call BuildPackage - OpenWrt buildroot signature

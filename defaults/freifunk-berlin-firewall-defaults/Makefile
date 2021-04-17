@@ -1,35 +1,9 @@
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=freifunk-berlin-firewall-defaults
+LUCI_TITLE:=Freifunk Berlin firewall default configuration
+LUCI_DEPENDS= +firewall +freifunk-berlin-lib-guard
+LUCI_DESCRIPTION:=Freifunk Berlin configuration files for firewall
 
 include ../../freifunk-berlin-generic.mk
 
-define Package/freifunk-berlin-firewall-defaults
-  SECTION:=freifunk-berlin
-  CATEGORY:=freifunk-berlin
-  TITLE:=Freifunk Berlin firewall default configuration
-  URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+= +firewall +freifunk-berlin-lib-guard
-  PKGARCH:=all
-endef
-
-define Package/freifunk-berlin-firewall-defaults/description
-  Freifunk Berlin configuration files for firewall
-endef
-
-define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)
-endef
-
-define Build/Configure
-endef
-
-define Build/Compile
-endef
-
-define Package/freifunk-berlin-firewall-defaults/install
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
-endef
-
-$(eval $(call BuildPackage,freifunk-berlin-firewall-defaults))
+# call BuildPackage - is done via freifunk-berlin-generic.mk --> luci.mk

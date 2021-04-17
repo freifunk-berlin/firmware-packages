@@ -8,6 +8,9 @@
 include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=Freifunk Public and Admin LuCI UI
+LUCI_SECTION:=luci
+LUCI_CATEGORY:=LuCI
+LUCI_SUBMENU_FORCED:=2. Modules
 LUCI_DEPENDS:=+luci-mod-admin-full +luci-lib-json +community-profiles +luci-lib-ipkg
 LUCI_PKGARCH:=all
 PKG_RELEASE:=3

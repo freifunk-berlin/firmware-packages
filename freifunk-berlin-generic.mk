@@ -15,6 +15,12 @@ else
 #$(info found luci.mk at $(LUCIMKFILE))
 endif
 
+LUCI_SECTION?=freifunk-berlin
+LUCI_CATEGORY?=freifunk-berlin
+LUCI_MAINTAINER?=Freifunk Berlin community
+LUCI_URL?=http://github.com/freifunk-berlin/packages_berlin
+LUCI_SUBMENU_FORCED?=none
+
 PKG_VERSION?=$(if $(DUMP),x,$(strip $(shell \
 	if svn info >/dev/null 2>/dev/null; then \
 		revision="svn-r$$(LC_ALL=C svn info | sed -ne 's/^Revision: //p')"; \
