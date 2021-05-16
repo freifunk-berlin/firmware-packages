@@ -1,0 +1,90 @@
+#!/bin sh
+
+r1_1_0_change_olsrd_lib_num() {
+  log "remove suffix from olsrd plugins"
+  change_olsrd_lib_num_handle_config() {
+    local config=$1
+    local v6=$2
+    local library=''
+    local librarywo=''
+    config_get library $config library
+    librarywo=$(echo ${library%%.*})
+    uci set olsrd$v6.$config.library=$librarywo
+    log " changed olsrd$v6 $librarywo"
+  }
+  reset_cb
+  config_load olsrd
+  config_foreach change_olsrd_lib_num_handle_config LoadPlugin
+  config_load olsrd6
+  config_foreach change_olsrd_lib_num_handle_config LoadPlugin 6
+
+}
+
+r1_1_0_olsrd_dygw_ping() {
+  olsrd_dygw_ping() {
+    local config=$1
+    local lib=''
+    config_get lib $config library
+    local libname=${lib%%.*}
+    if [ $lib == "olsrd_dyn_gw" ]; then
+      uci del_list olsrd.$config.Ping=213.73.91.35   # dnscache.ccc.berlin.de
+      uci add_list olsrd.$config.Ping=80.67.169.40   # www.fdn.fr/actions/dns
+      uci del_list olsrd.$config.Ping=85.214.20.141  # old digitalcourage
+      uci add_list olsrd.$config.Ping=46.182.19.48   # new digitalcourage
+      return 1
+    fi
+  }
+  reset_cb
+  config_load olsrd
+  config_foreach olsrd_dygw_ping LoadPlugin
+}
+
+r1_1_0_remove_olsrd_garbage_collection() {
+  log "removing garbage collection of core files from /tmp"
+  crontab -l | grep -v "rm -f /tmp/olsrd\*core" | crontab -
+  /etc/init.d/cron restart
+}
+
+r1_1_0_update_dns_entry() {
+  network_interface_delete_dns() {
+    local config=${1}
+    uci -q del network.${config}.dns
+  }
+  reset_cb
+  config_load network
+  config_foreach network_interface_delete_dns Interface
+  uci set network.loopback.dns="$(uci get "profile_$(uci get freifunk.community.name).interface.dns")"
+}
+
+r1_1_0_update_uplink_notunnel_name() {
+  log "update name of uplink-preset notunnel"
+  local result=$(uci -q get ffberlin-uplink.preset.current)
+  [[ $? -eq 0 ]] && [[ $result == "no-tunnel" ]] && uci set ffberlin-uplink.preset.current=notunnel
+  result=$(uci -q get ffberlin-uplink.preset.previous)
+  [[ $? -eq 0 ]] && [[ $result == "no-tunnel" ]] && uci set ffberlin-uplink.preset.previous=notunnel
+  log "update name of uplink-preset notunnel done"
+}
+
+r1_1_0_firewall_remove_advanced() {
+  firewall_remove_advanced() {
+    uci -q delete firewall.$1
+  }
+  config_load firewall
+  config_foreach firewall_remove_advanced advanced
+}
+
+
+migrate () {
+  log "Migrating from ${OLD_VERSION} to ${VERSION}."
+
+    r1_1_0_change_olsrd_lib_num
+    r1_1_0_olsrd_dygw_ping
+    r1_1_0_update_dns_entry
+    r1_1_0_update_uplink_notunnel_name
+    r1_1_0_remove_olsrd_garbage_collection
+    r1_1_0_firewall_remove_advanced
+
+  log "v1.1.0 - Migration done."
+}
+
+migrate
