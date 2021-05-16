@@ -57,26 +57,6 @@ else
   exit 0
 fi
 
-update_collectd_memory_leak_hotfix() {
-  # Remove old hotfixes for collectd RAM issues on 32MB routers
-  # see https://github.com/freifunk-berlin/firmware/issues/217
-  CRONTAB="/etc/crontabs/root"
-  test -f $CRONTAB || touch $CRONTAB
-  sed -i '/luci_statistics$/d' $CRONTAB
-  sed -i '/luci_statistics restart$/d' $CRONTAB
-  /etc/init.d/cron restart
-
-  if [ "$(cat /proc/meminfo |grep MemTotal:|awk {'print $2'})" -lt "65536" ]; then
-    uci set luci_statistics.collectd_ping.enable=0
-    uci set luci_statistics.collectd_rrdtool.enable=0
-  fi
-}
-
-fix_olsrd_txtinfo_port() {
-  uci set $(uci show olsrd|grep olsrd_txtinfo|cut -d '=' -f 1|sed 's/library/port/')=2006
-  uci set $(uci show olsrd6|grep olsrd_txtinfo|cut -d '=' -f 1|sed 's/library/port/')=2006
-}
-
 add_openvpn_mssfix() {
   uci set openvpn.ffvpn.mssfix=1300
 }
