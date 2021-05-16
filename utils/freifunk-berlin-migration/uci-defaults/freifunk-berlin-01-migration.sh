@@ -19,6 +19,16 @@ log() {
   echo >>/root/migrate.log "$@"
 }
 
+run_migrationsteps() {
+    VERSION = $1
+
+    [ -z ${VERSION} ] && (log "migration: no version provided"; exit 1)
+    # run each script / task of the release-mirgation
+    for script in /usr/share/freifunk-berlin-migration/${VERSION}; do
+      /bin/sh /usr/share/freifunk-berlin-migration/${VERSION}/${script}
+    done
+}
+
 if [ "Freifunk Berlin" = "${DISTRIB_ID}" ]; then
   log "Migration is running on a Freifunk Berlin system"
 else
@@ -57,17 +67,13 @@ else
   exit 0
 fi
 
-
 log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
 # check for every migration task folder
 for scriptdir in /usr/share/freifunk-berlin-migration/*; do
   # only do mirgations for releases higher then the one we are come from
   if semverLT ${OLD_VERSION} "${scriptdir}"; then
-    # run each script / task of the release-mirgation
-    for script in /usr/share/freifunk-berlin-migration/${scriptdir}; do
-      /bin/sh /usr/share/freifunk-berlin-migration/${scriptdir}/${script}
-    done
+    run_migrationsteps "${scriptdir}"
   fi
 done
 
