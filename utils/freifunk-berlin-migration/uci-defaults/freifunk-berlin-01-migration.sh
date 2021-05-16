@@ -57,10 +57,6 @@ else
   exit 0
 fi
 
-add_openvpn_mssfix() {
-  uci set openvpn.ffvpn.mssfix=1300
-}
-
 openvpn_ffvpn_hotplug() {
   uci set openvpn.ffvpn.up="/lib/freifunk/ffvpn-up.sh"
   uci set openvpn.ffvpn.nobind=0
