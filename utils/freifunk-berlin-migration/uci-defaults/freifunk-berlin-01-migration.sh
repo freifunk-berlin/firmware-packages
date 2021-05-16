@@ -77,31 +77,6 @@ r1_1_0_change_olsrd_lib_num() {
 
 }
 
-r1_1_0_notunnel_ffuplink() {
-  if [ "$(uci -q get ffberlin-uplink.preset.current)" == "no-tunnel" ]; then
-    log "update the ffuplink_dev to have a static macaddr if not already set"
-    local macaddr=$(uci -q get network.ffuplink_dev.macaddr)
-    if [ $? -eq 1 ]; then
-      # Create a static random macaddr for ffuplink device
-      # start with fe for ffuplink devices
-      # See the website https://www.itwissen.info/MAC-Adresse-MAC-address.html
-      macaddr="fe"
-      for byte in 2 3 4 5 6; do
-        macaddr=$macaddr`dd if=/dev/urandom bs=1 count=1 2> /dev/null | hexdump -e '1/1 ":%02x"'`
-      done
-      uci set network.ffuplink_dev.macaddr=$macaddr
-    fi
-  fi
-}
-
-r1_1_0_notunnel_ffuplink_ipXtable() {
-  if [ "$(uci -q get ffberlin-uplink.preset.current)" == "no-tunnel" ]; then
-    log "update the ffuplink no-tunnel settings to use options ip4table and ip6table"
-    uci set network.ffuplink.ip4table="ffuplink"
-    uci set network.ffuplink.ip6table="ffuplink"
-  fi
-}
-
 r1_1_0_olsrd_dygw_ping() {
   olsrd_dygw_ping() {
     local config=$1
@@ -119,20 +94,6 @@ r1_1_0_olsrd_dygw_ping() {
   reset_cb
   config_load olsrd
   config_foreach olsrd_dygw_ping LoadPlugin
-}
-
-r1_0_2_update_dns_entry() {
-  log "updating DNS-servers for interface dhcp from profile"
-  uci set network.dhcp.dns="$(uci get "profile_$(uci get freifunk.community.name).interface.dns")"
-}
-
-r1_0_2_add_olsrd_garbage_collection() {
-  crontab -l | grep "rm -f /tmp/olsrd\*core"
-  if [ $? == 1 ]; then
-    log "adding garbage collection of core files from /tmp"
-    echo "23 4 * * *	rm -f /tmp/olsrd*core" >> /etc/crontabs/root
-    /etc/init.d/cron restart
-  fi
 }
 
 r1_1_0_remove_olsrd_garbage_collection() {
