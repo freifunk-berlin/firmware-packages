@@ -58,27 +58,23 @@ else
 fi
 
 
-migrate () {
-  log "Migrating from ${OLD_VERSION} to ${VERSION}."
+log "Migrating from ${OLD_VERSION} to ${VERSION}."
 
-  # check for every migration task folder
-  for scriptdir in /usr/share/freifunk-berlin-migration/*; do
-    # only do mirgations for releases higher then the one we are come from
-    if semverLT ${OLD_VERSION} "${scriptdir}"; then
-      # run each script / task of the release-mirgation
-      for script in /usr/share/freifunk-berlin-migration/${scriptdir}; do
-        /bin/sh /usr/share/freifunk-berlin-migration/${scriptdir}/${script}
-      done
-    fi
-  done
+# check for every migration task folder
+for scriptdir in /usr/share/freifunk-berlin-migration/*; do
+  # only do mirgations for releases higher then the one we are come from
+  if semverLT ${OLD_VERSION} "${scriptdir}"; then
+    # run each script / task of the release-mirgation
+    for script in /usr/share/freifunk-berlin-migration/${scriptdir}; do
+      /bin/sh /usr/share/freifunk-berlin-migration/${scriptdir}/${script}
+    done
+  fi
+done
 
-  # overwrite version with the new version
-  log "Setting new system version to ${VERSION}."
-  uci set system.@system[0].version=${VERSION}
+# overwrite version with the new version
+log "Setting new system version to ${VERSION}."
+uci set system.@system[0].version=${VERSION}
 
-  uci commit
+uci commit
 
-  log "Migration done."
-}
-
-migrate
+log "Migration done."
