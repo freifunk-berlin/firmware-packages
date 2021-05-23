@@ -9,7 +9,7 @@ define Package/freifunk-berlin-olsrd-defaults
   CATEGORY:=freifunk-berlin
   TITLE:=Freifunk Berlin olsrd default configuration
   URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+= +olsrd +freifunk-berlin-lib-guard
+  DEPENDS+= +olsrd +freifunk-common-olsr +freifunk-berlin-lib-guard
   PKGARCH:=all
 endef
 
