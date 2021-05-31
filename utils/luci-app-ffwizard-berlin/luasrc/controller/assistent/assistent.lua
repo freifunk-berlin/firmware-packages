@@ -45,6 +45,9 @@ function commit()
 
   uci:set("ffwizard","settings","runbefore","true")
   uci:save("ffwizard")
+  -- remove landingpage redirection of luci-mod-freifunk, to restore default behavior
+  uci:set('freifunk', 'luci', 'redirect_landingurl', '')
+
   local sharenet = uci:get("ffwizard","settings","sharenet")
 
   local community = "profile_"..uci:get("freifunk","community","name")
@@ -150,6 +153,10 @@ function reset()
   uci:set("ffwizard","settings","runbefore","true")
   uci:save("ffwizard")
   uci:commit("ffwizard")
+  -- remove landingpage redirection of luci-mod-freifunk, to restore default behavior
+  uci:set('freifunk', 'luci', 'redirect_landingurl', '')
+  uci:save('freifunk')
+  uci:commit('freifunk', 'luci')
 
   luci.http.redirect(luci.dispatcher.build_url("/"))
 end

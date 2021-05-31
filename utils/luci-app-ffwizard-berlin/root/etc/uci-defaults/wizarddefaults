@@ -6,3 +6,9 @@ uci set freifunk-policyrouting.pr.enable=1
 uci set freifunk-policyrouting.pr.fallback=0
 uci set freifunk-policyrouting.pr.zones="freifunk"
 uci commit freifunk-policyrouting
+
+# redirect to wizard when it has never run before, will be removed when the wizard has finished
+[ 'true' = "$(uci -q get ffwizard.settings.runbefore)" ] && exit 0
+uci set freifunk.luci=setting
+uci set freifunk.luci.redirect_landingurl='/cgi-bin/luci/admin/freifunk/assistent?luci_username=root&luci_password='
+uci commit freifunk.luci
