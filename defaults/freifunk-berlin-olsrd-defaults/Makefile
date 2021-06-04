@@ -1,35 +1,13 @@
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=freifunk-berlin-olsrd-defaults
+LUCI_TITLE:=Freifunk Berlin olsrd default configuration
+LUCI_DEPENDS:=+olsrd +freifunk-common-olsr +freifunk-berlin-lib-guard
+LUCI_DESCRIPTION:=Freifunk Berlin configuration files for olsrd and olsrd6
+
+define Package/freifunk-berlin-dhcp-defaults/postinst
+# noop
+endef
 
 include ../../freifunk-berlin-generic.mk
 
-define Package/freifunk-berlin-olsrd-defaults
-  SECTION:=freifunk-berlin
-  CATEGORY:=freifunk-berlin
-  TITLE:=Freifunk Berlin olsrd default configuration
-  URL:=http://github.com/freifunk-berlin/packages_berlin
-  DEPENDS+= +olsrd +freifunk-common-olsr +freifunk-berlin-lib-guard
-  PKGARCH:=all
-endef
-
-define Package/freifunk-berlin-olsrd-defaults/description
-  Freifunk Berlin configuration files for olsrd and olsrd6
-endef
-
-define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)
-endef
-
-define Build/Configure
-endef
-
-define Build/Compile
-endef
-
-define Package/freifunk-berlin-olsrd-defaults/install
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(CP) ./uci-defaults/* $(1)/etc/uci-defaults
-endef
-
-$(eval $(call BuildPackage,freifunk-berlin-olsrd-defaults))
+# call BuildPackage - is done via freifunk-berlin-generic.mk --> luci.mk
