@@ -239,16 +239,24 @@ function main.write(self, section, value)
   --only do this if user entered cidr
   if (dhcpmeshnet:prefix() < 32) then
     --NETWORK CONFIG bridge for wifi APs
+    -- rename device br-lan to br-dhcp
+    uci:foreach("network","device",
+      function(section)
+        if section.name == "br-lan" then
+          uci:set("network", section['.name'], "name", "br-dhcp")
+        end
+      end
+    )
+
     local prenetconfig =  {}
     prenetconfig.ipaddr=dhcpmeshnet:minhost():string()
     prenetconfig.netmask=dhcpmeshnet:mask():string()
     prenetconfig.ip6assign="64"
-    prenetconfig.type="bridge"
     prenetconfig.proto="static"
-    -- use ifname from dhcp bridge on a consecutive run of assistent
-    prenetconfig.ifname=uci:get("network", "lan", "ifname") or uci:get("network", "dhcp", "ifname")
+    prenetconfig.ifname="br-dhcp"
 
     -- if macaddr is set for lan interface also set it for dhcp interface (needed for wdr4900)
+    -- TODO: rewite to new network --> is it needed? the MAC should belong to the still correct device
     local macaddr=uci:get("network", "lan", "macaddr") or uci:get("network", "dhcp", "macaddr")
     if (macaddr) then
       prenetconfig.macaddr = macaddr
