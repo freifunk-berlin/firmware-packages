@@ -4,7 +4,7 @@ LUCI_TITLE:=Freifunk Berlin network default configuration
 LUCI_DEPENDS:= +freifunk-berlin-lib-guard +iwinfo +pingcheck
 LUCI_DESCRIPTION:=Freifunk Berlin configuration files for network
 
-define Package/freifunk-berlin-dhcp-defaults/postinst
+define Package/freifunk-berlin-network-defaults/postinst
 # noop
 endef
 

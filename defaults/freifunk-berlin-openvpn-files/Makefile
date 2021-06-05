@@ -4,7 +4,7 @@ LUCI_TITLE:=Freifunk Berlin openVPN files (commmon)
 LUCI_DEPENDS:=+openvpn +freifunk-berlin-lib-guard +freifunk-berlin-network-defaults
 LUCI_DESCRIPTION:=Freifunk Berlin openVPN files
 
-define Package/freifunk-berlin-dhcp-defaults/postinst
+define Package/freifunk-berlin-openvpn-defaults/postinst
 # noop
 endef
 

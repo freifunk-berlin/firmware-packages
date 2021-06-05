@@ -4,7 +4,7 @@ LUCI_TITLE:=Freifunk Berlin uhttpd default configuration
 LUCI_DEPENDS:=+uhttpd +freifunk-berlin-lib-guard
 LUCI_DESCRIPTION:=Freifunk Berlin configuration files for uhttpd
 
-define Package/freifunk-berlin-dhcp-defaults/postinst
+define Package/freifunk-berlin-uhttpd-defaults/postinst
 # noop
 endef
 

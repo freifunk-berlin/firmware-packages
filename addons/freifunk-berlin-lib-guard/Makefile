@@ -1,11 +1,11 @@
 include $(TOPDIR)/rules.mk
 
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 LUCI_TITLE:=Freifunk Berlin guard function
 LUCI_DESCRIPTION:=Freifunk Berlin guard function
 
-define Package/freifunk-berlin-dhcp-defaults/postinst
+define Package/freifunk-berlin-lib-guard/postinst
 # noop
 endef
 

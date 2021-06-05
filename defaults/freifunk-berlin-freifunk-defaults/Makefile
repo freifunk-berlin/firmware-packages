@@ -3,7 +3,7 @@ include $(TOPDIR)/rules.mk
 LUCI_TITLE:=Freifunk Berlin freifunk default configuration
 LUCI_DESCRIPTION:=Freifunk Berlin configuration files for freifunk
 
-define Package/freifunk-berlin-dhcp-defaults/postinst
+define Package/freifunk-berlin-freifunk-defaults/postinst
 # noop
 endef
 
