@@ -1,7 +1,36 @@
 #!/bin/sh
 
+. /lib/functions.sh
 . /lib/functions/guard.sh
 guard "network"
+
+# find_first_section_for_name(sectionname uci-config searchname)
+find_first_section_for_name() {
+  local section=$1
+  local uciconfig=$2
+  local search=$3
+
+  if [ $(uci -q get ${uciconfig}.${section}.name) = ${search} ]; then
+    echo ${section}
+    return 0
+  fi
+}
+
+wan_2_bridge() {
+  local WANDEVICE=$1
+  local WANDEVICESECTION
+
+  # find current WAN-device
+  config_load network
+  WANDEVICESECTION=$(config_foreach find_first_section_for_name device network ${WANDEVICE})
+  # define WAN-device as bridge with name "br-wan"
+  uci set network.$WANDEVICESECTION.type='bridge'
+  uci add_list network.$WANDEVICESECTION.ports=$(uci get network.$WANDEVICESECTION.name)
+  uci set network.$WANDEVICESECTION.name='br-wan'
+  # set WAN & WAN6 interfaces to new WAN-device
+  uci set network.wan.device="br-wan"
+  uci set network.wan6.device="br-wan"
+}
 
 # change default ip to avoid collision with user's local network
 uci set network.lan.ipaddr=192.168.42.1
@@ -11,8 +40,9 @@ uci set network.lan.ipaddr=192.168.42.1
 uci set network.wan.peerdns=0
 uci set network.wan6.peerdns=0
 
-# setup wan as bridge
-uci set network.wan.type=bridge
+# setup wan as bridge if it exists (e.g. 1-port devices)
+#  "network.wan.device" is usually "eth0.2"
+uci -q get network.wan >/dev/null && wan_2_bridge $(uci get network.wan.device)
 
 # add tunl0 interface - tunl0 is the ipip tunnel interface for the olsr
 # SmartGateway plugin
