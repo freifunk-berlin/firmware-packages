@@ -255,13 +255,6 @@ function main.write(self, section, value)
     prenetconfig.proto="static"
     prenetconfig.ifname="br-dhcp"
 
-    -- if macaddr is set for lan interface also set it for dhcp interface (needed for wdr4900)
-    -- TODO: rewite to new network --> is it needed? the MAC should belong to the still correct device
-    local macaddr=uci:get("network", "lan", "macaddr") or uci:get("network", "dhcp", "macaddr")
-    if (macaddr) then
-      prenetconfig.macaddr = macaddr
-    end
-
     uci:section("network", "interface", "dhcp", prenetconfig)
 
     -- add to statistics
