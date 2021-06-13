@@ -1,0 +1,61 @@
+#!/bin sh
+
+vpn03_udp4() {
+  log "set VPN03 to UDPv4 only"
+  uci delete openvpn.ffvpn.remote
+  uci add_list openvpn.ffvpn.remote='vpn03.berlin.freifunk.net 1194'
+  uci add_list openvpn.ffvpn.remote='vpn03-backup.berlin.freifunk.net 1194'
+  uci set openvpn.ffvpn.proto=udp4
+}
+
+set_ipversion_olsrd6() {
+  uci set olsrd6.@olsrd[0].IpVersion=6
+}
+
+r1_0_0_no_wan_restart() {
+  crontab -l | grep -v "^0 6 \* \* \* ifup wan$" | crontab -
+}
+
+r1_0_0_update_preliminary_glinet_names() {
+  case `uci get system.led_wlan.sysfs` in
+    "gl_ar150:wlan")
+      log "correcting system.led_wlan.sysfs for GLinet AR150"
+      uci set system.led_wlan.sysfs="gl-ar150:wlan"
+      ;;
+    "gl_ar300:wlan")
+      log "correcting system.led_wlan.sysfs for GLinet AR300"
+      uci set system.led_wlan.sysfs="gl-ar300:wlan"
+      ;;
+    "domino:blue:wlan")
+      log "correcting system.led_wlan.sysfs for GLinet Domino"
+      uci set system.led_wlan.sysfs="gl-domino:blue:wlan"
+      ;;
+  esac
+}
+
+r1_0_0_upstream() {
+  log "applying upstream changes / sync with upstream"
+  grep -q "^kernel.core_pattern=" /etc/sysctl.conf || echo >>/etc/sysctl.conf "kernel.core_pattern=/tmp/%e.%t.%p.%s.core"
+  sed -i '/^net.ipv4.tcp_ecn=0/d' /etc/sysctl.conf
+  grep -q "^128" /etc/iproute2/rt_tables || echo >>/etc/iproute2/rt_tables "128	prelocal"
+  cp /rom/etc/inittab /etc/inittab
+  cp /rom/etc/profile /etc/profile
+  cp /rom/etc/hosts /etc/hosts
+  log " checking for user dnsmasq"
+  group_exists "dnsmasq" || group_add "dnsmasq" "453"
+  user_exists "dnsmasq" || user_add "dnsmasq" "453" "453"
+}
+
+migrate () {
+  log "Migrating from ${OLD_VERSION} to ${VERSION}."
+
+    vpn03_udp4
+    set_ipversion_olsrd6
+    r1_0_0_no_wan_restart
+    r1_0_0_update_preliminary_glinet_names
+    r1_0_0_upstream
+
+  log "v1.0.0 - common Migration done."
+}
+
+migrate

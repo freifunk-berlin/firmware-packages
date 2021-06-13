@@ -1,0 +1,95 @@
+#!/bin sh
+
+r1_0_0_vpn03_splitconfig() {
+  log "changing guard-entry for VPN03 from openvpn to vpn03-openvpn (config-split for VPN03)"
+  guard_rename openvpn vpn03_openvpn # to guard the current settings of package "freifunk-berlin-vpn03-files"
+}
+
+r1_0_0_firewallzone_uplink() {
+  log "adding firewall-zone for VPN / Uplink"
+  uci set firewall.zone_ffuplink=zone
+  uci set firewall.zone_ffuplink.name=ffuplink
+  uci set firewall.zone_ffuplink.input=REJECT
+  uci set firewall.zone_ffuplink.forward=ACCEPT
+  uci set firewall.zone_ffuplink.output=ACCEPT
+  uci set firewall.zone_ffuplink.network=ffuplink
+  # remove ffvpn from zone freifunk
+  ffzone_new=$(uci get firewall.zone_freifunk.network|sed -e "s/ ffvpn//g")
+  log " zone freifunk has now interfaces: ${ffzone_new}"
+  uci set firewall.zone_freifunk.network="${ffzone_new}"
+  log " setting up forwarding for ffuplink"
+  uci set firewall.fwd_ff_ffuplink=forwarding
+  uci set firewall.fwd_ff_ffuplink.src=freifunk
+  uci set firewall.fwd_ff_ffuplink.dest=ffuplink
+}
+
+r1_0_0_change_to_ffuplink() {
+  change_olsrd_dygw_ping_iface() {
+    local config=$1
+    local lib=''
+    config_get lib $config library
+    if [ -z "${lib##olsrd_dyn_gw.so*}" ]; then
+      uci set olsrd.$config.PingCmd='ping -c 1 -q -I ffuplink %s'
+      return 1
+    fi
+  }
+  remove_routingpolicy() {
+    local config=$1
+    case "$config" in
+      olsr_*_ffvpn_ipv4*) 
+        log "  network.$config"
+        uci delete network.$config
+        ;;
+      *) ;;
+    esac
+  }
+
+  log "changing interface ffvpn to ffuplink"
+  log " setting wan as bridge"
+  uci set network.wan.type=bridge
+  log " renaming interface ffvpn"
+  uci rename network.ffvpn=ffuplink
+  uci set network.ffuplink.ifname=ffuplink
+  log " updating VPN03-config"
+  uci rename openvpn.ffvpn=ffuplink
+  uci set openvpn.ffuplink.dev=ffuplink
+  uci set openvpn.ffuplink.status="/var/log/openvpn-status-ffuplink.log"
+  uci set openvpn.ffuplink.key="/etc/openvpn/ffuplink.key"
+  uci set openvpn.ffuplink.cert="/etc/openvpn/ffuplink.crt"
+  log " renaming VPN03 certificate files"
+  mv /etc/openvpn/freifunk_client.crt /etc/openvpn/ffuplink.crt
+  mv /etc/openvpn/freifunk_client.key /etc/openvpn/ffuplink.key
+  log " updating statistics, qos, olsr to use ffuplink"
+  # replace ffvpn by ffuplink
+  ffuplink_new=$(uci get luci_statistics.collectd_interface.Interfaces|sed -e "s/ffvpn/ffuplink/g")
+  uci set luci_statistics.collectd_interface.Interfaces="${ffuplink_new}"
+  uci rename qos.ffvpn=ffuplink
+  reset_cb
+  config_load olsrd
+  config_foreach change_olsrd_dygw_ping_iface LoadPlugin
+  log " removing deprecated IP-rules"
+  reset_cb
+  config_load network
+  config_foreach remove_routingpolicy rule
+}
+
+r1_0_0_set_uplinktype() {
+  log "storing used uplink-type"
+  log " migrating from Kathleen-release, assuming VPN03 as uplink-preset"
+  echo "" | uci import ffberlin-uplink
+  uci set ffberlin-uplink.preset=settings
+  uci set ffberlin-uplink.preset.current="vpn03_openvpn"
+}
+
+migrate () {
+  log "Migrating from ${OLD_VERSION} to ${VERSION}."
+
+    r1_0_0_vpn03_splitconfig
+    r1_0_0_firewallzone_uplink
+    r1_0_0_change_to_ffuplink
+    r1_0_0_set_uplinktype
+
+  log "v1.0.0 - ffuplink-Migration done."
+}
+
+migrate

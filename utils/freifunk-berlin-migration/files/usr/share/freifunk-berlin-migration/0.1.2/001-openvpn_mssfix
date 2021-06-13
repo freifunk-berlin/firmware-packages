@@ -1,0 +1,15 @@
+#!/bin sh
+
+add_openvpn_mssfix() {
+  uci set openvpn.ffvpn.mssfix=1300
+}
+
+migrate () {
+  log "Migrating from ${OLD_VERSION} to ${VERSION}."
+
+    add_openvpn_mssfix
+
+  log "v0.1.2 - Migration done."
+}
+
+migrate
