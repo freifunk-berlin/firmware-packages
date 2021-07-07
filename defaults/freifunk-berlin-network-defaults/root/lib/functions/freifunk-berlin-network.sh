@@ -6,7 +6,7 @@ create_ffuplink() {
   uci -q delete network.ffuplink
   # create a very basic ffuplink interface
   uci set network.ffuplink=interface
-  uci set network.ffuplink.ifname=ffuplink
+  uci set network.ffuplink.device=ffuplink
   # see https://github.com/freifunk-berlin/firmware/issues/561
   uci set network.ffuplink.ip4table=ffuplink
   uci set network.ffuplink.ip6table=ffuplink

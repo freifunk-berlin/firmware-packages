@@ -254,7 +254,7 @@ function main.write(self, section, value)
     prenetconfig.netmask=dhcpmeshnet:mask():string()
     prenetconfig.ip6assign="64"
     prenetconfig.proto="static"
-    prenetconfig.ifname="br-dhcp"
+    prenetconfig.device="br-dhcp"
 
     uci:section("network", "interface", "dhcp", prenetconfig)
 
